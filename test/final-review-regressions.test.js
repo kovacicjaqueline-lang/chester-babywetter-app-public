@@ -64,6 +64,24 @@ test('complete hourly coverage keeps weather-window coverage out of missing fiel
   assert.ok(!result.dataQuality.missingFields.includes('weather.hourly.coverage'));
 });
 
+test('short car transition accepts the next hourly point as coverage anchor', () => {
+  const result = recommendOutfit(request({
+    context:{
+      mode:'car',
+      plannedMinutes:30,
+      includeOutdoorTransition:true,
+      outsideTransitionMinutes:5,
+      cabinTempC:22,
+      cabinTempSource:'measured'
+    },
+    w:weather({hourly:[point('2026-08-25T15:00:00+02:00',18)]})
+  }));
+  const transition = result.phases.find((phase) => phase.phase === 'outdoor_transition');
+  assert.ok(transition);
+  assert.ok(!transition.missingFields.includes('weather.hourly.coverage'));
+  assert.ok(!result.notices.some((notice) => notice.code === 'WEATHER_DATA_INCOMPLETE' && notice.phase === 'outdoor_transition'));
+});
+
 test('missing hourly hazard value inside covered window remains partial', () => {
   const result = recommendOutfit(request({w:weather({hourly:[
     point('2026-08-25T15:00:00+02:00',18,{uvIndex:null})
