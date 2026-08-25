@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { GENERIC_TOG_TABLE, genericTogGuidanceForRoomTemp, recommendOutfit } from '../src/index.js';
+import {
+  GENERIC_TOG_TABLE,
+  genericTogGuidanceForRoomTemp,
+  recommendOutfit,
+  sleepBagRecommendationFor
+} from '../src/index.js';
 
 function profile(sleepBagInventory = []) {
   return {
@@ -61,6 +66,7 @@ test('matching selected TOG without manufacturer guidance gets concrete generic 
   const guidance = result.guidance.find((entry) => entry.code === 'SLEEP_GENERIC_TOG_TABLE');
   assert.equal(guidance.recommendedTog, 2.5);
   assert.equal(guidance.selectedTogMatches, true);
+  assert.equal(guidance.sleepBagRecommendation.action, 'keep');
   const alternative = result.alternatives.find((entry) => entry.alternativeId === 'generic_tog_18_to_20');
   assert.ok(alternative);
   assert.deepEqual(alternative.items.map((item) => item.itemId), ['sleep_suit']);
@@ -89,6 +95,99 @@ test('selected TOG that differs from generic room-temperature band is explicitly
   assert.equal(guidance.selectedTog, 1.0);
   assert.equal(guidance.recommendedTog, 2.5);
   assert.equal(guidance.selectedTogMatches, false);
+  assert.equal(guidance.sleepBagRecommendation.action, 'replace');
+  assert.equal(guidance.sleepBagRecommendation.targetTog, 2.5);
+});
+
+test('mismatched selected bag recommends a matching sleep bag from inventory', () => {
+  const bagProfile = profile([
+    { sleepBagId: 'bag_10', label: 'Sommer 1.0 TOG', tog: 1.0, manufacturer: null, guidanceBands: [] },
+    { sleepBagId: 'bag_25', label: 'Winter 2.5 TOG', tog: 2.5, manufacturer: null, guidanceBands: [] }
+  ]);
+  const result = recommendOutfit({
+    weather: null,
+    profile: bagProfile,
+    situation: sleep(18, 'bag_10')
+  });
+
+  const recommendation = result.guidance.find((entry) => entry.code === 'SLEEP_BAG_RECOMMENDATION');
+  assert.equal(recommendation.action, 'replace');
+  assert.equal(recommendation.inventoryOption.sleepBagId, 'bag_25');
+  assert.equal(recommendation.inventoryOption.tog, 2.5);
+  assert.deepEqual(recommendation.inventoryOption.recommendedUnderlayers, ['sleep_suit']);
+  assert.ok(noticeCodes(result).includes('SLEEP_BAG_SWAP_RECOMMENDED'));
+
+  const swap = result.alternatives.find((entry) => entry.alternativeId === 'sleep_bag_replace_bag_25');
+  assert.ok(swap);
+  assert.deepEqual(swap.replacesItemIds, ['bag_10']);
+  assert.deepEqual(swap.items.map((item) => item.itemId), ['bag_25', 'sleep_suit']);
+});
+
+test('manufacturer-guided inventory replacement wins over generic TOG match', () => {
+  const bagProfile = profile([
+    { sleepBagId: 'current', label: 'Current', tog: 1.0, manufacturer: null, guidanceBands: [] },
+    { sleepBagId: 'generic', label: 'Generic 2.5', tog: 2.5, manufacturer: null, guidanceBands: [] },
+    {
+      sleepBagId: 'guided',
+      label: 'Guided bag',
+      tog: 1.5,
+      manufacturer: 'Example',
+      guidanceBands: [{
+        minRoomTempC: 18,
+        maxRoomTempC: 20,
+        recommendedUnderlayers: ['long_sleeve_bodysuit'],
+        sourceLabel: 'Manufacturer chart',
+        sourceUrl: null
+      }]
+    }
+  ]);
+
+  const recommendation = sleepBagRecommendationFor({
+    profile: bagProfile,
+    situation: sleep(19, 'current')
+  });
+
+  assert.equal(recommendation.action, 'replace');
+  assert.equal(recommendation.basis, 'manufacturer_guidance');
+  assert.equal(recommendation.inventoryOption.sleepBagId, 'guided');
+  assert.deepEqual(recommendation.inventoryOption.recommendedUnderlayers, ['long_sleeve_bodysuit']);
+});
+
+test('no matching inventory bag still exposes a concrete target TOG swap option', () => {
+  const result = recommendOutfit({
+    weather: null,
+    profile: profile([{ sleepBagId: 'bag_10', label: '1.0 TOG', tog: 1.0, manufacturer: null, guidanceBands: [] }]),
+    situation: sleep(18, 'bag_10')
+  });
+
+  const recommendation = result.guidance.find((entry) => entry.code === 'SLEEP_BAG_RECOMMENDATION');
+  assert.equal(recommendation.action, 'replace');
+  assert.equal(recommendation.inventoryOption, null);
+  assert.equal(recommendation.targetTog, 2.5);
+  assert.ok(noticeCodes(result).includes('SLEEP_BAG_SWAP_TARGET_TOG'));
+
+  const swap = result.alternatives.find((entry) => entry.alternativeId === 'sleep_bag_replace_target_2_5_tog');
+  assert.ok(swap);
+  assert.equal(swap.sleepBagOption.sleepBagId, null);
+  assert.equal(swap.sleepBagOption.tog, 2.5);
+  assert.deepEqual(swap.items.map((item) => item.itemId), ['sleep_suit']);
+});
+
+test('without selected bag a matching inventory bag is proposed directly', () => {
+  const result = recommendOutfit({
+    weather: null,
+    profile: profile([
+      { sleepBagId: 'bag_05', label: 'Leicht 0.5 TOG', tog: 0.5, manufacturer: null, guidanceBands: [] },
+      { sleepBagId: 'bag_10', label: 'Mittel 1.0 TOG', tog: 1.0, manufacturer: null, guidanceBands: [] }
+    ]),
+    situation: sleep(22.5, null)
+  });
+
+  const recommendation = result.guidance.find((entry) => entry.code === 'SLEEP_BAG_RECOMMENDATION');
+  assert.equal(recommendation.action, 'select');
+  assert.equal(recommendation.inventoryOption.sleepBagId, 'bag_10');
+  assert.ok(noticeCodes(result).includes('SLEEP_BAG_SELECTION_RECOMMENDED'));
+  assert.ok(result.alternatives.some((entry) => entry.alternativeId === 'sleep_bag_select_bag_10'));
 });
 
 test('manufacturer guidance remains authoritative and suppresses generic fallback', () => {
@@ -114,6 +213,9 @@ test('manufacturer guidance remains authoritative and suppresses generic fallbac
   assert.equal(result.confidence.level, 'high');
   assert.ok(!noticeCodes(result).includes('SLEEP_GENERIC_TOG_GUIDANCE_USED'));
   assert.ok(!result.guidance.some((entry) => entry.code === 'SLEEP_GENERIC_TOG_TABLE'));
+  const recommendation = result.guidance.find((entry) => entry.code === 'SLEEP_BAG_RECOMMENDATION');
+  assert.equal(recommendation.action, 'keep');
+  assert.equal(recommendation.basis, 'manufacturer_guidance');
 });
 
 test('without a selected sleep bag the engine still exposes a generic TOG recommendation', () => {
@@ -125,6 +227,9 @@ test('without a selected sleep bag the engine still exposes a generic TOG recomm
   const guidance = result.guidance.find((entry) => entry.code === 'SLEEP_GENERIC_TOG_TABLE');
   assert.equal(guidance.recommendedTog, 1.0);
   assert.deepEqual(guidance.recommendedUnderlayers, ['short_sleeve_bodysuit']);
+  const recommendation = result.guidance.find((entry) => entry.code === 'SLEEP_BAG_RECOMMENDATION');
+  assert.equal(recommendation.action, 'select');
+  assert.equal(recommendation.targetTog, 1.0);
 });
 
 test('generic TOG fallback never bypasses blocked sleep evaluation without room temperature', () => {
@@ -135,4 +240,5 @@ test('generic TOG fallback never bypasses blocked sleep evaluation without room 
   });
   assert.equal(result.status, 'blocked');
   assert.ok(!result.guidance.some((entry) => entry.code === 'SLEEP_GENERIC_TOG_TABLE'));
+  assert.ok(!result.guidance.some((entry) => entry.code === 'SLEEP_BAG_RECOMMENDATION'));
 });
