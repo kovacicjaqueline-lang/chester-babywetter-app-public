@@ -85,7 +85,8 @@ export function detectPrecipitationType({ rain, showers, snowfall, precipitation
   if (hasLiquid) return 'rain';
 
   if (code !== null) {
-    if ([56, 57, 66, 67].includes(code)) return 'sleet';
+    if ([56, 57].includes(code)) return 'sleet';
+    if ([66, 67].includes(code)) return 'rain';
     if ([71, 73, 75, 77, 85, 86].includes(code)) return 'snow';
     if ((code >= 51 && code <= 65) || (code >= 80 && code <= 82) || (code >= 95 && code <= 99)) return 'rain';
     if ([0, 1, 2, 3, 45, 48].includes(code) && (precipMm ?? 0) <= 0) return 'none';
