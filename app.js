@@ -1,31 +1,63 @@
 import { ClothingAssetStore } from "./ui/asset-store.js";
-import { MOCK_PROFILE, MOCK_WEATHER } from "./ui/mock-data.js";
+import {
+  MOCK_CONTEXTS,
+  MOCK_HOURLY,
+  MOCK_PROFILE,
+  MOCK_WEATHER,
+  getMockRecommendation
+} from "./ui/mock-data.js";
 import {
   renderCatalog,
   renderHourly,
   renderOutfit,
   renderSituation,
+  renderSituationContext,
   renderSituationOptions,
   renderWeather
 } from "./ui/render.js";
 
-const STORAGE_KEY = "babywetter.ui.v1";
+const STORAGE_KEY = "babywetter.ui.v2";
 const ALLOWED_MODES = new Set(["outdoor", "stroller", "carrier", "car", "sleep"]);
 const ALLOWED_WARMTH = new Set(["cooler", "balanced", "warmer"]);
 const ALLOWED_STYLES = new Set(["neutral", "soft_blue", "soft_rose", "mixed"]);
 const ALLOWED_BIAS = new Set(["runs_cool", "neutral", "runs_warm"]);
+const ENUM_FIELDS = {
+  activity: new Set(["passive", "normal", "active"]),
+  sunExposure: new Set(["shade", "partial", "direct", "unknown"]),
+  windProtection: new Set(["none", "partial", "good", "unknown"]),
+  externalInsulation: new Set(["none", "light", "medium", "warm"]),
+  carrierCover: new Set(["none", "light", "warm"])
+};
+const NUMBER_FIELDS = new Set(["plannedMinutes", "cabinTempC", "outsideTransitionMinutes", "roomTempC"]);
+const BOOLEAN_FIELDS = new Set(["wearerOuterLayerCoversBaby", "includeOutdoorTransition"]);
 
 const defaultState = {
-  profile: { ...MOCK_PROFILE },
-  location: MOCK_WEATHER.location,
+  profile: structuredClone(MOCK_PROFILE),
+  location: structuredClone(MOCK_WEATHER.location),
   mode: "stroller",
   warmth: "balanced",
-  styleTheme: "neutral"
+  styleTheme: "neutral",
+  contexts: structuredClone(MOCK_CONTEXTS)
 };
 
 const assetStore = new ClothingAssetStore();
 let state = loadState();
 let toastTimer = null;
+
+function sanitizeContext(mode, candidate) {
+  const template = structuredClone(MOCK_CONTEXTS[mode]);
+  if (!candidate || typeof candidate !== "object") return template;
+
+  for (const key of Object.keys(template)) {
+    if (key === "mode") continue;
+    const value = candidate[key];
+    if (ENUM_FIELDS[key]?.has(value)) template[key] = value;
+    if (NUMBER_FIELDS.has(key) && (value === null || Number.isFinite(value))) template[key] = value;
+    if (BOOLEAN_FIELDS.has(key) && typeof value === "boolean") template[key] = value;
+    if (key === "selectedSleepBagId" && (value === null || typeof value === "string")) template[key] = value || null;
+  }
+  return template;
+}
 
 function sanitizedState(candidate) {
   const next = structuredClone(defaultState);
@@ -36,11 +68,33 @@ function sanitizedState(candidate) {
   next.profile.birthDate = typeof profile.birthDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(profile.birthDate) ? profile.birthDate : null;
   next.profile.warmthBias = ALLOWED_BIAS.has(profile.warmthBias) ? profile.warmthBias : "neutral";
 
-  next.location = typeof candidate.location === "string" && candidate.location.trim() ? candidate.location.trim().slice(0, 80) : next.location;
+  const candidateLocation = candidate.location;
+  if (typeof candidateLocation === "string" && candidateLocation.trim()) {
+    next.location = {
+      locationId: null,
+      label: candidateLocation.trim().slice(0, 80),
+      latitude: null,
+      longitude: null,
+      timezone: "Europe/Vienna"
+    };
+  } else if (candidateLocation && typeof candidateLocation === "object" && typeof candidateLocation.label === "string") {
+    next.location = {
+      locationId: typeof candidateLocation.locationId === "string" ? candidateLocation.locationId : null,
+      label: candidateLocation.label.trim().slice(0, 80) || next.location.label,
+      latitude: Number.isFinite(candidateLocation.latitude) ? candidateLocation.latitude : null,
+      longitude: Number.isFinite(candidateLocation.longitude) ? candidateLocation.longitude : null,
+      timezone: typeof candidateLocation.timezone === "string" ? candidateLocation.timezone : "Europe/Vienna"
+    };
+  }
+
   next.mode = ALLOWED_MODES.has(candidate.mode) ? candidate.mode : next.mode;
   next.warmth = ALLOWED_WARMTH.has(candidate.warmth) ? candidate.warmth : next.warmth;
   next.styleTheme = ALLOWED_STYLES.has(candidate.styleTheme ?? profile.styleTheme) ? (candidate.styleTheme ?? profile.styleTheme) : "neutral";
   next.profile.styleTheme = next.styleTheme;
+
+  for (const mode of ALLOWED_MODES) {
+    next.contexts[mode] = sanitizeContext(mode, candidate.contexts?.[mode]);
+  }
   return next;
 }
 
@@ -56,6 +110,7 @@ function loadState() {
 
 function persistState() {
   state.profile.styleTheme = state.styleTheme;
+  state.profile.updatedAt = new Date().toISOString();
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch {
@@ -65,19 +120,39 @@ function persistState() {
 
 function weatherView() {
   return {
-    ...MOCK_WEATHER,
-    location: state.location,
-    hourly: MOCK_WEATHER.hourly.map((entry) => ({ ...entry }))
+    ...structuredClone(MOCK_WEATHER),
+    location: structuredClone(state.location)
   };
+}
+
+function hourlyView() {
+  return MOCK_HOURLY.map((entry) => ({
+    ...structuredClone(entry),
+    location: structuredClone(state.location)
+  }));
+}
+
+function activeRecommendation() {
+  return getMockRecommendation(state.mode, state.warmth, state.contexts[state.mode]);
+}
+
+function renderRecommendation() {
+  renderOutfit({
+    recommendation: activeRecommendation(),
+    mode: state.mode,
+    warmth: state.warmth,
+    styleTheme: state.styleTheme
+  }, assetStore);
 }
 
 function renderAll() {
   document.body.dataset.styleTheme = state.styleTheme;
   renderWeather(weatherView());
-  renderHourly(weatherView());
+  renderHourly(hourlyView());
   renderSituation(state.mode);
   renderSituationOptions(state.mode);
-  renderOutfit(state, assetStore);
+  renderSituationContext(state.mode, state.contexts[state.mode]);
+  renderRecommendation();
   renderCatalog(assetStore, state.styleTheme);
   syncForms();
 }
@@ -85,7 +160,7 @@ function renderAll() {
 function syncForms() {
   document.querySelector("#profileName").value = state.profile.displayName ?? "";
   document.querySelector("#profileBirthDate").value = state.profile.birthDate ?? "";
-  document.querySelector("#locationInput").value = state.location;
+  document.querySelector("#locationInput").value = state.location.label;
 
   for (const input of document.querySelectorAll('input[name="warmthBias"]')) {
     input.checked = input.value === state.profile.warmthBias;
@@ -136,10 +211,10 @@ function bindGlobalActions() {
     }
 
     const warmthButton = event.target.closest("[data-warmth]");
-    if (warmthButton && ALLOWED_WARMTH.has(warmthButton.dataset.warmth)) {
+    if (warmthButton && !warmthButton.disabled && ALLOWED_WARMTH.has(warmthButton.dataset.warmth)) {
       state.warmth = warmthButton.dataset.warmth;
       persistState();
-      renderOutfit(state, assetStore);
+      renderRecommendation();
       return;
     }
 
@@ -150,10 +225,37 @@ function bindGlobalActions() {
       persistState();
       renderSituation(state.mode);
       renderSituationOptions(state.mode);
-      renderOutfit(state, assetStore);
-      closeDialog("situationDialog");
-      showToast(`Situation: ${situationButton.querySelector("strong")?.textContent ?? "geändert"}`);
+      renderSituationContext(state.mode, state.contexts[state.mode]);
+      renderRecommendation();
+      return;
     }
+
+    if (event.target.closest("#applySituationButton")) {
+      closeDialog("situationDialog");
+      showToast(`Situation: ${document.querySelector("#situationLabel").textContent}`);
+    }
+  });
+}
+
+function bindSituationContext() {
+  const host = document.querySelector("#situationContextFields");
+  host.addEventListener("change", (event) => {
+    const target = event.target;
+    const field = target.dataset?.contextField;
+    if (!field) return;
+
+    const context = state.contexts[state.mode];
+    if (target.type === "checkbox") {
+      context[field] = target.checked;
+    } else if (target.type === "number") {
+      context[field] = target.value === "" ? null : Number(target.value);
+    } else {
+      context[field] = target.value || null;
+    }
+
+    state.warmth = "balanced";
+    persistState();
+    renderRecommendation();
   });
 }
 
@@ -181,9 +283,16 @@ function bindLocation() {
       showToast("Bitte einen Ort oder eine PLZ eingeben.");
       return;
     }
-    state.location = location.slice(0, 80);
+    state.location = {
+      locationId: null,
+      label: location.slice(0, 80),
+      latitude: null,
+      longitude: null,
+      timezone: "Europe/Vienna"
+    };
     persistState();
     renderWeather(weatherView());
+    renderHourly(hourlyView());
     showToast("Ort übernommen – Wetter bleibt im UI-Branch Mock.");
   });
 }
@@ -251,6 +360,7 @@ function bindDialogBackdropClose() {
 
 async function init() {
   bindGlobalActions();
+  bindSituationContext();
   bindProfile();
   bindLocation();
   bindStyleSettings();
@@ -262,7 +372,7 @@ async function init() {
   renderAll();
 
   await assetStore.load();
-  renderOutfit(state, assetStore);
+  renderRecommendation();
   renderCatalog(assetStore, state.styleTheme);
 }
 
