@@ -156,5 +156,23 @@ test('manual outer lock that cannot satisfy required wind remains locked but mak
   assert.equal(slot(result,'outer').selected.selectionSource,'manual_lock');
   assert.equal(result.status,'partial');
   assert.equal(result.phases.find((phase) => phase.phase === 'main')?.status,'partial');
-  assert.ok(result.notices.some((notice) => notice.code === 'MANUAL_LOCK_LIMITS_WEATHER_PROTECTION'));
+  const notice = result.notices.find((entry) => entry.code === 'MANUAL_LOCK_LIMITS_WEATHER_PROTECTION');
+  assert.ok(notice);
+  assert.equal(notice.data.conflicts.some((conflict) => conflict.slot === 'outer'),true);
+});
+
+test('manual footwear lock that is not weatherproof stays locked but makes rainy walking partial', () => {
+  const context = { mode:'outdoor', plannedMinutes:60, activity:'normal', activitySource:'user', sunExposure:'shade', groundContact:'walking' };
+  const session = lockItem(createSession('rainy_footwear_lock'),{ slot:'footwear', itemId:'light_shoes' });
+  const result = recommendOutfit(request(context,{
+    w:weather(18,{ precipProbabilityPct:80 }),
+    session
+  }));
+  assert.equal(slot(result,'footwear').selected.itemId,'light_shoes');
+  assert.equal(slot(result,'footwear').selected.selectionSource,'manual_lock');
+  assert.equal(result.status,'partial');
+  assert.equal(result.phases.find((phase) => phase.phase === 'main')?.status,'partial');
+  const notice = result.notices.find((entry) => entry.code === 'MANUAL_LOCK_LIMITS_WEATHER_PROTECTION');
+  assert.ok(notice);
+  assert.equal(notice.data.conflicts.some((conflict) => conflict.slot === 'footwear'),true);
 });
