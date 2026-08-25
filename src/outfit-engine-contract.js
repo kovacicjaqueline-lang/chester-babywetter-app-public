@@ -1,5 +1,6 @@
 import { CLOTHING_CATALOG } from './clothing-catalog.js';
 import { recommendOutfit as recommendOutfitCore } from './outfit-engine.js';
+import { RELATION_ORDER, evaluateWind, rainRequirement, summarizeWeatherWindow, thermalEnvironment } from './outfit-engine-support.js';
 
 /**
  * Public calibrated V1 entry point. Keep cross-cutting postconditions here when
@@ -20,6 +21,7 @@ export function recommendOutfit(input) {
   }
 
   markManualWeatherProtectionConflicts(result,input);
+  calibrateFootwearAlternatives(result);
   return result;
 }
 
@@ -29,11 +31,12 @@ function markManualWeatherProtectionConflicts(result,input) {
 
   const checks = [];
   if (['outdoor','stroller','carrier'].includes(context.mode)) {
-    checks.push({ phase:'main', context });
+    checks.push({ phase:'main', context, mode:context.mode });
   } else if (context.mode === 'car' && context.includeOutdoorTransition) {
     checks.push({
       phase:'outdoor_transition',
-      context:{ plannedMinutes:context.outsideTransitionMinutes ?? context.plannedMinutes ?? null }
+      context:{ plannedMinutes:context.outsideTransitionMinutes ?? context.plannedMinutes ?? null },
+      mode:'outdoor'
     });
   }
 
@@ -41,20 +44,23 @@ function markManualWeatherProtectionConflicts(result,input) {
     const outer = result.slots.find((entry) => entry.phase === check.phase && entry.slot === 'outer');
     if (outer?.selected.selectionSource !== 'manual_lock') continue;
 
-    const requirement = weatherProtectionRequirement(input.weather,check.context.plannedMinutes);
+    const summary = summarizeWeatherWindow(input.weather,check.context.plannedMinutes);
+    const thermal = thermalEnvironment(input.weather.current);
+    const wind = evaluateWind(summary,thermal,check.context,check.mode);
+    const rain = rainRequirement(summary,input.weather.current);
     const accessory = result.slots.find((entry) => entry.phase === check.phase && entry.slot === 'stroller_weather_accessory');
     const outerDef = CLOTHING_CATALOG[outer.selected.itemId];
     const accessoryDef = CLOTHING_CATALOG[accessory?.selected.itemId];
     const actualRainProtection = Math.max(outerDef?.rainProtection ?? 0,accessoryDef?.rainProtection ?? 0);
     const actualWindProtection = Math.max(outerDef?.windProtection ?? 0,accessoryDef?.windProtection ?? 0);
-    const rainUnmet = requirement.rainRequired && actualRainProtection < 3;
-    const windUnmet = requirement.requiredWindProtection > actualWindProtection;
+    const rainUnmet = rain.required && actualRainProtection < 3;
+    const windUnmet = wind.requiredProtection > actualWindProtection;
     if (!rainUnmet && !windUnmet) continue;
 
     addNotice(result,'MANUAL_LOCK_LIMITS_WEATHER_PROTECTION','caution',check.phase,'MANUAL_LOCK_LIMITS_WEATHER_PROTECTION',{
       itemId:outer.selected.itemId,
-      rainRequired:requirement.rainRequired,
-      requiredWindProtection:requirement.requiredWindProtection,
+      rainRequired:rain.required,
+      requiredWindProtection:wind.requiredProtection,
       actualRainProtection,
       actualWindProtection
     },'weather.protection.manual_lock');
@@ -62,36 +68,22 @@ function markManualWeatherProtectionConflicts(result,input) {
   }
 }
 
-function weatherProtectionRequirement(weather,plannedMinutes) {
-  const current = weather.current;
-  const duration = Number.isFinite(plannedMinutes) ? Math.max(0,plannedMinutes) : 120;
-  const start = Date.parse(current.time);
-  const end = Number.isFinite(start) ? start + duration * 60000 : Infinity;
-  const points = [current,...(weather.hourly ?? []).filter((point) => {
-    const time = Date.parse(point.time);
-    return !Number.isFinite(start) || !Number.isFinite(time) || (time >= start && time <= end);
-  })];
-  const maxPrecipProbabilityPct = maxFinite(points.map((point) => point.precipProbabilityPct));
-  const maxWindSpeedKmh = maxFinite(points.map((point) => point.windSpeedKmh));
-  const maxWindGustKmh = maxFinite(points.map((point) => point.windGustKmh));
-  const rainCurrent = (Number.isFinite(current.precipMm) && current.precipMm > 0)
-    || ['rain','snow','sleet'].includes(current.precipitationType);
-
-  let requiredWindProtection = 0;
-  if (Number.isFinite(maxWindSpeedKmh)) {
-    if (maxWindSpeedKmh >= 39) requiredWindProtection = 3;
-    else if (maxWindSpeedKmh >= 29) requiredWindProtection = 2;
-    else if (maxWindSpeedKmh >= 20) requiredWindProtection = 1;
+function calibrateFootwearAlternatives(result) {
+  for (const slotResult of result.slots.filter((entry) => entry.slot === 'footwear')) {
+    const currentWeight = CLOTHING_CATALOG[slotResult.selected.itemId]?.thermalWeight ?? 0;
+    for (const option of slotResult.alternatives) {
+      const candidateWeight = CLOTHING_CATALOG[option.itemId]?.thermalWeight ?? currentWeight;
+      const delta = candidateWeight - currentWeight;
+      option.relativeThermalDelta = delta;
+      option.relation = delta === 0 ? 'equivalent' : delta > 0 ? 'warmer' : 'cooler';
+    }
+    slotResult.alternatives.sort((a,b) =>
+      RELATION_ORDER[a.relation] - RELATION_ORDER[b.relation]
+      || Math.abs(a.relativeThermalDelta) - Math.abs(b.relativeThermalDelta)
+      || a.projectedChanges.length - b.projectedChanges.length
+      || a.itemId.localeCompare(b.itemId)
+    );
   }
-  if (Number.isFinite(maxWindGustKmh)) {
-    if (maxWindGustKmh >= 50) requiredWindProtection = Math.max(requiredWindProtection,3);
-    else if (maxWindGustKmh >= 39) requiredWindProtection = Math.max(requiredWindProtection,2);
-  }
-
-  return {
-    rainRequired:rainCurrent || (Number.isFinite(maxPrecipProbabilityPct) && maxPrecipProbabilityPct >= 60),
-    requiredWindProtection
-  };
 }
 
 function markPartial(result,phase) {
@@ -115,9 +107,4 @@ function addNotice(result,code,severity,phase,reasonCode,data,ruleId) {
     delta:null,
     reasonCode
   });
-}
-
-function maxFinite(values) {
-  const finite = values.filter(Number.isFinite);
-  return finite.length ? Math.max(...finite) : null;
 }
