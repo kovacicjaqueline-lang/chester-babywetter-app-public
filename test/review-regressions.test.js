@@ -22,14 +22,18 @@ function weather(temp, overrides={}) {
   };
 }
 
-function request(context, { w=null, session=createSession('review_session') }={}) {
+function request(context, { w=null, session=createSession('review_session'), p=PROFILE, neckFeedback=null }={}) {
   return {
-    requestId:'review_request', requestedAt:'2026-08-25T12:00:00.000Z', profile:{...PROFILE}, context, weather:w, session, neckFeedback:null
+    requestId:'review_request', requestedAt:'2026-08-25T12:00:00.000Z', profile:{...p}, context, weather:w, session, neckFeedback
   };
 }
 
 function slot(result, name, phase='main') {
   return result.slots.find((entry) => entry.phase === phase && entry.slot === name);
+}
+
+function selectedIds(result,phase='main') {
+  return result.slots.filter((entry) => entry.phase === phase).map((entry) => entry.selected.itemId);
 }
 
 function bodyThermalWeight(result, phase='main') {
@@ -100,4 +104,75 @@ test('projected swap changes identify the locked slot separately from rebalanced
   assert.ok(fleece);
   assert.equal(fleece.projectedChanges.find((change) => change.slot === 'mid')?.reasonCode,'MANUAL_ITEM_LOCK');
   assert.equal(fleece.projectedChanges.find((change) => change.slot === 'outer')?.reasonCode,'OUTFIT_REBALANCED_AFTER_SWAP');
+});
+
+test('half thermal step is a smaller distinct outfit change than a full step', () => {
+  const context = { mode:'outdoor', plannedMinutes:60, activity:'normal', activitySource:'user', sunExposure:'shade', groundContact:'none' };
+  const half = recommendOutfit(request(context,{
+    w:weather(18),
+    p:{...PROFILE,warmthBias:'runs_cool'}
+  }));
+  const full = recommendOutfit(request(context,{
+    w:weather(18),
+    neckFeedback:'cool'
+  }));
+  assert.equal(half.phases[0].thermalAdjustment,0.5);
+  assert.equal(full.phases[0].thermalAdjustment,1);
+  assert.notDeepEqual(selectedIds(half),selectedIds(full));
+  assert.equal(slot(half,'mid').selected.itemId,'thin_sweater');
+  assert.equal(slot(half,'feet').selected.itemId,'warm_socks_booties');
+  assert.equal(slot(full,'mid').selected.itemId,'fleece_jacket');
+});
+
+test('footwear manual lock is retained and footwear alternatives remain available', () => {
+  const context = { mode:'outdoor', plannedMinutes:60, activity:'normal', activitySource:'user', sunExposure:'shade', groundContact:'walking' };
+  const session = lockItem(createSession('footwear_lock'),{ slot:'footwear', itemId:'warm_shoes' });
+  const result = recommendOutfit(request(context,{ w:weather(20),session }));
+  const footwear = slot(result,'footwear');
+  assert.equal(footwear.selected.itemId,'warm_shoes');
+  assert.equal(footwear.selected.selectionSource,'manual_lock');
+  assert.equal(footwear.alternatives.find((option) => option.itemId === 'light_shoes')?.relation,'cooler');
+  assert.equal(footwear.alternatives.find((option) => option.itemId === 'weatherproof_shoes')?.relation,'cooler');
+});
+
+test('missing precipitation probability is reported even when current precipitation is known dry', () => {
+  const context = { mode:'outdoor', plannedMinutes:60, activity:'normal', activitySource:'user', sunExposure:'shade', groundContact:'none' };
+  const result = recommendOutfit(request(context,{
+    w:weather(18,{ precipProbabilityPct:null,precipMm:0,precipitationType:'none' })
+  }));
+  assert.equal(result.status,'partial');
+  assert.ok(result.dataQuality.missingFields.includes('weather.precipProbabilityPct'));
+  assert.ok(result.notices.some((notice) => notice.code === 'WEATHER_DATA_INCOMPLETE'));
+});
+
+test('manual outer lock that cannot satisfy required wind remains locked but makes result partial', () => {
+  const context = { mode:'outdoor', plannedMinutes:60, activity:'normal', activitySource:'user', sunExposure:'shade', groundContact:'none' };
+  const session = lockItem(createSession('weather_lock'),{ slot:'outer', itemId:'light_transition_jacket' });
+  const result = recommendOutfit(request(context,{
+    w:weather(18,{ windSpeedKmh:40 }),
+    session
+  }));
+  assert.equal(slot(result,'outer').selected.itemId,'light_transition_jacket');
+  assert.equal(slot(result,'outer').selected.selectionSource,'manual_lock');
+  assert.equal(result.status,'partial');
+  assert.equal(result.phases.find((phase) => phase.phase === 'main')?.status,'partial');
+  const notice = result.notices.find((entry) => entry.code === 'MANUAL_LOCK_LIMITS_WEATHER_PROTECTION');
+  assert.ok(notice);
+  assert.equal(notice.data.conflicts.some((conflict) => conflict.slot === 'outer'),true);
+});
+
+test('manual footwear lock that is not weatherproof stays locked but makes rainy walking partial', () => {
+  const context = { mode:'outdoor', plannedMinutes:60, activity:'normal', activitySource:'user', sunExposure:'shade', groundContact:'walking' };
+  const session = lockItem(createSession('rainy_footwear_lock'),{ slot:'footwear', itemId:'light_shoes' });
+  const result = recommendOutfit(request(context,{
+    w:weather(18,{ precipProbabilityPct:80 }),
+    session
+  }));
+  assert.equal(slot(result,'footwear').selected.itemId,'light_shoes');
+  assert.equal(slot(result,'footwear').selected.selectionSource,'manual_lock');
+  assert.equal(result.status,'partial');
+  assert.equal(result.phases.find((phase) => phase.phase === 'main')?.status,'partial');
+  const notice = result.notices.find((entry) => entry.code === 'MANUAL_LOCK_LIMITS_WEATHER_PROTECTION');
+  assert.ok(notice);
+  assert.equal(notice.data.conflicts.some((conflict) => conflict.slot === 'footwear'),true);
 });
