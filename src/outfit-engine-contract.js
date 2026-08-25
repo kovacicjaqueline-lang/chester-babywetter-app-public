@@ -141,13 +141,27 @@ function missingWeatherWindowFields(weather,plannedMinutes) {
     .filter((point) => Date.parse(point.time) > start)
     .sort((a,b) => Date.parse(a.time) - Date.parse(b.time));
   const inWindow = validHourly.filter((point) => Date.parse(point.time) <= end);
-  const firstAtOrAfterEnd = validHourly.find((point) => Date.parse(point.time) >= end) ?? null;
 
   const missing = [];
-  // Hourly data is discrete. A point at/just after the window end can bracket a short interval
-  // (for example a 5-minute car transition) without being included in hazard calculations outside that interval.
-  const coverageAnchorMs = firstAtOrAfterEnd ? Date.parse(firstAtOrAfterEnd.time) : null;
-  const hasHourlyCoverage = coverageAnchorMs != null && coverageAnchorMs - end <= 60 * 60000;
+  // Hourly data is discrete. Require evidence that a future hourly series exists and
+  // that no part of the planned interval has a gap larger than one hourly step.
+  // A point just after a very short interval can establish series coverage without
+  // contributing weather hazards outside the requested window.
+  const firstFutureMs = validHourly.length ? Date.parse(validHourly[0].time) : null;
+  let hasHourlyCoverage = firstFutureMs != null && firstFutureMs - start <= 60 * 60000;
+  let previousMs = start;
+  if (hasHourlyCoverage) {
+    for (const point of inWindow) {
+      const pointMs = Date.parse(point.time);
+      if (pointMs - previousMs > 60 * 60000) {
+        hasHourlyCoverage = false;
+        break;
+      }
+      previousMs = pointMs;
+    }
+  }
+  if (hasHourlyCoverage && end - previousMs > 60 * 60000) hasHourlyCoverage = false;
+
   if (!hasHourlyCoverage) missing.push('weather.hourly.coverage');
   if (inWindow.some((point) => !Number.isFinite(point.precipProbabilityPct))) missing.push('weather.hourly.precipProbabilityPct');
   if (inWindow.some((point) => !Number.isFinite(point.windSpeedKmh))) missing.push('weather.hourly.windSpeedKmh');
