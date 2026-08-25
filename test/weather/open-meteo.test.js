@@ -124,6 +124,11 @@ test('detects rain, snow, sleet and dry conditions without outfit thresholds', (
   assert.equal(detectPrecipitationType({ rain: null, snowfall: null, precipitation: null, weatherCode: null }), 'unknown');
 });
 
+test('normalizes freezing-rain WMO codes as rain while preserving the exact weather code separately', () => {
+  assert.equal(detectPrecipitationType({ rain: null, showers: null, snowfall: null, precipitation: null, weatherCode: 66 }), 'rain');
+  assert.equal(detectPrecipitationType({ rain: null, showers: null, snowfall: null, precipitation: null, weatherCode: 67 }), 'rain');
+});
+
 test('maps UV values independently of precipitation detection', () => {
   const data = fixture();
   data.hourly.uv_index[1] = 6.7;
