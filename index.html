@@ -54,33 +54,29 @@
             <p class="eyebrow">Empfehlung</p>
             <h1 id="outfitHeading">So passt es jetzt</h1>
           </div>
-          <span class="confidence-pill" id="confidencePill">Mock · passend</span>
+          <span class="confidence-pill" id="confidencePill" data-status="ready">Mock · passend</span>
         </div>
 
         <div class="warmth-control" role="group" aria-label="Outfit wärmer oder dünner wählen">
-          <button type="button" data-warmth="cooler">Eine Schicht dünner</button>
+          <button type="button" data-warmth="cooler">Dünner</button>
           <button type="button" class="is-active" data-warmth="balanced" aria-pressed="true">Passend</button>
-          <button type="button" data-warmth="warmer">Eine Schicht wärmer</button>
-        </div>
-
-        <div id="assetNotice" class="asset-notice" role="status" hidden>
-          Kleidungsbilder werden aus <code>assets/clothing/manifest.json</code> geladen. Das Asset-Manifest ist auf diesem Parallelbranch noch nicht vorhanden.
+          <button type="button" data-warmth="warmer">Wärmer</button>
         </div>
 
         <div class="outfit-grid" id="outfitGrid" aria-live="polite"></div>
 
         <div class="reason-box">
           <span class="reason-icon" aria-hidden="true">✦</span>
-          <p id="outfitReason">Im Kinderwagen bewegt sich dein Baby wenig. Deshalb ist etwas mehr Isolation sinnvoll, ohne unnötig viele dicke Schichten zu stapeln.</p>
+          <p id="outfitReason">Im Kinderwagen bewegt sich dein Baby wenig. Deshalb ist etwas mehr Isolation sinnvoll.</p>
         </div>
 
-        <div id="safetyNotice" class="safety-notice" hidden></div>
+        <div id="safetyNotice" class="safety-notice" aria-live="polite" hidden></div>
 
         <div class="neck-check">
           <div class="neck-icon" aria-hidden="true">☁</div>
           <div>
             <h2>Nackentest</h2>
-            <p>Warm und trocken? Dann passt es. Heiß oder schwitzig: eine Schicht weniger. Kühl: eine passende Schicht ergänzen.</p>
+            <p>Warm & trocken: passt. Heiß/schwitzig: dünner. Kühl: wärmer.</p>
             <p class="fine-print">Kalte Hände oder Füße allein sind kein zuverlässiger Friernachweis.</p>
           </div>
         </div>
@@ -95,6 +91,10 @@
         </div>
         <div class="hourly-scroll" id="hourlyForecast" tabindex="0" aria-label="Stündliche Wettervorschau"></div>
       </section>
+
+      <div id="assetNotice" class="asset-notice" role="status" hidden>
+        Kleidungsbilder werden aus <code>assets/clothing/manifest.json</code> geladen. Das Asset-Manifest ist auf diesem Parallelbranch noch nicht vorhanden.
+      </div>
 
       <section class="card quick-actions" aria-labelledby="quickHeading">
         <h2 id="quickHeading" class="visually-hidden">Weitere Bereiche</h2>
@@ -151,13 +151,15 @@
   </dialog>
 
   <dialog id="situationDialog" class="sheet-dialog" aria-labelledby="situationTitle">
-    <form method="dialog" class="sheet">
+    <div class="sheet">
       <header class="sheet-header">
         <div><p class="eyebrow">Kontext</p><h2 id="situationTitle">Situation wählen</h2></div>
-        <button class="icon-button" value="cancel" aria-label="Situation schließen">×</button>
+        <button class="icon-button" type="button" data-close-dialog="situationDialog" aria-label="Situation schließen">×</button>
       </header>
       <div class="situation-options" id="situationOptions"></div>
-    </form>
+      <div id="situationContextFields" class="situation-context" aria-live="polite"></div>
+      <button class="primary-button apply-situation" type="button" id="applySituationButton">Übernehmen</button>
+    </div>
   </dialog>
 
   <dialog id="catalogDialog" class="sheet-dialog" aria-labelledby="catalogTitle">
@@ -224,10 +226,10 @@
       <ul class="safety-list">
         <li><strong>Nackentest zuerst:</strong> warm und trocken passt; heiß/schwitzig bedeutet weniger, kühl bedeutet mehr Isolation.</li>
         <li>Kalte Hände oder Füße allein sind kein zuverlässiger Friernachweis.</li>
-        <li><strong>Autositz:</strong> keine voluminöse Jacke und keinen Winteroverall unter dem Gurt. Zusätzliche Wärme nur sicher über dem geschlossenen Gurt.</li>
+        <li><strong>Autositz:</strong> keine voluminöse Jacke und keinen Winteroverall unter dem Gurt. Die Innenraumtemperatur darf als Schätzwert verwendet werden, muss dann aber als Schätzung erkennbar sein.</li>
         <li><strong>Trage:</strong> Körperwärme und Trage zählen als zusätzliche Wärme am Rumpf; exponierte Bereiche separat schützen.</li>
-        <li><strong>Kinderwagen:</strong> bei Kälte oft mehr Isolation, aber nie den Wagen mit einer luftstromhemmenden Decke abdecken.</li>
-        <li><strong>Schlafen:</strong> keine Mütze, keine lose Decke über dem Schlafsack. Raumtemperatur und Herstellerangaben sind maßgeblich, nicht das Außenwetter.</li>
+        <li><strong>Kinderwagen:</strong> bei Kälte oft mehr Isolation. Bei Sonne Sonnensegel oder Parasol verwenden; niemals Decke oder Mulltuch als luftstromhemmende Abdeckung über den Wagen spannen.</li>
+        <li><strong>Schlafen:</strong> keine Mütze, keine lose Decke über dem Schlafsack. Raumtemperatur und konkrete Herstellerangaben sind maßgeblich, nicht das Außenwetter.</li>
       </ul>
       <p class="dialog-note">Die App ist eine Entscheidungshilfe und keine medizinische Anwendung. Sie kann thermischen Komfort nicht garantieren.</p>
     </div>
