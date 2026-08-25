@@ -15,26 +15,40 @@ Die Engine bewertet Regeln in folgender Reihenfolge:
 5. **Aktivitätsmodifikator**
 6. **Persönlicher Wärme-Bias**
 7. **Nackentest-Korrektur**
-8. **Stilvariante** – ausschließlich Darstellung, niemals Fachlogik
+8. **Stilvariante** – ausschließlich Darstellung
 
 Eine niedrigere Priorität darf eine höhere nicht aufheben.
 
-Beispiel: Sehr kaltes Wetter darf im Auto nicht dazu führen, dass ein dicker Winteroverall unter dem Autositzgurt empfohlen wird.
+Beispiel: Sehr kaltes Wetter darf im Auto nie zu einem Winteroverall unter dem Autositzgurt führen.
 
-## 2. Begriffe
+## 2. Geltungsbereich
 
-### 2.1 Thermischer Schritt
+V1 gilt für Babys im Alter von **0 bis einschließlich 24 Monaten**.
 
-Ein `thermalStep` ist eine interne Heuristik, mit der die Engine eine Empfehlung um ungefähr eine leichte Isolationsstufe wärmer oder kühler verschiebt.
+Altersabhängig ist in V1 vor allem die Sonnen-Sicherheitsregel:
 
-Ein Schritt bedeutet **nicht** automatisch ein zusätzliches Kleidungsstück. Die Engine kann zum Beispiel:
+- `<12 Monate`: direkte Sonne möglichst vermeiden und Schatten priorisieren,
+- Alter unbekannt: bei direkter Sonne konservativ wie `<12 Monate` behandeln.
 
-- von T-Shirt auf Langarmshirt wechseln,
+Die Wärmelogik selbst bleibt innerhalb des V1-Altersbereichs grundsätzlich geschlechtsneutral und wird nicht allein aus dem Alter abgeleitet.
+
+## 3. Begriffe
+
+### 3.1 Thermischer Schritt
+
+Ein `thermalStep` ist eine interne Produktheuristik, mit der eine Empfehlung ungefähr um eine leichte Isolationsstufe wärmer oder kühler verschoben wird.
+
+Ein Schritt bedeutet nicht automatisch ein zusätzliches Kleidungsstück. Die Engine kann zum Beispiel:
+
+- Kurzarmbody gegen Langarmbody tauschen,
+- T-Shirt gegen Langarmshirt tauschen,
 - einen dünnen Pullover ergänzen,
-- eine leichte Jacke gegen eine wärmere ersetzen,
-- im Kinderwagen externe Isolation statt zusätzlicher Kleidung verwenden.
+- eine Jacke durch eine wärmere ersetzen,
+- im Kinderwagen externe Isolation statt zusätzlicher Körperkleidung verwenden.
 
-### 2.2 Schichten
+`thermalStep` ist kein medizinischer Messwert.
+
+### 3.2 Schichten
 
 - `base`: körpernahe Basisschicht
 - `legs`: Beinbekleidung
@@ -43,19 +57,21 @@ Ein Schritt bedeutet **nicht** automatisch ein zusätzliches Kleidungsstück. Di
 - `accessory`: Mütze, Sonnenhut, Handschuhe, Socken
 - `external`: Fußsack oder beaufsichtigte Decke außerhalb des Schlafbetts
 
-### 2.3 Temperaturgrundlage
+### 3.3 Thermische Referenz
 
-`effectiveTempC` wird folgendermaßen bestimmt:
+Die Regelengine verwendet `thermalReferenceC`.
 
-1. Wenn die Wetterquelle einen belastbaren `feelsLikeC`-Wert liefert, wird dieser als thermische Baseline verwendet.
-2. Andernfalls wird `airTempC` verwendet und Wind kann als eigener Kältemodifikator wirken.
-3. Wind darf nicht ein zweites Mal als zusätzlicher Temperaturabschlag gerechnet werden, wenn `feelsLikeC` ihn bereits enthält.
+1. Ist ein normalisierter `apparentTempC` vorhanden und vom Wetteradapter als `apparentTempTrusted: true` markiert, kann er `thermalReferenceC` liefern.
+2. Andernfalls wird `airTempC` verwendet.
+3. Metadaten `apparentTempIncludes` geben an, welche Faktoren bereits enthalten sind: `wind`, `humidity`, `sun`.
+4. Ein bereits enthaltener Faktor darf thermisch nicht ein zweites Mal verrechnet werden.
+5. Schutzfunktion und thermische Wirkung sind getrennt: Auch wenn Wind bereits in `apparentTempC` steckt, kann eine winddichte Außenschicht nötig sein.
 
-Direkte Sonne wird nicht pauschal in Grad Celsius umgerechnet. Sie kann die Überhitzungsgefahr erhöhen und verändert vor allem die Auswahl von Sonnenschutz und Isolation.
+Es gibt **keine generelle Regel**, dass jeder Providerwert namens `feelsLike` automatisch vertrauenswürdig oder baby-spezifisch ist.
 
-## 3. Zwiebelprinzip
+## 4. Zwiebelprinzip
 
-Die Engine bevorzugt mehrere funktional getrennte Schichten:
+Die Engine bevorzugt funktional getrennte Schichten:
 
 1. atmungsaktive Basisschicht,
 2. bei Bedarf isolierende Mittelschicht,
@@ -65,26 +81,27 @@ Die Engine bevorzugt mehrere funktional getrennte Schichten:
 
 Regeln:
 
-- Eine Regenjacke ist primär Nässeschutz und darf nicht automatisch als warme Schicht zählen.
-- Eine Softshelljacke ist windschützend und leicht bis mittel isolierend.
-- Fleece ist stark isolierend, aber allein nicht zuverlässig winddicht.
-- Ein Winteroverall ist eine starke Außenschicht und darf nicht unter dem Autositzgurt verwendet werden.
-- Ein Fußsack zählt als externe Isolation und darf im Kinderwagen zusätzliche Kleidung teilweise ersetzen.
+- Regenjacke ist primär Nässeschutz und zählt nicht automatisch als starke Wärmeschicht.
+- Softshell ist typischerweise windschützend und leicht bis mittel isolierend; konkrete Katalogeigenschaften entscheiden.
+- Fleece isoliert, ist aber nicht automatisch winddicht.
+- Winteroverall ist eine starke Außenschicht und unter dem Autositzgurt verboten.
+- Fußsack zählt als externe Isolation und kann im Kinderwagen Körperkleidung teilweise ersetzen.
+- Bei Hitze darf UV-Schutz durch Ersatz leichter Kleidungsstücke erfolgen statt durch zusätzliche schwere Schichten.
 
-## 4. Thermische Baseline nach Temperaturbereich
+## 5. Thermische Baseline nach Temperaturbereich
 
-Die folgende Tabelle ist eine **Produktheuristik**, keine medizinische oder universelle Bekleidungsnorm. Sie ist der Startpunkt für ein durchschnittlich wärmeempfindliches Baby im Modus `outdoor`, bei normaler Aktivität, trockenem Wetter und ohne starke direkte Sonne.
+Die folgenden Bänder sind **Produktheuristiken**, keine medizinische oder universelle Bekleidungsnorm. Sie sind Startpunkte für `outdoor`, normale Aktivität, trockenes Wetter und keine starke direkte Sonne.
 
 ### >= 28 °C – sehr warm
 
-Ziel: Überhitzung vermeiden, Sonnenschutz durch leichte Bedeckung statt zusätzliche Isolation.
+Ziel: Überhitzung vermeiden.
 
 Mögliche Baseline:
 
 - Kurzarmbody **oder** leichtes T-Shirt,
-- Windel; optional sehr leichte, luftige Hose/Shorts abhängig von Sonnenschutz und Situation,
-- leichte Socken nur bei Bedarf,
-- Sonnenhut bei relevanter Sonnen-/UV-Exposition.
+- Windel; optional sehr leichte, luftige Hose/Shorts je nach Sonnenschutz,
+- Socken nur bei Bedarf,
+- Sonnenhut bei relevanter Sonne/UV.
 
 Keine thermische Mittelschicht und keine isolierende Außenschicht.
 
@@ -94,10 +111,10 @@ Mögliche Baseline:
 
 - Kurzarmbody oder T-Shirt,
 - leichte Hose/Leggings,
-- dünne Socken,
+- dünne Socken optional,
 - Sonnenhut bei Sonne/UV.
 
-Eine Langarmschicht kann als leichter UV-Schutz statt einer zusätzlichen Wärmeschicht sinnvoll sein; Material und Luftigkeit müssen dafür geeignet sein.
+Leichte langärmelige Bedeckung kann ein kurzärmeliges Teil **ersetzen**, wenn UV-Schutz nötig ist.
 
 ### 20 bis < 24 °C – mild
 
@@ -124,10 +141,10 @@ Mögliche Baseline:
 
 - Langarmbody,
 - Hose oder wärmere Leggings,
-- dünner Pullover oder Fleece als Mittelschicht,
+- dünner Pullover oder Fleece,
 - Übergangs-/Softshelljacke,
 - Socken,
-- dünne oder wärmere Mütze abhängig von Wind und Exposition.
+- dünne oder wärmere Mütze je nach Wind/Exposition.
 
 ### 8 bis < 12 °C – kalt
 
@@ -153,9 +170,9 @@ Mögliche Baseline:
 - warme Mütze,
 - Handschuhe.
 
-Im Kinderwagen ist zusätzliche externe Isolation häufig sinnvoller als immer mehr Kleidung am Körper.
+Im Kinderwagen ist zusätzliche externe Isolation oft sinnvoller als immer mehr Kleidung am Körper.
 
-### < 3 °C – extreme Kälte für das V1-Regelmodell
+### < 3 °C – Modell-Grenzbereich
 
 Mögliche Baseline:
 
@@ -165,22 +182,20 @@ Mögliche Baseline:
 - warme Mütze,
 - Handschuhe,
 - warme Fußisolation,
-- im Kinderwagen geeigneter Fußsack bzw. externe Isolation.
+- im Kinderwagen geeigneter Fußsack/externe Isolation.
 
-Die Engine soll hier zusätzlich einen Hinweis auf begrenzte Expositionsdauer, häufige Temperaturkontrolle und Nackentest geben, statt unbegrenzt weitere Schichten zu addieren.
+Die Engine soll hier nicht unbegrenzt Schichten addieren. Zusätzlich sind engmaschiger Nackentest und ein Hinweis auf begrenzte Exposition sinnvoll.
 
-### Offene Entscheidung R-01 – Temperaturband-Grenzen
+### Offene Kalibrierung R-01 – Temperaturband-Grenzen
 
-**OFFEN:** Die Bandgrenzen sind eine initiale Produktheuristik und müssen vor produktiver Freigabe mit realen Testfällen geprüft werden. Besonders 20–24 °C und 16–20 °C können je nach Aktivität, Material und Situation unterschiedliche Kombinationen benötigen.
+**OFFEN:** Die Bandgrenzen müssen vor Produktfreigabe anhand konkreter Testfälle validiert werden. Änderungen an diesen Grenzen ändern keine harte Sicherheitsregel.
 
-## 5. Aktivität
-
-Aktivität verändert die Wärmeproduktion.
+## 6. Aktivität
 
 ### `passive`
 
 Beispiele: ruhiges Liegen/Sitzen draußen.  
-Wirkung: `+1 thermalStep`, sofern nicht bereits ein situationsspezifischer Modus denselben Effekt abbildet.
+Startheuristik: `+1 thermalStep`, sofern die Situation denselben Effekt nicht bereits enthält.
 
 ### `normal`
 
@@ -188,98 +203,101 @@ Keine Korrektur.
 
 ### `active`
 
-Beispiele: viel Bewegung bei einem mobilen älteren Baby.  
-Wirkung: `-1 thermalStep` als Ausgangspunkt.
+Beispiele: viel Bewegung bei mobilem älteren Baby.  
+Startheuristik: `-1 thermalStep`.
 
-Die Engine darf Aktivität nicht doppelt berücksichtigen. Im Kinderwagen ist `passive` typischerweise implizit; in der Trage wird der Wärmeeffekt primär über Körperwärme modelliert.
+Keine Doppelzählung:
 
-### Offene Entscheidung R-02 – Altersabhängige Aktivität
+- `stroller` modelliert geringe Aktivität bereits situationsspezifisch,
+- `carrier` modelliert Körperwärme primär über die Situation,
+- Alter allein setzt keine Aktivitätsstufe.
 
-**OFFEN:** Solange der freigegebene Altersbereich nicht feststeht, gibt es keine automatische Aktivitätsannahme aus dem Alter allein.
+## 7. Wind
 
-## 6. Wind
+Wind beeinflusst Wärmeverlust und den Bedarf nach windschützender Kleidung.
 
-Wind beeinflusst Wärmeverlust und die Notwendigkeit einer winddichten Außenschicht.
+### Wenn vertrauenswürdige scheinbare Temperatur Wind bereits enthält
 
-### Wenn `feelsLikeC` Wind bereits berücksichtigt
+- kein zusätzlicher thermischer Windabschlag,
+- Windstärke bleibt für die Wahl winddichter Kleidung relevant.
 
-- keine zusätzliche Temperaturabsenkung,
-- trotzdem bei deutlich spürbarem Wind windschützende Außenschicht priorisieren.
+### Wenn Wind thermisch noch nicht enthalten ist
 
-### Wenn nur `airTempC` vorliegt
+V1-Startheuristik:
 
-V1-Heuristik:
+- `<15 km/h`: kein pauschaler thermischer Schritt,
+- `15–29 km/h`: bei exponiertem Baby `+1 thermalStep` **oder** winddichte Außenschicht abhängig von vorhandenen Layers,
+- `>=30 km/h`: winddichte Außenschicht für exponierte Bereiche priorisieren; zusätzlicher thermischer Schritt möglich.
 
-- < 15 km/h: kein pauschaler thermischer Schritt,
-- 15–29 km/h: bei exponiertem Baby `+1 thermalStep` oder winddichte Außenschicht,
-- >= 30 km/h: winddichte Außenschicht verpflichtend für exponierte Bereiche; zusätzlich `+1 thermalStep` möglich.
+Kinderwagen-Windschutz reduziert direkte Exposition, darf aber nicht luftdicht schließen.
 
-Kinderwagen mit wirksamem Windschutz reduziert die direkte Windwirkung, darf aber nicht luftdicht geschlossen werden.
+### Offene Kalibrierung R-02 – Windschwellen
 
-### Offene Entscheidung R-03 – Windschwellen
+**OFFEN:** Schwellen müssen mit Wetteranbieter, Testfällen und konkreten Katalogeigenschaften abgestimmt werden.
 
-**OFFEN:** Die Schwellen dienen der Produktlogik und müssen gegen den gewählten Wetteranbieter sowie dessen Definition von `feelsLike` geprüft werden.
+## 8. Regen und Nässe
 
-## 7. Regen und Nässe
-
-Regen verändert zunächst den Nässeschutz, nicht automatisch die Wärmestufe.
+Regen verändert primär Nässeschutz, nicht automatisch Wärmestufe.
 
 Regeln:
 
-- bei relevantem Regen eine wasserschützende Außenschicht ergänzen,
+- bei relevantem Regen wasserschützende Außenschicht ergänzen,
 - bei warmem Wetter keine unnötig isolierende Regenkleidung erzeugen,
 - bei kühlem Wetter nasse Kleidung vermeiden bzw. Wechselkleidung empfehlen,
-- `Regenjacke` kann über einer passenden thermischen Kombination liegen,
-- `Softshell` reicht nur dann als Regenschutz, wenn die konkrete Katalogvariante dafür vorgesehen ist.
+- Regenjacke kann über einer thermisch passenden Kombination liegen,
+- Softshell zählt nur dann als ausreichender Regenschutz, wenn die konkrete Katalogdefinition dies zulässt.
 
-Mögliche Auslöser:
+Mögliche Trigger:
 
-- `precipProbabilityPct >= 50` und Aufenthalt im Freien geplant,
+- `precipProbabilityPct >= 50` und geplanter Aufenthalt im Freien,
 - `precipMm > 0`,
 - Wettercode meldet Regen/Schneeregen/Schnee.
 
-### Offene Entscheidung R-04 – Niederschlagsgrenze
+### Offene Kalibrierung R-03 – Niederschlagsgrenze
 
-**OFFEN:** Ob 50 % Wahrscheinlichkeit oder eine andere Schwelle produktiv verwendet wird, ist noch festzulegen.
+**OFFEN:** Die produktive Wahrscheinlichkeitsschwelle muss noch festgelegt werden.
 
-## 8. Sonne und UV
+## 9. Sonne und UV
 
-UV-Schutz und Wärmeschutz sind getrennte Dimensionen.
+UV-Schutz und Wärmeschutz werden getrennt bewertet.
 
-### UV-Index 0–2
+### 9.1 Altersregel
 
-Kein automatischer zusätzlicher UV-Layer allein aufgrund des Index. Direkte starke Sonne, Alter und Aufenthaltsdauer können trotzdem Sonnenschutz erfordern.
+Für Babys `<12 Monate`:
 
-### UV-Index >= 3
+- direkte Sonne möglichst vermeiden,
+- Schatten priorisieren,
+- dies gilt unabhängig davon, ob der UV-Index gerade unter 3 liegt.
 
-Die Engine soll Schutzmaßnahmen aktiv einplanen:
+Bei unbekanntem Alter und `sunExposure: direct` gilt derselbe konservative Fallback.
+
+### 9.2 UV-Index 0–2
+
+Kein zusätzlicher UV-Layer allein aufgrund des Index. Die Altersregel und tatsächliche direkte Sonne können trotzdem Schatten und Schutz erfordern.
+
+### 9.3 UV-Index >= 3
+
+Aktiven Schutz einplanen:
 
 - Schatten priorisieren,
 - Sonnenhut,
 - leichte hautbedeckende Kleidung, wenn thermisch vertretbar,
 - keine zusätzliche schwere Schicht nur für UV-Schutz.
 
-Bei warmem Wetter soll eher ein leichtes langärmeliges Teil anstelle eines zusätzlichen Layers verwendet werden.
+Bei warmem Wetter wird bevorzugt ein leichtes langärmeliges Teil **anstelle** eines zusätzlichen Layers verwendet.
 
-Bei starker Sonne im Kinderwagen:
+### 9.4 Kinderwagen in Sonne
 
 - Sonnenschutz/Parasol statt Decke oder Mulltuch über dem Wagen,
 - Luftzirkulation erhalten,
-- häufige Kontrolle von Brust/Nacken.
+- Brust/Nacken häufiger prüfen,
+- bei Wärme keine pauschale zusätzliche Kinderwagen-Isolation.
 
-Für sehr junge Babys muss direkte Sonne besonders konsequent vermieden werden. Die genaue Alterskommunikation wird erst nach Festlegung des unterstützten Altersbereichs finalisiert.
+## 10. Situation `outdoor`
 
-### Offene Entscheidung R-05 – Altersgrenzen Sonnenlogik
+Reihenfolge:
 
-**OFFEN:** NHS und WHO formulieren teilweise unterschiedliche Altersgrenzen für besonders strikten Schatten. Vor Produktfreigabe ist festzulegen, welche Leitlinie für die App normativ verwendet wird.
-
-## 9. Situation `outdoor`
-
-`outdoor` ist die Baseline-Situation.
-
-Thermische Reihenfolge:
-
-1. `effectiveTempC`,
+1. `thermalReferenceC`,
 2. Aktivität,
 3. Wind,
 4. Regen,
@@ -287,52 +305,51 @@ Thermische Reihenfolge:
 6. persönlicher Bias,
 7. Nackentest.
 
-Es gibt keine pauschale Regel `Baby immer eine Schicht mehr als Erwachsene`. Eine solche Faustregel ist zu ungenau für die App und wird höchstens als Hintergrundwissen, nicht als Algorithmus verwendet.
+Es gibt keine Algorithmusregel `Baby immer eine Schicht mehr als Erwachsene`.
 
-## 10. Situation `stroller`
+## 11. Situation `stroller`
 
 Der Kinderwagen kombiniert geringe Eigenaktivität mit optionalem Windschutz und externer Isolation.
 
 ### Baseline
 
-- typischerweise `+1 thermalStep` gegenüber aktivem Aufenthalt im Freien,
-- nicht zusätzlich `passive +1` rechnen, wenn `stroller` diesen Effekt bereits enthält.
+- typischerweise `+1 thermalStep` gegenüber aktivem Outdoor-Aufenthalt,
+- `passive +1` nicht zusätzlich rechnen, wenn `stroller` diesen Effekt bereits enthält.
 
 ### Fußsack / Decke
-
-Externe Isolation zählt in die Gesamtwärme ein und soll Körperkleidung ersetzen können.
 
 V1-Modell:
 
 - `none`: 0 externe Schritte,
-- `light`: +1 externer Isolationsschritt,
-- `medium`: noch offen,
-- `warm`: noch offen.
+- `light`: vorläufig +1 externer Isolationsschritt,
+- `medium`: offen,
+- `warm`: offen.
 
 Keine TOG-Werte für Fußsäcke erfinden.
 
-### Hitze-/Sonnenregel
+### Wärme-/Sonnenregel
 
-Bei warmer Witterung und direkter Sonne kann der Wagen Wärme stauen. Daher:
-
-- keine pauschale `+1`-Erwärmung bei bereits heißer Umgebung,
-- bei `effectiveTempC >= 24 °C` Kinderwagenmodifikator auf maximal neutral begrenzen,
-- bei starker direkter Sonne Isolation reduzieren,
-- Wagen nicht mit luftstromhemmender Decke/Tuch abdecken.
+- bei `thermalReferenceC >= 24 °C` Kinderwagen-Wärmemodifikator auf maximal neutral begrenzen,
+- bei direkter Sonne Isolation reduzieren,
+- Kinderwagen nicht mit luftstromhemmender Abdeckung überdecken.
 
 ### Schlaf im Kinderwagen
 
-Wenn ein Baby im Kinderwagen einschläft, bleibt der Modus fachlich `stroller`, solange es sich nicht um den regulären Indoor-Schlafplatz handelt. Für längeren bzw. regulären Schlaf gelten zusätzlich sichere Schlafbedingungen und Herstellerangaben des Wagens.
+Einschlafen im Kinderwagen macht den Modus nicht automatisch zu `sleep`. Für regulären/längeren Schlaf gelten zusätzlich Herstellerangaben und sichere Schlafbedingungen des konkreten Wagens.
 
-## 11. Situation `carrier`
+### Offene Kalibrierung R-04 – externe Isolation
 
-Die tragende Person und die Trage liefern zusätzliche Wärme am bedeckten Körper.
+**OFFEN:** `medium` und `warm` müssen fachlich kalibriert werden.
+
+## 12. Situation `carrier`
+
+Die tragende Person und die Trage liefern zusätzliche Wärme am bedeckten Rumpf.
 
 ### Baseline
 
 - am Rumpf `-1 thermalStep` gegenüber `outdoor` als Startheuristik,
-- keine dicke isolierende Schicht zwischen Baby und tragender Person, wenn beide bereits durch Trage/Körperkontakt ausreichend isoliert sind,
-- Jacke oder Tragecover der tragenden Person zählt als zusätzliche äußere Isolation.
+- keine unnötige dicke Schicht zwischen Baby und tragender Person,
+- Tragecover oder Jacke der tragenden Person zählt als zusätzliche äußere Isolation.
 
 ### Exponierte Körperzonen
 
@@ -343,161 +360,157 @@ Separat schützen:
 - Füße,
 - gegebenenfalls Hände.
 
-Eine Mütze kann trotz reduzierter Rumpfschichten notwendig sein.
-
 ### Hitze
 
-Bei warmem Wetter erhöht Körperkontakt die Überhitzungsgefahr. Nackentest häufiger einplanen und am Rumpf eher weniger als mehr isolieren.
+Bei warmem Wetter erhöht Körperkontakt die Überhitzungsgefahr. Am Rumpf eher weniger isolieren und Nackentest häufiger einplanen.
 
-### Offene Entscheidung R-06 – Tragecover
+### Offene Kalibrierung R-05 – Tragecover
 
-**OFFEN:** Tragecover sollen später als eigenes Katalogelement mit `thermalWeight` erfasst werden. Bis dahin darf die Engine nur `none | light | warm` als manuelle Angabe verwenden.
+**OFFEN:** thermische Bewertung `light | warm` muss anhand konkreter Produkte/Testfälle kalibriert werden.
 
-## 12. Situation `car`
+## 13. Situation `car`
 
-### Temperaturquelle
+Der Automodus hat zwei Phasen.
 
-Wenn bekannt, wird `cabinTempC` verwendet. Außentemperatur dient nur zum Übergang vom Haus zum Auto bzw. vom Auto nach draußen.
+### 13.1 `outdoor_transition`
 
-Wenn `cabinTempC` unbekannt ist, muss die Empfehlung zwei Phasen unterscheiden können:
+Optionaler Weg zum/vom Auto.
 
-1. Weg zum Auto,
-2. Fahrt im angeschnallten Autositz.
+- nutzt Außenwetter, wenn vorhanden,
+- darf draußen Winteroverall/warme Jacke empfehlen,
+- muss beim Wechsel zu `in_car` explizit anzeigen, welche voluminöse Schicht vor dem Anschnallen auszuziehen ist.
 
-### Harte Gurtsicherheitsregeln
+### 13.2 `in_car`
 
-Unter dem Gurt nicht zulässig:
+Für die angeschnallte Fahrt wird `cabinTempC` verwendet, wenn bekannt.
 
-- dicker Winteroverall,
+Wenn nur die Fahrt bewertet wird und `cabinTempC` vorhanden ist, sind Außenwetterdaten nicht Pflicht.
+
+Wenn Außenwetter für den Übergang fehlt:
+
+- `in_car` kann `ready` sein,
+- `outdoor_transition` wird `partial`/nicht berechnet.
+
+### 13.3 Autositz-Kompatibilität
+
+Jedes relevante Kleidungsstück hat:
+
+- `allowed`: darf unter dem Gurt automatisch empfohlen werden,
+- `conditional`: nicht automatisch unter dem Gurt auswählen; nur als bedingte Alternative mit Hinweis, dass der Gurt weiterhin korrekt eng anliegen muss,
+- `prohibited`: nie unter dem Gurt.
+
+Beispiele:
+
+- dünner körpernaher Body: `allowed`,
+- dünne, konkret als nicht voluminös definierte Fleecevariante: kann `allowed` sein,
+- nicht genauer spezifizierte Fleecejacke: `conditional`,
+- voluminöse Daunenjacke/Winteroverall: `prohibited`.
+
+### 13.4 Harte Gurtsicherheitsregeln
+
+Unter dem Gurt verboten:
+
+- Winteroverall,
 - voluminöse Daunen-/Steppjacke,
-- stark komprimierbare dicke Fleece-/Polsterschicht, sofern sie den korrekten Gurtverlauf beeinträchtigt.
-
-Bevorzugt:
-
-- dünne körpernahe Schichten,
-- dünner Pullover,
-- dünne Fleecejacke nur wenn Gurt weiterhin korrekt eng anliegt,
-- Mütze, Socken/Booties bei Bedarf.
+- stark komprimierbare dicke Polsterschicht.
 
 Zusätzliche Wärme:
 
+- dünne zugelassene Schichten unter dem Gurt,
 - Decke oder Jacke **über** dem bereits korrekt geschlossenen Gurt,
-- niemals unter den Gurt stopfen.
+- niemals zusätzliche dicke Schicht unter den geschlossenen Gurt stopfen.
 
-Die App darf `winter_overall` im `car`-Outfit nicht als `under_harness` ausgeben.
+## 14. Situation `sleep`
 
-## 13. Situation `sleep`
+Schlafen verwendet ein separates Modell.
 
-Schlafen verwendet ein getrenntes Modell.
+### 14.1 Pflichtinput
 
-### 13.1 Eingaben
-
-Pflicht:
-
-- `roomTempC`.
+- `roomTempC` für eine vollständige Empfehlung.
 
 Optional:
 
-- vorhandene Schlafsäcke mit TOG,
-- Schlafkleidungsinventar,
+- ausgewählter Schlafsack,
+- TOG als Produkteigenschaft,
+- konkrete Hersteller-Temperatur-/Unterkleidungsangaben,
 - Nackentest.
 
-Nicht als direkter Regelinput:
+Nicht als direkter thermischer Regelinput:
 
 - Außentemperatur,
 - Wind,
 - UV,
 - Regen.
 
-### 13.2 Harte Schlafregeln
+### 14.2 Harte Schlafregeln
 
 - keine Mütze in Innenräumen beim Schlafen,
 - Kopf frei,
 - keine lose Decke über einem Schlafsack,
 - keine Wärmflasche oder Heizdecke,
-- keine zusätzliche dicke Außenschicht,
+- keine dicke Outdoor-Außenschicht,
 - Schlafsack passend und nach Herstellerangabe verwenden.
 
-### 13.3 Raumtemperatur
+### 14.3 Raumtemperatur
 
-16–20 °C ist der bevorzugte Safer-Sleep-Orientierungsbereich. Die App soll Räume außerhalb dieses Bereichs nicht als automatisch gefährlich deklarieren, sondern die Kleidung anpassen und bei starken Abweichungen vorsichtige Hinweise zeigen.
+16–20 °C ist der Safer-Sleep-Orientierungsbereich. Außerhalb dieses Bereichs darf die App nicht automatisch eine Diagnose oder akute Gefährdung behaupten.
 
-### 13.4 TOG-Logik
+### 14.4 TOG-Logik – normative V1-Entscheidung
 
-TOG beschreibt die Wärmeleistung eines Schlafsacks, ist aber kein allein ausreichender Sicherheitswert. Herstellerangaben haben Vorrang.
+**V1 enthält keine generische TOG-zu-Temperatur-Tabelle.**
 
-Normatives V1-Prinzip:
+Priorität:
 
-1. Wenn für einen Schlafsack ein Hersteller-Temperaturbereich gespeichert ist, **diesen** verwenden.
-2. Wenn nur ein TOG-Wert bekannt ist, darf die App nur einen klar als Orientierung markierten Fallback verwenden.
-3. Nackentest bleibt Kontrollmechanismus.
-4. Nicht `hoher TOG + zusätzliche lose Decke` kombinieren.
+1. Raumtemperatur,
+2. konkrete Herstellerangaben des gewählten Schlafsacks,
+3. dort empfohlene sichere Unterkleidung,
+4. Nackentest.
 
-### 13.5 Vorläufiger TOG-Fallback – nicht final freigegeben
+Wenn strukturierte Herstellerangaben vorhanden sind, darf die App daraus eine konkrete Kombination ableiten.
 
-**OFFENE HEURISTIK, NICHT PRODUKTIV NORMATIV:**
+Wenn nur ein TOG-Wert vorliegt:
 
-- `>= 24 °C`: 0–0.5 TOG oder sehr leichte Schlafbekleidung; Herstellerangabe beachten,
-- `20–<24 °C`: ungefähr 0.5–1.0 TOG,
-- `16–<20 °C`: ungefähr 1.5–2.5 TOG,
-- `<16 °C`: keine automatische Hochskalierung über 2.5 TOG; Raum-/Herstellerhinweis und zusätzliche körpernahe Kleidung statt loser Decken prüfen.
+- TOG darf angezeigt werden,
+- TOG darf nicht allein in eine exakte Unterkleidungs-Kombination umgerechnet werden,
+- Ergebnis muss `partial` sein,
+- keine lose Decke als Ausgleich empfehlen.
 
-Diese Bereiche dürfen erst nach Entscheidung R-07 als produktive Defaults verwendet werden.
+Damit entfällt die frühere offene Entscheidung zu einer generischen TOG-Tabelle.
 
-### Offene Entscheidung R-07 – TOG-Standard
+## 15. Nackentest und Feedback
 
-**OFFEN:** Es gibt keine einzige universelle TOG-Tabelle, die für alle Schlafsackhersteller und Kleidungssets identisch gilt. Vor V1-Freigabe ist eine der folgenden Varianten festzulegen:
-
-- nur Hersteller-Tabellen zulassen,
-- generischen, deutlich als Orientierung gekennzeichneten Fallback verwenden,
-- oder eine kuratierte Liste unterstützter Schlafsacktypen pflegen.
-
-## 14. Nackentest und Feedback
-
-Der Nackentest ist die wichtigste Rückmeldung nach dem Anziehen.
+Der Nackentest ist die wichtigste reale Rückmeldung nach dem Anziehen.
 
 ### `warm_dry`
 
-Bedeutung: Nacken bzw. Brust angenehm warm und trocken.  
-Aktion: Empfehlung bestätigen, keine Schicht ändern.
+- Nacken/Brust angenehm warm und trocken,
+- Outfit beibehalten.
 
 ### `hot_sweaty`
 
-Bedeutung: heiß, feucht oder schwitzig.  
-Aktion:
-
-1. eine isolierende Komponente entfernen oder leichter ersetzen,
-2. harte Schutzfunktion erhalten – z. B. Regenjacke nicht einfach entfernen, sondern thermische Schicht darunter reduzieren,
-3. erneut kontrollieren.
+1. isolierende Komponente entfernen oder leichter ersetzen,
+2. Schutzfunktion erhalten – z. B. Regenjacke nicht einfach entfernen, sondern thermische Schicht darunter reduzieren,
+3. erneut prüfen.
 
 ### `cool`
 
-Bedeutung: Nacken/Brust spürbar kühl.  
-Aktion:
+1. geeignete isolierende Komponente ergänzen oder wärmer ersetzen,
+2. Situation beachten – Kinderwagen kann externe Isolation nutzen; Auto muss Gurtsicherheit erhalten,
+3. erneut prüfen.
 
-1. eine geeignete isolierende Komponente ergänzen oder wärmer ersetzen,
-2. Situation beachten – im Kinderwagen kann externe Isolation sinnvoller sein, im Auto muss Gurtsicherheit erhalten bleiben,
-3. erneut kontrollieren.
+### Hände/Füße
 
-### Hände und Füße
+Kalte Hände/Füße allein verändern die globale thermische Stufe nicht. Gezielte Socken/Booties/Handschuhe sind möglich.
 
-`cold_hands_or_feet` allein verändert die thermische Gesamtstufe **nicht**. Die App darf gezielt Socken/Booties/Handschuhe empfehlen, aber nicht daraus ableiten, dass der ganze Körper friert.
+### Persistenz und Lernen
 
-### Persistente Personalisierung
+**V1 führt keine automatische langfristige Wärmeanpassung aus Nackentestereignissen durch.**
 
-Ein einzelnes Feedback speichert keinen dauerhaften `warmthBias`.
+- Ein Feedback ändert nur die aktuelle Empfehlung.
+- `warmthBias` bleibt manuell gesetzt.
+- Feedback darf optional gespeichert/exportiert werden, hat aber keine automatische Lernwirkung.
 
-Vorschlag für spätere Automatik:
-
-- mindestens 3 vergleichbare Situationen,
-- konsistente Rückmeldung in dieselbe Richtung,
-- keine Schlaf-/Auto-Sicherheitsregel darf dadurch verändert werden.
-
-### Offene Entscheidung R-08 – Feedback-Lernschwelle
-
-**OFFEN:** Anzahl und Vergleichbarkeit der Ereignisse für automatische Personalisierung sind noch festzulegen.
-
-## 15. Persönlicher Wärme-Bias
+## 16. Persönlicher Wärme-Bias
 
 `runs_cool`:
 
@@ -511,61 +524,94 @@ Vorschlag für spätere Automatik:
 
 - maximal `-1 thermalStep`.
 
-Der Bias darf nicht:
+Der Bias darf nie:
 
 - Autositz-Sicherheitsregeln umgehen,
 - Schlafregeln umgehen,
-- Sonnenschutz entfernen, wenn er fachlich erforderlich ist,
+- altersabhängigen Sonnenschutz entfernen,
+- notwendigen UV-Schutz entfernen,
 - extreme Wettergrenzen stillschweigend normalisieren.
 
-## 16. Sicherheitswarnungen als strukturierte Ergebnisse
+## 17. Strukturierte Sicherheitswarnungen
 
-Die Engine soll keine Sicherheitslogik nur als Freitext implementieren. Sie erzeugt strukturierte Hinweise, z. B.:
+Mindestens folgende Codes:
 
-- `CAR_SEAT_NO_BULKY_LAYERS`,
-- `SLEEP_NO_HAT`,
-- `SLEEP_NO_LOOSE_BLANKET_OVER_BAG`,
-- `STROLLER_DO_NOT_COVER_AIRFLOW`,
-- `UV_SHADE_AND_COVERAGE`,
-- `CHECK_NECK`,
-- `EXTREME_COLD_CAUTION`,
-- `EXTREME_HEAT_CAUTION`.
+- `CAR_SEAT_NO_BULKY_LAYERS`
+- `CAR_SEAT_REMOVE_OUTER_BEFORE_HARNESS`
+- `CAR_SEAT_BLANKET_OVER_HARNESS_ONLY`
+- `SLEEP_NO_HAT`
+- `SLEEP_NO_LOOSE_BLANKET_OVER_BAG`
+- `SLEEP_USE_ROOM_TEMPERATURE`
+- `SLEEP_MANUFACTURER_GUIDANCE_REQUIRED`
+- `STROLLER_DO_NOT_COVER_AIRFLOW`
+- `INFANT_UNDER_12M_AVOID_DIRECT_SUN`
+- `UV_SHADE_AND_COVERAGE`
+- `CHECK_NECK`
+- `EXTREME_COLD_CAUTION`
+- `EXTREME_HEAT_CAUTION`
 
-Die spätere UI entscheidet nur über Darstellung und Text, nicht über die fachliche Bedeutung.
+Die UI darf Texte variieren, aber nicht die fachliche Bedeutung verändern.
 
-## 17. Regelkonflikte
-
-Beispiele:
+## 18. Regelkonflikte
 
 ### Kalt + Auto
 
-Thermisch wäre Winteroverall plausibel, Sicherheitsregel verbietet ihn unter dem Gurt. Ergebnis: dünne Schichten + Decke über dem Gurt.
+Outdoor wäre Winteroverall plausibel. Ergebnis:
+
+- `outdoor_transition`: Overall möglich,
+- vor dem Anschnallen entfernen,
+- `in_car`: zugelassene dünne Schichten + bei Bedarf Decke über dem Gurt.
 
 ### Warm + hoher UV
 
-UV verlangt Bedeckung, Hitze verlangt wenige Schichten. Ergebnis: leichte, luftige, hautbedeckende Einzelteile statt zusätzlicher isolierender Schicht.
+UV verlangt Bedeckung, Hitze wenige Schichten. Ergebnis: leichte, luftige, hautbedeckende Einzelteile **anstelle** zusätzlicher isolierender Layers.
+
+### Baby <12 Monate + UV 1 + direkte Sonne
+
+Niedriger UV-Index hebt Altersregel nicht auf. Ergebnis: Schatten priorisieren, direkte Sonne möglichst vermeiden.
 
 ### Kalt + Trage
 
-Kälte verlangt Isolation, Körperwärme reduziert Rumpfbedarf. Ergebnis: Rumpf leichter, exponierte Beine/Füße/Kopf gezielt wärmer.
+Kälte verlangt Isolation, Körperwärme reduziert Rumpfbedarf. Ergebnis: Rumpf leichter, exponierte Beine/Füße/Kopf gezielt schützen.
 
 ### Regen + mild
 
-Regen verlangt Nässeschutz, Temperatur keine zusätzliche Wärme. Ergebnis: leichte Regenaußenschicht über mildem Basisset.
+Nässeschutz ergänzen, ohne automatische zusätzliche Wärmestufe.
 
 ### Schlafen + kalte Außentemperatur
 
-Außentemperatur wird ignoriert. Nur Raumtemperatur und Schlafsystem bestimmen das Outfit.
+Außentemperatur wird als direkter Outfitinput ignoriert. Raumtemperatur und Schlafsystem entscheiden.
 
-## 18. Fachliche offene Entscheidungen – Zusammenfassung
+### TOG bekannt, Herstellerangaben fehlen
+
+Keine generische TOG-Tabelle anwenden. Ergebnis `partial` + sichere Grundregeln + Hinweis auf Herstellerangabe.
+
+## 19. Quellenzuordnung
+
+Normative Sicherheitsregeln beziehen sich auf das Quellenregister in `PRODUCT_CONCEPT.md`:
+
+- Sonne unter 12 Monaten: `SRC-WHO-UV-1`, ergänzend `SRC-NHS-SUN`
+- UV ab Index 3: `SRC-WHO-UV-2`
+- Schlafraum/Nackentest/keine universelle TOG-Tabelle: `SRC-LULLABY-ROOM`, `SRC-LULLABY-DRESS`
+- Autositz ohne voluminöse Kleidung: `SRC-NHTSA-CARSEAT`
+
+Die Temperaturbänder, Windschwellen sowie Fußsack-/Tragecover-Schritte sind Produktheuristiken und ausdrücklich keine aus diesen Quellen abgeleiteten medizinischen Grenzwerte.
+
+## 20. Verbleibende offene Kalibrierungen
 
 - `R-01`: Temperaturband-Grenzen validieren.
-- `R-02`: Altersbezug der Aktivität erst nach Alters-Scope.
-- `R-03`: Windschwellen mit Wetteranbieter abstimmen.
-- `R-04`: Niederschlagswahrscheinlichkeit als Trigger festlegen.
-- `R-05`: normative Altersgrenze für besonders strikten Sonnenschutz festlegen.
-- `R-06`: thermische Bewertung von Tragecovern definieren.
-- `R-07`: generische oder herstellerspezifische TOG-Strategie entscheiden.
-- `R-08`: Lernschwelle für personalisierten Wärme-Bias entscheiden.
-- `R-09`: thermische Schritte für `medium` und `warm` Fußsack/Decke fachlich testen.
-- `R-10`: Grenzwerte für extreme Hitze/Kälte und zugehörige Expositionshinweise festlegen.
+- `R-02`: Windschwellen mit Wetteradapter und Testfällen validieren.
+- `R-03`: Niederschlagswahrscheinlichkeit als Trigger festlegen.
+- `R-04`: thermische Schritte für `medium`/`warm` Fußsack oder Decke testen.
+- `R-05`: thermische Bewertung von Tragecovern testen.
+- `R-06`: Grenzwerte für extreme Hitze/Kälte/Sturm und Expositionshinweise festlegen.
+
+Nicht mehr offen:
+
+- Altersbereich,
+- `<12 Monate`-Sonnenregel,
+- UV-Trigger `>=3`,
+- generische TOG-Strategie,
+- automatische Feedback-Lernschwelle,
+- Autositz-Kompatibilitätsmodell,
+- Auto-Phasenmodell.
