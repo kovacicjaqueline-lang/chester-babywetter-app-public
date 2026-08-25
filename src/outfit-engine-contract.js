@@ -41,28 +41,58 @@ function markManualWeatherProtectionConflicts(result,input) {
   }
 
   for (const check of checks) {
-    const outer = result.slots.find((entry) => entry.phase === check.phase && entry.slot === 'outer');
-    if (outer?.selected.selectionSource !== 'manual_lock') continue;
-
     const summary = summarizeWeatherWindow(input.weather,check.context.plannedMinutes);
     const thermal = thermalEnvironment(input.weather.current);
     const wind = evaluateWind(summary,thermal,check.context,check.mode);
     const rain = rainRequirement(summary,input.weather.current);
-    const accessory = result.slots.find((entry) => entry.phase === check.phase && entry.slot === 'stroller_weather_accessory');
-    const outerDef = CLOTHING_CATALOG[outer.selected.itemId];
-    const accessoryDef = CLOTHING_CATALOG[accessory?.selected.itemId];
-    const actualRainProtection = Math.max(outerDef?.rainProtection ?? 0,accessoryDef?.rainProtection ?? 0);
-    const actualWindProtection = Math.max(outerDef?.windProtection ?? 0,accessoryDef?.windProtection ?? 0);
-    const rainUnmet = rain.required && actualRainProtection < 3;
-    const windUnmet = wind.requiredProtection > actualWindProtection;
-    if (!rainUnmet && !windUnmet) continue;
+    const conflicts = [];
 
+    const outer = result.slots.find((entry) => entry.phase === check.phase && entry.slot === 'outer');
+    if (outer?.selected.selectionSource === 'manual_lock') {
+      const accessory = result.slots.find((entry) => entry.phase === check.phase && entry.slot === 'stroller_weather_accessory');
+      const outerDef = CLOTHING_CATALOG[outer.selected.itemId];
+      const accessoryDef = CLOTHING_CATALOG[accessory?.selected.itemId];
+      const actualRainProtection = Math.max(outerDef?.rainProtection ?? 0,accessoryDef?.rainProtection ?? 0);
+      const actualWindProtection = Math.max(outerDef?.windProtection ?? 0,accessoryDef?.windProtection ?? 0);
+      const rainUnmet = rain.required && actualRainProtection < 3;
+      const windUnmet = wind.requiredProtection > actualWindProtection;
+      if (rainUnmet || windUnmet) {
+        conflicts.push({
+          slot:'outer',
+          itemId:outer.selected.itemId,
+          rainRequired:rain.required,
+          requiredRainProtection:rain.required ? 3 : 0,
+          actualRainProtection,
+          requiredWindProtection:wind.requiredProtection,
+          actualWindProtection
+        });
+      }
+    }
+
+    const groundContact = check.context.groundContact;
+    const footwear = result.slots.find((entry) => entry.phase === check.phase && entry.slot === 'footwear');
+    if (check.mode === 'outdoor'
+      && ['standing','walking'].includes(groundContact)
+      && footwear?.selected.selectionSource === 'manual_lock'
+      && rain.required) {
+      const footwearDef = CLOTHING_CATALOG[footwear.selected.itemId];
+      const actualRainProtection = footwearDef?.rainProtection ?? 0;
+      if (actualRainProtection < 2) {
+        conflicts.push({
+          slot:'footwear',
+          itemId:footwear.selected.itemId,
+          rainRequired:true,
+          requiredRainProtection:2,
+          actualRainProtection,
+          requiredWindProtection:0,
+          actualWindProtection:footwearDef?.windProtection ?? 0
+        });
+      }
+    }
+
+    if (!conflicts.length) continue;
     addNotice(result,'MANUAL_LOCK_LIMITS_WEATHER_PROTECTION','caution',check.phase,'MANUAL_LOCK_LIMITS_WEATHER_PROTECTION',{
-      itemId:outer.selected.itemId,
-      rainRequired:rain.required,
-      requiredWindProtection:wind.requiredProtection,
-      actualRainProtection,
-      actualWindProtection
+      conflicts
     },'weather.protection.manual_lock');
     markPartial(result,check.phase);
   }
