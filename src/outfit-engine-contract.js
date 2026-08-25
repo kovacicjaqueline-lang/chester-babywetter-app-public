@@ -22,7 +22,6 @@ export function recommendOutfit(input) {
 
   markManualWeatherProtectionConflicts(result,input);
   markWeatherWindowCompleteness(result,input);
-  normalizeNeckTracePriority(result,input);
   calibrateFootwearAlternatives(result);
   return result;
 }
@@ -143,27 +142,12 @@ function missingWeatherWindowFields(weather,plannedMinutes) {
     .sort((a,b) => Date.parse(a.time) - Date.parse(b.time));
 
   const missing = [];
+  // A positive planned window needs future hourly evidence; current conditions alone are not a complete forecast window.
   if (!hourly.length || Date.parse(hourly.at(-1).time) < end) missing.push('weather.hourly.coverage');
   if (hourly.some((point) => !Number.isFinite(point.precipProbabilityPct))) missing.push('weather.hourly.precipProbabilityPct');
   if (hourly.some((point) => !Number.isFinite(point.windSpeedKmh))) missing.push('weather.hourly.windSpeedKmh');
   if (hourly.some((point) => !Number.isFinite(point.uvIndex))) missing.push('weather.hourly.uvIndex');
   return [...new Set(missing)];
-}
-
-function normalizeNeckTracePriority(result,input) {
-  const feedback = input.neckFeedback ?? null;
-  if (!['warm_dry','hot_sweaty','cool'].includes(feedback)) return;
-
-  const neckTraces = result.ruleTrace.filter((entry) => entry.ruleId === 'feedback.neck');
-  if (!neckTraces.length) return;
-  result.ruleTrace = result.ruleTrace.filter((entry) => entry.ruleId !== 'feedback.neck');
-
-  for (const trace of neckTraces) {
-    const lastQuickIndex = result.ruleTrace.reduce((last,entry,index) =>
-      entry.phase === trace.phase && entry.ruleId === 'quick.warmth' ? index : last,-1);
-    if (lastQuickIndex >= 0) result.ruleTrace.splice(lastQuickIndex + 1,0,trace);
-    else result.ruleTrace.push(trace);
-  }
 }
 
 function calibrateFootwearAlternatives(result) {
