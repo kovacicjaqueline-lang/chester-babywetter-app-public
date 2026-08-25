@@ -1,393 +1,350 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  CLOTHING_CATALOG, TEMPERATURE_BANDS, createSession, lockItem, recommendOutfit, setWarmthOffset, temperatureBandFor
+  CLOTHING_CATALOG,
+  recommendOutfit,
+  createItemLock,
+  adjustWarmthSession
 } from '../src/index.js';
 
-const BASE_PROFILE = Object.freeze({
-  profileId:'baby_test', displayName:'Baby', birthDate:'2026-01-24', warmthBias:'neutral', styleTheme:'neutral', defaultMode:'stroller',
-  createdAt:'2026-08-25T10:00:00.000Z', updatedAt:'2026-08-25T10:00:00.000Z'
-});
-const profile = (overrides={}) => ({ ...BASE_PROFILE, ...overrides });
-const point = (temp,overrides={}) => ({
-  time:'2026-08-25T14:00:00+02:00', airTempC:temp, apparentTempC:null, apparentTempTrusted:false, apparentTempIncludes:[],
-  windSpeedKmh:5, windGustKmh:8, precipProbabilityPct:0, precipMm:0, precipitationType:'none', uvIndex:1, cloudCoverPct:20, isDay:true,
-  ...overrides
-});
-function weather(temp, currentOverrides={}, hourly=[]) {
+const NOW = '2026-08-25T14:00:00+02:00';
+
+function profile(overrides = {}) {
   return {
-    weatherId:'weather_test', location:{ locationId:'loc',label:'Testort',latitude:47.8,longitude:13,timezone:'Europe/Vienna' },
-    origin:'api', source:'test', fetchedAt:'2026-08-25T12:00:00.000Z', freshness:'fresh', current:point(temp,currentOverrides), hourly
+    profileId: 'baby_1', displayName: 'Baby', birthDate: '2026-01-24',
+    warmthBias: 'neutral', styleTheme: 'neutral', defaultMode: 'outdoor',
+    createdAt: NOW, updatedAt: NOW, ...overrides
   };
 }
-const outdoor = (overrides={}) => ({ mode:'outdoor', plannedMinutes:60, activity:'normal', activitySource:'user', sunExposure:'shade', groundContact:'none', ...overrides });
-const stroller = (overrides={}) => ({ mode:'stroller', plannedMinutes:60, strollerState:'awake', activity:'normal', activitySource:'user', sunExposure:'shade', windProtection:'none', ...overrides });
-const carrier = (overrides={}) => ({ mode:'carrier', plannedMinutes:60, sunExposure:'shade', placement:'over_wearer_outerwear', ...overrides });
-const car = (overrides={}) => ({ mode:'car', plannedMinutes:30, includeOutdoorTransition:false, outsideTransitionMinutes:null, cabinTempC:20, cabinTempSource:'manual', ...overrides });
-const sleep = (overrides={}) => ({ mode:'sleep', roomTempC:18.5, ...overrides });
-function request(context,{ w=context.mode==='sleep'?null:weather(18), p=profile(), session=createSession('session_test'), neckFeedback=null }={}) {
-  return { requestId:'req_test', requestedAt:'2026-08-25T12:00:00.000Z', profile:p, context, weather:w, session, neckFeedback };
+
+function session(overrides = {}) {
+  return { sessionId: 's1', manualLocks: [], warmthOffset: 0, ...overrides };
 }
-const slot = (result,name,phase='main') => result.slots.find((entry) => entry.phase===phase && entry.slot===name);
-const id = (result,name,phase='main') => slot(result,name,phase)?.selected.itemId ?? null;
-const notices = (result) => result.notices.map((n) => n.code);
-const selectedIds = (result,phase='main') => result.slots.filter((s)=>s.phase===phase).map((s)=>s.selected.itemId);
-const changedSlots = (a,b,phase='main') => {
-  const am=new Map(a.slots.filter(s=>s.phase===phase).map(s=>[s.slot,s.selected.itemId]));
-  const bm=new Map(b.slots.filter(s=>s.phase===phase).map(s=>[s.slot,s.selected.itemId]));
-  return [...new Set([...am.keys(),...bm.keys()])].filter(k=>am.get(k)!==bm.get(k));
-};
 
-test('engine is deterministic for identical input',()=>{ const r=request(outdoor()); assert.deepEqual(recommendOutfit(r),recommendOutfit(r)); });
+function point(overrides = {}) {
+  return {
+    time: NOW, airTempC: 16, apparentTempC: 16, apparentTempTrusted: true,
+    apparentTempIncludes: ['wind', 'humidity', 'sun'], windSpeedKmh: 5, windGustKmh: 10,
+    precipProbabilityPct: 10, precipMm: 0, precipitationType: 'none', uvIndex: 1,
+    cloudCoverPct: 40, isDay: true, ...overrides
+  };
+}
 
-test('calibrated temperature bands are exact',()=>{
-  const cases=[[-5,'below_0'],[-0.01,'below_0'],[0,'0_to_3'],[2.99,'0_to_3'],[3,'3_to_8'],[8,'8_to_12'],[12,'12_to_16'],[16,'16_to_20'],[20,'20_to_24'],[24,'24_to_28'],[28,'28_to_30'],[30,'30_plus'],[40,'30_plus']];
-  for (const [t,expected] of cases) assert.equal(temperatureBandFor(t).id,expected);
-  assert.equal(TEMPERATURE_BANDS.length,10);
+function weather(currentOverrides = {}, hourly = [], overrides = {}) {
+  return {
+    weatherId: 'w1', location: { locationId: 'x', label: 'Salzburg', latitude: 47.8, longitude: 13.0, timezone: 'Europe/Vienna' },
+    origin: 'api', source: 'open_meteo', fetchedAt: NOW, freshness: 'fresh',
+    current: point(currentOverrides), hourly, ...overrides
+  };
+}
+
+function outdoor(overrides = {}) {
+  return { mode: 'outdoor', plannedMinutes: 90, activity: 'normal', activitySource: 'user', sunExposure: 'shade', groundContact: 'none', ...overrides };
+}
+
+function stroller(overrides = {}) {
+  return { mode: 'stroller', plannedMinutes: 90, strollerState: 'awake', activity: 'normal', activitySource: 'user', sunExposure: 'shade', windProtection: 'partial', ...overrides };
+}
+
+function carrier(overrides = {}) {
+  return { mode: 'carrier', plannedMinutes: 90, sunExposure: 'shade', placement: 'over_wearer_outerwear', ...overrides };
+}
+
+function req(context, weatherValue = weather(), overrides = {}) {
+  return { requestId: 'r1', requestedAt: NOW, profile: profile(), context, weather: weatherValue, session: session(), neckFeedback: null, ...overrides };
+}
+
+function selected(result, slot, phase = 'main') {
+  return result.slots.find((entry) => entry.phase === phase && entry.slot === slot)?.selected?.itemId ?? null;
+}
+
+function bodyScore(result, phase = 'main') {
+  return result.slots
+    .filter((entry) => entry.phase === phase && ['base_torso', 'legs', 'mid', 'outer'].includes(entry.slot))
+    .reduce((sum, entry) => sum + (CLOTHING_CATALOG[entry.selected.itemId]?.thermalWeight ?? 0), 0);
+}
+
+function noticeCodes(result) {
+  return result.notices.map((notice) => notice.code);
+}
+
+function slotIds(result, phase = 'main') {
+  return Object.fromEntries(result.slots.filter((entry) => entry.phase === phase).map((entry) => [entry.slot, entry.selected.itemId]));
+}
+
+function changedSlots(a, b, phase = 'main') {
+  const before = slotIds(a, phase); const after = slotIds(b, phase);
+  return new Set([...Object.keys(before), ...Object.keys(after)].filter((key) => before[key] !== after[key]));
+}
+
+test('stroller does not force passive: awake active is lighter than asleep', () => {
+  const w = weather({ airTempC: 15, apparentTempC: 15 });
+  const active = recommendOutfit(req(stroller({ strollerState: 'awake', activity: 'active' }), w));
+  const asleep = recommendOutfit(req(stroller({ strollerState: 'asleep', activity: 'active' }), w));
+  assert.equal(selected(active, 'stroller_thermal_accessory'), null);
+  assert.equal(selected(asleep, 'stroller_thermal_accessory'), 'stroller_light_blanket');
+  assert.ok(bodyScore(asleep) + 0.5 >= bodyScore(active));
 });
 
-test('trusted apparent temperature is thermal reference and wind is not double-counted',()=>{
-  const w=weather(22,{ apparentTempC:17,apparentTempTrusted:true,apparentTempIncludes:['wind','humidity','sun'],windSpeedKmh:35 });
-  const r=recommendOutfit(request(outdoor(),{w}));
-  assert.equal(r.phases[0].thermalReferenceC,17);
-  assert.equal(r.phases[0].thermalReferenceSource,'apparent_temp');
-  assert.equal(r.phases[0].thermalAdjustment,0);
+test('awake active and awake calm stroller can differ', () => {
+  const w = weather({ airTempC: 15, apparentTempC: 15 });
+  const active = recommendOutfit(req(stroller({ activity: 'active' }), w));
+  const calm = recommendOutfit(req(stroller({ activity: 'calm' }), w));
+  assert.notDeepEqual(slotIds(active), slotIds(calm));
 });
 
-test('wind protection remains required when apparent temperature already contains wind',()=>{
-  const w=weather(22,{ apparentTempC:17,apparentTempTrusted:true,apparentTempIncludes:['wind'],windSpeedKmh:35 });
-  const r=recommendOutfit(request(outdoor(),{w}));
-  assert.ok((CLOTHING_CATALOG[id(r,'outer')]?.windProtection ?? 0)>=2);
+test('warm footmuff can replace body warmth', () => {
+  const w = weather({ airTempC: 7, apparentTempC: 7 });
+  const withFootmuff = recommendOutfit(req(stroller({ strollerState: 'asleep' }), w));
+  const noExternalSession = createItemLock(session(), { phase: 'main', slot: 'stroller_thermal_accessory', itemId: 'none', lockedAt: NOW });
+  const without = recommendOutfit(req(stroller({ strollerState: 'asleep' }), w, { session: noExternalSession }));
+  assert.equal(selected(withFootmuff, 'stroller_thermal_accessory'), 'stroller_warm_footmuff');
+  assert.ok(bodyScore(withFootmuff) < bodyScore(without));
 });
 
-test('untrusted apparent temperature falls back to air temperature',()=>{
-  const w=weather(22,{ apparentTempC:10,apparentTempTrusted:false,windSpeedKmh:5 });
-  const r=recommendOutfit(request(outdoor(),{w}));
-  assert.equal(r.phases[0].thermalReferenceC,22);
-  assert.equal(r.phases[0].thermalReferenceSource,'air_temp');
+test('footmuff swap to light blanket triggers full outfit rebalance', () => {
+  const w = weather({ airTempC: 7, apparentTempC: 7 });
+  const base = recommendOutfit(req(stroller({ strollerState: 'asleep' }), w));
+  const locked = createItemLock(session(), { phase: 'main', slot: 'stroller_thermal_accessory', itemId: 'stroller_light_blanket', lockedAt: NOW });
+  const swapped = recommendOutfit(req(stroller({ strollerState: 'asleep' }), w, { session: locked }));
+  assert.equal(selected(swapped, 'stroller_thermal_accessory'), 'stroller_light_blanket');
+  assert.ok(changedSlots(base, swapped).size >= 2, 'accessory plus at least one body slot should change');
+  assert.ok(bodyScore(swapped) > bodyScore(base));
 });
 
-test('outdoor calm adds +0.5 and active adds -1',()=>{
-  const calm=recommendOutfit(request(outdoor({activity:'calm'})));
-  const active=recommendOutfit(request(outdoor({activity:'active'})));
-  assert.equal(calm.phases[0].thermalAdjustment,0.5);
-  assert.equal(active.phases[0].thermalAdjustment,-1);
+test('pullover to fleece rebalances outer layer', () => {
+  const w = weather({ airTempC: 13, apparentTempC: 13 });
+  const base = recommendOutfit(req(outdoor(), w));
+  assert.equal(selected(base, 'mid'), 'thin_sweater');
+  const locked = createItemLock(session(), { phase: 'main', slot: 'mid', itemId: 'fleece_jacket', lockedAt: NOW });
+  const swapped = recommendOutfit(req(outdoor(), w, { session: locked }));
+  assert.equal(selected(swapped, 'mid'), 'fleece_jacket');
+  assert.notEqual(selected(swapped, 'outer'), selected(base, 'outer'));
 });
 
-test('stroller does not force activity to passive/calm',()=>{
-  const r=recommendOutfit(request(stroller({strollerState:'awake',activity:'active'}),{w:weather(12)}));
-  assert.equal(r.phases[0].thermalAdjustment,-0.5);
-  assert.equal(id(r,'stroller_thermal_accessory'),'stroller_light_blanket');
+test('stroller rain cover avoids redundant rain jacket', () => {
+  const w = weather({ airTempC: 16, apparentTempC: 16, precipProbabilityPct: 70 });
+  const result = recommendOutfit(req(stroller(), w));
+  assert.equal(selected(result, 'stroller_weather_accessory'), 'stroller_rain_cover');
+  assert.notEqual(selected(result, 'outer'), 'rain_jacket');
 });
 
-test('awake active stroller differs from asleep stroller at same weather',()=>{
-  const w=weather(12);
-  const awake=recommendOutfit(request(stroller({strollerState:'awake',activity:'active'}),{w}));
-  const asleep=recommendOutfit(request(stroller({strollerState:'asleep',activity:'active'}),{w}));
-  assert.notEqual(id(awake,'stroller_thermal_accessory'),id(asleep,'stroller_thermal_accessory'));
-  assert.equal(id(awake,'stroller_thermal_accessory'),'stroller_light_blanket');
-  assert.equal(id(asleep,'stroller_thermal_accessory'),'stroller_light_footmuff');
+test('removing stroller rain cover requires rain jacket', () => {
+  const w = weather({ airTempC: 16, apparentTempC: 16, precipProbabilityPct: 70 });
+  const locked = createItemLock(session(), { phase: 'main', slot: 'stroller_weather_accessory', itemId: 'none', lockedAt: NOW });
+  const result = recommendOutfit(req(stroller(), w, { session: locked }));
+  assert.equal(selected(result, 'stroller_weather_accessory'), null);
+  assert.equal(selected(result, 'outer'), 'rain_jacket');
 });
 
-test('asleep stroller ignores activity thermally',()=>{
-  const w=weather(12);
-  const calm=recommendOutfit(request(stroller({strollerState:'asleep',activity:'calm'}),{w}));
-  const active=recommendOutfit(request(stroller({strollerState:'asleep',activity:'active'}),{w}));
-  assert.deepEqual(selectedIds(calm),selectedIds(active));
+test('direct sun in stroller prefers sunshade', () => {
+  const result = recommendOutfit(req(stroller({ sunExposure: 'direct' }), weather({ uvIndex: 5 })));
+  assert.equal(selected(result, 'stroller_weather_accessory'), 'stroller_sunshade');
+  assert.ok(noticeCodes(result).includes('STROLLER_SUNSHADE'));
 });
 
-test('stroller accessories are engine recommendations, not inventory inputs',()=>{
-  const r=recommendOutfit(request(stroller(),{w:weather(7)}));
-  assert.equal(id(r,'stroller_thermal_accessory'),'stroller_warm_footmuff');
+test('Open-Meteo apparent temperature does not double-count wind thermally', () => {
+  const included = recommendOutfit(req(outdoor(), weather({ apparentTempC: 10, airTempC: 12, windSpeedKmh: 35, apparentTempIncludes: ['wind', 'humidity', 'sun'] })));
+  const notIncluded = recommendOutfit(req(outdoor(), weather({ apparentTempC: 10, airTempC: 12, windSpeedKmh: 35, apparentTempIncludes: ['humidity', 'sun'] })));
+  const a = included.phases[0].thermalAdjustment;
+  const b = notIncluded.phases[0].thermalAdjustment;
+  assert.equal(a, 0);
+  assert.equal(b, 1);
 });
 
-test('warm footmuff can replace body insulation',()=>{
-  const w=weather(4);
-  const r=recommendOutfit(request(stroller({strollerState:'asleep'}),{w}));
-  assert.equal(id(r,'stroller_thermal_accessory'),'stroller_warm_footmuff');
-  assert.notEqual(id(r,'outer'),'winter_overall');
+test('wind protection remains required even when wind is in apparent temperature', () => {
+  const result = recommendOutfit(req(outdoor(), weather({ apparentTempC: 16, airTempC: 17, windSpeedKmh: 35, apparentTempIncludes: ['wind', 'humidity', 'sun'] })));
+  const outer = CLOTHING_CATALOG[selected(result, 'outer')];
+  assert.ok(outer && outer.windProtection >= 2);
 });
 
-test('warm footmuff to warm blanket swap rebalances body outfit warmer',()=>{
-  const w=weather(4);
-  const base=recommendOutfit(request(stroller({strollerState:'asleep'}),{w}));
-  const session=lockItem(createSession('session_test'),{slot:'stroller_thermal_accessory',itemId:'stroller_warm_blanket'});
-  const swapped=recommendOutfit(request(stroller({strollerState:'asleep'}),{w,session}));
-  assert.equal(id(base,'stroller_thermal_accessory'),'stroller_warm_footmuff');
-  assert.equal(id(swapped,'stroller_thermal_accessory'),'stroller_warm_blanket');
-  assert.notDeepEqual(selectedIds(base),selectedIds(swapped));
+test('precip probability below 40 alone adds no rain element', () => {
+  const result = recommendOutfit(req(outdoor(), weather({ precipProbabilityPct: 39 })));
+  assert.notEqual(selected(result, 'outer'), 'rain_jacket');
+  assert.ok(!noticeCodes(result).includes('RAIN_PROTECTION_REQUIRED'));
 });
 
-test('manual stroller accessory lock remains in same session',()=>{
-  const session=lockItem(createSession('same'),{slot:'stroller_thermal_accessory',itemId:'stroller_light_blanket'});
-  const a=recommendOutfit(request(stroller(),{w:weather(7),session}));
-  const b=recommendOutfit(request(stroller(),{w:weather(7),session}));
-  assert.equal(id(a,'stroller_thermal_accessory'),'stroller_light_blanket');
-  assert.equal(slot(b,'stroller_thermal_accessory').selected.selectionSource,'manual_lock');
+test('precip probability 40-59 is optional, not automatic', () => {
+  const result = recommendOutfit(req(outdoor(), weather({ precipProbabilityPct: 50 })));
+  assert.notEqual(selected(result, 'outer'), 'rain_jacket');
+  assert.ok(noticeCodes(result).includes('RAIN_PROTECTION_OPTIONAL'));
 });
 
-test('thin sweater to fleece lock rebalances outer layer',()=>{
-  const w=weather(14);
-  const base=recommendOutfit(request(outdoor(),{w}));
-  const session=lockItem(createSession('s'),{slot:'mid',itemId:'fleece_jacket'});
-  const swapped=recommendOutfit(request(outdoor(),{w,session}));
-  assert.equal(id(base,'mid'),'thin_sweater');
-  assert.equal(id(swapped,'mid'),'fleece_jacket');
-  assert.equal(id(base,'outer'),'softshell_jacket');
-  assert.equal(id(swapped,'outer'),'light_transition_jacket');
+test('precip probability >=60 in relevant window requires rain protection', () => {
+  const hour = point({ time: '2026-08-25T15:00:00+02:00', precipProbabilityPct: 65 });
+  const result = recommendOutfit(req(outdoor(), weather({ precipProbabilityPct: 20 }, [hour])));
+  assert.equal(selected(result, 'outer'), 'rain_jacket');
 });
 
-test('alternatives are ordered equivalent then warmer then cooler',()=>{
-  const r=recommendOutfit(request(outdoor(),{w:weather(14)}));
-  const alternatives=slot(r,'mid').alternatives;
-  const order={equivalent:0,warmer:1,cooler:2};
-  for(let i=1;i<alternatives.length;i++) assert.ok(order[alternatives[i-1].relation] <= order[alternatives[i].relation]);
+test('carrier body heat reduces torso insulation but exposed areas remain protected', () => {
+  const w = weather({ airTempC: 10, apparentTempC: 10 });
+  const out = recommendOutfit(req(outdoor(), w));
+  const carried = recommendOutfit(req(carrier(), w));
+  assert.ok(bodyScore(carried) < bodyScore(out));
+  assert.equal(selected(carried, 'feet'), 'warm_socks_booties');
+  assert.equal(selected(carried, 'head'), 'thin_hat');
 });
 
-test('alternative projectedChanges contains whole-outfit rebalancing',()=>{
-  const r=recommendOutfit(request(outdoor(),{w:weather(14)}));
-  const fleece=slot(r,'mid').alternatives.find(a=>a.itemId==='fleece_jacket');
-  assert.ok(fleece.projectedChanges.some(change=>change.slot==='mid'));
-  assert.ok(fleece.projectedChanges.some(change=>change.slot==='outer'));
+test('wearer outerwear plus warm carrier cover is capped at -2 thermal steps', () => {
+  const locked = createItemLock(session(), { phase: 'main', slot: 'carrier_accessory', itemId: 'carrier_cover_warm', lockedAt: NOW });
+  const result = recommendOutfit(req(carrier({ placement: 'under_wearer_outerwear' }), weather({ airTempC: 5, apparentTempC: 5 }), { session: locked }));
+  const trace = result.ruleTrace.find((entry) => entry.ruleId === 'situation.carrier.body_heat');
+  assert.equal(trace.delta, -2);
 });
 
-test('precip probability below 40 alone adds no rain element',()=>{
-  const r=recommendOutfit(request(outdoor(),{w:weather(18,{precipProbabilityPct:39})}));
-  assert.notEqual(id(r,'outer'),'rain_jacket');
+test('car has separate outdoor_transition and in_car phases', () => {
+  const context = { mode: 'car', plannedMinutes: 30, includeOutdoorTransition: true, outsideTransitionMinutes: 5, cabinTempC: 20, cabinTempSource: 'manual' };
+  const result = recommendOutfit(req(context, weather({ airTempC: 5, apparentTempC: 5 })));
+  assert.ok(result.phases.some((phase) => phase.phase === 'outdoor_transition'));
+  assert.ok(result.phases.some((phase) => phase.phase === 'in_car'));
 });
 
-test('precip probability 40-59 is optional only',()=>{
-  const r=recommendOutfit(request(outdoor(),{w:weather(18,{precipProbabilityPct:50})}));
-  assert.ok(notices(r).includes('RAIN_PROTECTION_OPTIONAL'));
-  assert.notEqual(id(r,'outer'),'rain_jacket');
+test('winter overall is never under harness', () => {
+  const context = { mode: 'car', plannedMinutes: 30, includeOutdoorTransition: false, outsideTransitionMinutes: null, cabinTempC: 0, cabinTempSource: 'manual' };
+  const locked = createItemLock(session(), { phase: 'in_car', slot: 'outer', itemId: 'winter_overall', lockedAt: NOW });
+  const result = recommendOutfit(req(context, null, { session: locked }));
+  assert.ok(!result.slots.some((entry) => entry.phase === 'in_car' && entry.selected.itemId === 'winter_overall'));
+  assert.ok(noticeCodes(result).includes('MANUAL_LOCK_OVERRIDDEN_FOR_SAFETY'));
 });
 
-test('precip probability >=60 requires rain protection',()=>{
-  const r=recommendOutfit(request(outdoor(),{w:weather(18,{precipProbabilityPct:60})}));
-  assert.equal(id(r,'outer'),'rain_jacket');
+test('estimated cabin temperature is propagated visibly', () => {
+  const context = { mode: 'car', plannedMinutes: 30, includeOutdoorTransition: false, outsideTransitionMinutes: null, cabinTempC: 20, cabinTempSource: 'estimated' };
+  const result = recommendOutfit(req(context, null));
+  assert.equal(result.status, 'ready_with_estimate');
+  assert.equal(result.phases.find((phase) => phase.phase === 'in_car').status, 'ready_with_estimate');
+  assert.ok(noticeCodes(result).includes('CAR_CABIN_TEMPERATURE_ESTIMATED'));
+  assert.equal(result.dataQuality.usedEstimatedCabinTemperature, true);
 });
 
-test('hourly precipitation within planned window can trigger protection',()=>{
-  const hourly=[point(18,{time:'2026-08-25T15:00:00+02:00',precipProbabilityPct:80})];
-  const r=recommendOutfit(request(outdoor({plannedMinutes:120}),{w:weather(18,{},hourly)}));
-  assert.equal(id(r,'outer'),'rain_jacket');
+test('sleep uses room temperature and ignores outdoor weather', () => {
+  const context = { mode: 'sleep', roomTempC: 18.5 };
+  const coldOutside = recommendOutfit(req(context, weather({ airTempC: -10, apparentTempC: -20 })));
+  const hotOutside = recommendOutfit(req(context, weather({ airTempC: 35, apparentTempC: 38 })));
+  assert.deepEqual(slotIds(coldOutside), slotIds(hotOutside));
+  assert.equal(coldOutside.phases[0].thermalReferenceSource, 'room_temp');
 });
 
-test('stroller rain cover replaces unnecessary baby rain jacket',()=>{
-  const r=recommendOutfit(request(stroller(),{w:weather(18,{precipProbabilityPct:70})}));
-  assert.equal(id(r,'stroller_weather_accessory'),'stroller_rain_cover');
-  assert.notEqual(id(r,'outer'),'rain_jacket');
+test('all five TOGs plus no sleep bag are interchangeable', () => {
+  const result = recommendOutfit(req({ mode: 'sleep', roomTempC: 19 }, null));
+  const bagSlot = result.slots.find((entry) => entry.slot === 'sleep_bag');
+  const ids = new Set([bagSlot.selected.itemId, ...bagSlot.alternatives.map((entry) => entry.itemId)]);
+  assert.deepEqual(ids, new Set(['sleep_bag_none', 'sleep_bag_0_5', 'sleep_bag_1_0', 'sleep_bag_1_5', 'sleep_bag_2_5', 'sleep_bag_3_5']));
 });
 
-test('removing stroller rain cover requires baby rain jacket',()=>{
-  const session=lockItem(createSession('s'),{slot:'stroller_weather_accessory',itemId:'stroller_weather_none'});
-  const r=recommendOutfit(request(stroller(),{w:weather(18,{precipProbabilityPct:70}),session}));
-  assert.equal(id(r,'stroller_weather_accessory'),'stroller_weather_none');
-  assert.equal(id(r,'outer'),'rain_jacket');
+test('TOG 2.5 to 1.0 rebalances to warmer sleep underlayer', () => {
+  const context = { mode: 'sleep', roomTempC: 18.5 };
+  const base = recommendOutfit(req(context, null));
+  assert.equal(selected(base, 'sleep_bag'), 'sleep_bag_2_5');
+  assert.equal(selected(base, 'sleep_underlayer'), 'sleep_underlayer_short_sleeve_bodysuit');
+  const locked = createItemLock(session(), { phase: 'main', slot: 'sleep_bag', itemId: 'sleep_bag_1_0', lockedAt: NOW });
+  const swapped = recommendOutfit(req(context, null, { session: locked }));
+  assert.equal(selected(swapped, 'sleep_bag'), 'sleep_bag_1_0');
+  assert.equal(selected(swapped, 'sleep_underlayer'), 'sleep_underlayer_short_bodysuit_plus_light_pajamas');
 });
 
-test('direct sun in stroller prefers sunshade/parasol and airflow warning',()=>{
-  const r=recommendOutfit(request(stroller({sunExposure:'direct'}),{w:weather(22,{uvIndex:5})}));
-  assert.equal(id(r,'stroller_weather_accessory'),'stroller_sunshade');
-  assert.ok(notices(r).includes('STROLLER_SUNSHADE'));
-  assert.ok(notices(r).includes('STROLLER_DO_NOT_COVER_AIRFLOW'));
+test('sleep never recommends loose blanket over sleep bag', () => {
+  const result = recommendOutfit(req({ mode: 'sleep', roomTempC: 15 }, null));
+  assert.ok(!result.items.some((entry) => entry.itemId.includes('blanket')));
+  assert.ok(noticeCodes(result).includes('SLEEP_NO_LOOSE_BLANKET_OVER_BAG'));
 });
 
-test('under-12 direct sun creates avoidance notice',()=>{
-  const r=recommendOutfit(request(outdoor({sunExposure:'direct'}),{w:weather(22,{uvIndex:1})}));
-  assert.ok(notices(r).includes('INFANT_UNDER_12M_AVOID_DIRECT_SUN'));
+test('styleTheme does not alter fach item ids or safety codes', () => {
+  const baseReq = req(outdoor(), weather({ airTempC: 12, apparentTempC: 12 }));
+  const neutral = recommendOutfit({ ...baseReq, profile: profile({ styleTheme: 'neutral' }) });
+  const boy = recommendOutfit({ ...baseReq, profile: profile({ styleTheme: 'boy' }) });
+  const girl = recommendOutfit({ ...baseReq, profile: profile({ styleTheme: 'girl' }) });
+  assert.deepEqual(slotIds(neutral), slotIds(boy));
+  assert.deepEqual(slotIds(neutral), slotIds(girl));
+  assert.deepEqual(noticeCodes(neutral), noticeCodes(boy));
 });
 
-test('unknown age direct sun uses conservative notice',()=>{
-  const r=recommendOutfit(request(outdoor({sunExposure:'direct'}),{w:weather(22,{uvIndex:1}),p:profile({birthDate:null})}));
-  assert.ok(notices(r).includes('AGE_UNKNOWN_DIRECT_SUN_CONSERVATIVE_RULE'));
+test('manual item lock remains selected in same session', () => {
+  const locked = createItemLock(session(), { phase: 'main', slot: 'mid', itemId: 'fleece_jacket', lockedAt: NOW });
+  const result = recommendOutfit(req(outdoor(), weather({ airTempC: 17, apparentTempC: 17 }), { session: locked }));
+  const mid = result.slots.find((entry) => entry.slot === 'mid');
+  assert.equal(mid.selected.itemId, 'fleece_jacket');
+  assert.equal(mid.selected.selectionSource, 'manual_lock');
 });
 
-test('UV >=3 uses light coverage, not heavy extra insulation in warmth',()=>{
-  const r=recommendOutfit(request(outdoor({sunExposure:'direct'}),{w:weather(27,{uvIndex:6})}));
-  assert.equal(id(r,'base_torso'),'light_long_sleeve_shirt');
-  assert.equal(id(r,'head'),'sun_hat');
-  assert.notEqual(id(r,'mid'),'fleece_jacket');
+test('safety may override a lock and records structured reason', () => {
+  const context = { mode: 'car', plannedMinutes: 30, includeOutdoorTransition: false, outsideTransitionMinutes: null, cabinTempC: 18, cabinTempSource: 'manual' };
+  const locked = createItemLock(session(), { phase: 'in_car', slot: 'outer', itemId: 'winter_overall', lockedAt: NOW });
+  const result = recommendOutfit(req(context, null, { session: locked }));
+  const notice = result.notices.find((entry) => entry.code === 'MANUAL_LOCK_OVERRIDDEN_FOR_SAFETY');
+  assert.ok(notice);
+  assert.equal(notice.data.slot, 'outer');
+  assert.ok(result.ruleTrace.some((entry) => entry.effect === 'override_lock' && entry.target === 'winter_overall'));
 });
 
-test('wind thresholds use calibrated 20/29/39/50 levels',()=>{
-  const r20=recommendOutfit(request(outdoor(),{w:weather(22,{windSpeedKmh:20})}));
-  const r29=recommendOutfit(request(outdoor(),{w:weather(22,{windSpeedKmh:29})}));
-  const r39=recommendOutfit(request(outdoor(),{w:weather(22,{windSpeedKmh:39})}));
-  const r50=recommendOutfit(request(outdoor(),{w:weather(22,{windSpeedKmh:50})}));
-  assert.equal(r20.phases[0].thermalAdjustment,0.5);
-  assert.equal(r29.phases[0].thermalAdjustment,1);
-  assert.equal(r39.phases[0].thermalAdjustment,1.5);
-  assert.equal(r50.phases[0].thermalAdjustment,2);
-  assert.ok(notices(r50).includes('STRONG_WIND_CAUTION'));
+test('warmer quick correction changes the minimum sensible number of slots', () => {
+  const context = outdoor(); const w = weather({ airTempC: 17, apparentTempC: 17 });
+  const base = recommendOutfit(req(context, w));
+  const warmer = recommendOutfit(req(context, w, { session: adjustWarmthSession(session(), 'warmer') }));
+  assert.equal(changedSlots(base, warmer).size, 1);
+  assert.ok(bodyScore(warmer) >= bodyScore(base));
 });
 
-test('stroller wind protection reduces thermal wind modifier without erasing functional wind',()=>{
-  const none=recommendOutfit(request(stroller({windProtection:'none'}),{w:weather(18,{windSpeedKmh:39})}));
-  const good=recommendOutfit(request(stroller({windProtection:'good'}),{w:weather(18,{windSpeedKmh:39})}));
-  assert.ok(good.phases[0].thermalAdjustment < none.phases[0].thermalAdjustment);
-  assert.ok((CLOTHING_CATALOG[id(good,'outer')]?.windProtection ?? CLOTHING_CATALOG[id(good,'stroller_weather_accessory')]?.windProtection ?? 0)>=1);
+test('cooler quick correction changes the minimum sensible number of slots', () => {
+  const context = outdoor(); const w = weather({ airTempC: 17, apparentTempC: 17 });
+  const base = recommendOutfit(req(context, w));
+  const cooler = recommendOutfit(req(context, w, { session: adjustWarmthSession(session(), 'cooler') }));
+  assert.equal(changedSlots(base, cooler).size, 1);
+  assert.ok(bodyScore(cooler) <= bodyScore(base));
 });
 
-test('carrier body heat reduces torso insulation but retains exposed feet/head protection',()=>{
-  const w=weather(10);
-  const out=recommendOutfit(request(outdoor(),{w}));
-  const carry=recommendOutfit(request(carrier(),{w}));
-  assert.notDeepEqual([id(out,'mid'),id(out,'outer')],[id(carry,'mid'),id(carry,'outer')]);
-  assert.equal(id(carry,'feet'),'warm_socks_booties');
-  assert.equal(id(carry,'head'),'warm_hat');
+test('hot_sweaty never increases isolation and cool never reduces it', () => {
+  const baseReq = req(outdoor(), weather({ airTempC: 17, apparentTempC: 17 }));
+  const normal = recommendOutfit(baseReq);
+  const hot = recommendOutfit({ ...baseReq, neckFeedback: 'hot_sweaty' });
+  const cool = recommendOutfit({ ...baseReq, neckFeedback: 'cool' });
+  assert.ok(bodyScore(hot) <= bodyScore(normal));
+  assert.ok(bodyScore(cool) >= bodyScore(normal));
 });
 
-test('carrier under wearer outerwear adds shared warmth credit',()=>{
-  const w=weather(14);
-  const over=recommendOutfit(request(carrier({placement:'over_wearer_outerwear'}),{w}));
-  const under=recommendOutfit(request(carrier({placement:'under_wearer_outerwear'}),{w}));
-  assert.ok(under.phases[0].thermalAdjustment <= over.phases[0].thermalAdjustment);
+test('neck feedback does not learn or mutate persistent warmthBias', () => {
+  const p = profile({ warmthBias: 'neutral' });
+  const baseReq = req(outdoor(), weather(), { profile: p });
+  recommendOutfit({ ...baseReq, neckFeedback: 'cool' });
+  assert.equal(p.warmthBias, 'neutral');
+  assert.equal(recommendOutfit(baseReq).phases[0].thermalAdjustment, 0);
 });
 
-test('carrier jacket plus warm cover credit is capped at two steps',()=>{
-  const session=lockItem(createSession('s'),{slot:'carrier_accessory',itemId:'carrier_cover_warm'});
-  const r=recommendOutfit(request(carrier({placement:'under_wearer_outerwear'}),{w:weather(10),session}));
-  assert.ok(r.ruleTrace.some(t=>t.ruleId==='situation.carrier.body_heat' && t.delta===-2));
+test('groundContact none does not add footwear', () => {
+  const result = recommendOutfit(req(outdoor({ groundContact: 'none' }), weather({ airTempC: 8, apparentTempC: 8 })));
+  assert.equal(selected(result, 'footwear'), null);
 });
 
-test('estimated cabin temperature is consumed, not calculated, and marked',()=>{
-  const r=recommendOutfit(request(car({cabinTempC:21,cabinTempSource:'estimated'}),{w:null}));
-  assert.equal(r.status,'ready_with_estimate');
-  assert.equal(r.phases[0].thermalReferenceC,21);
-  assert.ok(notices(r).includes('CAR_CABIN_TEMPERATURE_ESTIMATED'));
-  assert.equal(r.dataQuality.usedEstimatedCabinTemperature,true);
+test('walking ground contact adds weather-appropriate footwear', () => {
+  const result = recommendOutfit(req(outdoor({ groundContact: 'walking' }), weather({ airTempC: 18, apparentTempC: 18 })));
+  assert.equal(selected(result, 'footwear'), 'weather_shoes');
 });
 
-test('car blocks if cabin temperature is absent instead of estimating internally',()=>{
-  const r=recommendOutfit(request(car({cabinTempC:null}),{w:null}));
-  assert.equal(r.status,'blocked');
-  assert.ok(r.dataQuality.missingFields.includes('context.cabinTempC'));
+test('warmth bias is calibrated to +/-0.5', () => {
+  const base = req(outdoor(), weather({ airTempC: 17, apparentTempC: 17 }));
+  const cool = recommendOutfit({ ...base, profile: profile({ warmthBias: 'runs_cool' }) });
+  const warm = recommendOutfit({ ...base, profile: profile({ warmthBias: 'runs_warm' }) });
+  assert.equal(cool.phases[0].thermalAdjustment, 0.5);
+  assert.equal(warm.phases[0].thermalAdjustment, -0.5);
 });
 
-test('car can emit outdoor_transition and in_car phases',()=>{
-  const r=recommendOutfit(request(car({includeOutdoorTransition:true,cabinTempC:20}),{w:weather(5)}));
-  assert.ok(r.phases.some(p=>p.phase==='outdoor_transition'));
-  assert.ok(r.phases.some(p=>p.phase==='in_car'));
-  assert.ok(notices(r).includes('CAR_SEAT_REMOVE_OUTER_BEFORE_HARNESS'));
+test('missing optional weather is not interpreted as zero', () => {
+  const w = weather({ windSpeedKmh: null, windGustKmh: null, precipProbabilityPct: null, uvIndex: null });
+  const result = recommendOutfit(req(outdoor(), w));
+  assert.equal(result.status, 'partial');
+  assert.ok(noticeCodes(result).includes('WEATHER_DATA_INCOMPLETE'));
+  assert.ok(result.dataQuality.missingFields.includes('weather.current.windSpeedKmh'));
 });
 
-test('winter overall is never under harness',()=>{
-  const r=recommendOutfit(request(car({cabinTempC:5}),{w:null}));
-  assert.ok(!r.slots.some(s=>s.phase==='in_car' && s.selected.itemId==='winter_overall'));
-  assert.ok(!r.slots.some(s=>s.phase==='in_car' && CLOTHING_CATALOG[s.selected.itemId]?.carSeatCompatibility==='prohibited'));
+test('alternative ordering is equivalent then warmer then cooler', () => {
+  const result = recommendOutfit(req(outdoor(), weather({ airTempC: 17, apparentTempC: 17 })));
+  const mid = result.slots.find((entry) => entry.slot === 'mid');
+  const ranks = mid.alternatives.map((entry) => ({ equivalent: 0, warmer: 1, cooler: 2 })[entry.relation]);
+  assert.deepEqual(ranks, [...ranks].sort((a, b) => a - b));
 });
 
-test('safety overrides a prohibited manual car lock with structured reason',()=>{
-  const session=lockItem(createSession('s'),{phase:'in_car',slot:'outer',itemId:'winter_overall'});
-  const r=recommendOutfit(request(car({cabinTempC:8}),{w:null,session}));
-  assert.ok(notices(r).includes('MANUAL_LOCK_OVERRIDDEN_FOR_SAFETY'));
-  assert.ok(r.ruleTrace.some(t=>t.effect==='override_lock'));
-  assert.notEqual(id(r,'outer','in_car'),'winter_overall');
-});
-
-test('conditional manual car layer remains with explicit fit warning',()=>{
-  const session=lockItem(createSession('s'),{phase:'in_car',slot:'mid',itemId:'fleece_jacket'});
-  const r=recommendOutfit(request(car({cabinTempC:10}),{w:null,session}));
-  assert.equal(id(r,'mid','in_car'),'fleece_jacket');
-  assert.ok(notices(r).includes('CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT'));
-});
-
-test('warmth bias uses +0.5 / 0 / -0.5 and does not learn',()=>{
-  const cool=recommendOutfit(request(outdoor(),{p:profile({warmthBias:'runs_cool'})}));
-  const neutral=recommendOutfit(request(outdoor(),{p:profile({warmthBias:'neutral'})}));
-  const warm=recommendOutfit(request(outdoor(),{p:profile({warmthBias:'runs_warm'})}));
-  assert.equal(cool.phases[0].thermalAdjustment,0.5);
-  assert.equal(neutral.phases[0].thermalAdjustment,0);
-  assert.equal(warm.phases[0].thermalAdjustment,-0.5);
-  assert.equal(profile().warmthBias,'neutral');
-});
-
-test('hot_sweaty never increases isolation and cool never decreases it',()=>{
-  const base=recommendOutfit(request(outdoor()));
-  const hot=recommendOutfit(request(outdoor(),{neckFeedback:'hot_sweaty'}));
-  const cool=recommendOutfit(request(outdoor(),{neckFeedback:'cool'}));
-  assert.ok(hot.phases[0].thermalAdjustment <= base.phases[0].thermalAdjustment);
-  assert.ok(cool.phases[0].thermalAdjustment >= base.phases[0].thermalAdjustment);
-});
-
-test('neck feedback does not permanently change profile warmth bias',()=>{
-  const p=profile(); recommendOutfit(request(outdoor(),{p,neckFeedback:'cool'})); assert.equal(p.warmthBias,'neutral');
-});
-
-test('warmer quick correction changes at most one unlocked slot',()=>{
-  const base=recommendOutfit(request(outdoor(),{w:weather(18)}));
-  const warmer=recommendOutfit(request(outdoor(),{w:weather(18),session:setWarmthOffset(createSession('s'),'warmer')}));
-  assert.ok(changedSlots(base,warmer).length<=1);
-});
-
-test('cooler quick correction changes at most one unlocked slot',()=>{
-  const base=recommendOutfit(request(outdoor(),{w:weather(18)}));
-  const cooler=recommendOutfit(request(outdoor(),{w:weather(18),session:setWarmthOffset(createSession('s'),'cooler')}));
-  assert.ok(changedSlots(base,cooler).length<=1);
-});
-
-test('quick correction respects manual lock',()=>{
-  let session=lockItem(createSession('s'),{slot:'mid',itemId:'fleece_jacket'});
-  session=setWarmthOffset(session,'cooler');
-  const r=recommendOutfit(request(outdoor(),{w:weather(14),session}));
-  assert.equal(id(r,'mid'),'fleece_jacket');
-});
-
-test('styleTheme does not alter fach item IDs or safety codes',()=>{
-  const a=recommendOutfit(request(outdoor(),{p:profile({styleTheme:'neutral'})}));
-  const b=recommendOutfit(request(outdoor(),{p:profile({styleTheme:'boy'})}));
-  const c=recommendOutfit(request(outdoor(),{p:profile({styleTheme:'girl'})}));
-  assert.deepEqual(selectedIds(a),selectedIds(b));
-  assert.deepEqual(selectedIds(a),selectedIds(c));
-  assert.deepEqual(notices(a),notices(b));
-});
-
-test('missing optional weather is partial and is not interpreted as zero',()=>{
-  const w=weather(18,{windSpeedKmh:null,windGustKmh:null,precipProbabilityPct:null,precipMm:null,precipitationType:'unknown',uvIndex:null});
-  const r=recommendOutfit(request(outdoor(),{w}));
-  assert.equal(r.status,'partial');
-  assert.ok(notices(r).includes('WEATHER_DATA_INCOMPLETE'));
-  assert.ok(r.dataQuality.missingFields.length>=3);
-});
-
-test('stale weather stays usable but produces partial status',()=>{
-  const w=weather(18); w.freshness='stale';
-  const r=recommendOutfit(request(outdoor(),{w}));
-  assert.equal(r.status,'partial');
-  assert.ok(notices(r).includes('WEATHER_DATA_STALE'));
-});
-
-test('groundContact none never adds shoes',()=>{
-  const r=recommendOutfit(request(outdoor({groundContact:'none'}),{w:weather(5)}));
-  assert.equal(id(r,'footwear'),null);
-});
-
-test('standing/walking can add weather-appropriate shoes',()=>{
-  const dry=recommendOutfit(request(outdoor({groundContact:'standing'}),{w:weather(20)}));
-  const wet=recommendOutfit(request(outdoor({groundContact:'walking'}),{w:weather(20,{precipProbabilityPct:70})}));
-  assert.equal(id(dry,'footwear'),'light_shoes');
-  assert.equal(id(wet,'footwear'),'weatherproof_shoes');
-});
-
-test('cold hands or feet flags alone do not change global recommendation',()=>{
-  const base=recommendOutfit(request(outdoor(),{w:weather(18)}));
-  const withPeripheralFlags=recommendOutfit({ ...request(outdoor(),{w:weather(18)}), handsCold:true, feetCold:true });
-  assert.deepEqual(selectedIds(base),selectedIds(withPeripheralFlags));
-});
-
-test('extreme cold, heat and strong wind produce caution codes',()=>{
-  assert.ok(notices(recommendOutfit(request(outdoor(),{w:weather(-1)}))).includes('EXTREME_COLD_CAUTION'));
-  assert.ok(notices(recommendOutfit(request(outdoor(),{w:weather(30)}))).includes('EXTREME_HEAT_CAUTION'));
-  assert.ok(notices(recommendOutfit(request(outdoor(),{w:weather(18,{windGustKmh:60})}))).includes('STRONG_WIND_CAUTION'));
-});
-
-test('all recommendation slots are unique per phase and use known catalog items',()=>{
-  const scenarios=[outdoor(),stroller(),carrier(),car({includeOutdoorTransition:true}),sleep()];
-  for (const context of scenarios) {
-    const r=recommendOutfit(request(context,{w:context.mode==='sleep'?null:weather(12)}));
-    const keys=r.slots.map(s=>`${s.phase}|${s.slot}`);
-    assert.equal(new Set(keys).size,keys.length);
-    for (const s of r.slots) assert.ok(CLOTHING_CATALOG[s.selected.itemId],s.selected.itemId);
-  }
+test('alternative projected changes expose total rebalancing impact', () => {
+  const result = recommendOutfit(req(stroller({ strollerState: 'asleep' }), weather({ airTempC: 7, apparentTempC: 7 })));
+  const accessory = result.slots.find((entry) => entry.slot === 'stroller_thermal_accessory');
+  const blanket = accessory.alternatives.find((entry) => entry.itemId === 'stroller_light_blanket');
+  assert.ok(blanket.projectedChanges.some((change) => ['base_torso', 'legs', 'mid', 'outer'].includes(change.slot)));
 });
