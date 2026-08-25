@@ -136,17 +136,22 @@ function missingWeatherWindowFields(weather,plannedMinutes) {
   const start = Date.parse(weather.current.time);
   if (!Number.isFinite(start)) return ['weather.current.time'];
   const end = start + duration * 60000;
-  const hourly = (weather.hourly ?? [])
+  const validHourly = (weather.hourly ?? [])
     .filter((point) => Number.isFinite(Date.parse(point.time)))
-    .filter((point) => Date.parse(point.time) > start && Date.parse(point.time) <= end)
+    .filter((point) => Date.parse(point.time) > start)
     .sort((a,b) => Date.parse(a.time) - Date.parse(b.time));
+  const inWindow = validHourly.filter((point) => Date.parse(point.time) <= end);
+  const firstAtOrAfterEnd = validHourly.find((point) => Date.parse(point.time) >= end) ?? null;
 
   const missing = [];
-  // A positive planned window needs future hourly evidence; current conditions alone are not a complete forecast window.
-  if (!hourly.length || Date.parse(hourly.at(-1).time) < end) missing.push('weather.hourly.coverage');
-  if (hourly.some((point) => !Number.isFinite(point.precipProbabilityPct))) missing.push('weather.hourly.precipProbabilityPct');
-  if (hourly.some((point) => !Number.isFinite(point.windSpeedKmh))) missing.push('weather.hourly.windSpeedKmh');
-  if (hourly.some((point) => !Number.isFinite(point.uvIndex))) missing.push('weather.hourly.uvIndex');
+  // Hourly data is discrete. A point at/just after the window end can bracket a short interval
+  // (for example a 5-minute car transition) without being included in hazard calculations outside that interval.
+  const coverageAnchorMs = firstAtOrAfterEnd ? Date.parse(firstAtOrAfterEnd.time) : null;
+  const hasHourlyCoverage = coverageAnchorMs != null && coverageAnchorMs - end <= 60 * 60000;
+  if (!hasHourlyCoverage) missing.push('weather.hourly.coverage');
+  if (inWindow.some((point) => !Number.isFinite(point.precipProbabilityPct))) missing.push('weather.hourly.precipProbabilityPct');
+  if (inWindow.some((point) => !Number.isFinite(point.windSpeedKmh))) missing.push('weather.hourly.windSpeedKmh');
+  if (inWindow.some((point) => !Number.isFinite(point.uvIndex))) missing.push('weather.hourly.uvIndex');
   return [...new Set(missing)];
 }
 
