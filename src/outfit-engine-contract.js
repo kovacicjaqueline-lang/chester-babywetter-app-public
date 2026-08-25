@@ -1,52 +1,34 @@
 import { recommendOutfit as recommendOutfitCore } from './outfit-engine.js';
 
-function hasNotice(result, code, phase) {
-  return result.notices.some((notice) => notice.code === code && notice.phase === phase);
-}
-
-function addNotice(result, code, severity, phase, reasonCode, data = {}) {
-  if (hasNotice(result, code, phase)) return;
-  result.notices.push({ code, severity, phase, reasonCodes:[reasonCode], data:{...data} });
-  result.ruleTrace.push({
-    ruleId:`notice.${code.toLowerCase()}`,
-    phase,
-    effect:'notice',
-    target:code,
-    delta:null,
-    reasonCode
-  });
-}
-
-function enforceCalibratedPostconditions(result, input) {
+/**
+ * Public calibrated V1 entry point. Keep only postconditions that are not part
+ * of the core optimizer itself so fachliche rules are not duplicated.
+ */
+export function recommendOutfit(input) {
+  const result = recommendOutfitCore(input);
   const context = input.context ?? input.situation ?? {};
+  const main = result.phases.find((phase) => phase.phase === 'main');
 
-  if (context.sunExposure === 'direct') {
-    const main = result.phases.find((phase) => phase.phase === 'main');
-    if (Number.isFinite(main?.thermalReferenceC) && main.thermalReferenceC >= 28) {
-      addNotice(
-        result,
-        'EXTREME_HEAT_CAUTION',
-        'caution',
-        'main',
-        'EXTREME_HEAT_CAUTION',
-        { thermalReferenceC:main.thermalReferenceC }
-      );
-    }
-  }
-
-  if (result.mode === 'car') {
-    const blocked = result.phases.filter((phase) => phase.status === 'blocked');
-    const usable = result.phases.filter((phase) => ['ready','ready_with_estimate','partial'].includes(phase.status));
-    if (blocked.length && usable.length) result.status = 'partial';
+  if (context.sunExposure === 'direct'
+    && Number.isFinite(main?.thermalReferenceC)
+    && main.thermalReferenceC >= 28
+    && !result.notices.some((notice) => notice.code === 'EXTREME_HEAT_CAUTION' && notice.phase === 'main')) {
+    result.notices.push({
+      code:'EXTREME_HEAT_CAUTION',
+      severity:'caution',
+      phase:'main',
+      reasonCodes:['EXTREME_HEAT_CAUTION'],
+      data:{ thermalReferenceC:main.thermalReferenceC }
+    });
+    result.ruleTrace.push({
+      ruleId:'weather.heat.direct_sun',
+      phase:'main',
+      effect:'notice',
+      target:'EXTREME_HEAT_CAUTION',
+      delta:null,
+      reasonCode:'EXTREME_HEAT_CAUTION'
+    });
   }
 
   return result;
-}
-
-/**
- * Public calibrated V1 entry point. The core evaluator stays pure; these
- * postconditions reconcile cross-phase/status invariants from DATA_CONTRACT.
- */
-export function recommendOutfit(input) {
-  return enforceCalibratedPostconditions(recommendOutfitCore(input), input);
 }
