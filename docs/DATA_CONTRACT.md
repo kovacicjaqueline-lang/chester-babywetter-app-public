@@ -5,21 +5,22 @@ Ziel: stabile, serialisierbare Datenstrukturen für Vanilla JavaScript, `localSt
 
 ## 1. Grundsätze
 
-- Alle dauerhaft gespeicherten Daten müssen JSON-serialisierbar sein.
+- Alle dauerhaft gespeicherten Daten sind JSON-serialisierbar.
 - Keine `Date`, `Map`, `Set`, Klasseninstanzen oder Funktionen in persistenten Objekten.
 - Zeitpunkte werden als ISO-8601-Strings gespeichert.
-- Temperaturen werden intern ausschließlich in Grad Celsius gespeichert.
+- Temperaturen werden intern in Grad Celsius gespeichert.
 - Wind wird intern in km/h gespeichert.
 - Prozentwerte liegen im Bereich 0–100.
-- IDs sind stabile Strings; empfohlen werden UUIDs.
+- IDs sind stabile Strings; UUIDs sind empfohlen.
 - Enums werden als lowercase `snake_case`-Strings gespeichert.
 - Fachlogik verwendet keine UI-Texte als Schlüssel.
-- Unbekannt ist nicht dasselbe wie `false` oder `0`. Fehlende optionale Daten werden mit `null` oder durch Abwesenheit des Felds dargestellt; pro Struktur soll genau eine Variante verwendet werden.
-- Sicherheitswarnungen und Regelspuren werden strukturiert gespeichert, nicht nur als fertiger Text.
+- Unbekannt ist nicht dasselbe wie `false` oder `0`.
+- Sicherheitswarnungen und Regelspuren werden strukturiert gespeichert.
+- Rohdaten des Wetterproviders und von der App normalisierte Fachsemantik werden getrennt gedacht.
+- Tatsächliche Sonnenexposition gehört zum Situationskontext, nicht zum Wetter-Snapshot.
+- V1 unterstützt Babys von 0 bis einschließlich 24 Monaten.
 
 ## 2. Versionsstrategie
-
-Jedes Export-/Persistenzformat erhält eine Schema-Version.
 
 ```ts
 interface DataEnvelope<T> {
@@ -30,7 +31,7 @@ interface DataEnvelope<T> {
 }
 ```
 
-Bei inkompatiblen zukünftigen Änderungen wird `schemaVersion` erhöht. Import darf eine unbekannte höhere Version nicht stillschweigend interpretieren.
+Eine unbekannte höhere `schemaVersion` darf beim Import nicht stillschweigend interpretiert werden.
 
 ## 3. Enums
 
@@ -54,17 +55,9 @@ type WeatherFreshness = "fresh" | "stale" | "unknown";
 
 type DataOrigin = "api" | "cache" | "manual";
 
-type AppDataState =
-  | "idle"
-  | "loading"
-  | "ready"
-  | "offline_with_cache"
-  | "offline_without_cache"
-  | "location_denied"
-  | "location_unavailable"
-  | "weather_api_error"
-  | "weather_stale"
-  | "sleep_missing_room_temperature";
+type SunExposure = "shade" | "partial" | "direct" | "unknown";
+
+type ApparentTempFactor = "wind" | "humidity" | "sun";
 
 type ThermalWeight = 0 | 1 | 2 | 3 | 4;
 
@@ -79,9 +72,46 @@ type BodyZone =
   | "head"
   | "neck";
 
-type ClothingLayer = "base" | "legs" | "mid" | "outer" | "accessory" | "external";
+type ClothingLayer =
+  | "base"
+  | "legs"
+  | "mid"
+  | "outer"
+  | "accessory"
+  | "external";
 
 type RecommendationSeverity = "info" | "caution" | "hard_rule";
+
+type CarSeatCompatibility = "allowed" | "conditional" | "prohibited";
+
+type RecommendationPhase = "main" | "outdoor_transition" | "in_car";
+
+type WearPosition =
+  | "on_body"
+  | "under_harness"
+  | "over_harness"
+  | "external";
+
+type ConnectivityStatus = "online" | "offline" | "unknown";
+
+type LocationStatus =
+  | "idle"
+  | "requesting"
+  | "available"
+  | "denied"
+  | "unavailable"
+  | "not_required";
+
+type WeatherStatus =
+  | "idle"
+  | "loading"
+  | "fresh"
+  | "stale"
+  | "manual"
+  | "unavailable"
+  | "error";
+
+type RecommendationStatus = "idle" | "ready" | "partial" | "blocked";
 ```
 
 ## 4. Babyprofil
@@ -110,16 +140,7 @@ JSON-Beispiel:
   "warmthBias": "neutral",
   "styleTheme": "mixed",
   "defaultActivity": "normal",
-  "sleepBagInventory": [
-    {
-      "sleepBagId": "bag_25tog_01",
-      "label": "Schlafsack 2.5 TOG",
-      "tog": 2.5,
-      "manufacturer": null,
-      "manufacturerMinRoomTempC": null,
-      "manufacturerMaxRoomTempC": null
-    }
-  ],
+  "sleepBagInventory": [],
   "createdAt": "2026-08-25T09:40:00.000Z",
   "updatedAt": "2026-08-25T09:40:00.000Z"
 }
@@ -127,29 +148,66 @@ JSON-Beispiel:
 
 ### Fachliche Validierung
 
-- `warmthBias` standardmäßig `neutral`.
-- `styleTheme` darf keine thermische Regel beeinflussen.
-- `birthDate` darf für Darstellung/Altersgruppe genutzt werden, aber nicht für noch nicht definierte Alters-Sonderregeln.
-- Medizinische Felder gehören nicht in V1.
+- `birthDate` ist optional.
+- Liegt ein gültiges Geburtsdatum vor, muss das Baby für V1 am Nutzungstag zwischen 0 und 24 Monaten alt sein.
+- Fehlt `birthDate`, darf die Wärmelogik trotzdem arbeiten.
+- Bei unbekanntem Alter gilt für direkte Sonne der konservative `<12 Monate`-Fallback.
+- `warmthBias` ist in V1 manuell gesetzt; Nackentest verändert ihn nicht automatisch.
+- `styleTheme` beeinflusst nie Fachlogik.
 
-## 5. Schlafsack
+## 5. Schlafsack und Herstellerangaben
+
+TOG ist eine Produkteigenschaft, aber in V1 kein universeller Algorithmusschlüssel.
 
 ```ts
+interface SleepBagGuidanceBand {
+  minRoomTempC: number | null;
+  maxRoomTempC: number | null;
+  recommendedUnderlayers: string[]; // ClothingItemDefinition.itemId
+  sourceLabel: string | null;
+  sourceUrl: string | null;
+}
+
 interface SleepBag {
   sleepBagId: string;
   label: string;
   tog: number | null;
   manufacturer: string | null;
-  manufacturerMinRoomTempC: number | null;
-  manufacturerMaxRoomTempC: number | null;
+  guidanceBands: SleepBagGuidanceBand[];
 }
 ```
 
+Beispiel:
+
+```json
+{
+  "sleepBagId": "bag_25tog_01",
+  "label": "Schlafsack 2.5 TOG",
+  "tog": 2.5,
+  "manufacturer": "example_manufacturer",
+  "guidanceBands": [
+    {
+      "minRoomTempC": 16,
+      "maxRoomTempC": 20,
+      "recommendedUnderlayers": [
+        "long_sleeve_bodysuit",
+        "sleep_suit"
+      ],
+      "sourceLabel": "Hersteller-Temperaturguide",
+      "sourceUrl": "https://example.invalid/manufacturer-guide"
+    }
+  ]
+}
+```
+
+Der Beispiel-URL ist nur Schema-Demonstration und keine Fachquelle.
+
 Regeln:
 
-- `tog` muss `>= 0` sein.
-- Hersteller-Temperaturbereich hat Vorrang vor generischem TOG-Fallback.
-- Das Datenmodell behauptet nicht, dass gleicher TOG bei allen Herstellern identische Kleidung erfordert.
+- `tog >= 0`, wenn vorhanden.
+- Herstellerbänder haben Vorrang vor jeder allgemeinen Orientierung.
+- Wenn nur `tog` bekannt ist und `guidanceBands` leer sind, darf daraus keine exakte TOG-basierte Unterkleidung erzeugt werden.
+- Eine Empfehlung mit ausgewähltem Schlafsack, aber ohne passende Herstellerangabe, ist `partial`.
 
 ## 6. Standort
 
@@ -163,19 +221,17 @@ interface WeatherLocation {
 }
 ```
 
-JSON-Beispiel:
+Beispiel:
 
 ```json
 {
-  "locationId": "manual_berndorf",
-  "label": "Berndorf bei Salzburg",
+  "locationId": "manual_salzburg",
+  "label": "Salzburg",
   "latitude": null,
   "longitude": null,
   "timezone": "Europe/Vienna"
 }
 ```
-
-Koordinaten sind optional, damit manuelle Orte ohne präzise Geodaten unterstützt werden können.
 
 ## 7. Wetter-Snapshot
 
@@ -190,8 +246,9 @@ interface WeatherSnapshot {
   freshness: WeatherFreshness;
 
   airTempC: number;
-  feelsLikeC: number | null;
-  feelsLikeIncludesWind: boolean | null;
+  apparentTempC: number | null;
+  apparentTempTrusted: boolean;
+  apparentTempIncludes: ApparentTempFactor[];
 
   windSpeedKmh: number | null;
   windGustKmh: number | null;
@@ -203,7 +260,6 @@ interface WeatherSnapshot {
   uvIndex: number | null;
   cloudCoverPct: number | null;
   isDay: boolean | null;
-  directSunExposure: "none" | "partial" | "direct" | "unknown";
 }
 ```
 
@@ -225,8 +281,9 @@ JSON-Beispiel:
   "fetchedAt": "2026-08-25T09:31:10.000Z",
   "freshness": "fresh",
   "airTempC": 18.4,
-  "feelsLikeC": 17.1,
-  "feelsLikeIncludesWind": true,
+  "apparentTempC": 17.1,
+  "apparentTempTrusted": true,
+  "apparentTempIncludes": ["wind", "humidity"],
   "windSpeedKmh": 17,
   "windGustKmh": 29,
   "precipProbabilityPct": 20,
@@ -234,18 +291,21 @@ JSON-Beispiel:
   "precipitationType": "none",
   "uvIndex": 3.2,
   "cloudCoverPct": 40,
-  "isDay": true,
-  "directSunExposure": "partial"
+  "isDay": true
 }
 ```
 
 ### Kritische Semantik
 
-`feelsLikeIncludesWind` verhindert Doppelzählung.
+`apparentTempTrusted` bedeutet nicht, dass der Wert medizinisch oder speziell für Babys validiert ist. Es bedeutet nur, dass der **App-Wetteradapter** die Providersemantik kennt und den Wert für die definierte Produktheuristik verwenden darf.
 
-- `true`: Wind darf nicht zusätzlich als Temperaturabschlag gerechnet werden.
-- `false`: Windmodifikator darf angewendet werden.
-- `null`: Herkunft unklar; Engine soll konservativ keinen mathematischen Doppelabschlag vornehmen und nur winddichte Kleidung priorisieren.
+Regeln:
+
+- `apparentTempTrusted: true` setzt voraus, dass `apparentTempC` nicht `null` ist.
+- `apparentTempIncludes` darf nur Faktoren enthalten, deren Einrechnung durch den Adapter bekannt ist.
+- Bei `apparentTempTrusted: false` dient `airTempC` als thermische Referenz.
+- Fehlende Wind-/UV-/Regendaten werden nie als `0` interpretiert.
+- Tatsächliche Sonnenexposition wird hier bewusst **nicht** gespeichert.
 
 ### Manuelle Wettereingabe
 
@@ -267,8 +327,9 @@ Minimal gültig:
   "fetchedAt": "2026-08-25T09:35:00.000Z",
   "freshness": "fresh",
   "airTempC": 19,
-  "feelsLikeC": null,
-  "feelsLikeIncludesWind": null,
+  "apparentTempC": null,
+  "apparentTempTrusted": false,
+  "apparentTempIncludes": [],
   "windSpeedKmh": null,
   "windGustKmh": null,
   "precipProbabilityPct": null,
@@ -276,52 +337,101 @@ Minimal gültig:
   "precipitationType": "unknown",
   "uvIndex": null,
   "cloudCoverPct": null,
-  "isDay": null,
-  "directSunExposure": "unknown"
+  "isDay": null
 }
 ```
 
-Fehlende Wind-/UV-/Regendaten werden nicht als `0` interpretiert.
+## 8. Abgeleitete thermische Umgebung
 
-## 8. Kontext pro Situation
+`thermalReferenceC` wird nicht zwingend persistent gespeichert. Sie wird für die Empfehlung aus dem Wetter-Snapshot abgeleitet.
+
+```ts
+interface ThermalEnvironment {
+  thermalReferenceC: number;
+  referenceSource: "air_temp" | "apparent_temp";
+  alreadyIncludedFactors: ApparentTempFactor[];
+}
+```
+
+Beispiel:
+
+```json
+{
+  "thermalReferenceC": 17.1,
+  "referenceSource": "apparent_temp",
+  "alreadyIncludedFactors": ["wind", "humidity"]
+}
+```
+
+In diesem Beispiel darf Wind thermisch nicht erneut als Temperaturabschlag gerechnet werden, kann aber weiterhin winddichte Kleidung auslösen.
+
+## 9. Kontext pro Situation
+
+### Gemeinsame Sonnenexposition
+
+`SunExposure` beschreibt die tatsächliche Situation des Babys, nicht das Wetter allgemein.
+
+### Outdoor
 
 ```ts
 interface OutdoorContext {
   mode: "outdoor";
   activity: ActivityLevel;
   plannedMinutes: number | null;
+  sunExposure: SunExposure;
 }
+```
 
+### Kinderwagen
+
+```ts
 interface StrollerContext {
   mode: "stroller";
   activity: "passive";
   plannedMinutes: number | null;
+  sunExposure: SunExposure;
   windProtection: "none" | "partial" | "good" | "unknown";
   externalInsulation: "none" | "light" | "medium" | "warm";
 }
+```
 
+### Trage
+
+```ts
 interface CarrierContext {
   mode: "carrier";
   activity: "passive";
   plannedMinutes: number | null;
+  sunExposure: SunExposure;
   carrierCover: "none" | "light" | "warm";
   wearerOuterLayerCoversBaby: boolean;
 }
+```
 
+### Auto
+
+```ts
 interface CarContext {
   mode: "car";
   activity: "passive";
   plannedMinutes: number | null;
   cabinTempC: number | null;
+  includeOutdoorTransition: boolean;
   outsideTransitionMinutes: number | null;
 }
+```
 
+### Schlaf
+
+```ts
 interface SleepContext {
   mode: "sleep";
   roomTempC: number | null;
   selectedSleepBagId: string | null;
 }
+```
 
+```ts
 type SituationContext =
   | OutdoorContext
   | StrollerContext
@@ -330,31 +440,18 @@ type SituationContext =
   | SleepContext;
 ```
 
-### Kinderwagen-Beispiel
+JSON-Beispiele:
 
 ```json
 {
   "mode": "stroller",
   "activity": "passive",
   "plannedMinutes": 60,
+  "sunExposure": "partial",
   "windProtection": "partial",
   "externalInsulation": "light"
 }
 ```
-
-### Trage-Beispiel
-
-```json
-{
-  "mode": "carrier",
-  "activity": "passive",
-  "plannedMinutes": 45,
-  "carrierCover": "none",
-  "wearerOuterLayerCoversBaby": true
-}
-```
-
-### Auto-Beispiel
 
 ```json
 {
@@ -362,11 +459,10 @@ type SituationContext =
   "activity": "passive",
   "plannedMinutes": 35,
   "cabinTempC": 21,
+  "includeOutdoorTransition": true,
   "outsideTransitionMinutes": 4
 }
 ```
-
-### Schlaf-Beispiel
 
 ```json
 {
@@ -376,7 +472,7 @@ type SituationContext =
 }
 ```
 
-## 9. Empfehlungs-Request
+## 10. Empfehlungs-Request
 
 ```ts
 interface OutfitRecommendationRequest {
@@ -389,69 +485,15 @@ interface OutfitRecommendationRequest {
 }
 ```
 
-Regeln:
+### Validierung nach Modus
 
-- Für `sleep` darf `weather` `null` sein.
-- Für `sleep` ist `roomTempC` Pflicht für eine vollständige Empfehlung.
-- Für die vier Nicht-Schlaf-Modi ist `weather.airTempC` Pflicht.
-- `neckFeedback` kann für die Erstempfehlung `null` sein.
+- `sleep`: `weather` darf `null` sein; `roomTempC` ist für `ready` erforderlich.
+- `outdoor`, `stroller`, `carrier`: `weather.airTempC` ist für eine vollständige wetterbasierte Empfehlung erforderlich.
+- `car` nur `in_car`: Wenn `cabinTempC` vorhanden ist, darf `weather` `null` sein.
+- `car` mit `includeOutdoorTransition: true`: Außenwetter ist für die **Übergangsphase** erforderlich. Fehlt es, darf `in_car` trotzdem `ready` sein und der Gesamtrecommendation-Status wird mindestens `partial`.
+- `neckFeedback` kann bei Erstempfehlung `null` sein.
 
-JSON-Beispiel:
-
-```json
-{
-  "requestId": "req_001",
-  "requestedAt": "2026-08-25T09:42:00.000Z",
-  "profile": {
-    "profileId": "baby_4bba29a0",
-    "displayName": "Chester",
-    "birthDate": "2026-01-24",
-    "warmthBias": "neutral",
-    "styleTheme": "mixed",
-    "defaultActivity": "normal",
-    "sleepBagInventory": [],
-    "createdAt": "2026-08-25T09:40:00.000Z",
-    "updatedAt": "2026-08-25T09:40:00.000Z"
-  },
-  "context": {
-    "mode": "stroller",
-    "activity": "passive",
-    "plannedMinutes": 60,
-    "windProtection": "partial",
-    "externalInsulation": "light"
-  },
-  "weather": {
-    "snapshotId": "weather_001",
-    "location": {
-      "locationId": "geo_001",
-      "label": "Salzburg",
-      "latitude": 47.8095,
-      "longitude": 13.055,
-      "timezone": "Europe/Vienna"
-    },
-    "origin": "api",
-    "source": "weather_provider_pending",
-    "observedAt": "2026-08-25T09:30:00.000Z",
-    "fetchedAt": "2026-08-25T09:31:10.000Z",
-    "freshness": "fresh",
-    "airTempC": 18.4,
-    "feelsLikeC": 17.1,
-    "feelsLikeIncludesWind": true,
-    "windSpeedKmh": 17,
-    "windGustKmh": 29,
-    "precipProbabilityPct": 20,
-    "precipMm": 0,
-    "precipitationType": "none",
-    "uvIndex": 3.2,
-    "cloudCoverPct": 40,
-    "isDay": true,
-    "directSunExposure": "partial"
-  },
-  "neckFeedback": null
-}
-```
-
-## 10. Kleidungskatalog
+## 11. Kleidungskatalog
 
 ```ts
 interface ClothingItemDefinition {
@@ -464,7 +506,7 @@ interface ClothingItemDefinition {
   windProtection: ProtectionLevel;
   rainProtection: ProtectionLevel;
   sunCoverage: ProtectionLevel;
-  carSeatSafe: boolean;
+  carSeatCompatibility: CarSeatCompatibility;
   sleepSafe: boolean;
   allowedSituations: SituationMode[];
   styleAssetGroup: string;
@@ -485,7 +527,7 @@ Beispiele:
     "windProtection": 0,
     "rainProtection": 0,
     "sunCoverage": 2,
-    "carSeatSafe": true,
+    "carSeatCompatibility": "allowed",
     "sleepSafe": true,
     "allowedSituations": ["outdoor", "stroller", "carrier", "car", "sleep"],
     "styleAssetGroup": "long_sleeve_bodysuit"
@@ -500,9 +542,9 @@ Beispiele:
     "windProtection": 1,
     "rainProtection": 0,
     "sunCoverage": 2,
-    "carSeatSafe": false,
+    "carSeatCompatibility": "conditional",
     "sleepSafe": false,
-    "allowedSituations": ["outdoor", "stroller", "carrier"],
+    "allowedSituations": ["outdoor", "stroller", "carrier", "car"],
     "styleAssetGroup": "fleece_jacket"
   },
   {
@@ -515,9 +557,9 @@ Beispiele:
     "windProtection": 3,
     "rainProtection": 2,
     "sunCoverage": 3,
-    "carSeatSafe": false,
+    "carSeatCompatibility": "prohibited",
     "sleepSafe": false,
-    "allowedSituations": ["outdoor", "stroller"],
+    "allowedSituations": ["outdoor", "stroller", "car"],
     "styleAssetGroup": "winter_overall"
   },
   {
@@ -530,7 +572,7 @@ Beispiele:
     "windProtection": 0,
     "rainProtection": 0,
     "sunCoverage": 3,
-    "carSeatSafe": true,
+    "carSeatCompatibility": "allowed",
     "sleepSafe": false,
     "allowedSituations": ["outdoor", "stroller", "carrier", "car"],
     "styleAssetGroup": "sun_hat"
@@ -538,11 +580,15 @@ Beispiele:
 ]
 ```
 
-### Offene Entscheidung D-01 – `carSeatSafe`
+### Autositz-Regel
 
-**OFFEN:** Ein einfacher Boolean ist für V1 leicht nutzbar, kann aber bei dünnem vs. dickem Fleece zu grob sein. Mögliche spätere Erweiterung: `carSeatCompatibility: allowed | conditional | prohibited`.
+- `allowed`: darf bei passender thermischer Logik automatisch als `under_harness` empfohlen werden.
+- `conditional`: Engine darf es **nicht automatisch** als `under_harness` auswählen; nur als bedingte Alternative mit Safety-Hinweis.
+- `prohibited`: darf in `in_car` nie `under_harness` sein.
 
-## 11. Empfehlungsposition
+Ein `winter_overall` darf im Automodus für `outdoor_transition` vorkommen, aber nicht für `in_car` unter dem Gurt.
+
+## 12. Empfehlungsposition und Phase
 
 ```ts
 interface RecommendedItem {
@@ -550,12 +596,13 @@ interface RecommendedItem {
   quantity: number;
   role: ClothingLayer;
   reasonCodes: string[];
-  wearPosition: "on_body" | "over_harness" | "external";
+  phase: RecommendationPhase;
+  wearPosition: WearPosition;
   optional: boolean;
 }
 ```
 
-JSON-Beispiel:
+Normaler Outdoor-Fall:
 
 ```json
 {
@@ -563,12 +610,41 @@ JSON-Beispiel:
   "quantity": 1,
   "role": "outer",
   "reasonCodes": ["RAIN_PROTECTION_REQUIRED"],
+  "phase": "main",
   "wearPosition": "on_body",
   "optional": false
 }
 ```
 
-## 12. Strukturierte Hinweise
+Auto-Übergang:
+
+```json
+{
+  "itemId": "winter_overall",
+  "quantity": 1,
+  "role": "outer",
+  "reasonCodes": ["OUTDOOR_TRANSITION_COLD"],
+  "phase": "outdoor_transition",
+  "wearPosition": "on_body",
+  "optional": false
+}
+```
+
+Angeschnallte Fahrt:
+
+```json
+{
+  "itemId": "thin_sweater",
+  "quantity": 1,
+  "role": "mid",
+  "reasonCodes": ["IN_CAR_THERMAL_BASELINE"],
+  "phase": "in_car",
+  "wearPosition": "under_harness",
+  "optional": false
+}
+```
+
+## 13. Strukturierte Hinweise
 
 ```ts
 interface RecommendationNotice {
@@ -583,11 +659,16 @@ Normative Codes für V1:
 
 - `CHECK_NECK`
 - `CAR_SEAT_NO_BULKY_LAYERS`
+- `CAR_SEAT_REMOVE_OUTER_BEFORE_HARNESS`
 - `CAR_SEAT_BLANKET_OVER_HARNESS_ONLY`
+- `CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT`
 - `SLEEP_NO_HAT`
 - `SLEEP_NO_LOOSE_BLANKET_OVER_BAG`
 - `SLEEP_USE_ROOM_TEMPERATURE`
+- `SLEEP_MANUFACTURER_GUIDANCE_REQUIRED`
 - `STROLLER_DO_NOT_COVER_AIRFLOW`
+- `INFANT_UNDER_12M_AVOID_DIRECT_SUN`
+- `AGE_UNKNOWN_DIRECT_SUN_CONSERVATIVE_RULE`
 - `UV_SHADE_AND_COVERAGE`
 - `WEATHER_DATA_STALE`
 - `WEATHER_DATA_INCOMPLETE`
@@ -598,24 +679,30 @@ Beispiel:
 
 ```json
 {
-  "code": "CAR_SEAT_NO_BULKY_LAYERS",
+  "code": "CAR_SEAT_REMOVE_OUTER_BEFORE_HARNESS",
   "severity": "hard_rule",
   "reasonCodes": ["CAR_HARNESS_SAFETY"],
   "data": {
-    "prohibitedItemId": "winter_overall"
+    "itemId": "winter_overall"
   }
 }
 ```
 
-## 13. Regelspur
-
-Die Engine soll nachvollziehbar machen, wie die Empfehlung zustande kam.
+## 14. Regelspur
 
 ```ts
 interface RuleTraceEntry {
   ruleId: string;
-  effect: "add" | "remove" | "replace" | "thermal_up" | "thermal_down" | "notice" | "no_change";
+  effect:
+    | "add"
+    | "remove"
+    | "replace"
+    | "thermal_up"
+    | "thermal_down"
+    | "notice"
+    | "no_change";
   target: string | null;
+  phase: RecommendationPhase;
   delta: number | null;
   reasonCode: string;
 }
@@ -629,39 +716,41 @@ Beispiel:
     "ruleId": "baseline.temp.16_20",
     "effect": "add",
     "target": "long_sleeve_bodysuit",
+    "phase": "main",
     "delta": null,
     "reasonCode": "BASELINE_COOL"
   },
   {
-    "ruleId": "situation.stroller.passive",
-    "effect": "thermal_up",
-    "target": null,
-    "delta": 1,
-    "reasonCode": "STROLLER_LOW_ACTIVITY"
-  },
-  {
-    "ruleId": "weather.feels_like.includes_wind",
+    "ruleId": "weather.apparent.includes_wind",
     "effect": "no_change",
     "target": null,
+    "phase": "main",
     "delta": 0,
-    "reasonCode": "WIND_ALREADY_IN_FEELS_LIKE"
+    "reasonCode": "WIND_ALREADY_IN_THERMAL_REFERENCE"
   }
 ]
 ```
 
-Diese Spur ist für Tests und Debugging wichtig und muss nicht vollständig in der späteren UI sichtbar sein.
-
-## 14. Empfehlungsergebnis
+## 15. Empfehlungsergebnis
 
 ```ts
+interface RecommendationPhaseStatus {
+  phase: RecommendationPhase;
+  status: "ready" | "partial" | "blocked";
+  missingFields: string[];
+}
+
 interface OutfitRecommendation {
   recommendationId: string;
   requestId: string;
   generatedAt: string;
   mode: SituationMode;
-  effectiveTempC: number | null;
+  status: "ready" | "partial" | "blocked";
+  thermalReferenceC: number | null;
+  thermalReferenceSource: "air_temp" | "apparent_temp" | "room_temp" | "cabin_temp" | null;
   thermalBand: string | null;
   thermalAdjustment: number;
+  phaseStatus: RecommendationPhaseStatus[];
   items: RecommendedItem[];
   notices: RecommendationNotice[];
   ruleTrace: RuleTraceEntry[];
@@ -673,7 +762,7 @@ interface OutfitRecommendation {
 }
 ```
 
-JSON-Beispiel:
+Kinderwagen-Beispiel:
 
 ```json
 {
@@ -681,15 +770,25 @@ JSON-Beispiel:
   "requestId": "req_001",
   "generatedAt": "2026-08-25T09:42:00.100Z",
   "mode": "stroller",
-  "effectiveTempC": 17.1,
+  "status": "ready",
+  "thermalReferenceC": 17.1,
+  "thermalReferenceSource": "apparent_temp",
   "thermalBand": "16_to_20",
   "thermalAdjustment": 1,
+  "phaseStatus": [
+    {
+      "phase": "main",
+      "status": "ready",
+      "missingFields": []
+    }
+  ],
   "items": [
     {
       "itemId": "long_sleeve_bodysuit",
       "quantity": 1,
       "role": "base",
       "reasonCodes": ["BASELINE_COOL"],
+      "phase": "main",
       "wearPosition": "on_body",
       "optional": false
     },
@@ -698,14 +797,7 @@ JSON-Beispiel:
       "quantity": 1,
       "role": "legs",
       "reasonCodes": ["BASELINE_COOL"],
-      "wearPosition": "on_body",
-      "optional": false
-    },
-    {
-      "itemId": "thin_sweater",
-      "quantity": 1,
-      "role": "mid",
-      "reasonCodes": ["BASELINE_COOL"],
+      "phase": "main",
       "wearPosition": "on_body",
       "optional": false
     },
@@ -714,15 +806,8 @@ JSON-Beispiel:
       "quantity": 1,
       "role": "external",
       "reasonCodes": ["STROLLER_LOW_ACTIVITY"],
+      "phase": "main",
       "wearPosition": "external",
-      "optional": false
-    },
-    {
-      "itemId": "sun_hat",
-      "quantity": 1,
-      "role": "accessory",
-      "reasonCodes": ["UV_INDEX_GTE_3"],
-      "wearPosition": "on_body",
       "optional": false
     }
   ],
@@ -731,12 +816,6 @@ JSON-Beispiel:
       "code": "CHECK_NECK",
       "severity": "info",
       "reasonCodes": ["THERMAL_FEEDBACK_REQUIRED"],
-      "data": {}
-    },
-    {
-      "code": "STROLLER_DO_NOT_COVER_AIRFLOW",
-      "severity": "hard_rule",
-      "reasonCodes": ["HEAT_AND_AIRFLOW_SAFETY"],
       "data": {}
     }
   ],
@@ -749,7 +828,66 @@ JSON-Beispiel:
 }
 ```
 
-## 15. Nackentest-Feedback
+Auto-Beispiel mit fehlendem Außenwetter:
+
+```json
+{
+  "recommendationId": "rec_car_001",
+  "requestId": "req_car_001",
+  "generatedAt": "2026-08-25T10:00:00.000Z",
+  "mode": "car",
+  "status": "partial",
+  "thermalReferenceC": 21,
+  "thermalReferenceSource": "cabin_temp",
+  "thermalBand": null,
+  "thermalAdjustment": 0,
+  "phaseStatus": [
+    {
+      "phase": "outdoor_transition",
+      "status": "blocked",
+      "missingFields": ["weather.airTempC"]
+    },
+    {
+      "phase": "in_car",
+      "status": "ready",
+      "missingFields": []
+    }
+  ],
+  "items": [
+    {
+      "itemId": "long_sleeve_bodysuit",
+      "quantity": 1,
+      "role": "base",
+      "reasonCodes": ["IN_CAR_THERMAL_BASELINE"],
+      "phase": "in_car",
+      "wearPosition": "under_harness",
+      "optional": false
+    }
+  ],
+  "notices": [
+    {
+      "code": "CAR_SEAT_NO_BULKY_LAYERS",
+      "severity": "hard_rule",
+      "reasonCodes": ["CAR_HARNESS_SAFETY"],
+      "data": {}
+    },
+    {
+      "code": "WEATHER_DATA_INCOMPLETE",
+      "severity": "caution",
+      "reasonCodes": ["OUTDOOR_TRANSITION_NOT_EVALUATED"],
+      "data": {}
+    }
+  ],
+  "ruleTrace": [],
+  "dataQuality": {
+    "weatherFreshness": null,
+    "missingFields": ["weather.airTempC"],
+    "usedManualFallback": false
+  }
+}
+```
+
+## 16. Nackentest-Feedback
 
 ```ts
 interface NeckFeedbackEvent {
@@ -759,12 +897,11 @@ interface NeckFeedbackEvent {
   recordedAt: string;
   feedback: NeckFeedback;
   mode: SituationMode;
-  effectiveTempC: number | null;
   resultingAction: "keep" | "reduce_insulation" | "increase_insulation";
 }
 ```
 
-JSON-Beispiel:
+Beispiel:
 
 ```json
 {
@@ -774,18 +911,25 @@ JSON-Beispiel:
   "recordedAt": "2026-08-25T10:05:00.000Z",
   "feedback": "hot_sweaty",
   "mode": "stroller",
-  "effectiveTempC": 17.1,
   "resultingAction": "reduce_insulation"
 }
 ```
 
-Kalte Hände/Füße werden nicht als `NeckFeedback` codiert. Falls die UI dies später erfassen soll, braucht es ein separates Feld wie `extremityObservation`, das keine automatische globale Wärmekorrektur auslöst.
+V1 verwendet gespeicherte Feedbackereignisse **nicht** für automatische Langzeit-Personalisierung. Deshalb ist kein Vergleichbarkeits-/Lernkontext erforderlich. Falls eine spätere Version automatisch lernen soll, benötigt sie ein versioniertes Kontext-Snapshot-Modell und darf bestehende V1-Ereignisse nicht stillschweigend als ausreichend interpretieren.
 
-## 16. Anwendungszustand
+Kalte Hände/Füße werden nicht als `NeckFeedback` codiert.
+
+## 17. Laufzeitzustand
+
+Ein einzelner exklusiver Status ist nicht ausreichend. Mehrere Achsen dürfen gleichzeitig unterschiedliche Zustände haben.
 
 ```ts
 interface AppRuntimeState {
-  state: AppDataState;
+  connectivity: ConnectivityStatus;
+  locationStatus: LocationStatus;
+  weatherStatus: WeatherStatus;
+  recommendationStatus: RecommendationStatus;
+
   activeProfileId: string | null;
   activeMode: SituationMode;
   weather: WeatherSnapshot | null;
@@ -801,13 +945,14 @@ interface AppError {
 }
 ```
 
-Beispiele:
-
-### Standort abgelehnt
+### Standort abgelehnt, manuelle Eingabe noch nicht erfolgt
 
 ```json
 {
-  "state": "location_denied",
+  "connectivity": "online",
+  "locationStatus": "denied",
+  "weatherStatus": "unavailable",
+  "recommendationStatus": "blocked",
   "activeProfileId": "baby_4bba29a0",
   "activeMode": "outdoor",
   "weather": null,
@@ -821,40 +966,17 @@ Beispiele:
 }
 ```
 
-### Offline mit Cache
+### Offline mit altem Cache
 
 ```json
 {
-  "state": "offline_with_cache",
+  "connectivity": "offline",
+  "locationStatus": "available",
+  "weatherStatus": "stale",
+  "recommendationStatus": "partial",
   "activeProfileId": "baby_4bba29a0",
   "activeMode": "stroller",
-  "weather": {
-    "snapshotId": "cached_weather_001",
-    "location": {
-      "locationId": "geo_001",
-      "label": "Salzburg",
-      "latitude": 47.8095,
-      "longitude": 13.055,
-      "timezone": "Europe/Vienna"
-    },
-    "origin": "cache",
-    "source": "weather_provider_pending",
-    "observedAt": "2026-08-25T09:00:00.000Z",
-    "fetchedAt": "2026-08-25T09:01:00.000Z",
-    "freshness": "fresh",
-    "airTempC": 18,
-    "feelsLikeC": 17,
-    "feelsLikeIncludesWind": true,
-    "windSpeedKmh": 15,
-    "windGustKmh": null,
-    "precipProbabilityPct": 10,
-    "precipMm": 0,
-    "precipitationType": "none",
-    "uvIndex": 2.8,
-    "cloudCoverPct": null,
-    "isDay": true,
-    "directSunExposure": "unknown"
-  },
+  "weather": null,
   "lastRecommendation": null,
   "error": null
 }
@@ -864,7 +986,10 @@ Beispiele:
 
 ```json
 {
-  "state": "sleep_missing_room_temperature",
+  "connectivity": "offline",
+  "locationStatus": "not_required",
+  "weatherStatus": "unavailable",
+  "recommendationStatus": "blocked",
   "activeProfileId": "baby_4bba29a0",
   "activeMode": "sleep",
   "weather": null,
@@ -878,7 +1003,16 @@ Beispiele:
 }
 ```
 
-## 17. Persistenz in `localStorage`
+## 18. Zustandsregeln
+
+- `locationStatus: denied` ist kein fataler Appzustand; manuelle Ort-/Wettereingabe muss möglich bleiben.
+- `connectivity: offline` und `weatherStatus: stale` können gleichzeitig gelten.
+- `weatherStatus: error` kann mit vorhandenem Cache kombiniert werden; die Datenqualität entscheidet, ob eine Empfehlung `ready` oder `partial` ist.
+- `sleep` benötigt weder Standort noch Wetter.
+- `car` nur für `in_car` kann ohne Wetter `ready` sein, wenn `cabinTempC` vorhanden ist.
+- Fehlende optionale Wetterfelder werden nicht als Nullwerte interpretiert.
+
+## 19. Persistenz in `localStorage`
 
 Empfohlene Keys:
 
@@ -892,17 +1026,17 @@ interface LocalSettings {
   defaultMode: SituationMode;
   temperatureUnit: "celsius";
   allowLocation: boolean | null;
-  weatherCacheMaxAgeMinutes: number;
+  weatherCacheMaxAgeMinutes: number | null;
 }
 ```
 
-`weatherCacheMaxAgeMinutes` ist technisch speicherbar, der normative Default ist aber noch offen.
+`weatherCacheMaxAgeMinutes` darf `null` sein, solange der normative Cache-Default noch nicht beschlossen ist.
 
-### Offene Entscheidung D-02 – Cache-Dauer
+### Offene Entscheidung D-01 – Cache-Dauer
 
-**OFFEN:** Gültigkeitsdauer für Wettercache muss zusammen mit dem späteren Wetteranbieter festgelegt werden. Kein Default soll im Code erfunden werden, bevor diese Entscheidung getroffen ist.
+**OFFEN / KALIBRIERUNG:** Cache-Gültigkeit muss mit dem Wetteranbieter festgelegt werden. Kein Default im Code erfinden.
 
-## 18. JSON-Export
+## 20. JSON-Export
 
 ```ts
 interface ExportPayloadV1 {
@@ -935,16 +1069,14 @@ Beispiel:
       "defaultMode": "stroller",
       "temperatureUnit": "celsius",
       "allowLocation": true,
-      "weatherCacheMaxAgeMinutes": 30
+      "weatherCacheMaxAgeMinutes": null
     },
     "feedback": []
   }
 }
 ```
 
-Der Beispielwert `30` Minuten ist **kein freigegebener Produktdefault**, sondern nur ein gültiger Datenwert zur Demonstration des Formats.
-
-## 19. Importvalidierung
+## 21. Importvalidierung
 
 Import muss vor Speicherung vollständig validieren:
 
@@ -956,23 +1088,28 @@ Import muss vor Speicherung vollständig validieren:
 6. Prozentwerte 0–100.
 7. TOG nicht negativ.
 8. Datumsstrings parsbar.
-9. Unbekannte Felder dürfen ignoriert werden, aber unbekannte sicherheitsrelevante Enum-Werte nicht.
-10. Keine importierten UI-Texte als Regeldefinition interpretieren.
+9. Geburtsdatum liegt nicht in der Zukunft.
+10. Bei vorhandenem Geburtsdatum liegt das Alter für V1 im Bereich 0–24 Monate; andernfalls Import als Profil außerhalb des V1-Scopes ablehnen oder explizit markieren – keine stillschweigende Anwendung der Outfitlogik.
+11. `apparentTempTrusted: true` nur mit vorhandenem `apparentTempC`.
+12. `guidanceBands` dürfen keine unbekannten Kleidungs-IDs als normative Unterkleidung aktivieren.
+13. Unbekannte sicherheitsrelevante Enum-Werte führen zu Validierungsfehler.
+14. Fehlerhafter Import überschreibt bestehende lokale Daten nicht teilweise.
+15. Importierte Texte werden nie als Regeldefinition interpretiert.
 
-Fehlerhafter Import darf bestehende lokale Daten nicht teilweise überschreiben.
-
-## 20. Fachliche Regel-IDs
+## 22. Fachliche Regel-IDs
 
 Empfohlenes Schema:
 
 - `baseline.temp.*`
 - `activity.*`
+- `weather.apparent.*`
 - `weather.wind.*`
 - `weather.rain.*`
 - `weather.uv.*`
 - `situation.stroller.*`
 - `situation.carrier.*`
-- `situation.car.*`
+- `situation.car.transition.*`
+- `situation.car.in_car.*`
 - `situation.sleep.*`
 - `feedback.neck.*`
 - `safety.*`
@@ -981,49 +1118,82 @@ Beispiele:
 
 - `baseline.temp.16_20`
 - `weather.uv.gte_3`
-- `situation.car.no_bulky_under_harness`
+- `safety.sun.under_12m.direct`
+- `situation.car.transition.remove_bulky_layer`
+- `situation.car.in_car.no_bulky_under_harness`
 - `situation.sleep.no_hat`
 - `feedback.neck.hot_sweaty`
 
-Diese IDs sollen später direkt in Unit-Tests verwendbar sein.
+## 23. Invarianten für Tests
 
-## 21. Invarianten für Tests
+Folgende Eigenschaften müssen unabhängig von konkreten Outfits gelten:
 
-Folgende Eigenschaften müssen unabhängig von konkreten Outfits immer gelten:
-
-1. `styleTheme` verändert nie `thermalAdjustment`, `items[].itemId` auf fachlicher Ebene oder Sicherheitswarnungen; nur Asset-/Darstellungsvarianten dürfen sich unterscheiden.
+1. `styleTheme` verändert nie Fach-Item-IDs, Wärmestufe oder Sicherheitswarnungen.
 2. `sleep` verwendet `roomTempC`, nicht `weather.airTempC`.
-3. `winter_overall` darf im Modus `car` nie `wearPosition: "on_body"` unter dem Gurt erhalten.
-4. `SLEEP_NO_HAT` gilt immer im Schlafmodus für Indoor-Schlaf.
-5. Ein vorhandenes `feelsLikeC` mit `feelsLikeIncludesWind: true` darf keinen zweiten Wind-Temperaturabschlag auslösen.
-6. `hot_sweaty` darf die Isolation nicht erhöhen.
-7. `cool` darf die Isolation nicht verringern.
-8. `warm_dry` ändert die thermische Stufe nicht.
-9. Kühle Hände/Füße allein verändern die globale thermische Stufe nicht.
-10. UV-Schutz darf bei Hitze nicht durch zusätzliche schwere Isolation umgesetzt werden.
-11. Regen darf nicht automatisch einen zusätzlichen Wärme-Layer erzwingen.
-12. Fehlende Wetterdaten dürfen nicht als Nullwerte ausgelegt werden.
-13. `location_denied` muss manuelle Eingabe erlauben können; es ist kein fataler App-Zustand.
-14. Ein ungültiger Import darf vorhandene lokale Daten nicht teilweise verändern.
+3. Eine generische TOG-Tabelle wird in V1 nicht verwendet.
+4. Ein Schlafsack ohne passende `guidanceBands` darf nicht allein aufgrund seines TOG eine exakte Unterkleidungs-Kombination erzeugen.
+5. `winter_overall` darf in `car/in_car` nie `wearPosition: "under_harness"` erhalten.
+6. `winter_overall` darf in `car/outdoor_transition` vorkommen.
+7. `carSeatCompatibility: prohibited` darf nie `under_harness` sein.
+8. `carSeatCompatibility: conditional` darf nicht automatisch als `under_harness` gewählt werden.
+9. `car` mit `cabinTempC` und ohne Outdoor-Übergang kann ohne Wetter `ready` sein.
+10. `car` mit fehlendem Outdoor-Wetter darf die `in_car`-Phase nicht unnötig blockieren.
+11. Bei `apparentTempTrusted: true` darf kein Faktor aus `apparentTempIncludes` thermisch doppelt gerechnet werden.
+12. Wind kann trotz bereits eingerechneter thermischer Wirkung winddichte Kleidung auslösen.
+13. `SunExposure` gehört zum Kontext, nicht zum `WeatherSnapshot`.
+14. `<12 Monate + direct` erzeugt unabhängig vom UV-Index einen Sonnen-Safety-Hinweis.
+15. `birthDate: null + direct` erzeugt den konservativen Alters-unbekannt-Hinweis.
+16. `uvIndex >= 3` löst UV-Schutz aus, ohne automatisch schwere Isolation zu addieren.
+17. `hot_sweaty` erhöht Isolation nie.
+18. `cool` verringert Isolation nie.
+19. `warm_dry` ändert die thermische Stufe nicht.
+20. Kalte Hände/Füße allein verändern die globale thermische Stufe nicht.
+21. Nackentest verändert in V1 `warmthBias` nicht automatisch.
+22. Regen erzwingt nicht automatisch einen zusätzlichen Wärme-Layer.
+23. Fehlende Wetterdaten werden nicht als `0` ausgelegt.
+24. `locationStatus: denied` muss manuelle Eingabe erlauben können.
+25. Zustandsachsen dürfen kombiniert werden, z. B. `offline + stale + partial`.
+26. Ungültiger Import verändert bestehende lokale Daten nicht teilweise.
 
-## 22. Offene Datenentscheidungen
+## 24. Verbleibende offene Datenentscheidungen
 
-### D-03 – Kleidungswärme-Skala
+### D-01 – Cache-Dauer
 
-**OFFEN:** `thermalWeight` 0–4 ist für V1 verständlich, aber noch nicht empirisch kalibriert. Vor Implementierung muss definiert werden, welche realen Kleidungsarten welchem Wert entsprechen.
+Wetteranbieter und `stale`-Grenze festlegen.
 
-### D-04 – Materialeigenschaften
+### D-02 – Kleidungswärme-Skala
 
-**OFFEN:** V1 kann Material zunächst ignorieren oder grob über Varianten modellieren. Eine explizite Materialachse (`cotton`, `wool`, `fleece`, `synthetic_shell`) würde die Logik präziser, aber komplexer machen.
+`thermalWeight` 0–4 ist eine V1-Arbeitsskala, aber noch nicht empirisch kalibriert. Konkrete Kleidungsarten müssen vor Implementierungsfreigabe zugeordnet und getestet werden.
 
-### D-05 – Ein oder mehrere Babyprofile
+### D-03 – Materialeigenschaften
 
-**OFFEN:** Das Datenmodell kann mehrere Profile tragen, Produktkonzept V1 geht derzeit von einem aktiven lokalen Profil aus. Zu entscheiden ist, ob Mehrprofil-Unterstützung schon in V1 benötigt wird.
+V1 kann Material zunächst über konkrete Kleidungsdefinitionen modellieren. Eine eigene Materialachse (`cotton`, `wool`, `fleece`, `synthetic_shell`) bleibt eine spätere Entscheidung.
 
-### D-06 – Regelspur persistieren
+### D-04 – Ein oder mehrere Babyprofile
 
-**OFFEN:** `ruleTrace` ist für Tests und Debugging wertvoll. Es muss noch entschieden werden, ob sie nur zur Laufzeit existiert oder zusammen mit Feedbackereignissen gespeichert wird.
+Produktkonzept V1 geht von einem aktiven lokalen Profil aus. Mehrprofil-Unterstützung ist nicht erforderlich, solange sie nicht separat beschlossen wird.
 
-### D-07 – Stilthemen
+### D-05 – Regelspur persistieren
 
-**OFFEN:** Die finalen visuellen Themes werden erst im Asset-/UI-Arbeitsstrang festgelegt. Der Datenvertrag garantiert nur, dass Stil niemals Fachlogik beeinflusst.
+`ruleTrace` ist für Tests/Debugging vorgesehen. Ob sie persistiert oder nur zur Laufzeit existiert, ist offen.
+
+### D-06 – Stilthemen
+
+Finale visuelle Themes werden erst im Asset-/UI-Arbeitsstrang festgelegt. Stil beeinflusst nie Fachlogik.
+
+## 25. Bereits entschiedene Datenentscheidungen
+
+Für V1 nicht mehr offen:
+
+- Alters-Scope `0–24 Monate`.
+- tatsächliche Sonnenexposition im Situationskontext.
+- konservative Sonnenregel bei unbekanntem Alter.
+- `apparentTempTrusted` + `apparentTempIncludes` statt `feelsLikeIncludesWind`.
+- abgeleitete `thermalReferenceC` statt blindem Provider-`feelsLike`.
+- `CarSeatCompatibility = allowed | conditional | prohibited` statt Boolean.
+- Auto-Phasen `outdoor_transition` und `in_car`.
+- Wetter ist für reine `in_car`-Empfehlung mit `cabinTempC` nicht Pflicht.
+- mehrere unabhängige Runtime-Statusachsen statt exklusivem `AppDataState`.
+- keine generische TOG-Tabelle in V1.
+- strukturierte Herstellerbänder für Schlafsäcke.
+- keine automatische Langzeit-Personalisierung aus Nackentestfeedback in V1.
