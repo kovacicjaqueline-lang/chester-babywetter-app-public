@@ -38,8 +38,11 @@ export const THERMAL_LADDERS = Object.freeze({
 });
 
 export const BODY_SLOTS = Object.freeze(['base_torso','legs','mid','outer','feet','head','hands']);
+const LOCKABLE_ITEM_SLOTS = Object.freeze([...BODY_SLOTS,'footwear']);
 export const QUICK_WARM_PRIORITY = Object.freeze(['mid','outer','base_torso','legs','feet','head','hands']);
 export const QUICK_COOL_PRIORITY = Object.freeze(['outer','mid','legs','base_torso','feet','head','hands']);
+const HALF_WARM_PRIORITY = Object.freeze(['feet','head','hands','legs','outer','mid','base_torso']);
+const HALF_COOL_PRIORITY = Object.freeze(['hands','head','feet','outer','legs','mid','base_torso']);
 export const RELATION_ORDER = Object.freeze({ equivalent:0, warmer:1, cooler:2 });
 
 export function createSession(sessionId = 'session') {
@@ -284,10 +287,17 @@ export function applyGroundContact(state,rain,temp,context,mode) {
 }
 
 export function applyBodyLocksAndRebalance(state,result,request,phase,mode) {
-  const locks = request.session.manualLocks.filter((lock) => lock.phase === phase && BODY_SLOTS.includes(lock.slot));
+  const locks = request.session.manualLocks.filter((lock) => lock.phase === phase && LOCKABLE_ITEM_SLOTS.includes(lock.slot));
+  const lockedThermalSlots = new Set(locks.filter((lock) => BODY_SLOTS.includes(lock.slot)).map((lock) => lock.slot));
   for (const lock of locks) {
     const definition = CLOTHING_CATALOG[lock.itemId];
     if (!definition || definition.slot !== lock.slot || !definition.allowedSituations.includes(mode)) continue;
+    if (lock.slot === 'footwear') {
+      if (mode !== 'outdoor' || !['standing','walking'].includes(request.context.groundContact)) continue;
+      setSelected(state,'footwear',lock.itemId,'manual_lock','on_body',['MANUAL_ITEM_LOCK']);
+      addTrace(result,'swap.manual_lock',phase,'lock',lock.itemId,0,'MANUAL_ITEM_LOCK');
+      continue;
+    }
     if (phase === 'in_car' && definition.carSeatCompatibility === 'prohibited') {
       overrideUnsafeLock(result,lock,phase,'CAR_SEAT_PROHIBITED_LAYER');
       continue;
@@ -301,7 +311,7 @@ export function applyBodyLocksAndRebalance(state,result,request,phase,mode) {
     if (phase === 'in_car' && definition.carSeatCompatibility === 'conditional') {
       addNotice(result,'CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT','caution',phase,['CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT'],{ itemId:lock.itemId });
     }
-    if (delta) rebalanceOtherSlots(state,-delta,new Set(locks.map((entry) => entry.slot)),mode,lock.slot);
+    if (delta) rebalanceOtherSlots(state,-delta,lockedThermalSlots,mode,lock.slot);
   }
 }
 
@@ -333,11 +343,17 @@ export function applyQuickCorrection(state,result,offset,phase,mode,request) {
 export function applyThermalDelta(state,delta,locked,mode,priority = null,stopAfterOne = false) {
   if (!delta) return null;
   const direction = delta > 0 ? 1 : -1;
-  let moves = Math.max(1,Math.ceil(Math.abs(delta)));
-  const order = priority ?? (direction > 0 ? QUICK_WARM_PRIORITY : QUICK_COOL_PRIORITY);
+  const magnitude = Math.abs(delta);
+  const fullMoves = Math.floor(magnitude + 1e-9);
+  const hasHalfMove = magnitude - fullMoves >= 0.49;
+  const normalOrder = priority ?? (direction > 0 ? QUICK_WARM_PRIORITY : QUICK_COOL_PRIORITY);
+  const halfBase = direction > 0 ? HALF_WARM_PRIORITY : HALF_COOL_PRIORITY;
+  const halfOrder = priority
+    ? [...halfBase.filter((slot) => priority.includes(slot)), ...priority.filter((slot) => !halfBase.includes(slot))]
+    : halfBase;
   let firstChanged = null;
-  while (moves > 0) {
-    let changed = false;
+
+  const moveOnce = (order) => {
     for (const slot of order) {
       if (locked.has(slot)) continue;
       const next = nextThermalItem(state.map.get(slot)?.itemId ?? null,slot,direction,mode);
@@ -345,13 +361,16 @@ export function applyThermalDelta(state,delta,locked,mode,priority = null,stopAf
       if (next === null) state.map.delete(slot);
       else setSelected(state,slot,next,'engine',state.phase === 'in_car' ? 'under_harness' : 'on_body',['THERMAL_REBALANCE']);
       firstChanged ??= slot;
-      changed = true;
-      break;
+      return true;
     }
-    if (!changed) break;
-    moves -= 1;
-    if (stopAfterOne) break;
+    return false;
+  };
+
+  for (let index = 0; index < fullMoves; index += 1) {
+    if (!moveOnce(normalOrder)) break;
+    if (stopAfterOne) return firstChanged;
   }
+  if (hasHalfMove && !(stopAfterOne && firstChanged)) moveOnce(halfOrder);
   return firstChanged;
 }
 
@@ -384,7 +403,6 @@ export function nearestSleepUnderlayer(target) {
     return Math.abs(aw-target) - Math.abs(bw-target) || aw-bw;
   })[0];
 }
-
 
 export function alternativeCandidateIds(slotResult,mode) {
   return (SLOT_ITEMS[slotResult.slot] ?? []).filter((itemId) => {
@@ -422,8 +440,9 @@ export function applyWeatherQuality(result,weather,point,weatherWindow,phase) {
   }
   const missing = [];
   if (!isFiniteNumber(weatherWindow.maxWindSpeedKmh)) missing.push('weather.windSpeedKmh');
-  const precipKnown = isFiniteNumber(weatherWindow.maxPrecipProbabilityPct) || isFiniteNumber(point.precipMm) || ['none','rain','snow','sleet'].includes(point.precipitationType);
-  if (!precipKnown) missing.push('weather.precipitation');
+  if (!isFiniteNumber(weatherWindow.maxPrecipProbabilityPct)) missing.push('weather.precipProbabilityPct');
+  const currentPrecipKnown = isFiniteNumber(point.precipMm) || ['none','rain','snow','sleet'].includes(point.precipitationType);
+  if (!currentPrecipKnown) missing.push('weather.precipitation');
   if (!isFiniteNumber(weatherWindow.maxUvIndex)) missing.push('weather.uvIndex');
   if (missing.length) {
     result.status = 'partial';
