@@ -64,6 +64,18 @@ test('complete hourly coverage keeps weather-window coverage out of missing fiel
   assert.ok(!result.dataQuality.missingFields.includes('weather.hourly.coverage'));
 });
 
+test('gap inside a longer planned weather window is reported as incomplete coverage', () => {
+  const result = recommendOutfit(request({
+    context:{plannedMinutes:240},
+    w:weather({hourly:[
+      point('2026-08-25T15:00:00+02:00',18),
+      point('2026-08-25T18:00:00+02:00',18)
+    ]})
+  }));
+  assert.equal(result.status,'partial');
+  assert.ok(result.dataQuality.missingFields.includes('weather.hourly.coverage'));
+});
+
 test('short car transition accepts the next hourly point as coverage anchor', () => {
   const result = recommendOutfit(request({
     context:{
