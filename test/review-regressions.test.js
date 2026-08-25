@@ -131,8 +131,8 @@ test('footwear manual lock is retained and footwear alternatives remain availabl
   const footwear = slot(result,'footwear');
   assert.equal(footwear.selected.itemId,'warm_shoes');
   assert.equal(footwear.selected.selectionSource,'manual_lock');
-  assert.ok(footwear.alternatives.some((option) => option.itemId === 'light_shoes'));
-  assert.ok(footwear.alternatives.some((option) => option.itemId === 'weatherproof_shoes'));
+  assert.equal(footwear.alternatives.find((option) => option.itemId === 'light_shoes')?.relation,'cooler');
+  assert.equal(footwear.alternatives.find((option) => option.itemId === 'weatherproof_shoes')?.relation,'cooler');
 });
 
 test('missing precipitation probability is reported even when current precipitation is known dry', () => {
