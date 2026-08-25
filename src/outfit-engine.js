@@ -126,9 +126,6 @@ function evaluateOutdoorLike(result, request, phase, effectiveMode) {
   if (bias) traceThermal(result,'profile.warmth_bias',phase,bias,bias > 0 ? 'BABY_RUNS_COOL' : 'BABY_RUNS_WARM');
 
   const neck = neckFeedbackAdjustment(neckFeedback);
-  adjustment += neck;
-  if (neck) traceThermal(result,'feedback.neck',phase,neck,neck > 0 ? 'NECK_COOL' : 'NECK_HOT_SWEATY');
-  else if (neckFeedback === 'warm_dry') addTrace(result,'feedback.neck',phase,'no_change',null,0,'NECK_WARM_DRY_KEEP');
 
   let accessoryCredit = 0;
   if (effectiveMode === 'stroller') {
@@ -176,9 +173,10 @@ function evaluateOutdoorLike(result, request, phase, effectiveMode) {
 
   applyBodyLocksAndRebalance(state, result, request, phase, effectiveMode);
 
-  const protectedQuickSlots = functionalProtectionSlots(state, rain, wind, effectiveMode);
+  const protectedQuickSlots = functionalProtectionSlots(state, rain, wind, effectiveMode, uv);
   const quickRequest = withProtectedSlots(request, phase, protectedQuickSlots);
   applyQuickCorrection(state, result, session.warmthOffset, phase, effectiveMode, quickRequest);
+  applyNeckCorrection(state,result,request,phase,effectiveMode,neckFeedback,neck,protectedQuickSlots);
 
   if (thermal.thermalReferenceC < 0) addNotice(result,'EXTREME_COLD_CAUTION','caution',phase,['EXTREME_COLD_CAUTION'],{ thermalReferenceC:thermal.thermalReferenceC });
   if (thermal.thermalReferenceC >= 30 || (effectiveMode === 'carrier' && thermal.thermalReferenceC >= 28)) addNotice(result,'EXTREME_HEAT_CAUTION','caution',phase,['EXTREME_HEAT_CAUTION'],{ thermalReferenceC:thermal.thermalReferenceC });
@@ -193,7 +191,7 @@ function evaluateOutdoorLike(result, request, phase, effectiveMode) {
     thermalReferenceC:thermal.thermalReferenceC,
     thermalReferenceSource:thermal.referenceSource,
     thermalBand:band.id,
-    thermalAdjustment:roundHalf(adjustment - accessoryCredit - (effectiveMode === 'carrier' ? carrierTorsoCredit : 0) + session.warmthOffset),
+    thermalAdjustment:roundHalf(adjustment + neck - accessoryCredit - (effectiveMode === 'carrier' ? carrierTorsoCredit : 0) + session.warmthOffset),
     missingFields:[...new Set(result.dataQuality.missingFields)]
   });
   return result;
@@ -217,7 +215,7 @@ function evaluateCar(result, request) {
       context:transitionContext,
       session:{ ...session, manualLocks:session.manualLocks.filter((lock) => lock.phase === 'outdoor_transition') }
     };
-    const transitionResult = createResult({ ...request, context:{ ...request.context, mode:'car' } });
+    const transitionResult = createResult({ ...request, context:{ ...request.context, mode:'car'} });
     evaluateOutdoorLike(transitionResult, subRequest, 'outdoor_transition', 'outdoor');
     mergeResult(result, transitionResult, 'outdoor_transition');
     if (transitionResult.status === 'blocked') result.status = 'partial';
@@ -237,8 +235,9 @@ function evaluateCar(result, request) {
   seedBaseline(state, band.id, 'car');
   makeCarSafeBaseline(state);
 
-  const adjustment = warmthBiasAdjustment(profile.warmthBias) + neckFeedbackAdjustment(neckFeedback);
-  applyThermalDelta(state, adjustment, new Set(), 'car');
+  const bias = warmthBiasAdjustment(profile.warmthBias);
+  const neck = neckFeedbackAdjustment(neckFeedback);
+  applyThermalDelta(state, bias, new Set(), 'car');
   makeCarSafeBaseline(state);
 
   applyBodyLocksAndRebalance(state,result,request,'in_car','car');
@@ -247,6 +246,11 @@ function evaluateCar(result, request) {
 
   const carQuickRequest = withProtectedSlots(request,'in_car',new Set(['mid','outer']));
   applyQuickCorrection(state,result,session.warmthOffset,'in_car','car',carQuickRequest);
+  sanitizeAutomaticConditionalCarLayers(state);
+  enforceCarSafetyAfterLocks(state,result,request,'in_car');
+
+  const carNeckProtected = neck > 0 ? new Set(['mid','outer']) : new Set(['outer']);
+  applyNeckCorrection(state,result,request,'in_car','car',neckFeedback,neck,carNeckProtected);
   sanitizeAutomaticConditionalCarLayers(state);
   enforceCarSafetyAfterLocks(state,result,request,'in_car');
 
@@ -265,7 +269,7 @@ function evaluateCar(result, request) {
     thermalReferenceC:context.cabinTempC,
     thermalReferenceSource:'cabin_temp',
     thermalBand:band.id,
-    thermalAdjustment:roundHalf(adjustment + session.warmthOffset),
+    thermalAdjustment:roundHalf(bias + neck + session.warmthOffset),
     missingFields:[]
   });
   if (result.status !== 'partial' && result.status !== 'blocked') result.status = inCarStatus;
@@ -401,21 +405,49 @@ function rebalanceFunctionalProtection(state, thermalWeightBeforeProtection, mod
   applyThermalDelta(state,-delta,new Set(['outer']),mode,priority);
 }
 
-function functionalProtectionSlots(state, rain, wind, mode) {
+function functionalProtectionSlots(state, rain, wind, mode, uv) {
   const protectedSlots = new Set();
   const outer = state.map.get('outer');
-  if (!outer) return protectedSlots;
-  const outerDefinition = CLOTHING_CATALOG[outer.itemId];
-  const strollerWeatherDefinition = mode === 'stroller'
-    ? CLOTHING_CATALOG[state.map.get('stroller_weather_accessory')?.itemId]
-    : null;
-  const rainNeedsOuter = rain.required && (strollerWeatherDefinition?.rainProtection ?? 0) < 3;
-  const windNeedsOuter = wind.requiredProtection > (strollerWeatherDefinition?.windProtection ?? 0);
-  if ((rainNeedsOuter && (outerDefinition?.rainProtection ?? 0) >= 3)
-    || (windNeedsOuter && (outerDefinition?.windProtection ?? 0) >= wind.requiredProtection)) {
-    protectedSlots.add('outer');
+  if (outer) {
+    const outerDefinition = CLOTHING_CATALOG[outer.itemId];
+    const strollerWeatherDefinition = mode === 'stroller'
+      ? CLOTHING_CATALOG[state.map.get('stroller_weather_accessory')?.itemId]
+      : null;
+    const rainNeedsOuter = rain.required && (strollerWeatherDefinition?.rainProtection ?? 0) < 3;
+    const windNeedsOuter = wind.requiredProtection > (strollerWeatherDefinition?.windProtection ?? 0);
+    if ((rainNeedsOuter && (outerDefinition?.rainProtection ?? 0) >= 3)
+      || (windNeedsOuter && (outerDefinition?.windProtection ?? 0) >= wind.requiredProtection)) {
+      protectedSlots.add('outer');
+    }
+  }
+
+  if (uv.active && mode !== 'car') {
+    for (const slot of ['head','base_torso','legs']) {
+      if (state.map.has(slot)) protectedSlots.add(slot);
+    }
   }
   return protectedSlots;
+}
+
+function applyNeckCorrection(state,result,request,phase,mode,feedback,delta,protectedSlots = new Set()) {
+  if (!delta) {
+    if (feedback === 'warm_dry') addTrace(result,'feedback.neck',phase,'no_change',null,0,'NECK_WARM_DRY_KEEP');
+    return;
+  }
+  const locked = new Set([
+    ...request.session.manualLocks.filter((lock) => lock.phase === phase).map((lock) => lock.slot),
+    ...protectedSlots
+  ]);
+  const changed = applyThermalDelta(state,delta,locked,mode,null,true);
+  addTrace(
+    result,
+    'feedback.neck',
+    phase,
+    delta > 0 ? 'thermal_up' : 'thermal_down',
+    changed ?? null,
+    delta,
+    delta > 0 ? 'NECK_COOL' : 'NECK_HOT_SWEATY'
+  );
 }
 
 function withProtectedSlots(request, phase, slots) {

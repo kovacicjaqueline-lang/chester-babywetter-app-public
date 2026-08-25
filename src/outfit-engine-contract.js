@@ -21,6 +21,7 @@ export function recommendOutfit(input) {
   }
 
   markManualWeatherProtectionConflicts(result,input);
+  markWeatherWindowCompleteness(result,input);
   calibrateFootwearAlternatives(result);
   return result;
 }
@@ -96,6 +97,76 @@ function markManualWeatherProtectionConflicts(result,input) {
     },'weather.protection.manual_lock');
     markPartial(result,check.phase);
   }
+}
+
+function markWeatherWindowCompleteness(result,input) {
+  const context = input.context ?? input.situation ?? {};
+  const weather = input.weather;
+  if (!weather?.current) return;
+
+  const checks = [];
+  if (['outdoor','stroller','carrier'].includes(context.mode)) {
+    checks.push({ phase:'main', plannedMinutes:context.plannedMinutes ?? null });
+  } else if (context.mode === 'car' && context.includeOutdoorTransition) {
+    checks.push({ phase:'outdoor_transition', plannedMinutes:context.outsideTransitionMinutes ?? context.plannedMinutes ?? null });
+  }
+
+  for (const check of checks) {
+    const evaluation = result.phases.find((entry) => entry.phase === check.phase);
+    if (!evaluation || evaluation.status === 'blocked') continue;
+    const missing = missingWeatherWindowFields(weather,check.plannedMinutes);
+    if (!missing.length) continue;
+
+    result.dataQuality.missingFields = [...new Set([...(result.dataQuality.missingFields ?? []),...missing])];
+    evaluation.missingFields = [...new Set([...(evaluation.missingFields ?? []),...missing])];
+    markPartial(result,check.phase);
+
+    if (!hasNotice(result,'WEATHER_DATA_INCOMPLETE',check.phase)) {
+      addNotice(result,'WEATHER_DATA_INCOMPLETE','caution',check.phase,'WEATHER_WINDOW_INCOMPLETE',{
+        count:missing.length
+      },'weather.window.completeness');
+    }
+  }
+}
+
+function missingWeatherWindowFields(weather,plannedMinutes) {
+  const duration = Number.isFinite(plannedMinutes) ? Math.max(0,plannedMinutes) : 120;
+  if (duration === 0) return [];
+
+  const start = Date.parse(weather.current.time);
+  if (!Number.isFinite(start)) return ['weather.current.time'];
+  const end = start + duration * 60000;
+  const validHourly = (weather.hourly ?? [])
+    .filter((point) => Number.isFinite(Date.parse(point.time)))
+    .filter((point) => Date.parse(point.time) > start)
+    .sort((a,b) => Date.parse(a.time) - Date.parse(b.time));
+  const inWindow = validHourly.filter((point) => Date.parse(point.time) <= end);
+
+  const missing = [];
+  // Hourly data is discrete. Require evidence that a future hourly series exists and
+  // that no part of the planned interval has a gap larger than one hourly step.
+  // A point just after a very short interval can establish series coverage without
+  // contributing weather hazards outside the requested window.
+  const firstFutureMs = validHourly.length ? Date.parse(validHourly[0].time) : null;
+  let hasHourlyCoverage = firstFutureMs != null && firstFutureMs - start <= 60 * 60000;
+  let previousMs = start;
+  if (hasHourlyCoverage) {
+    for (const point of inWindow) {
+      const pointMs = Date.parse(point.time);
+      if (pointMs - previousMs > 60 * 60000) {
+        hasHourlyCoverage = false;
+        break;
+      }
+      previousMs = pointMs;
+    }
+  }
+  if (hasHourlyCoverage && end - previousMs > 60 * 60000) hasHourlyCoverage = false;
+
+  if (!hasHourlyCoverage) missing.push('weather.hourly.coverage');
+  if (inWindow.some((point) => !Number.isFinite(point.precipProbabilityPct))) missing.push('weather.hourly.precipProbabilityPct');
+  if (inWindow.some((point) => !Number.isFinite(point.windSpeedKmh))) missing.push('weather.hourly.windSpeedKmh');
+  if (inWindow.some((point) => !Number.isFinite(point.uvIndex))) missing.push('weather.hourly.uvIndex');
+  return [...new Set(missing)];
 }
 
 function calibrateFootwearAlternatives(result) {
