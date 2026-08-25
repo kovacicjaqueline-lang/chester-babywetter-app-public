@@ -171,6 +171,7 @@ interface WeatherSnapshot {
   uvIndex: number | null;
   cloudCoverPct: number | null;
   isDay: boolean | null;
+  weatherCode: number | null;
 }
 ```
 
@@ -200,7 +201,8 @@ interface WeatherSnapshot {
   "precipitationType": "none",
   "uvIndex": 3.2,
   "cloudCoverPct": 40,
-  "isDay": true
+  "isDay": true,
+  "weatherCode": 2
 }
 ```
 
@@ -214,6 +216,8 @@ interface WeatherSnapshot {
 - Ein bereits enthaltener Faktor darf thermisch nicht doppelt verrechnet werden.
 - Wind kann trotzdem winddichte Kleidung auslösen.
 - Fehlende Wind-/UV-/Regendaten werden nie als `0` interpretiert.
+- `weatherCode` bewahrt den normalisierten numerischen Provider-/WMO-Code für genaue Wettersemantik und Schutzregeln; fehlt er, ist der Wert `null`.
+- Für V1 bleibt `precipitationType` bewusst grob. Open-Meteo/WMO 66 und 67 (gefrierender Regen) werden als `rain` normalisiert; der exakte Code 66/67 bleibt in `weatherCode` erhalten.
 - `SunExposure` ist bewusst kein Feld des Wetter-Snapshots.
 
 ### Manuelle Eingabe
@@ -244,7 +248,8 @@ interface WeatherSnapshot {
   "precipitationType": "unknown",
   "uvIndex": null,
   "cloudCoverPct": null,
-  "isDay": null
+  "isDay": null,
+  "weatherCode": null
 }
 ```
 
@@ -976,6 +981,7 @@ Für V1 nicht mehr offen:
 - konservative Sonnenregel bei unbekanntem Alter.
 - `apparentTempTrusted` + `apparentTempIncludes` statt `feelsLikeIncludesWind`.
 - normalisierte thermische Referenz statt blindem Provider-`feelsLike`.
+- `weatherCode: number | null` ist Bestandteil des `WeatherSnapshot`; WMO 66/67 werden in V1 als `rain` normalisiert, der exakte Code bleibt erhalten.
 - `CarSeatCompatibility = allowed | conditional | prohibited`.
 - Auto-Phasen `outdoor_transition` und `in_car`.
 - phasenweise thermische Ergebniswerte.
