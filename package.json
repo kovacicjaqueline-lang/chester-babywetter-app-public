@@ -1,0 +1,8 @@
+{
+  "name": "chester-babywetter-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  }
+}
