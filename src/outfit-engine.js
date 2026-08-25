@@ -16,6 +16,10 @@ import {
 
 export { TEMPERATURE_BANDS, createSession, setWarmthOffset, lockItem, temperatureBandFor } from './outfit-engine-support.js';
 
+const BODY_THERMAL_SLOTS = Object.freeze(['base_torso','legs','mid','outer','feet','head','hands']);
+const PROTECTION_REBALANCE_PRIORITY = Object.freeze(['mid','legs','base_torso','feet','head','hands']);
+const CARRIER_PROTECTION_REBALANCE_PRIORITY = Object.freeze(['mid','base_torso']);
+
 export function recommendOutfit(input) {
   const request = normalizeRequest(input);
   const result = recommendCore(request);
@@ -38,15 +42,19 @@ function normalizeRequest(input) {
   if (!profile || typeof profile !== 'object') throw new TypeError('profile is required');
   if (!context || typeof context !== 'object' || !context.mode) throw new TypeError('context.mode is required');
   const session = input.session ?? createSession('session_default');
-  if (![ -1, 0, 1 ].includes(session.warmthOffset ?? 0)) throw new RangeError('session.warmthOffset must be -1, 0 or 1');
+  if (![-1,0,1].includes(session.warmthOffset ?? 0)) throw new RangeError('session.warmthOffset must be -1, 0 or 1');
   return {
-    requestId: input.requestId ?? 'request',
-    requestedAt: input.requestedAt ?? '1970-01-01T00:00:00.000Z',
+    requestId:input.requestId ?? 'request',
+    requestedAt:input.requestedAt ?? '1970-01-01T00:00:00.000Z',
     profile,
     context,
-    weather: input.weather ?? null,
-    session: { sessionId:session.sessionId ?? 'session_default', manualLocks:[...(session.manualLocks ?? [])], warmthOffset:session.warmthOffset ?? 0 },
-    neckFeedback: input.neckFeedback ?? null
+    weather:input.weather ?? null,
+    session:{
+      sessionId:session.sessionId ?? 'session_default',
+      manualLocks:[...(session.manualLocks ?? [])],
+      warmthOffset:session.warmthOffset ?? 0
+    },
+    neckFeedback:input.neckFeedback ?? null
   };
 }
 
@@ -158,13 +166,19 @@ function evaluateOutdoorLike(result, request, phase, effectiveMode) {
     addNotice(result,'STROLLER_DO_NOT_COVER_AIRFLOW','hard_rule',phase,['STROLLER_AIRFLOW_SAFETY'],{});
   }
 
+  const thermalWeightBeforeProtection = bodyThermalWeight(state);
   applyRainProtection(state, result, request, rain, phase, effectiveMode);
   applyWindProtection(state, result, wind, phase, effectiveMode);
+  rebalanceFunctionalProtection(state, thermalWeightBeforeProtection, effectiveMode);
+
   applySunProtection(state, result, request, uv, thermal.thermalReferenceC, phase, effectiveMode);
   applyGroundContact(state, rain, thermal.thermalReferenceC, context, effectiveMode);
 
   applyBodyLocksAndRebalance(state, result, request, phase, effectiveMode);
-  applyQuickCorrection(state, result, session.warmthOffset, phase, effectiveMode, request);
+
+  const protectedQuickSlots = functionalProtectionSlots(state, rain, wind, effectiveMode);
+  const quickRequest = withProtectedSlots(request, phase, protectedQuickSlots);
+  applyQuickCorrection(state, result, session.warmthOffset, phase, effectiveMode, quickRequest);
 
   if (thermal.thermalReferenceC < 0) addNotice(result,'EXTREME_COLD_CAUTION','caution',phase,['EXTREME_COLD_CAUTION'],{ thermalReferenceC:thermal.thermalReferenceC });
   if (thermal.thermalReferenceC >= 30 || (effectiveMode === 'carrier' && thermal.thermalReferenceC >= 28)) addNotice(result,'EXTREME_HEAT_CAUTION','caution',phase,['EXTREME_HEAT_CAUTION'],{ thermalReferenceC:thermal.thermalReferenceC });
@@ -175,7 +189,7 @@ function evaluateOutdoorLike(result, request, phase, effectiveMode) {
   finalizePhase(state);
   result.phases.push({
     phase,
-    status: phaseStatusFromResult(result),
+    status:phaseStatusFromResult(result),
     thermalReferenceC:thermal.thermalReferenceC,
     thermalReferenceSource:thermal.referenceSource,
     thermalBand:band.id,
@@ -191,13 +205,22 @@ function evaluateCar(result, request) {
 
   if (context.includeOutdoorTransition) {
     const transitionContext = {
-      mode:'outdoor', plannedMinutes:context.outsideTransitionMinutes ?? context.plannedMinutes ?? null,
-      activity:'normal', activitySource:'default', sunExposure:'unknown', groundContact:'none'
+      mode:'outdoor',
+      plannedMinutes:context.outsideTransitionMinutes ?? context.plannedMinutes ?? null,
+      activity:'normal',
+      activitySource:'default',
+      sunExposure:'unknown',
+      groundContact:'none'
     };
-    const subRequest = { ...request, context:transitionContext, session:{ ...session, manualLocks:session.manualLocks.filter((lock) => lock.phase === 'outdoor_transition') } };
-    const transitionResult = createResult({ ...request, context:{...request.context, mode:'car'} });
+    const subRequest = {
+      ...request,
+      context:transitionContext,
+      session:{ ...session, manualLocks:session.manualLocks.filter((lock) => lock.phase === 'outdoor_transition') }
+    };
+    const transitionResult = createResult({ ...request, context:{ ...request.context, mode:'car' } });
     evaluateOutdoorLike(transitionResult, subRequest, 'outdoor_transition', 'outdoor');
     mergeResult(result, transitionResult, 'outdoor_transition');
+    if (transitionResult.status === 'blocked') result.status = 'partial';
     if (result.slots.some((slot) => slot.phase === 'outdoor_transition' && CLOTHING_CATALOG[slot.selected.itemId]?.carSeatCompatibility === 'prohibited')) {
       addNotice(result,'CAR_SEAT_REMOVE_OUTER_BEFORE_HARNESS','hard_rule','outdoor_transition',['CAR_HARNESS_SAFETY'],{});
     }
@@ -214,12 +237,17 @@ function evaluateCar(result, request) {
   seedBaseline(state, band.id, 'car');
   makeCarSafeBaseline(state);
 
-  let adjustment = warmthBiasAdjustment(profile.warmthBias) + neckFeedbackAdjustment(neckFeedback);
+  const adjustment = warmthBiasAdjustment(profile.warmthBias) + neckFeedbackAdjustment(neckFeedback);
   applyThermalDelta(state, adjustment, new Set(), 'car');
   makeCarSafeBaseline(state);
+
   applyBodyLocksAndRebalance(state,result,request,'in_car','car');
+  sanitizeAutomaticConditionalCarLayers(state);
   enforceCarSafetyAfterLocks(state,result,request,'in_car');
-  applyQuickCorrection(state,result,session.warmthOffset,'in_car','car',request);
+
+  const carQuickRequest = withProtectedSlots(request,'in_car',new Set(['mid','outer']));
+  applyQuickCorrection(state,result,session.warmthOffset,'in_car','car',carQuickRequest);
+  sanitizeAutomaticConditionalCarLayers(state);
   enforceCarSafetyAfterLocks(state,result,request,'in_car');
 
   addNotice(result,'CAR_SEAT_BLANKET_OVER_HARNESS_ONLY','hard_rule','in_car',['CAR_HARNESS_SAFETY'],{});
@@ -231,7 +259,15 @@ function evaluateCar(result, request) {
 
   finalizePhase(state);
   const inCarStatus = context.cabinTempSource === 'estimated' ? 'ready_with_estimate' : 'ready';
-  result.phases.push({ phase:'in_car', status:inCarStatus, thermalReferenceC:context.cabinTempC, thermalReferenceSource:'cabin_temp', thermalBand:band.id, thermalAdjustment:roundHalf(adjustment + session.warmthOffset), missingFields:[] });
+  result.phases.push({
+    phase:'in_car',
+    status:inCarStatus,
+    thermalReferenceC:context.cabinTempC,
+    thermalReferenceSource:'cabin_temp',
+    thermalBand:band.id,
+    thermalAdjustment:roundHalf(adjustment + session.warmthOffset),
+    missingFields:[]
+  });
   if (result.status !== 'partial' && result.status !== 'blocked') result.status = inCarStatus;
   return result;
 }
@@ -253,40 +289,70 @@ function evaluateSleep(result, request) {
   const guidance = genericTogGuidanceForRoomTemp(context.roomTempC);
   const state = createPhaseState(result,'main','sleep');
   const bagLock = findLock(session,'main','sleep_bag');
+  const underLock = findLock(session,'main','sleep_underlayer');
+
   let bagId = guidance.sleepBagId;
   let bagSource = 'engine';
+  let bagLocked = false;
   if (bagLock) {
     if (SLEEP_BAG_IDS.includes(bagLock.itemId)) {
       bagId = bagLock.itemId;
       bagSource = 'manual_lock';
+      bagLocked = true;
       addTrace(result,'swap.sleep_bag','main','lock',bagId,null,'MANUAL_ITEM_LOCK');
     } else {
       overrideUnsafeLock(result,bagLock,'main','SLEEP_INVALID_BAG_LOCK');
     }
   }
 
-  let targetWarmth = guidance.targetWarmth + warmthBiasAdjustment(profile.warmthBias) + neckFeedbackAdjustment(neckFeedback) + session.warmthOffset;
-  targetWarmth = clamp(targetWarmth,0,9);
-  const bagWeight = CLOTHING_CATALOG[bagId].sleepWarmthWeight;
-  const underTarget = targetWarmth - bagWeight;
-  const underlayerId = nearestSleepUnderlayer(underTarget);
-  setSelected(state,'sleep_bag',bagId,bagSource,'external',[bagSource === 'manual_lock' ? 'MANUAL_ITEM_LOCK' : 'SLEEP_GENERIC_TOG_ORIENTATION']);
-  setSelected(state,'sleep_underlayer',underlayerId,'engine','on_body',['SLEEP_UNDERLAYER_REBALANCED']);
-
-  const underLock = findLock(session,'main','sleep_underlayer');
+  let lockedUnderlayerId = null;
   if (underLock) {
     const definition = CLOTHING_CATALOG[underLock.itemId];
     if (definition?.slot === 'sleep_underlayer' && definition.sleepSafe) {
-      setSelected(state,'sleep_underlayer',underLock.itemId,'manual_lock','on_body',['MANUAL_ITEM_LOCK']);
+      lockedUnderlayerId = underLock.itemId;
       addTrace(result,'swap.sleep_underlayer','main','lock',underLock.itemId,null,'MANUAL_ITEM_LOCK');
     } else {
       overrideUnsafeLock(result,underLock,'main','SLEEP_UNSAFE_UNDERLAYER_LOCK');
     }
   }
 
+  let targetWarmth = guidance.targetWarmth + warmthBiasAdjustment(profile.warmthBias) + neckFeedbackAdjustment(neckFeedback) + session.warmthOffset;
+  targetWarmth = clamp(targetWarmth,0,9);
+
+  if (lockedUnderlayerId && !bagLocked) {
+    const underWeight = CLOTHING_CATALOG[lockedUnderlayerId].sleepWarmthWeight ?? 0;
+    bagId = nearestSleepBag(targetWarmth - underWeight, guidance.sleepBagId);
+  }
+
+  const bagWeight = CLOTHING_CATALOG[bagId].sleepWarmthWeight ?? 0;
+  const underlayerId = lockedUnderlayerId ?? nearestSleepUnderlayer(targetWarmth - bagWeight);
+  const bagReason = bagSource === 'manual_lock'
+    ? 'MANUAL_ITEM_LOCK'
+    : lockedUnderlayerId
+      ? 'SLEEP_BAG_REBALANCED'
+      : 'SLEEP_GENERIC_TOG_ORIENTATION';
+
+  setSelected(state,'sleep_bag',bagId,bagSource,'external',[bagReason]);
+  setSelected(
+    state,
+    'sleep_underlayer',
+    underlayerId,
+    lockedUnderlayerId ? 'manual_lock' : 'engine',
+    'on_body',
+    [lockedUnderlayerId ? 'MANUAL_ITEM_LOCK' : 'SLEEP_UNDERLAYER_REBALANCED']
+  );
+
   finalizePhase(state);
   if (context.roomTempC < 16) addNotice(result,'SLEEP_ROOM_BELOW_ORIENTATION_RANGE','caution','main',['SLEEP_ROOM_BELOW_16'],{ roomTempC:context.roomTempC });
-  result.phases.push({ phase:'main', status:'ready', thermalReferenceC:context.roomTempC, thermalReferenceSource:'room_temp', thermalBand:guidance.id, thermalAdjustment:roundHalf(targetWarmth - guidance.targetWarmth), missingFields:[] });
+  result.phases.push({
+    phase:'main',
+    status:'ready',
+    thermalReferenceC:context.roomTempC,
+    thermalReferenceSource:'room_temp',
+    thermalBand:guidance.id,
+    thermalAdjustment:roundHalf(targetWarmth - guidance.targetWarmth),
+    missingFields:[]
+  });
   return result;
 }
 
@@ -305,14 +371,82 @@ function attachAlternatives(result,request) {
       const projectedScore = thermalSignature(projected,slotResult.phase);
       const delta = roundHalf(projectedScore - baselineScore);
       const relation = Math.abs(delta) < 0.25 ? 'equivalent' : delta > 0 ? 'warmer' : 'cooler';
-      options.push({
-        itemId,
-        relation,
-        relativeThermalDelta:delta,
-        projectedChanges:diffRecommendations(result,projected,slotResult.phase)
-      });
+      const projectedChanges = diffRecommendations(result,projected,slotResult.phase).map((change) => ({
+        ...change,
+        reasonCode:change.slot === slotResult.slot ? 'MANUAL_ITEM_LOCK' : 'OUTFIT_REBALANCED_AFTER_SWAP'
+      }));
+      options.push({ itemId, relation, relativeThermalDelta:delta, projectedChanges });
     }
-    options.sort((a,b) => RELATION_ORDER[a.relation] - RELATION_ORDER[b.relation] || Math.abs(a.relativeThermalDelta) - Math.abs(b.relativeThermalDelta) || a.projectedChanges.length - b.projectedChanges.length || a.itemId.localeCompare(b.itemId));
+    options.sort((a,b) => RELATION_ORDER[a.relation] - RELATION_ORDER[b.relation]
+      || Math.abs(a.relativeThermalDelta) - Math.abs(b.relativeThermalDelta)
+      || a.projectedChanges.length - b.projectedChanges.length
+      || a.itemId.localeCompare(b.itemId));
     slotResult.alternatives = options;
   }
+}
+
+function bodyThermalWeight(state) {
+  let total = 0;
+  for (const [slot,selection] of state.map.entries()) {
+    if (!BODY_THERMAL_SLOTS.includes(slot)) continue;
+    total += CLOTHING_CATALOG[selection.itemId]?.thermalWeight ?? 0;
+  }
+  return total;
+}
+
+function rebalanceFunctionalProtection(state, thermalWeightBeforeProtection, mode) {
+  const delta = bodyThermalWeight(state) - thermalWeightBeforeProtection;
+  if (!delta) return;
+  const priority = mode === 'carrier' ? CARRIER_PROTECTION_REBALANCE_PRIORITY : PROTECTION_REBALANCE_PRIORITY;
+  applyThermalDelta(state,-delta,new Set(['outer']),mode,priority);
+}
+
+function functionalProtectionSlots(state, rain, wind, mode) {
+  const protectedSlots = new Set();
+  const outer = state.map.get('outer');
+  if (!outer) return protectedSlots;
+  const outerDefinition = CLOTHING_CATALOG[outer.itemId];
+  const strollerWeatherDefinition = mode === 'stroller'
+    ? CLOTHING_CATALOG[state.map.get('stroller_weather_accessory')?.itemId]
+    : null;
+  const rainNeedsOuter = rain.required && (strollerWeatherDefinition?.rainProtection ?? 0) < 3;
+  const windNeedsOuter = wind.requiredProtection > (strollerWeatherDefinition?.windProtection ?? 0);
+  if ((rainNeedsOuter && (outerDefinition?.rainProtection ?? 0) >= 3)
+    || (windNeedsOuter && (outerDefinition?.windProtection ?? 0) >= wind.requiredProtection)) {
+    protectedSlots.add('outer');
+  }
+  return protectedSlots;
+}
+
+function withProtectedSlots(request, phase, slots) {
+  if (!slots.size) return request;
+  const existing = new Set(request.session.manualLocks.filter((lock) => lock.phase === phase).map((lock) => lock.slot));
+  const syntheticLocks = [...slots]
+    .filter((slot) => !existing.has(slot))
+    .map((slot) => ({ phase, slot, itemId:'__protected__', lockedAt:request.requestedAt }));
+  return {
+    ...request,
+    session:{ ...request.session, manualLocks:[...request.session.manualLocks,...syntheticLocks] }
+  };
+}
+
+function sanitizeAutomaticConditionalCarLayers(state) {
+  for (const [slot,selection] of [...state.map.entries()]) {
+    const definition = CLOTHING_CATALOG[selection.itemId];
+    if (definition?.carSeatCompatibility !== 'conditional' || selection.selectionSource === 'manual_lock') continue;
+    if (slot === 'mid') setSelected(state,'mid','thin_sweater','engine','under_harness',['IN_CAR_THERMAL_BASELINE']);
+    else state.map.delete(slot);
+  }
+}
+
+function nearestSleepBag(targetWeight, preferredId) {
+  return [...SLEEP_BAG_IDS].sort((a,b) => {
+    const aw = CLOTHING_CATALOG[a].sleepWarmthWeight ?? 0;
+    const bw = CLOTHING_CATALOG[b].sleepWarmthWeight ?? 0;
+    const distance = Math.abs(aw-targetWeight) - Math.abs(bw-targetWeight);
+    if (distance) return distance;
+    if (a === preferredId) return -1;
+    if (b === preferredId) return 1;
+    return aw-bw;
+  })[0];
 }
