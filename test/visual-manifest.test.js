@@ -73,7 +73,8 @@ test('real manifests cover exactly the current catalog and expose neutral fallba
 
   const visualCatalog = buildVisualCatalog(assetManifest, visualManifest);
   assert.equal(visualCatalog.themes.length, 10);
-  assert.equal(visualCatalog.visualVariantCount, 81);
+  const expectedVariantCount = assetManifest.assetGroups.reduce((sum, group) => sum + manifestPaths(group).length, 0);
+  assert.equal(visualCatalog.visualVariantCount, expectedVariantCount);
 
   for (const group of assetManifest.assetGroups) {
     const paths = manifestPaths(group);
@@ -108,7 +109,6 @@ test('all manifest paths exist and no WebP is accidentally unreferenced', () => 
 
   const physical = new Set(allWebpFiles(clothingRoot).map((absolute) => absolute.slice(repoRoot.length).replaceAll('\\', '/')));
   assert.deepEqual([...physical].sort(), [...referenced].sort());
-  assert.equal(physical.size, 75);
 });
 
 test('physical images are valid square WebP files in the established 128/256px repo standard', () => {

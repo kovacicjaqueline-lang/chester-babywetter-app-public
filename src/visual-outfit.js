@@ -109,6 +109,10 @@ export function buildVisualCatalog(assetManifest, visualManifest) {
       });
     });
 
+    if (visualVariants.length > 0 && !visualVariants.some((variant) => variant.sourceStyle === fallbackSourceStyle)) {
+      throw new Error(`Asset group ${group.id} has no ${fallbackSourceStyle} fallback variant`);
+    }
+
     groupsById[group.id] = Object.freeze({
       id: group.id,
       label: group.label || group.id,
@@ -140,7 +144,10 @@ export function selectVisualVariant({ catalog, assetGroupId, themeId, styleTheme
     throw new Error(`Unknown styleTheme: ${styleTheme}`);
   }
   const group = catalog.groupsById[assetGroupId];
-  if (!group || group.visualVariants.length === 0) {
+  if (!group) {
+    throw new Error(`Unknown asset group: ${assetGroupId}`);
+  }
+  if (group.visualVariants.length === 0) {
     return Object.freeze({
       variantId: null,
       assetPath: null,
@@ -234,6 +241,8 @@ export function selectVisualLook({
 }
 
 export function nextVisualSeed(visualSeed = 0) {
-  if (Number.isSafeInteger(visualSeed)) return visualSeed + 1;
+  if (Number.isSafeInteger(visualSeed)) {
+    return visualSeed < Number.MAX_SAFE_INTEGER ? visualSeed + 1 : 0;
+  }
   return `${String(visualSeed)}:next`;
 }

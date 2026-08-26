@@ -139,6 +139,17 @@ test('car safety and sleep recommendation payloads are left byte-for-byte unchan
   }
 });
 
+test('unknown item ids fail loudly instead of silently losing an image', () => {
+  const catalog = buildVisualCatalog(assetManifest, visualManifest);
+  assert.throws(() => selectVisualVariant({
+    catalog,
+    assetGroupId: 'obsolete_item_id',
+    themeId: 'sage_oat',
+    styleTheme: 'neutral',
+    seedKey: 'obsolete-test'
+  }), /Unknown asset group/);
+});
+
 test('derived visual variant ids are unique and all themes referenced by variants exist', () => {
   const catalog = buildVisualCatalog(assetManifest, visualManifest);
   const ids = Object.values(catalog.groupsById).flatMap((group) => group.visualVariants.map((variant) => variant.id));
