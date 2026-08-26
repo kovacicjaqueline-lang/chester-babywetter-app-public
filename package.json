@@ -1,12 +1,20 @@
 {
   "name": "chester-babywetter-app-public",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test"
+    "dev": "wrangler dev --port 8788",
+    "test": "node --test",
+    "test:browser": "playwright test",
+    "verify:deploy": "wrangler deploy --dry-run",
+    "deploy": "wrangler deploy"
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1",
+    "wrangler": "4.125.0"
   }
 }
