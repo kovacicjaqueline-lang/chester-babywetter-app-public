@@ -18,7 +18,7 @@ Profil und Einstellungen werden lokal im Browser gespeichert. Es gibt in V1 kein
 
 ## Voraussetzungen
 
-- Node.js 20 oder neuer
+- Node.js 22 oder neuer
 - npm
 
 ## Lokal starten
@@ -39,6 +39,8 @@ Unit- und Regressionstests:
 ```bash
 npm test
 ```
+
+Die CI führt diese Tests mit Node.js 22 und 24 aus.
 
 Playwright-Browsertests:
 
