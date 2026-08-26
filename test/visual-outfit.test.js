@@ -139,6 +139,21 @@ test('car safety and sleep recommendation payloads are left byte-for-byte unchan
   }
 });
 
+test('theme-compatible variants are actually explored across seeds', () => {
+  const catalog = buildVisualCatalog(assetManifest, visualManifest);
+  const observed = new Set();
+  for (let seed = 0; seed < 40; seed += 1) {
+    observed.add(selectVisualVariant({
+      catalog,
+      assetGroupId: 'long_sleeve_bodysuit',
+      themeId: 'dusty_blue_sand',
+      styleTheme: 'neutral',
+      seedKey: `variation-${seed}`
+    }).sourceStyle);
+  }
+  assert.deepEqual([...observed].sort(), ['boy', 'neutral']);
+});
+
 test('unknown item ids fail loudly instead of silently losing an image', () => {
   const catalog = buildVisualCatalog(assetManifest, visualManifest);
   assert.throws(() => selectVisualVariant({

@@ -13,6 +13,11 @@ function stableHash(input) {
     hash ^= text.charCodeAt(index);
     hash = Math.imul(hash, 16777619);
   }
+  hash ^= hash >>> 16;
+  hash = Math.imul(hash, 0x85ebca6b);
+  hash ^= hash >>> 13;
+  hash = Math.imul(hash, 0xc2b2ae35);
+  hash ^= hash >>> 16;
   return hash >>> 0;
 }
 
@@ -165,6 +170,7 @@ export function selectVisualVariant({ catalog, assetGroupId, themeId, styleTheme
     .filter(({ rank }) => rank < 99);
 
   let pool = rankedThemed;
+  let bestRank = null;
   let usedFallback = false;
 
   if (pool.length === 0) {
@@ -173,11 +179,14 @@ export function selectVisualVariant({ catalog, assetGroupId, themeId, styleTheme
     pool = [{ variant: fallback, rank: normalizeStyleRank(fallback, styleTheme) }];
     usedFallback = true;
   } else {
-    const bestRank = Math.min(...pool.map(({ rank }) => rank));
+    bestRank = Math.min(...pool.map(({ rank }) => rank));
     pool = pool.filter(({ rank }) => rank <= bestRank + 1);
   }
 
-  const chosen = pickStable(pool.map(({ variant }) => variant), `${seedKey}|${assetGroupId}|${themeId}`);
+  const weightedPool = styleTheme === 'neutral' || bestRank == null
+    ? pool.map(({ variant }) => variant)
+    : pool.flatMap(({ variant, rank }) => rank === bestRank ? [variant, variant] : [variant]);
+  const chosen = pickStable(weightedPool, `${seedKey}|${assetGroupId}|${themeId}`);
   const compatibleWithTheme = chosen.themeIds.includes(themeId);
   usedFallback ||= !compatibleWithTheme || chosen.sourceStyle === catalog.fallbackSourceStyle && themed.length === 0;
 
