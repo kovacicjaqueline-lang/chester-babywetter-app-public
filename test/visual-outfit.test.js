@@ -117,7 +117,7 @@ test('same session keeps theme and unchanged item assets stable across fachliche
   assert.deepEqual(changed.items.map((item) => item.variantId), first.items.slice(0, 2).map((item) => item.variantId));
 });
 
-test('missing theme variant falls back cleanly to neutral', () => {
+test('missing theme variant falls back cleanly to the original neutral fallback', () => {
   const restrictiveVisualManifest = structuredClone(visualManifest);
   restrictiveVisualManifest.sourceStyleProfiles.neutral.themeIds = ['sage_oat'];
   restrictiveVisualManifest.sourceStyleProfiles.boy.themeIds = ['dusty_blue_sand'];
@@ -132,7 +132,7 @@ test('missing theme variant falls back cleanly to neutral', () => {
     seedKey: 'fallback-test'
   });
 
-  assert.equal(result.sourceStyle, 'neutral');
+  assert.equal(result.variantId, 'long_sleeve_bodysuit::neutral');
   assert.equal(result.usedFallback, true);
   assert.equal(result.assetPath, 'assets/clothing/long_sleeve_bodysuit/neutral.webp');
 });
@@ -166,7 +166,7 @@ test('car safety and sleep recommendation payloads are left byte-for-byte unchan
   }
 });
 
-test('theme-compatible variants are actually explored across seeds', () => {
+test('legacy theme-compatible style variants are actually explored across seeds', () => {
   const catalog = buildVisualCatalog(assetManifest, visualManifest);
   const observed = new Set();
   for (let seed = 0; seed < 40; seed += 1) {
@@ -179,6 +179,26 @@ test('theme-compatible variants are actually explored across seeds', () => {
     }).sourceStyle);
   }
   assert.deepEqual([...observed].sort(), ['boy', 'neutral']);
+});
+
+test('additional physical variants are explored without replacing the neutral fallback', () => {
+  const catalog = buildVisualCatalog(assetManifest, visualManifest);
+  const trousers = catalog.groupsById.trousers;
+  assert.equal(trousers.visualVariants.length, 3);
+  assert.equal(trousers.visualVariants.filter((variant) => variant.isFallback).length, 1);
+  const observed = new Set();
+  for (let seed = 0; seed < 80; seed += 1) {
+    observed.add(selectVisualVariant({
+      catalog,
+      assetGroupId: 'trousers',
+      themeId: 'dusty_blue_sand',
+      styleTheme: 'neutral',
+      seedKey: `additional-${seed}`
+    }).variantId);
+  }
+  assert.ok(observed.has('trousers::neutral'));
+  assert.ok(observed.has('trousers::oat-knit-01'));
+  assert.ok(observed.has('trousers::dusty-blue-01'));
 });
 
 test('unknown item ids fail loudly instead of silently losing an image', () => {

@@ -48,6 +48,14 @@ function normalizeStyleRank(profile, styleTheme) {
   return Number.isInteger(rank) && rank >= 0 ? rank : 99;
 }
 
+function validateThemeIds(variantId, candidateThemeIds, themeIds) {
+  for (const themeId of candidateThemeIds) {
+    if (!themeIds.has(themeId)) {
+      throw new Error(`Visual variant ${variantId} references unknown theme ${themeId}`);
+    }
+  }
+}
+
 export function buildVisualCatalog(assetManifest, visualManifest) {
   assertObject(assetManifest, 'assetManifest');
   assertObject(visualManifest, 'visualManifest');
@@ -95,11 +103,7 @@ export function buildVisualCatalog(assetManifest, visualManifest) {
       visualVariantIds.add(id);
 
       const candidateThemeIds = override.themeIds || sourceProfile.themeIds || [];
-      for (const themeId of candidateThemeIds) {
-        if (!themeIds.has(themeId)) {
-          throw new Error(`Visual variant ${id} references unknown theme ${themeId}`);
-        }
-      }
+      validateThemeIds(id, candidateThemeIds, themeIds);
 
       return Object.freeze({
         id,
@@ -114,7 +118,40 @@ export function buildVisualCatalog(assetManifest, visualManifest) {
       });
     });
 
-    if (visualVariants.length > 0 && !visualVariants.some((variant) => variant.sourceStyle === fallbackSourceStyle)) {
+    const additionalDefinitions = visualManifest.additionalVariants?.[group.id] || [];
+    if (!Array.isArray(additionalDefinitions)) {
+      throw new TypeError(`additionalVariants.${group.id} must be an array`);
+    }
+
+    for (const additional of additionalDefinitions) {
+      assertObject(additional, `additionalVariants.${group.id}`);
+      if (!additional.id || typeof additional.assetPath !== 'string' || !additional.assetPath) {
+        throw new Error(`Additional visual variant for ${group.id} needs id and assetPath`);
+      }
+      const sourceStyle = additional.sourceStyle || fallbackSourceStyle;
+      const sourceProfile = sourceProfiles[sourceStyle] || sourceProfiles[fallbackSourceStyle] || {};
+      const id = `${group.id}::${additional.id}`;
+      if (visualVariantIds.has(id)) {
+        throw new Error(`Visual variant id must be unique: ${id}`);
+      }
+      visualVariantIds.add(id);
+      const candidateThemeIds = additional.themeIds || sourceProfile.themeIds || [];
+      validateThemeIds(id, candidateThemeIds, themeIds);
+
+      visualVariants.push(Object.freeze({
+        id,
+        assetGroupId: group.id,
+        sourceStyle,
+        assetPath: additional.assetPath,
+        themeIds: Object.freeze([...candidateThemeIds]),
+        paletteTags: Object.freeze([...(additional.paletteTags || sourceProfile.paletteTags || [])]),
+        pattern: additional.pattern || sourceProfile.pattern || 'unspecified',
+        stylePreferenceRank: Object.freeze({ ...(sourceProfile.stylePreferenceRank || {}), ...(additional.stylePreferenceRank || {}) }),
+        isFallback: additional.isFallback === true
+      }));
+    }
+
+    if (visualVariants.length > 0 && !visualVariants.some((variant) => variant.isFallback)) {
       throw new Error(`Asset group ${group.id} has no ${fallbackSourceStyle} fallback variant`);
     }
 
@@ -174,7 +211,7 @@ export function selectVisualVariant({ catalog, assetGroupId, themeId, styleTheme
   let usedFallback = false;
 
   if (pool.length === 0) {
-    const fallback = group.visualVariants.find((variant) => variant.sourceStyle === catalog.fallbackSourceStyle)
+    const fallback = group.visualVariants.find((variant) => variant.isFallback)
       || group.visualVariants[0];
     pool = [{ variant: fallback, rank: normalizeStyleRank(fallback, styleTheme) }];
     usedFallback = true;
@@ -188,7 +225,7 @@ export function selectVisualVariant({ catalog, assetGroupId, themeId, styleTheme
     : pool.flatMap(({ variant, rank }) => rank === bestRank ? [variant, variant] : [variant]);
   const chosen = pickStable(weightedPool, `${seedKey}|${assetGroupId}|${themeId}`);
   const compatibleWithTheme = chosen.themeIds.includes(themeId);
-  usedFallback ||= !compatibleWithTheme || chosen.sourceStyle === catalog.fallbackSourceStyle && themed.length === 0;
+  usedFallback ||= !compatibleWithTheme || chosen.isFallback && themed.length === 0;
 
   return Object.freeze({
     variantId: chosen.id,

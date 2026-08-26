@@ -17,6 +17,14 @@ function manifestPaths(group) {
   return group.assetPath ? [group.assetPath] : [];
 }
 
+function additionalPaths(groupId) {
+  return (visualManifest.additionalVariants?.[groupId] || []).map((variant) => variant.assetPath).filter(Boolean);
+}
+
+function allReferencedPaths() {
+  return assetManifest.assetGroups.flatMap((group) => [...manifestPaths(group), ...additionalPaths(group.id)]);
+}
+
 function allWebpFiles(directory) {
   const result = [];
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
@@ -73,18 +81,18 @@ test('real manifests cover exactly the current catalog and expose neutral fallba
 
   const visualCatalog = buildVisualCatalog(assetManifest, visualManifest);
   assert.equal(visualCatalog.themes.length, 10);
-  const expectedVariantCount = assetManifest.assetGroups.reduce((sum, group) => sum + manifestPaths(group).length, 0);
+  const expectedVariantCount = assetManifest.assetGroups.reduce((sum, group) => sum + manifestPaths(group).length + additionalPaths(group.id).length, 0);
   assert.equal(visualCatalog.visualVariantCount, expectedVariantCount);
 
   for (const group of assetManifest.assetGroups) {
     const paths = manifestPaths(group);
     if (paths.length === 0) continue;
     const variants = visualCatalog.groupsById[group.id].visualVariants;
-    assert.ok(variants.some((variant) => variant.sourceStyle === 'neutral'), `${group.id} needs neutral fallback`);
+    assert.ok(variants.some((variant) => variant.isFallback), `${group.id} needs neutral fallback`);
   }
 });
 
-test('visual override metadata only targets existing groups, source styles and themes', () => {
+test('visual metadata only targets existing groups, source styles and themes', () => {
   const groups = new Map(assetManifest.assetGroups.map((group) => [group.id, group]));
   const themeIds = new Set(visualManifest.themes.map((theme) => theme.id));
 
@@ -99,10 +107,26 @@ test('visual override metadata only targets existing groups, source styles and t
       }
     }
   }
+
+  const variantIds = new Set();
+  for (const [groupId, variants] of Object.entries(visualManifest.additionalVariants || {})) {
+    assert.ok(groups.has(groupId), `unknown additional variant group ${groupId}`);
+    assert.ok(Array.isArray(variants), `additional variants for ${groupId} must be an array`);
+    for (const variant of variants) {
+      const fullId = `${groupId}::${variant.id}`;
+      assert.ok(variant.id, `${groupId} additional variant needs id`);
+      assert.equal(variantIds.has(fullId), false, `duplicate visual variant ${fullId}`);
+      variantIds.add(fullId);
+      assert.equal(typeof variant.assetPath, 'string', `${fullId} needs assetPath`);
+      for (const themeId of variant.themeIds || []) {
+        assert.ok(themeIds.has(themeId), `unknown theme ${themeId}`);
+      }
+    }
+  }
 });
 
-test('all manifest paths exist and no WebP is accidentally unreferenced', () => {
-  const referenced = new Set(assetManifest.assetGroups.flatMap(manifestPaths));
+test('all referenced paths exist and no WebP is accidentally unreferenced', () => {
+  const referenced = new Set(allReferencedPaths());
   for (const relativePath of referenced) {
     assert.equal(existsSync(join(repoRoot, relativePath)), true, `missing ${relativePath}`);
   }
