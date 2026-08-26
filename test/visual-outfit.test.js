@@ -90,6 +90,33 @@ test('all rendered items are compatible with the selected theme or explicit neut
   }
 });
 
+test('all configured themes produce a fully compatible representative outfit', () => {
+  const rec = recommendation(['long_sleeve_bodysuit', 'trousers', 'thin_sweater']);
+  for (const theme of visualManifest.themes) {
+    const look = selectVisualLook({
+      recommendation: rec,
+      assetManifest,
+      visualManifest,
+      styleTheme: 'neutral',
+      visualSeed: 5,
+      themeId: theme.id
+    });
+    assert.equal(look.themeId, theme.id);
+    for (const item of look.items) {
+      assert.equal(item.compatibleWithTheme || item.usedFallback, true, `${theme.id} / ${item.itemId}`);
+    }
+  }
+});
+
+test('same session keeps theme and unchanged item assets stable across fachliche recomputation', () => {
+  const firstRecommendation = recommendation(['long_sleeve_bodysuit', 'trousers', 'thin_sweater']);
+  const changedRecommendation = recommendation(['long_sleeve_bodysuit', 'trousers'], { recommendationId: 'rec_2' });
+  const first = selectVisualLook({ recommendation: firstRecommendation, assetManifest, visualManifest, visualSeed: 6 });
+  const changed = selectVisualLook({ recommendation: changedRecommendation, assetManifest, visualManifest, visualSeed: 6 });
+  assert.equal(changed.themeId, first.themeId);
+  assert.deepEqual(changed.items.map((item) => item.variantId), first.items.slice(0, 2).map((item) => item.variantId));
+});
+
 test('missing theme variant falls back cleanly to neutral', () => {
   const restrictiveVisualManifest = structuredClone(visualManifest);
   restrictiveVisualManifest.sourceStyleProfiles.neutral.themeIds = ['sage_oat'];
