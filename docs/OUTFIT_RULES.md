@@ -367,21 +367,32 @@ Diese Reduktion gilt **nicht** automatisch für Kopf, Füße, Unterschenkel und 
 
 ### 10.1 Phasen
 
-- `outdoor_transition`: Wetterbasierte Kleidung zum/vom Auto,
+- `outdoor_transition`: wetterbasierte Kleidung zum/vom Auto,
 - `in_car`: Kleidung unter/über dem Gurt anhand einer bekannten oder geschätzten Innenraumtemperatur.
 
 ### 10.2 Innenraumtemperatur
 
-Ist `cabinTempC` gemessen/manuell gesetzt, wird sie verwendet.
+Für V1 gelten drei Quellen mit klarer Semantik:
 
-Ist sie unbekannt, darf die App eine **geschätzte** Innenraumtemperatur verwenden, muss aber:
+- `manual`: der Nutzer hat den Innenraumwert manuell korrigiert,
+- `measured`: der Nutzer markiert einen tatsächlich gemessenen Innenraumwert ausdrücklich als gemessen,
+- `estimated`: die Innenraumtemperatur ist unbekannt und wird durch die vorgelagerte Integrationslogik geschätzt.
 
-- `temperatureSource: estimated` ausgeben,
-- die Schätzung sichtbar machen,
+Für `estimated` verwendet V1 **fix 20 °C als neutrale klima-kontrollierte Annahme**. Diese Zahl ist bewusst grob und keine Prognose des realen Fahrzeuginnenraums. Sie wird nicht aus `airTempC`, `apparentTempC`, Wind, Sonne oder Fahrtdauer berechnet.
+
+Begründung: Die verfügbaren V1-Inputs enthalten weder tatsächlichen Innenraumzustand noch HVAC-/Heizungs-/Klimastatus, Vorheizen/Vorkühlen, Parkdauer oder solare Aufheizung. Eine außenwetterabhängige Formel würde deshalb Scheingenauigkeit erzeugen. Außenwetter gehört ausschließlich in `outdoor_transition`; `in_car` verwendet `cabinTempC`.
+
+Bei `estimated` muss die App:
+
+- `cabinTempSource: estimated` bis ins Ergebnis tragen,
+- `CAR_CABIN_TEMPERATURE_ESTIMATED` sichtbar anzeigen,
+- `ready_with_estimate` statt unmarkiertem `ready` verwenden,
 - eine schnelle manuelle Korrektur erlauben,
-- keine Sicherheit aus der Schätzung ableiten.
+- beim manuellen Ändern von `cabinTempC` auf `manual` wechseln,
+- beim Zurückschalten auf `estimated` wieder 20 °C einsetzen,
+- keine Gurtsicherheitsentscheidung aus der Schätzung oder der Temperaturquelle ableiten.
 
-Die konkrete Schätzformel gehört in den Integrations-/Datenstrang; Außentemperatur allein darf nicht einfach als Innenraumtemperatur übernommen werden.
+`measured` und `manual` verwenden den angegebenen Wert ohne Schätzkennzeichnung.
 
 ### 10.3 Gurtsicherheit
 
@@ -586,6 +597,7 @@ Mindestens:
 - `CAR_SEAT_REMOVE_OUTER_BEFORE_HARNESS`,
 - `CAR_SEAT_BLANKET_OVER_HARNESS_ONLY`,
 - `CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT`,
+- `CAR_CABIN_TEMPERATURE_ESTIMATED`,
 - `SLEEP_NO_HAT`,
 - `SLEEP_NO_LOOSE_BLANKET_OVER_BAG`,
 - `SLEEP_NO_WEIGHTED_PRODUCTS`,
@@ -629,3 +641,7 @@ Mindestens:
 21. `wärmer` / `dünner` verändert möglichst wenig Teile.
 22. Nackentest lernt in V1 keinen permanenten Bias.
 23. Schuhe werden ohne Bodenkontakt nicht automatisch empfohlen.
+24. `cabinTempSource: estimated` bedeutet in V1 exakt die neutrale 20-°C-Annahme und wird nicht aus Außenwetter abgeleitet.
+25. `manual` und `measured` verwenden den angegebenen Innenraumwert ohne Schätzkennzeichnung.
+26. Manuelle Änderung der Innenraumtemperatur setzt die Quelle auf `manual`; Zurückschalten auf `estimated` setzt wieder 20 °C.
+27. Gurtsicherheitsregeln sind für `manual | measured | estimated` identisch und unabhängig von der Schätzhöhe.
