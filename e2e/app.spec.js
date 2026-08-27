@@ -61,6 +61,18 @@ test('Kleidung besitzt echte Bilder und sinnvolle Alt-Texte', async ({ page }) =
   for (const item of checks) { expect(item.complete).toBe(true); expect(item.naturalWidth).toBeGreaterThan(0); expect(item.alt.trim().length).toBeGreaterThan(3); expect(item.src).toContain('/assets/clothing/'); }
 });
 
+test('Anderer Look ändert nur den Visual-Seed und nicht die fachlichen Items', async ({ page }) => {
+  await openDemo(page);
+  const beforeItems = await selectedIds(page);
+  const beforeSeed = await page.evaluate(() => JSON.parse(localStorage.getItem('babyweather.v1.uiState') || '{}').visualSeed ?? 0);
+  await expect(page.locator('#changeLookButton')).toBeEnabled();
+  await page.locator('#changeLookButton').click();
+  const afterItems = await selectedIds(page);
+  const afterSeed = await page.evaluate(() => JSON.parse(localStorage.getItem('babyweather.v1.uiState') || '{}').visualSeed);
+  expect(afterItems).toEqual(beforeItems);
+  expect(afterSeed).toBe(beforeSeed + 1);
+});
+
 test('Standort kann gewechselt werden', async ({ page }) => {
   await openDemo(page);
   await page.locator('[data-open-dialog="locationDialog"]').click();
