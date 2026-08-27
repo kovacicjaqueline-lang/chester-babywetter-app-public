@@ -24,6 +24,17 @@ async function setWeatherCacheAge(page, minutes) {
   }, minutes);
 }
 
+async function restartFromPersistedCacheOffline(page, context, ageMinutes) {
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
+  await setWeatherCacheAge(page, ageMinutes);
+  await page.close();
+  await context.setOffline(true);
+  const offlinePage = await context.newPage();
+  await offlinePage.goto('/?demo=1');
+  return offlinePage;
+}
+
 test('App startet ohne Console-Fehler und zeigt ein Standard-Outfit', async ({ page }) => {
   const errors = [];
   page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
@@ -105,41 +116,31 @@ test('Offline-Zustand bleibt verständlich und verwendet frischen Cache', async 
 
 test('Stale-Wettercache bleibt bis 120 Minuten nutzbar und sichtbar als nicht aktuell markiert', async ({ page, context }) => {
   await openDemo(page);
-  await page.evaluate(() => navigator.serviceWorker.ready);
-  await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
-  await setWeatherCacheAge(page, 60);
+  const offlinePage = await restartFromPersistedCacheOffline(page, context, 60);
 
-  await context.setOffline(true);
-  await page.reload();
-
-  await expect(page.locator('#weatherDescription')).toContainText('ältere gespeicherte Daten');
-  await expect(page.locator('#connectionBanner')).toContainText('ältere gespeicherte Wetterdaten');
-  await expect(page.locator('[data-notice-code="WEATHER_DATA_STALE"]')).toBeVisible();
-  await expect(page.locator('#confidencePill')).toHaveText('Teilweise');
-  await expect(page.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
+  await expect(offlinePage.locator('#weatherDescription')).toContainText('ältere gespeicherte Daten');
+  await expect(offlinePage.locator('#connectionBanner')).toContainText('ältere gespeicherte Wetterdaten');
+  await expect(offlinePage.locator('[data-notice-code="WEATHER_DATA_STALE"]')).toBeVisible();
+  await expect(offlinePage.locator('#confidencePill')).toHaveText('Teilweise');
+  await expect(offlinePage.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
   await context.setOffline(false);
 });
 
 test('Zu alter Wettercache wird nicht als aktuelles Wetter verwendet; Schlaf bleibt wetterunabhängig', async ({ page, context }) => {
   await openDemo(page);
-  await page.evaluate(() => navigator.serviceWorker.ready);
-  await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
-  await setWeatherCacheAge(page, 121);
+  const offlinePage = await restartFromPersistedCacheOffline(page, context, 121);
 
-  await context.setOffline(true);
-  await page.reload();
+  await expect(offlinePage.locator('#temperatureValue')).toHaveText('–');
+  await expect(offlinePage.locator('#weatherDescription')).toHaveText('Gespeichertes Wetter zu alt');
+  await expect(offlinePage.locator('#connectionBanner')).toContainText('älter als 120 Minuten');
+  await expect(offlinePage.locator('#confidencePill')).toHaveText('Angaben fehlen');
+  await expect(offlinePage.locator('#outfitGrid [data-item-id]')).toHaveCount(0);
+  await expect(offlinePage.locator('#outfitGrid .outfit-empty')).toContainText('Noch keine sichere Empfehlung');
 
-  await expect(page.locator('#temperatureValue')).toHaveText('–');
-  await expect(page.locator('#weatherDescription')).toHaveText('Gespeichertes Wetter zu alt');
-  await expect(page.locator('#connectionBanner')).toContainText('älter als 120 Minuten');
-  await expect(page.locator('#confidencePill')).toHaveText('Angaben fehlen');
-  await expect(page.locator('#outfitGrid [data-item-id]')).toHaveCount(0);
-  await expect(page.locator('#outfitGrid .outfit-empty')).toContainText('Noch keine sichere Empfehlung');
-
-  await chooseSituation(page, 'sleep');
-  await expect(page.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
-  await expect(page.locator('[data-notice-code="SLEEP_USE_ROOM_TEMPERATURE"]')).toBeVisible();
-  await expect(page.locator('#outfitReason')).toContainText('Raumtemperatur');
+  await chooseSituation(offlinePage, 'sleep');
+  await expect(offlinePage.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
+  await expect(offlinePage.locator('[data-notice-code="SLEEP_USE_ROOM_TEMPERATURE"]')).toBeVisible();
+  await expect(offlinePage.locator('#outfitReason')).toContainText('Raumtemperatur');
   await context.setOffline(false);
 });
 
