@@ -97,7 +97,7 @@ export function sameWeatherLocation(left, right) {
 function alignStaleSeriesToNow(series, nowMs) {
   const currentMs = Date.parse(series.current.time);
   const promoted = series.hourly
-    .filter((point) => validDateString(point?.time))
+    .filter((point) => validDateString(point?.time) && finiteNumber(point?.airTempC))
     .filter((point) => {
       const pointMs = Date.parse(point.time);
       return pointMs > currentMs && pointMs <= nowMs;
@@ -110,7 +110,7 @@ function alignStaleSeriesToNow(series, nowMs) {
   return {
     ...series,
     current: structuredClone(promoted),
-    hourly: series.hourly.filter((point) => validDateString(point?.time) && Date.parse(point.time) > promotedMs)
+    hourly: series.hourly.filter((point) => validDateString(point?.time) && finiteNumber(point?.airTempC) && Date.parse(point.time) > promotedMs)
   };
 }
 
