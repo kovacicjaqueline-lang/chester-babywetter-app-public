@@ -31,6 +31,10 @@
           <p class="eyebrow" id="weatherHeading">Jetzt</p>
           <div class="temperature-line"><strong class="temperature" id="temperatureValue">–</strong><span class="weather-symbol" id="weatherSymbol" aria-hidden="true">◌</span></div>
           <p class="weather-description" id="weatherDescription">Wetter wird geladen …</p>
+          <div class="weather-adjust-row">
+            <button class="text-button" type="button" data-open-dialog="weatherOverrideDialog">Wetter anpassen</button>
+            <span id="weatherOverrideStatus" class="weather-override-status" role="status" hidden></span>
+          </div>
         </div>
         <div class="weather-facts" id="weatherFacts" aria-label="Wetterdetails"></div>
       </section>
@@ -57,7 +61,15 @@
         <div id="safetyNotice" class="safety-notice" aria-live="polite" hidden></div>
         <div class="neck-check" data-testid="neck-check">
           <div class="neck-icon" aria-hidden="true">☁</div>
-          <div><h2>Nackentest</h2><p>Warm & trocken: passt. Heiß/schwitzig: dünner. Kühl: wärmer.</p><p class="fine-print">Kalte Hände oder Füße allein sind kein zuverlässiger Friernachweis.</p></div>
+          <div>
+            <h2>Nackentest</h2>
+            <p>Warm & trocken: passt. Heiß/schwitzig: dünner. Kühl: wärmer.</p>
+            <p class="fine-print">Kalte Hände oder Füße allein sind kein zuverlässiger Friernachweis.</p>
+            <div class="neck-action-row">
+              <button type="button" class="neck-action-button" data-open-dialog="neckFeedbackDialog">Nackentest anwenden</button>
+              <span id="neckFeedbackStatus" class="neck-feedback-status" role="status">Noch keine Rückmeldung angewendet.</span>
+            </div>
+          </div>
         </div>
       </section>
       <section class="card hourly-card" aria-labelledby="hourlyHeading">
@@ -98,8 +110,40 @@
       <button class="primary-button" type="submit" id="saveLocationButton">Ort übernehmen</button>
     </form>
   </dialog>
+  <dialog id="weatherOverrideDialog" class="sheet-dialog" aria-labelledby="weatherOverrideTitle">
+    <form class="sheet" id="weatherOverrideForm">
+      <header class="sheet-header"><div><p class="eyebrow">Aktuelle Werte</p><h2 id="weatherOverrideTitle">Wetter manuell anpassen</h2></div><button class="icon-button" type="button" data-close-dialog="weatherOverrideDialog" aria-label="Wetteranpassung schließen">×</button></header>
+      <p id="weatherOverrideSource" class="dialog-note">Die aktuellen Wetterwerte werden geladen.</p>
+      <label class="field">Lufttemperatur<input id="manualAirTempC" type="number" inputmode="decimal" min="-60" max="60" step="0.5" required></label>
+      <div class="weather-override-grid">
+        <label class="field">Wind km/h<input id="manualWindSpeedKmh" type="number" inputmode="decimal" min="0" max="250" step="0.5"></label>
+        <label class="field">Böen km/h<input id="manualWindGustKmh" type="number" inputmode="decimal" min="0" max="300" step="0.5"></label>
+        <label class="field">Regenwahrscheinlichkeit %<input id="manualPrecipProbabilityPct" type="number" inputmode="decimal" min="0" max="100" step="1"></label>
+        <label class="field">Niederschlag mm<input id="manualPrecipMm" type="number" inputmode="decimal" min="0" max="500" step="0.1"></label>
+        <label class="field">Niederschlagsart<select id="manualPrecipitationType"><option value="none">Keiner</option><option value="rain">Regen</option><option value="snow">Schnee</option><option value="sleet">Schneeregen</option><option value="unknown">Unbekannt</option></select></label>
+        <label class="field">UV-Index<input id="manualUvIndex" type="number" inputmode="decimal" min="0" max="20" step="0.1"></label>
+      </div>
+      <p class="dialog-note">Bei manueller Anpassung verwendet die Engine die eingegebene Lufttemperatur statt eines alten API-„Gefühlt“-Werts. Die stündliche Vorhersage bleibt als Zukunftsprognose erhalten.</p>
+      <div class="settings-actions">
+        <button class="primary-button" type="submit" id="applyWeatherOverrideButton">Manuelle Werte verwenden</button>
+        <button class="secondary-button" type="button" id="resetWeatherOverrideButton">Automatisches Wetter neu laden</button>
+      </div>
+    </form>
+  </dialog>
   <dialog id="situationDialog" class="sheet-dialog" aria-labelledby="situationTitle">
     <div class="sheet"><header class="sheet-header"><div><p class="eyebrow">Kontext</p><h2 id="situationTitle">Situation wählen</h2></div><button class="icon-button" type="button" data-close-dialog="situationDialog" aria-label="Situation schließen">×</button></header><div class="situation-options" id="situationOptions"></div><div id="situationContextFields" class="situation-context" aria-live="polite"></div><button class="primary-button apply-situation" type="button" id="applySituationButton">Übernehmen</button></div>
+  </dialog>
+  <dialog id="neckFeedbackDialog" class="sheet-dialog" aria-labelledby="neckFeedbackTitle">
+    <div class="sheet">
+      <header class="sheet-header"><div><p class="eyebrow">Aktuelle Rückmeldung</p><h2 id="neckFeedbackTitle">Wie fühlt sich der Nacken an?</h2></div><button class="icon-button" type="button" data-close-dialog="neckFeedbackDialog" aria-label="Nackentest schließen">×</button></header>
+      <p class="dialog-note">Die Rückmeldung verändert nur die aktuelle Empfehlung und wird nicht als langfristige Wärmetendenz gelernt.</p>
+      <div class="feedback-options">
+        <button type="button" class="feedback-option" data-neck-feedback="warm_dry"><strong>Warm & trocken</strong><small>Empfehlung beibehalten.</small></button>
+        <button type="button" class="feedback-option" data-neck-feedback="hot_sweaty"><strong>Heiß oder schwitzig</strong><small>Eine sinnvolle Schicht reduzieren.</small></button>
+        <button type="button" class="feedback-option" data-neck-feedback="cool"><strong>Kühl</strong><small>Eine sinnvolle Schicht ergänzen.</small></button>
+      </div>
+      <p class="dialog-note">Kalte Hände oder Füße allein sind kein zuverlässiger Hinweis darauf, dass dein Baby friert.</p>
+    </div>
   </dialog>
   <dialog id="alternativeDialog" class="sheet-dialog" aria-labelledby="alternativeTitle">
     <div class="sheet"><header class="sheet-header"><div><p class="eyebrow">Austauschen</p><h2 id="alternativeTitle">Alternative wählen</h2></div><button class="icon-button" type="button" data-close-dialog="alternativeDialog" aria-label="Alternativen schließen">×</button></header><p class="dialog-note">Thermisch andere Alternativen werden von der Engine als komplettes Outfit neu bewertet.</p><div id="alternativeOptions" class="alternative-options"></div></div>
