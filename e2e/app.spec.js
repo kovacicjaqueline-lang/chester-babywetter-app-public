@@ -92,6 +92,24 @@ test('Offline-Zustand bleibt verständlich und verwendet Cache', async ({ page, 
   await context.setOffline(false);
 });
 
+test('Kleidungsbilder bleiben nach Offline-Reload verfügbar', async ({ page, context }) => {
+  await openDemo(page);
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
+  expect(await page.locator('#outfitGrid img[data-clothing-image="true"]').count()).toBeGreaterThan(1);
+
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
+
+  const images = page.locator('#outfitGrid img[data-clothing-image="true"]');
+  expect(await images.count()).toBeGreaterThan(1);
+  const checks = await images.evaluateAll((nodes) => nodes.map((image) => ({ complete:image.complete, naturalWidth:image.naturalWidth })));
+  for (const item of checks) { expect(item.complete).toBe(true); expect(item.naturalWidth).toBeGreaterThan(0); }
+  await expect(page.locator('#outfitGrid .asset-placeholder')).toHaveCount(0);
+  await context.setOffline(false);
+});
+
 test('Einstellungen bleiben nach Reload erhalten', async ({ page }) => {
   await openDemo(page);
   await page.locator('[data-open-dialog="settingsDialog"]').first().click();
