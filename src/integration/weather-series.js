@@ -1,11 +1,19 @@
+export const WEATHER_FRESH_MAX_AGE_MINUTES = 30;
+export const WEATHER_CACHE_MAX_AGE_MINUTES = 120;
+export const WEATHER_CACHE_CLOCK_SKEW_MINUTES = 5;
+
 function finiteNumber(value) {
   return typeof value === 'number' && Number.isFinite(value);
+}
+
+function validDateString(value) {
+  return typeof value === 'string' && Number.isFinite(Date.parse(value));
 }
 
 function normalizePoint(point) {
   if (!point || typeof point !== 'object') return null;
   const time = point.time ?? point.observedAt ?? null;
-  if (typeof time !== 'string' || !Number.isFinite(Date.parse(time)) || !finiteNumber(point.airTempC)) return null;
+  if (!validDateString(time) || !finiteNumber(point.airTempC)) return null;
   return {
     time,
     airTempC: point.airTempC,
@@ -37,12 +45,15 @@ export function normalizeWeatherBundle(bundle, fallbackLocation = null) {
     .filter((point) => Date.parse(point.time) > Date.parse(current.time))
     .sort((a, b) => Date.parse(a.time) - Date.parse(b.time));
 
+  const fetchedAt = bundle.fetchedAt ?? sourceCurrent.fetchedAt ?? null;
+  if (!validDateString(fetchedAt)) throw new TypeError('weather bundle requires a valid fetchedAt timestamp');
+
   return {
     weatherId: bundle.weatherId ?? sourceCurrent.snapshotId ?? `weather:${location.locationId ?? location.label}:${current.time}`,
     location: structuredClone(location),
     origin: bundle.origin ?? sourceCurrent.origin ?? 'api',
     source: bundle.source ?? sourceCurrent.source ?? 'unknown',
-    fetchedAt: bundle.fetchedAt ?? sourceCurrent.fetchedAt ?? new Date().toISOString(),
+    fetchedAt,
     freshness: bundle.freshness ?? sourceCurrent.freshness ?? 'unknown',
     current,
     hourly
@@ -50,7 +61,7 @@ export function normalizeWeatherBundle(bundle, fallbackLocation = null) {
 }
 
 export function markWeatherSeriesStale(series) {
-  if (!series || typeof series !== 'object' || !series.current) return null;
+  if (!isWeatherSeries(series)) return null;
   return {
     ...structuredClone(series),
     origin: 'cache',
@@ -63,10 +74,65 @@ export function isWeatherSeries(value) {
     value &&
     typeof value === 'object' &&
     value.current &&
-    typeof value.current.time === 'string' &&
+    validDateString(value.current.time) &&
     finiteNumber(value.current.airTempC) &&
     value.location &&
     typeof value.location.label === 'string' &&
+    validDateString(value.fetchedAt) &&
     Array.isArray(value.hourly)
   );
+}
+
+export function sameWeatherLocation(left, right) {
+  if (!left || !right || typeof left !== 'object' || typeof right !== 'object') return false;
+  if (typeof left.locationId === 'string' && left.locationId && typeof right.locationId === 'string' && right.locationId) {
+    return left.locationId === right.locationId;
+  }
+  if ([left.latitude, left.longitude, right.latitude, right.longitude].every(finiteNumber)) {
+    return Math.abs(left.latitude - right.latitude) <= 0.001 && Math.abs(left.longitude - right.longitude) <= 0.001;
+  }
+  return false;
+}
+
+export function assessCachedWeatherSeries(
+  candidate,
+  {
+    location = null,
+    now = () => new Date(),
+    freshMaxAgeMinutes = WEATHER_FRESH_MAX_AGE_MINUTES,
+    maxAgeMinutes = WEATHER_CACHE_MAX_AGE_MINUTES,
+    maxClockSkewMinutes = WEATHER_CACHE_CLOCK_SKEW_MINUTES
+  } = {}
+) {
+  if (!isWeatherSeries(candidate)) return { status: 'invalid', ageMinutes: null, series: null };
+  if (location && !sameWeatherLocation(candidate.location, location)) {
+    return { status: 'location_mismatch', ageMinutes: null, series: null };
+  }
+
+  const nowValue = now();
+  const nowMs = nowValue instanceof Date ? nowValue.getTime() : Date.parse(nowValue);
+  const fetchedMs = Date.parse(candidate.fetchedAt);
+  if (!Number.isFinite(nowMs) || !Number.isFinite(fetchedMs)) {
+    return { status: 'invalid', ageMinutes: null, series: null };
+  }
+
+  const rawAgeMinutes = (nowMs - fetchedMs) / 60000;
+  if (rawAgeMinutes < -Math.abs(maxClockSkewMinutes)) {
+    return { status: 'invalid', ageMinutes: rawAgeMinutes, series: null };
+  }
+  const ageMinutes = Math.max(0, rawAgeMinutes);
+  if (!finiteNumber(maxAgeMinutes) || maxAgeMinutes < 0 || ageMinutes > maxAgeMinutes) {
+    return { status: 'expired', ageMinutes, series: null };
+  }
+
+  const freshness = ageMinutes <= freshMaxAgeMinutes ? 'fresh' : 'stale';
+  return {
+    status: freshness,
+    ageMinutes,
+    series: {
+      ...structuredClone(candidate),
+      origin: 'cache',
+      freshness
+    }
+  };
 }
