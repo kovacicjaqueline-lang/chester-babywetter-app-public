@@ -65,9 +65,9 @@ test('Import ohne Profil behält das lokale Profil und übernimmt validierte Ein
   await page.locator('input[name="warmthBias"][value="runs_warm"]').check();
   await page.locator('#saveProfileButton').click();
   await expect(page.locator('#profileDialog')).toBeHidden();
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('babyweather.v1.profile'))).not.toBeNull();
 
   const before = await page.evaluate(() => JSON.parse(localStorage.getItem('babyweather.v1.profile')));
-  expect(before).not.toBeNull();
   await page.locator('[data-open-dialog="settingsDialog"]').first().click();
   const envelope = validEnvelope();
   envelope.payload.profile = null;
