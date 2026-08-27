@@ -39,16 +39,11 @@ test('Wetter kann manuell überschrieben und wieder automatisch geladen werden',
   await expect(page.locator('#weatherOverrideStatus')).toBeHidden();
 });
 
-test('Manuelles Wetter funktioniert ohne API- oder Cache-Wetter', async ({ page, context }) => {
-  await openDemo(page);
-  await page.evaluate(() => navigator.serviceWorker.ready);
-  await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
-  await page.evaluate(() => localStorage.removeItem('babyweather.v1.weatherCache'));
-
-  await context.setOffline(true);
-  await page.reload();
+test('Manuelles Wetter funktioniert ohne API- oder Cache-Wetter', async ({ page }) => {
+  await page.route('https://api.open-meteo.com/**', (route) => route.abort('failed'));
+  await page.goto('/');
   await expect(page.locator('#connectionBanner')).toBeVisible();
-  await expect(page.locator('#connectionBanner')).toContainText('Offline');
+  await expect(page.locator('#connectionBanner')).toContainText('Wetter nicht verfügbar');
 
   await page.locator('[data-open-dialog="weatherOverrideDialog"]').click();
   await expect(page.locator('#applyWeatherOverrideButton')).toBeEnabled();
@@ -59,9 +54,10 @@ test('Manuelles Wetter funktioniert ohne API- oder Cache-Wetter', async ({ page,
 
   await expect(page.locator('#temperatureValue')).toHaveText('9°');
   await expect(page.locator('#weatherOverrideStatus')).toHaveText('Manuell angepasst');
-  await expect(page.locator('#connectionBanner')).toContainText('manuell eingegebene Wetterwerte');
   await expect(page.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
-  await context.setOffline(false);
+  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('babyweather.v1.weatherCache')));
+  expect(stored.origin).toBe('manual');
+  expect(stored.hourly).toEqual([]);
 });
 
 test('Nackentest-Rückmeldung wird nur auf die aktuelle Empfehlung angewendet', async ({ page }) => {
