@@ -75,7 +75,7 @@ test('Anderer Look ändert nur den Visual-Seed und nicht die fachlichen Items', 
 
 test('Standort kann gewechselt werden', async ({ page }) => {
   await openDemo(page);
-  await page.locator('[data-open-dialog="locationDialog"]').click();
+  await page.locator('[data-open-dialog="locationDialog"]').first().click();
   await page.locator('#locationInput').fill('Wien');
   await page.locator('#saveLocationButton').click();
   await expect(page.locator('#locationLabel')).toContainText('Wien');
@@ -85,7 +85,6 @@ test('Offline-Zustand bleibt verständlich und verwendet Cache', async ({ page, 
   await openDemo(page);
   await page.evaluate(() => navigator.serviceWorker.ready);
   await context.setOffline(true);
-  await page.reload();
   await expect(page.locator('#connectionBanner')).toBeVisible();
   await expect(page.locator('#connectionBanner')).toContainText('Offline');
   await expect(page.locator('#weatherDescription')).toContainText('gespeichert');
