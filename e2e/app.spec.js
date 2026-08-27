@@ -29,6 +29,9 @@ async function restartFromPersistedCacheOffline(page, context, ageMinutes) {
   await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
   await setWeatherCacheAge(page, ageMinutes);
   await page.close();
+  await context.addInitScript(() => {
+    Object.defineProperty(Navigator.prototype, 'onLine', { configurable:true, get:() => false });
+  });
   await context.setOffline(true);
   const offlinePage = await context.newPage();
   await offlinePage.goto('/?demo=1');
