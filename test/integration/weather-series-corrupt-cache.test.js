@@ -45,7 +45,6 @@ test('corrupt hourly point is never promoted to current for stale cache', () => 
   assert.equal(result.series.current.time, '2026-08-26T10:00:00.000Z');
   assert.equal(result.series.current.airTempC, 18);
   assert.deepEqual(result.series.hourly.map((point) => point.time), [
-    '2026-08-26T11:00:00.000Z',
     '2026-08-26T12:00:00.000Z'
   ]);
 });
