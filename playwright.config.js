@@ -13,10 +13,10 @@ export default defineConfig({
     screenshot: 'only-on-failure'
   },
   webServer: {
-    command: 'npm run dev -- --ip 127.0.0.1',
+    command: 'node test/support/static-server.mjs',
     url: 'http://127.0.0.1:8788',
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000
+    timeout: 30_000
   },
   projects: [
     { name: 'chromium', use: { browserName: 'chromium' } }
