@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "fallbackSourceStyle": "neutral",
+  "themes": [
+    {"id":"sage_oat","label":"Sage / Oat","palette":["sage","oat","cream"]},
+    {"id":"dusty_blue_sand","label":"Dusty Blue / Sand","palette":["dusty_blue","sand","cream"]},
+    {"id":"clay_cream","label":"Clay / Cream","palette":["clay","cream","warm_beige"]},
+    {"id":"terracotta_greige","label":"Terracotta / Greige","palette":["terracotta","greige","cream"]},
+    {"id":"ocher_taupe","label":"Ocher / Taupe","palette":["ocher","taupe","oat"]},
+    {"id":"petrol_warm_beige","label":"Petrol / Warm Beige","palette":["petrol","warm_beige","cream"]},
+    {"id":"mauve_cream","label":"Mauve / Cream","palette":["mauve","cream","greige"]},
+    {"id":"apricot_oat","label":"Apricot / Oat","palette":["apricot","oat","cream"]},
+    {"id":"slate_blue_greige","label":"Slate Blue / Greige","palette":["slate_blue","greige","sand"]},
+    {"id":"soft_lavender_sand","label":"Soft Lavender / Sand","palette":["soft_lavender","sand","cream"]}
+  ],
+  "sourceStyleProfiles": {
+    "neutral": {
+      "themeIds":["sage_oat","dusty_blue_sand","clay_cream","terracotta_greige","ocher_taupe","petrol_warm_beige","mauve_cream","apricot_oat","slate_blue_greige","soft_lavender_sand"],
+      "paletteTags":["light_neutral"],
+      "pattern":"unspecified",
+      "stylePreferenceRank":{"neutral":0,"boy":1,"girl":1}
+    },
+    "boy": {
+      "themeIds":["dusty_blue_sand","petrol_warm_beige","slate_blue_greige"],
+      "paletteTags":["cool_muted"],
+      "pattern":"unspecified",
+      "stylePreferenceRank":{"boy":0,"neutral":1,"girl":2}
+    },
+    "girl": {
+      "themeIds":["clay_cream","terracotta_greige","mauve_cream","apricot_oat","soft_lavender_sand"],
+      "paletteTags":["warm_soft"],
+      "pattern":"unspecified",
+      "stylePreferenceRank":{"girl":0,"neutral":1,"boy":2}
+    }
+  },
+  "assetOverrides": {
+    "short_sleeve_bodysuit": {
+      "neutral":{"paletteTags":["cream","oat"],"pattern":"solid"},
+      "boy":{"themeIds":["dusty_blue_sand","slate_blue_greige"],"paletteTags":["dusty_blue"],"pattern":"fine_stripe"},
+      "girl":{"themeIds":["clay_cream","mauve_cream","apricot_oat","soft_lavender_sand"],"paletteTags":["soft_rose"],"pattern":"mini_motif"}
+    }
+  },
+  "additionalVariants": {
+    "leggings": [
+      {"id":"sage-rib-01","assetPath":"assets/clothing/leggings/sage-rib-01.webp","themeIds":["sage_oat","petrol_warm_beige"],"paletteTags":["sage","oat"],"pattern":"fine_rib"},
+      {"id":"mauve-knit-01","assetPath":"assets/clothing/leggings/mauve-knit-01.webp","themeIds":["mauve_cream","soft_lavender_sand"],"paletteTags":["mauve","greige"],"pattern":"micro_texture"}
+    ],
+    "trousers": [
+      {"id":"oat-knit-01","assetPath":"assets/clothing/trousers/oat-knit-01.webp","themeIds":["sage_oat","dusty_blue_sand","clay_cream","ocher_taupe","apricot_oat"],"paletteTags":["oat","sand","cream"],"pattern":"micro_texture"},
+      {"id":"dusty-blue-01","assetPath":"assets/clothing/trousers/dusty-blue-01.webp","themeIds":["dusty_blue_sand","slate_blue_greige"],"paletteTags":["dusty_blue","greige"],"pattern":"solid"}
+    ],
+    "sweatshirt": [
+      {"id":"dusty-blue-quilt-01","assetPath":"assets/clothing/sweatshirt/dusty-blue-quilt-01.webp","themeIds":["dusty_blue_sand","slate_blue_greige"],"paletteTags":["dusty_blue"],"pattern":"micro_quilt"},
+      {"id":"sage-quilt-01","assetPath":"assets/clothing/sweatshirt/sage-quilt-01.webp","themeIds":["sage_oat","petrol_warm_beige"],"paletteTags":["sage","oat"],"pattern":"micro_quilt"}
+    ],
+    "light_transition_jacket": [
+      {"id":"sage-01","assetPath":"assets/clothing/light_transition_jacket/sage-01.webp","themeIds":["sage_oat","petrol_warm_beige"],"paletteTags":["sage","cream"],"pattern":"solid"},
+      {"id":"dusty-blue-01","assetPath":"assets/clothing/light_transition_jacket/dusty-blue-01.webp","themeIds":["dusty_blue_sand","slate_blue_greige"],"paletteTags":["dusty_blue","sand"],"pattern":"solid"}
+    ],
+    "thin_hat": [
+      {"id":"cream-knit-01","assetPath":"assets/clothing/thin_hat/cream-knit-01.webp","themeIds":["sage_oat","dusty_blue_sand","clay_cream","terracotta_greige","ocher_taupe","petrol_warm_beige","mauve_cream","apricot_oat","slate_blue_greige","soft_lavender_sand"],"paletteTags":["cream","oat"],"pattern":"fine_knit"},
+      {"id":"terracotta-knit-01","assetPath":"assets/clothing/thin_hat/terracotta-knit-01.webp","themeIds":["clay_cream","terracotta_greige","ocher_taupe","apricot_oat"],"paletteTags":["terracotta","clay"],"pattern":"fine_knit"}
+    ],
+    "light_shoes": [
+      {"id":"sage-01","assetPath":"assets/clothing/light_shoes/sage-01.webp","themeIds":["sage_oat","petrol_warm_beige"],"paletteTags":["sage","cream"],"pattern":"solid"},
+      {"id":"dusty-blue-01","assetPath":"assets/clothing/light_shoes/dusty-blue-01.webp","themeIds":["dusty_blue_sand","slate_blue_greige"],"paletteTags":["dusty_blue","cream"],"pattern":"solid"}
+    ],
+    "warm_socks_booties": [
+      {"id":"cream-knit-01","assetPath":"assets/clothing/warm_socks_booties/cream-knit-01.webp","themeIds":["sage_oat","dusty_blue_sand","clay_cream","terracotta_greige","ocher_taupe","petrol_warm_beige","mauve_cream","apricot_oat","slate_blue_greige","soft_lavender_sand"],"paletteTags":["cream","oat"],"pattern":"fine_knit"},
+      {"id":"mauve-knit-01","assetPath":"assets/clothing/warm_socks_booties/mauve-knit-01.webp","themeIds":["mauve_cream","soft_lavender_sand","clay_cream"],"paletteTags":["mauve","cream"],"pattern":"fine_knit"}
+    ]
+  }
+}
