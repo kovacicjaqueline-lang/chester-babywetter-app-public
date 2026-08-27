@@ -44,6 +44,19 @@ test('valid V1 import is returned as an explicit sanitized payload', () => {
   assert.equal('injected' in result.payload.settings, false);
 });
 
+test('profile may be null and optional appVersion must be a string when present', () => {
+  const withoutProfile = validEnvelope();
+  withoutProfile.payload.profile = null;
+  delete withoutProfile.appVersion;
+  const result = validateImportEnvelopeV1(withoutProfile, { now: NOW });
+  assert.equal(result.payload.profile, null);
+  assert.equal('appVersion' in result, false);
+
+  const nullVersion = validEnvelope();
+  nullVersion.appVersion = null;
+  assert.throws(() => validateImportEnvelopeV1(nullVersion, { now: NOW }), TypeError);
+});
+
 test('known feedback events are validated and sanitized', () => {
   const input = validEnvelope();
   input.payload.feedback.push({
