@@ -97,8 +97,8 @@ export function validateImportEnvelopeV1(value, { now = () => new Date() } = {})
 
   return {
     schemaVersion: 1,
-    exportedAt: typeof value.exportedAt === 'string' && Number.isFinite(Date.parse(value.exportedAt)) ? value.exportedAt : null,
-    appVersion: typeof value.appVersion === 'string' ? value.appVersion : null,
+    exportedAt: isoTimestamp(value.exportedAt, 'exportedAt'),
+    appVersion: value.appVersion == null ? null : requiredString(value.appVersion, 'appVersion', { max: 40 }),
     payload: {
       profile: validateProfile(value.payload.profile, current),
       settings: validateSettings(value.payload.settings),
