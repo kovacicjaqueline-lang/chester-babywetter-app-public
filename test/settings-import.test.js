@@ -84,6 +84,8 @@ test('non-finite/negative settings values and malformed timestamps are rejected'
   assert.throws(() => validateImportEnvelopeV1(timestamp, { now: NOW }), TypeError);
   const envelopeTime = validEnvelope(); envelopeTime.exportedAt = 'not-a-date';
   assert.throws(() => validateImportEnvelopeV1(envelopeTime, { now: NOW }), TypeError);
+  const impossibleTime = validEnvelope(); impossibleTime.exportedAt = '2026-02-30T10:00:00.000Z';
+  assert.throws(() => validateImportEnvelopeV1(impossibleTime, { now: NOW }), TypeError);
   const feedback = validEnvelope(); feedback.payload.feedback = [{}];
   assert.throws(() => validateImportEnvelopeV1(feedback, { now: NOW }), TypeError);
 });
