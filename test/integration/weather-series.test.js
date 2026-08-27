@@ -113,6 +113,23 @@ test('stale cache advances current to the latest cached forecast point at or bef
   assert.equal(series.current.time, '2026-08-26T10:00:00.000Z');
 });
 
+test('stale manual override keeps the manually entered current point instead of promoting API forecast data', () => {
+  const series = normalizeWeatherBundle({
+    origin: 'api_with_manual_override',
+    current: snapshot('2026-08-26T10:00:00.000Z', { airTempC: 16, origin: 'api_with_manual_override' }),
+    hourly: [snapshot('2026-08-26T11:00:00.000Z', { airTempC: 22 }), snapshot('2026-08-26T12:00:00.000Z', { airTempC: 23 })]
+  }, location);
+  const result = assessCachedWeatherSeries(series, {
+    location,
+    now: () => new Date('2026-08-26T11:20:00.000Z')
+  });
+  assert.equal(result.status, 'stale');
+  assert.equal(result.series.origin, 'api_with_manual_override');
+  assert.equal(result.series.current.time, '2026-08-26T10:00:00.000Z');
+  assert.equal(result.series.current.airTempC, 16);
+  assert.deepEqual(result.series.hourly.map((point) => point.time), ['2026-08-26T11:00:00.000Z', '2026-08-26T12:00:00.000Z']);
+});
+
 test('stale risk horizon is compensated to start from actual request time without changing weather timestamps', () => {
   const series = normalizeWeatherBundle({
     current: snapshot('2026-08-26T10:00:00.000Z'),

@@ -195,7 +195,7 @@ export function assessCachedWeatherSeries(
     origin: manualOrigin(candidate.origin) ? candidate.origin : 'cache',
     freshness
   };
-  if (freshness === 'stale') series = alignStaleSeriesToNow(series, nowMs);
+  if (freshness === 'stale' && !manualOrigin(candidate.origin)) series = alignStaleSeriesToNow(series, nowMs);
 
   return {
     status: freshness,
