@@ -82,6 +82,8 @@ test('non-finite/negative settings values and malformed timestamps are rejected'
   assert.throws(() => validateImportEnvelopeV1(cacheAge, { now: NOW }), RangeError);
   const timestamp = validEnvelope(); timestamp.payload.profile.updatedAt = 'yesterday';
   assert.throws(() => validateImportEnvelopeV1(timestamp, { now: NOW }), TypeError);
+  const envelopeTime = validEnvelope(); envelopeTime.exportedAt = 'not-a-date';
+  assert.throws(() => validateImportEnvelopeV1(envelopeTime, { now: NOW }), TypeError);
   const feedback = validEnvelope(); feedback.payload.feedback = [{}];
   assert.throws(() => validateImportEnvelopeV1(feedback, { now: NOW }), TypeError);
 });
