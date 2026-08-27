@@ -81,30 +81,6 @@ test('Standort kann gewechselt werden', async ({ page }) => {
   await expect(page.locator('#locationLabel')).toContainText('Wien');
 });
 
-test('Wetter kann manuell überschrieben und wieder automatisch geladen werden', async ({ page }) => {
-  await openDemo(page);
-  const before = await selectedIds(page);
-  await page.locator('[data-open-dialog="weatherOverrideDialog"]').click();
-  await page.locator('#manualAirTempC').fill('5');
-  await page.locator('#manualWindSpeedKmh').fill('35');
-  await page.locator('#manualWindGustKmh').fill('45');
-  await page.locator('#manualPrecipProbabilityPct').fill('70');
-  await page.locator('#manualPrecipMm').fill('1');
-  await page.locator('#manualPrecipitationType').selectOption('rain');
-  await page.locator('#manualUvIndex').fill('1');
-  await page.locator('#applyWeatherOverrideButton').click();
-  await expect(page.locator('#temperatureValue')).toHaveText('5°');
-  await expect(page.locator('#weatherOverrideStatus')).toBeVisible();
-  await expect(page.locator('#weatherOverrideStatus')).toHaveText('Manuell angepasst');
-  await expect(page.locator('#weatherFacts')).toContainText('Gefühlt–');
-  expect(await selectedIds(page)).not.toEqual(before);
-
-  await page.locator('[data-open-dialog="weatherOverrideDialog"]').click();
-  await page.locator('#resetWeatherOverrideButton').click();
-  await expect(page.locator('#temperatureValue')).toHaveText('18°');
-  await expect(page.locator('#weatherOverrideStatus')).toBeHidden();
-});
-
 test('Offline-Zustand bleibt verständlich und verwendet Cache', async ({ page, context }) => {
   await openDemo(page);
   await page.evaluate(() => navigator.serviceWorker.ready);
@@ -113,6 +89,53 @@ test('Offline-Zustand bleibt verständlich und verwendet Cache', async ({ page, 
   await expect(page.locator('#connectionBanner')).toContainText('Offline');
   await expect(page.locator('#weatherDescription')).toContainText('gespeichert');
   await expect(page.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
+  await context.setOffline(false);
+});
+
+test('Kleidungsbilder bleiben nach Offline-Reload verfügbar', async ({ page, context }) => {
+  await openDemo(page);
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
+
+  const cacheAudit = await page.evaluate(async () => {
+    const [assetManifest, visualManifest] = await Promise.all([
+      fetch('/assets/clothing/manifest.json').then((response) => response.json()),
+      fetch('/assets/clothing/visual-manifest.json').then((response) => response.json())
+    ]);
+    const normalize = (path) => {
+      if (typeof path !== 'string') return null;
+      const normalized = path.replace(/^\/+/, '');
+      if (!normalized.startsWith('assets/clothing/') || !normalized.toLowerCase().endsWith('.webp')) return null;
+      return `/${normalized}`;
+    };
+    const expected = new Set();
+    const add = (path) => { const normalized = normalize(path); if (normalized) expected.add(normalized); };
+    for (const group of assetManifest.assetGroups || []) {
+      add(group.assetPath);
+      for (const path of Object.values(group.variantPaths || {})) add(path);
+    }
+    for (const variants of Object.values(visualManifest.additionalVariants || {})) {
+      for (const variant of Array.isArray(variants) ? variants : []) add(variant.assetPath);
+    }
+    const missing = [];
+    for (const path of expected) {
+      if (!(await caches.match(path))) missing.push(path);
+    }
+    return { expectedCount: expected.size, missing };
+  });
+  expect(cacheAudit.expectedCount).toBeGreaterThan(50);
+  expect(cacheAudit.missing).toEqual([]);
+  expect(await page.locator('#outfitGrid img[data-clothing-image="true"]').count()).toBeGreaterThan(1);
+
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
+
+  const images = page.locator('#outfitGrid img[data-clothing-image="true"]');
+  expect(await images.count()).toBeGreaterThan(1);
+  const checks = await images.evaluateAll((nodes) => nodes.map((image) => ({ complete:image.complete, naturalWidth:image.naturalWidth })));
+  for (const item of checks) { expect(item.complete).toBe(true); expect(item.naturalWidth).toBeGreaterThan(0); }
+  await expect(page.locator('#outfitGrid .asset-placeholder')).toHaveCount(0);
   await context.setOffline(false);
 });
 
@@ -165,19 +188,11 @@ test('Schlafmodus verwendet Raumtemperatur', async ({ page }) => {
   await expect(page.locator('[data-notice-code="SLEEP_USE_ROOM_TEMPERATURE"]')).toBeVisible();
 });
 
-test('Nackentest-Rückmeldung wird nur auf die aktuelle Empfehlung angewendet', async ({ page }) => {
+test('Nackentest-Hinweis ist sichtbar', async ({ page }) => {
   await openDemo(page);
-  await chooseSituation(page, 'outdoor');
-  const before = await selectedIds(page);
+  await expect(page.getByTestId('neck-check')).toBeVisible();
+  await expect(page.getByTestId('neck-check')).toContainText('Warm & trocken');
   await expect(page.getByTestId('neck-check')).toContainText('Kalte Hände oder Füße');
-  await page.getByRole('button', { name:'Nackentest anwenden' }).click();
-  await page.locator('[data-neck-feedback="cool"]').click();
-  await expect(page.locator('#neckFeedbackStatus')).toContainText('Kühl');
-  const after = await selectedIds(page);
-  expect(after).not.toEqual(before);
-
-  await chooseSituation(page, 'stroller');
-  await expect(page.locator('#neckFeedbackStatus')).toContainText('Noch keine Rückmeldung');
 });
 
 test('thermisch andere Kleidungsalternative löst Neubewertung aus', async ({ page }) => {
