@@ -4,6 +4,7 @@ import {
   WEATHER_CACHE_MAX_AGE_MINUTES,
   WEATHER_FRESH_MAX_AGE_MINUTES,
   assessCachedWeatherSeries,
+  compensateWeatherRiskHorizon,
   isWeatherSeries,
   markWeatherSeriesStale,
   normalizeWeatherBundle,
@@ -112,6 +113,48 @@ test('stale cache advances current to the latest cached forecast point at or bef
   assert.equal(series.current.time, '2026-08-26T10:00:00.000Z');
 });
 
+test('stale risk horizon is compensated to start from actual request time without changing weather timestamps', () => {
+  const series = normalizeWeatherBundle({
+    current: snapshot('2026-08-26T10:00:00.000Z'),
+    hourly: [
+      snapshot('2026-08-26T11:00:00.000Z'),
+      snapshot('2026-08-26T12:00:00.000Z')
+    ]
+  }, location);
+  const stale = assessCachedWeatherSeries(series, {
+    location,
+    now: () => new Date('2026-08-26T11:58:00.000Z')
+  }).series;
+  assert.equal(stale.current.time, '2026-08-26T11:00:00.000Z');
+
+  const outdoor = compensateWeatherRiskHorizon(
+    { mode: 'outdoor', plannedMinutes: 5, activity: 'normal' },
+    stale,
+    { now: () => new Date('2026-08-26T11:58:00.000Z') }
+  );
+  assert.equal(outdoor.plannedMinutes, 63);
+  assert.equal(stale.current.time, '2026-08-26T11:00:00.000Z');
+
+  const car = compensateWeatherRiskHorizon(
+    { mode: 'car', plannedMinutes: 30, includeOutdoorTransition: true, outsideTransitionMinutes: 5 },
+    stale,
+    { now: () => new Date('2026-08-26T11:58:00.000Z') }
+  );
+  assert.equal(car.outsideTransitionMinutes, 63);
+});
+
+test('fresh cache does not get a compensated risk horizon', () => {
+  const fresh = assessCachedWeatherSeries(cachedSeries(), {
+    location,
+    now: () => new Date('2026-08-26T10:20:00.000Z')
+  }).series;
+  const context = { mode: 'outdoor', plannedMinutes: 5 };
+  assert.deepEqual(
+    compensateWeatherRiskHorizon(context, fresh, { now: () => new Date('2026-08-26T10:20:00.000Z') }),
+    context
+  );
+});
+
 test('fresh cache does not promote forecast points to current', () => {
   const series = normalizeWeatherBundle({
     current: snapshot('2026-08-26T10:00:00.000Z'),
@@ -124,6 +167,19 @@ test('fresh cache does not promote forecast points to current', () => {
   assert.equal(result.status, 'fresh');
   assert.equal(result.series.current.time, '2026-08-26T10:00:00.000Z');
   assert.equal(result.series.hourly[0].time, '2026-08-26T10:15:00.000Z');
+});
+
+test('cached manual override keeps its provenance while the same age limits apply', () => {
+  const series = cachedSeries();
+  series.origin = 'manual';
+  const result = assessCachedWeatherSeries(series, {
+    location,
+    now: () => new Date('2026-08-26T11:00:00.000Z')
+  });
+  assert.equal(result.status, 'stale');
+  assert.equal(result.series.origin, 'manual');
+  assert.equal(result.series.freshness, 'stale');
+  assert.equal(result.sourceOrigin, 'manual');
 });
 
 test('cached weather older than 120 minutes is expired and not returned as WeatherSeries', () => {

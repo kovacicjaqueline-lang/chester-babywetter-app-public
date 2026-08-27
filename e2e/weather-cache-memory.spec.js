@@ -20,12 +20,30 @@ test('frisch geladenes Wetter bleibt offline nutzbar, wenn localStorage-Cache fe
   await context.setOffline(false);
 });
 
-test('aktives Wetter altert auch ohne Reload von fresh zu stale und danach zu abgelaufen', async ({ page }) => {
+test('online geöffnetes Wetter wird beim Überschreiten der Freshness-Grenze automatisch aktualisiert', async ({ page }) => {
+  await page.clock.install({ time: new Date('2026-08-27T10:00:00.000Z') });
+  await page.goto('/?demo=1');
+  await expect(page.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
+
+  const initialFetchedAt = await page.evaluate(() => JSON.parse(localStorage.getItem('babyweather.v1.weatherCache'))?.fetchedAt);
+  expect(initialFetchedAt).toBe('2026-08-27T10:00:00.000Z');
+
+  await page.clock.fastForward(31 * 60 * 1000);
+
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('babyweather.v1.weatherCache'))?.fetchedAt))
+    .not.toBe(initialFetchedAt);
+  await expect(page.locator('#weatherDescription')).not.toContainText('ältere gespeicherte Daten');
+  await expect(page.locator('[data-notice-code="WEATHER_DATA_STALE"]')).toHaveCount(0);
+  await expect(page.locator('#confidencePill')).toHaveText('Passend');
+});
+
+test('aktives Wetter altert offline auch ohne Reload von fresh zu stale und danach zu abgelaufen', async ({ page, context }) => {
   await page.clock.install({ time: new Date('2026-08-27T10:00:00.000Z') });
   await page.goto('/?demo=1');
   await expect(page.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
   await expect(page.locator('#confidencePill')).toHaveText('Passend');
 
+  await context.setOffline(true);
   await page.clock.fastForward(31 * 60 * 1000);
   await expect(page.locator('#weatherDescription')).toContainText('ältere gespeicherte Daten');
   await expect(page.locator('[data-notice-code="WEATHER_DATA_STALE"]')).toBeVisible();
@@ -36,4 +54,6 @@ test('aktives Wetter altert auch ohne Reload von fresh zu stale und danach zu ab
   await expect(page.locator('#weatherDescription')).toHaveText('Gespeichertes Wetter zu alt');
   await expect(page.locator('#confidencePill')).toHaveText('Angaben fehlen');
   await expect(page.locator('#outfitGrid [data-item-id]')).toHaveCount(0);
+
+  await context.setOffline(false);
 });
