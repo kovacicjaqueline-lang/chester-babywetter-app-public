@@ -66,8 +66,9 @@ const assetStore = new ClothingAssetStore(); const weatherService = createWeathe
 function persistProfile() { state.profile.defaultMode = state.settings.defaultMode; state.profile.updatedAt = nowIso(); localStorage.setItem(PROFILE_KEY, JSON.stringify(state.profile)); }
 function persistSettings() { localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings)); localStorage.setItem(UI_STATE_KEY, JSON.stringify({ mode: state.mode, contexts: state.contexts, visualSeed: state.visualSeed })); }
 function cacheWeather(series) { try { localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify(series)); } catch { showToast('Wetterdaten konnten nicht lokal gespeichert werden.'); } }
+function weatherAssessmentOptions(location) { return { location, maxAgeMinutes: state.settings.weatherCacheMaxAgeMinutes }; }
 function cachedWeather(location) {
-  const options = { location, maxAgeMinutes: state.settings.weatherCacheMaxAgeMinutes };
+  const options = weatherAssessmentOptions(location);
   const storedAssessment = assessCachedWeatherSeries(safeParse(WEATHER_CACHE_KEY), options);
   const memoryAssessment = assessCachedWeatherSeries(state.weather, options);
   const usable = [storedAssessment, memoryAssessment]
@@ -82,6 +83,20 @@ function cachedWeather(location) {
   return assessment.series;
 }
 function clearCacheRuntime() { state.runtime.weatherCacheStatus = null; state.runtime.weatherCacheAgeMinutes = null; }
+function syncActiveWeatherFreshness(location = state.location) {
+  if (!state.weather) return false;
+  const previousOrigin = state.weather.origin;
+  const previousFreshness = state.weather.freshness;
+  const assessment = assessCachedWeatherSeries(state.weather, weatherAssessmentOptions(location));
+  if (assessment.status === 'fresh' && previousOrigin !== 'cache') {
+    clearCacheRuntime();
+    return false;
+  }
+  state.runtime.weatherCacheStatus = assessment.status;
+  state.runtime.weatherCacheAgeMinutes = assessment.ageMinutes;
+  state.weather = assessment.series;
+  return previousOrigin !== state.weather?.origin || previousFreshness !== state.weather?.freshness || !state.weather;
+}
 function resetSession() { session = createSession(`ui:${Date.now()}:${Math.random().toString(36).slice(2)}`); state.warmthDirection = 'balanced'; }
 function requestForCurrentState() { return { requestId: `ui:${state.mode}`, requestedAt: nowIso(), profile: structuredClone(state.profile), context: structuredClone(state.contexts[state.mode]), weather: state.mode === 'sleep' ? null : state.weather, session, neckFeedback: null }; }
 function computeRecommendation() {
@@ -94,7 +109,14 @@ function renderCurrentRecommendation() {
   if (!lastRecommendation) return;
   renderOutfit({ recommendation: lastRecommendation, context: state.contexts[state.mode], warmthDirection: state.warmthDirection, styleTheme: state.profile.styleTheme, visualSeed: state.visualSeed }, assetStore);
 }
-function renderRecommendation() { lastRecommendation = computeRecommendation(); renderCurrentRecommendation(); }
+function renderRecommendation() {
+  syncActiveWeatherFreshness();
+  renderWeather(state.weather, state.location, state.runtime);
+  renderHourly(state.weather);
+  updateConnectionBanner();
+  lastRecommendation = computeRecommendation();
+  renderCurrentRecommendation();
+}
 function cacheAgeLabel() {
   const age = state.runtime.weatherCacheAgeMinutes;
   if (!Number.isFinite(age)) return '';
@@ -132,6 +154,16 @@ function updateConnectionBanner() {
     }
     return;
   }
+  if (state.weather?.freshness === 'stale') {
+    banner.hidden = false;
+    banner.textContent = `Wetterdaten sind nicht aktuell${cacheAge ? ` (${cacheAge})` : ''}; die Empfehlung ist entsprechend gekennzeichnet.`;
+    return;
+  }
+  if (!state.weather && state.runtime.weatherCacheStatus === 'expired') {
+    banner.hidden = false;
+    banner.textContent = 'Der vorhandene Wettercache ist zu alt und wird nicht für eine neue Wetterempfehlung verwendet.';
+    return;
+  }
   banner.hidden = true;
 }
 function renderAll() { document.body.dataset.styleTheme = state.profile.styleTheme; renderWeather(state.weather, state.location, state.runtime); renderHourly(state.weather); renderSituation(state.mode); renderSituationOptions(state.mode); renderSituationContext(state.mode, state.contexts[state.mode]); renderRecommendation(); renderCatalog(assetStore, state.profile.styleTheme); syncForms(); updateConnectionBanner(); }
@@ -140,7 +172,7 @@ function showToast(message) { const toast = document.querySelector('#toast'); to
 function openDialog(id) { const dialog = document.getElementById(id); if (!(dialog instanceof HTMLDialogElement)) return; for (const open of document.querySelectorAll('dialog[open]')) if (open !== dialog) open.close(); if (!dialog.open) dialog.showModal(); }
 function closeDialog(id) { const dialog = document.getElementById(id); if (dialog instanceof HTMLDialogElement && dialog.open) dialog.close(); }
 async function refreshWeather(location, { persistLocation = true } = {}) {
-  state.runtime.weatherLoading = true; state.runtime.weatherError = null; state.location = location; renderWeather(state.weather, state.location, state.runtime); updateConnectionBanner();
+  state.runtime.weatherLoading = true; state.runtime.weatherError = null; state.location = location; syncActiveWeatherFreshness(location); renderWeather(state.weather, state.location, state.runtime); updateConnectionBanner();
   if (!navigator.onLine) { state.weather = cachedWeather(location); state.runtime.weatherLoading = false; state.runtime.weatherError = 'offline'; resetSession(); renderAll(); return; }
   try { const bundle = persistLocation ? await weatherService.useLocation(location, { demoMode: DEMO_MODE }) : await weatherService.loadWeather(location, { demoMode: DEMO_MODE }); state.weather = normalizeWeatherBundle(bundle, location); state.location = state.weather.location; cacheWeather(state.weather); clearCacheRuntime(); }
   catch (error) { state.weather = cachedWeather(location); state.runtime.weatherError = error?.code ?? error?.message ?? 'weather_error'; }
@@ -179,6 +211,7 @@ async function init() {
   bindGlobalActions(); bindSituationContext(); bindProfile(); bindLocation(); bindStyleSettings(); bindImportExport(); bindDialogs();
   window.addEventListener('online', () => refreshWeather(state.location ?? DEFAULT_LOCATION));
   window.addEventListener('offline', () => { state.weather = cachedWeather(state.location ?? DEFAULT_LOCATION); state.runtime.weatherError = 'offline'; resetSession(); renderAll(); });
+  window.setInterval(() => renderRecommendation(), 60000);
   state.location = weatherService.getSavedLocation() ?? DEFAULT_LOCATION; state.weather = cachedWeather(state.location); renderAll(); await assetStore.load(); renderAll(); await refreshWeather(state.location, { persistLocation: true }); registerServiceWorker();
 }
 init();
