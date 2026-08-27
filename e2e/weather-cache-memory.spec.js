@@ -19,3 +19,21 @@ test('frisch geladenes Wetter bleibt offline nutzbar, wenn localStorage-Cache fe
 
   await context.setOffline(false);
 });
+
+test('aktives Wetter altert auch ohne Reload von fresh zu stale und danach zu abgelaufen', async ({ page }) => {
+  await page.clock.install({ time: new Date('2026-08-27T10:00:00.000Z') });
+  await page.goto('/?demo=1');
+  await expect(page.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
+  await expect(page.locator('#confidencePill')).toHaveText('Passend');
+
+  await page.clock.fastForward(31 * 60 * 1000);
+  await expect(page.locator('#weatherDescription')).toContainText('ältere gespeicherte Daten');
+  await expect(page.locator('[data-notice-code="WEATHER_DATA_STALE"]')).toBeVisible();
+  await expect(page.locator('#confidencePill')).toHaveText('Teilweise');
+
+  await page.clock.fastForward(90 * 60 * 1000);
+  await expect(page.locator('#temperatureValue')).toHaveText('–');
+  await expect(page.locator('#weatherDescription')).toHaveText('Gespeichertes Wetter zu alt');
+  await expect(page.locator('#confidencePill')).toHaveText('Angaben fehlen');
+  await expect(page.locator('#outfitGrid [data-item-id]')).toHaveCount(0);
+});
