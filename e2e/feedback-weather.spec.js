@@ -39,6 +39,31 @@ test('Wetter kann manuell überschrieben und wieder automatisch geladen werden',
   await expect(page.locator('#weatherOverrideStatus')).toBeHidden();
 });
 
+test('Manuelles Wetter funktioniert ohne API- oder Cache-Wetter', async ({ page, context }) => {
+  await openDemo(page);
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
+  await page.evaluate(() => localStorage.removeItem('babyweather.v1.weatherCache'));
+
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.locator('#connectionBanner')).toBeVisible();
+  await expect(page.locator('#connectionBanner')).toContainText('Offline');
+
+  await page.locator('[data-open-dialog="weatherOverrideDialog"]').click();
+  await expect(page.locator('#applyWeatherOverrideButton')).toBeEnabled();
+  await expect(page.locator('#weatherOverrideSource')).toContainText('Keine automatischen Wetterdaten');
+  await page.locator('#manualAirTempC').fill('9');
+  await page.locator('#manualPrecipitationType').selectOption('none');
+  await page.locator('#applyWeatherOverrideButton').click();
+
+  await expect(page.locator('#temperatureValue')).toHaveText('9°');
+  await expect(page.locator('#weatherOverrideStatus')).toHaveText('Manuell angepasst');
+  await expect(page.locator('#connectionBanner')).toContainText('manuell eingegebene Wetterwerte');
+  await expect(page.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
+  await context.setOffline(false);
+});
+
 test('Nackentest-Rückmeldung wird nur auf die aktuelle Empfehlung angewendet', async ({ page }) => {
   await openDemo(page);
   await chooseSituation(page, 'outdoor');
@@ -46,9 +71,30 @@ test('Nackentest-Rückmeldung wird nur auf die aktuelle Empfehlung angewendet', 
   await expect(page.getByTestId('neck-check')).toContainText('Kalte Hände oder Füße');
   await page.getByRole('button', { name:'Nackentest anwenden' }).click();
   await page.locator('[data-neck-feedback="cool"]').click();
-  await expect(page.locator('#neckFeedbackStatus')).toContainText('Kühl');
+  await expect(page.locator('#neckFeedbackStatus')).toContainText('Kühl – wärmer angepasst');
   expect(await selectedIds(page)).not.toEqual(before);
 
   await chooseSituation(page, 'stroller');
   await expect(page.locator('#neckFeedbackStatus')).toContainText('Noch keine Rückmeldung');
+});
+
+test('Nackentest behauptet keine Änderung wenn keine sichere Wärmestufe mehr möglich ist', async ({ page }) => {
+  await openDemo(page);
+  await chooseSituation(page, 'outdoor');
+  await page.locator('[data-open-dialog="weatherOverrideDialog"]').click();
+  await page.locator('#manualAirTempC').fill('-20');
+  await page.locator('#manualWindSpeedKmh').fill('0');
+  await page.locator('#manualWindGustKmh').fill('0');
+  await page.locator('#manualPrecipProbabilityPct').fill('0');
+  await page.locator('#manualPrecipMm').fill('0');
+  await page.locator('#manualPrecipitationType').selectOption('none');
+  await page.locator('#manualUvIndex').fill('0');
+  await page.locator('#applyWeatherOverrideButton').click();
+  const before = await selectedIds(page);
+
+  await page.getByRole('button', { name:'Nackentest anwenden' }).click();
+  await page.locator('[data-neck-feedback="cool"]').click();
+
+  await expect(page.locator('#neckFeedbackStatus')).toContainText('keine weitere sinnvolle oder sichere Schichtänderung möglich');
+  expect(await selectedIds(page)).toEqual(before);
 });
