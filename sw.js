@@ -1,4 +1,4 @@
-const CACHE_NAME = 'babywetter-shell-v0.2.0-assets2';
+const CACHE_NAME = 'babywetter-shell-v0.2.0-assets3';
 const ASSET_MANIFEST_PATH = '/assets/clothing/manifest.json';
 const VISUAL_MANIFEST_PATH = '/assets/clothing/visual-manifest.json';
 const SHELL = [
@@ -19,6 +19,7 @@ const SHELL = [
   '/src/outfit-engine-support.js',
   '/src/visual-outfit.js',
   '/src/integration/weather-series.js',
+  '/src/integration/manual-weather.js',
   '/src/weather/index.js',
   '/src/weather/errors.js',
   '/src/weather/location.js',
