@@ -92,6 +92,53 @@ test('Offline-Zustand bleibt verständlich und verwendet Cache', async ({ page, 
   await context.setOffline(false);
 });
 
+test('Kleidungsbilder bleiben nach Offline-Reload verfügbar', async ({ page, context }) => {
+  await openDemo(page);
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
+
+  const cacheAudit = await page.evaluate(async () => {
+    const [assetManifest, visualManifest] = await Promise.all([
+      fetch('/assets/clothing/manifest.json').then((response) => response.json()),
+      fetch('/assets/clothing/visual-manifest.json').then((response) => response.json())
+    ]);
+    const normalize = (path) => {
+      if (typeof path !== 'string') return null;
+      const normalized = path.replace(/^\/+/, '');
+      if (!normalized.startsWith('assets/clothing/') || !normalized.toLowerCase().endsWith('.webp')) return null;
+      return `/${normalized}`;
+    };
+    const expected = new Set();
+    const add = (path) => { const normalized = normalize(path); if (normalized) expected.add(normalized); };
+    for (const group of assetManifest.assetGroups || []) {
+      add(group.assetPath);
+      for (const path of Object.values(group.variantPaths || {})) add(path);
+    }
+    for (const variants of Object.values(visualManifest.additionalVariants || {})) {
+      for (const variant of Array.isArray(variants) ? variants : []) add(variant.assetPath);
+    }
+    const missing = [];
+    for (const path of expected) {
+      if (!(await caches.match(path))) missing.push(path);
+    }
+    return { expectedCount: expected.size, missing };
+  });
+  expect(cacheAudit.expectedCount).toBeGreaterThan(50);
+  expect(cacheAudit.missing).toEqual([]);
+  expect(await page.locator('#outfitGrid img[data-clothing-image="true"]').count()).toBeGreaterThan(1);
+
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
+
+  const images = page.locator('#outfitGrid img[data-clothing-image="true"]');
+  expect(await images.count()).toBeGreaterThan(1);
+  const checks = await images.evaluateAll((nodes) => nodes.map((image) => ({ complete:image.complete, naturalWidth:image.naturalWidth })));
+  for (const item of checks) { expect(item.complete).toBe(true); expect(item.naturalWidth).toBeGreaterThan(0); }
+  await expect(page.locator('#outfitGrid .asset-placeholder')).toHaveCount(0);
+  await context.setOffline(false);
+});
+
 test('Einstellungen bleiben nach Reload erhalten', async ({ page }) => {
   await openDemo(page);
   await page.locator('[data-open-dialog="settingsDialog"]').first().click();
