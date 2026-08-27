@@ -91,6 +91,41 @@ test('cached weather becomes stale after 30 minutes and stays usable through 120
   assert.equal(atMaxAge.ageMinutes, 120);
 });
 
+test('stale cache advances current to the latest cached forecast point at or before now', () => {
+  const series = normalizeWeatherBundle({
+    current: snapshot('2026-08-26T10:00:00.000Z', { airTempC: 18 }),
+    hourly: [
+      snapshot('2026-08-26T11:00:00.000Z', { airTempC: 19 }),
+      snapshot('2026-08-26T12:00:00.000Z', { airTempC: 20 }),
+      snapshot('2026-08-26T13:00:00.000Z', { airTempC: 21 })
+    ]
+  }, location);
+  const result = assessCachedWeatherSeries(series, {
+    location,
+    now: () => new Date('2026-08-26T11:20:00.000Z')
+  });
+  assert.equal(result.status, 'stale');
+  assert.equal(result.series.current.time, '2026-08-26T11:00:00.000Z');
+  assert.equal(result.series.current.airTempC, 19);
+  assert.deepEqual(result.series.hourly.map((point) => point.time), ['2026-08-26T12:00:00.000Z', '2026-08-26T13:00:00.000Z']);
+  assert.equal(result.series.fetchedAt, '2026-08-26T10:00:00.000Z');
+  assert.equal(series.current.time, '2026-08-26T10:00:00.000Z');
+});
+
+test('fresh cache does not promote forecast points to current', () => {
+  const series = normalizeWeatherBundle({
+    current: snapshot('2026-08-26T10:00:00.000Z'),
+    hourly: [snapshot('2026-08-26T10:15:00.000Z', { airTempC: 19 })]
+  }, location);
+  const result = assessCachedWeatherSeries(series, {
+    location,
+    now: () => new Date('2026-08-26T10:20:00.000Z')
+  });
+  assert.equal(result.status, 'fresh');
+  assert.equal(result.series.current.time, '2026-08-26T10:00:00.000Z');
+  assert.equal(result.series.hourly[0].time, '2026-08-26T10:15:00.000Z');
+});
+
 test('cached weather older than 120 minutes is expired and not returned as WeatherSeries', () => {
   const result = assessCachedWeatherSeries(cachedSeries(), {
     location,
