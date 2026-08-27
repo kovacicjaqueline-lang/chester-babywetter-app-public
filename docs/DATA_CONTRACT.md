@@ -219,7 +219,7 @@ V1-Grenzen:
 - Alter `> 30` und `<= 120 Minuten`: `stale`, weiterhin nutzbar,
 - Alter `> 120 Minuten`: abgelaufen und nicht mehr als `WeatherSeries` an die Outfitengine geben.
 
-`expired` ist bewusst **kein** Wert von `WeatherFreshness`: zu alte Daten sind kein nutzbarer Wetterdatensatz mehr, sondern ein Integrations-/Runtime-Zustand. Ein verwendeter Cache erhält `origin: "cache"`; `freshness` bleibt innerhalb der ersten 30 Minuten `fresh` und wird danach `stale`.
+`expired` ist bewusst **kein** Wert von `WeatherFreshness`: zu alte Daten sind kein nutzbarer Wetterdatensatz mehr, sondern ein Integrations-/Runtime-Zustand. Bei automatisch geladenen Wetterdaten erhält ein wiederverwendeter Cache `origin: "cache"`. Manuell eingegebene bzw. manuell überschriebene Wetterdaten behalten dagegen `origin: "manual"` bzw. `origin: "api_with_manual_override"`, damit ihre Provenienz nicht verloren geht. Für alle Ursprünge bleiben die Freshness- und Ablaufgrenzen identisch.
 
 Zusätzliche Invarianten:
 
@@ -229,6 +229,8 @@ Zusätzliche Invarianten:
 - `stale` Wetter führt in wetterabhängigen Phasen zu sichtbarer Unsicherheit (`partial` plus `WEATHER_DATA_STALE`).
 - Abgelaufene, ungültige oder standortfremde Cachewerte dürfen nicht als aktuelle Temperatur, Wind-, Regen- oder UV-Werte angezeigt werden.
 - Dieselben Grenzen gelten bei Offline-Nutzung und als Fallback nach fehlgeschlagenem Online-Refresh.
+- Bei automatischen Wetterdaten löst der Übergang zu `stale` online einen erneuten Abruf aus; ein stale Datensatz bleibt nur als zeitlich begrenzter Fallback erhalten, wenn die Aktualisierung nicht gelingt.
+- Wenn bei stale automatischem Wetter ein bereits erreichter stündlicher Prognosepunkt als neuer Referenzpunkt verwendet wird, muss das Wetterrisikofenster für Wind, Regen und UV weiterhin den ab tatsächlicher Request-Zeit geplanten Zeitraum abdecken. Zeitstempel der Wetterpunkte werden dafür nicht umgeschrieben.
 - Schlafmodus verwendet keinen Wettercache als thermischen Input; maßgeblich bleibt ausschließlich `roomTempC`.
 
 ## 6. Abgeleitete Wetter-/Thermalwerte
@@ -962,7 +964,7 @@ Vor Speicherung vollständig prüfen:
 10. `apparentTempTrusted: true` nur mit `apparentTempC != null`,
 11. `SleepBagTog` nur aus `{0.5,1.0,1.5,2.5,3.5}`,
 12. `cabinTempSource: estimated` muss als Schätzung bis ins Ergebnis gelangen,
-13. `weatherCacheMaxAgeMinutes` muss als endliche Zahl validiert und auf `30..120` begrenzt werden,
+13. `weatherCacheMaxAgeMinutes`: Legacy-`null` aus älteren Schema-V1-Exports wird auf den V1-Standard `120` migriert; andere Werte müssen endliche Zahlen sein und werden auf `30..120` begrenzt,
 14. unbekannte Safety-Enums ablehnen,
 15. ungültiger Import überschreibt lokale Daten nicht teilweise.
 
@@ -1019,6 +1021,8 @@ Empfohlen:
 30. Abgelaufener, ungültiger oder standortfremder Cache wird nicht als aktuelles Wetter an die Engine gegeben oder mit alten Wetterwerten dargestellt.
 31. `stale` Wetter erzeugt `partial` plus `WEATHER_DATA_STALE`.
 32. Schlaf bleibt auch bei abgelaufenem/fehlendem Wettercache ausschließlich von `roomTempC` abhängig.
+33. Wiederverwendete manuelle Wetterwerte behalten ihre manuelle Provenienz und werden nicht durch ältere automatische Stundenwerte als `current` ersetzt.
+34. Bei stale automatischem Wetter deckt das Risikozeitfenster weiterhin den ab Request-Zeit geplanten Zeitraum ab.
 
 ## 32. Noch offene technische Datenentscheidungen
 
