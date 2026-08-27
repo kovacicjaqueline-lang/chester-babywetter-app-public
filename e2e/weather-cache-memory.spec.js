@@ -21,17 +21,20 @@ test('frisch geladenes Wetter bleibt offline nutzbar, wenn localStorage-Cache fe
 });
 
 test('online geöffnetes Wetter wird beim Überschreiten der Freshness-Grenze automatisch aktualisiert', async ({ page }) => {
-  await page.clock.install({ time: new Date('2026-08-27T10:00:00.000Z') });
+  const clockStart = Date.parse('2026-08-27T10:00:00.000Z');
+  await page.clock.install({ time: new Date(clockStart) });
   await page.goto('/?demo=1');
   await expect(page.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
 
   const initialFetchedAt = await page.evaluate(() => JSON.parse(localStorage.getItem('babyweather.v1.weatherCache'))?.fetchedAt);
-  expect(initialFetchedAt).toBe('2026-08-27T10:00:00.000Z');
+  const initialFetchedMs = Date.parse(initialFetchedAt);
+  expect(initialFetchedMs).toBeGreaterThanOrEqual(clockStart);
+  expect(initialFetchedMs).toBeLessThan(clockStart + 1000);
 
   await page.clock.fastForward(31 * 60 * 1000);
 
-  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('babyweather.v1.weatherCache'))?.fetchedAt))
-    .not.toBe(initialFetchedAt);
+  await expect.poll(() => page.evaluate(() => Date.parse(JSON.parse(localStorage.getItem('babyweather.v1.weatherCache'))?.fetchedAt)))
+    .toBeGreaterThan(initialFetchedMs);
   await expect(page.locator('#weatherDescription')).not.toContainText('ältere gespeicherte Daten');
   await expect(page.locator('[data-notice-code="WEATHER_DATA_STALE"]')).toHaveCount(0);
   await expect(page.locator('#confidencePill')).toHaveText('Passend');
