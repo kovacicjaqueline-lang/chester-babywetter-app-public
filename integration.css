@@ -48,10 +48,14 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0 10px;
 }
+.neck-check {
+  margin-top: 6px;
+  padding: 7px 9px 6px;
+}
 .neck-check > div:last-child {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 2px 8px;
+  gap: 1px 8px;
   align-items: start;
 }
 .neck-check h2 {
@@ -61,22 +65,27 @@
 .neck-check > div:last-child > p:not(.fine-print) {
   grid-column: 1 / -1;
   grid-row: 2;
+  font-size: .69rem;
+  line-height: 1.25;
 }
 .neck-check .fine-print {
   grid-column: 1 / -1;
   grid-row: 3;
+  margin-top: 1px;
+  font-size: .6rem;
+  line-height: 1.22;
 }
 .neck-action-row { display: contents; }
 .neck-action-button {
   grid-column: 2;
   grid-row: 1;
-  min-height: 32px;
-  padding: 5px 8px;
+  min-height: 30px;
+  padding: 4px 7px;
   border: 1px solid rgba(73,96,77,.2);
   border-radius: 10px;
   background: rgba(255,255,255,.72);
   color: var(--sage-ink);
-  font-size: .64rem;
+  font-size: .62rem;
   font-weight: 780;
   white-space: nowrap;
 }
@@ -84,8 +93,8 @@
   grid-column: 1 / -1;
   grid-row: 4;
   color: #607064;
-  font-size: .6rem;
-  line-height: 1.3;
+  font-size: .58rem;
+  line-height: 1.2;
 }
 .feedback-options {
   display: grid;
