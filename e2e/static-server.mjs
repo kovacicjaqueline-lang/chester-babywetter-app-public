@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const host = '127.0.0.1';
 const port = 8788;
-const root = resolve(fileURLToPath(new URL('../../', import.meta.url)));
+const root = resolve(fileURLToPath(new URL('../', import.meta.url)));
 const mimeTypes = new Map([
   ['.html', 'text/html; charset=utf-8'],
   ['.js', 'text/javascript; charset=utf-8'],

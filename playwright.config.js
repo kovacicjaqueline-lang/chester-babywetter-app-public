@@ -2,6 +2,7 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: '**/static-server.mjs',
   timeout: 30_000,
   expect: { timeout: 8_000 },
   fullyParallel: false,
@@ -13,7 +14,7 @@ export default defineConfig({
     screenshot: 'only-on-failure'
   },
   webServer: {
-    command: 'node test/support/static-server.mjs',
+    command: 'node e2e/static-server.mjs',
     url: 'http://127.0.0.1:8788',
     reuseExistingServer: !process.env.CI,
     timeout: 30_000
