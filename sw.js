@@ -1,4 +1,4 @@
-const CACHE_NAME = 'babywetter-shell-v0.2.0-assets1';
+const CACHE_NAME = 'babywetter-shell-v0.2.0-assets2';
 const ASSET_MANIFEST_PATH = '/assets/clothing/manifest.json';
 const VISUAL_MANIFEST_PATH = '/assets/clothing/visual-manifest.json';
 const SHELL = [
@@ -32,7 +32,8 @@ const SHELL = [
 function normalizedClothingAssetPath(path) {
   if (typeof path !== 'string') return null;
   const normalized = path.replace(/^\/+/, '');
-  return normalized.startsWith('assets/clothing/') ? `/${normalized}` : null;
+  if (!normalized.startsWith('assets/clothing/') || !normalized.toLowerCase().endsWith('.webp')) return null;
+  return `/${normalized}`;
 }
 
 function collectClothingAssetPaths(assetManifest, visualManifest) {
@@ -54,6 +55,18 @@ function collectClothingAssetPaths(assetManifest, visualManifest) {
   return [...paths];
 }
 
+async function cacheOptionalClothingAsset(cache, path) {
+  try {
+    const response = await fetch(path);
+    const contentType = response.headers.get('content-type') || '';
+    if (!response.ok || !contentType.toLowerCase().startsWith('image/')) return false;
+    await cache.put(path, response);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function precacheClothingAssets(cache) {
   const [assetResponse, visualResponse] = await Promise.all([
     cache.match(ASSET_MANIFEST_PATH),
@@ -66,7 +79,7 @@ async function precacheClothingAssets(cache) {
     visualResponse.json()
   ]);
   const assetPaths = collectClothingAssetPaths(assetManifest, visualManifest);
-  if (assetPaths.length) await cache.addAll(assetPaths);
+  await Promise.all(assetPaths.map((path) => cacheOptionalClothingAsset(cache, path)));
 }
 
 self.addEventListener('install', (event) => {
