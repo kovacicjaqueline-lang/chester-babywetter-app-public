@@ -3,7 +3,7 @@ const STYLES = new Set(['neutral', 'boy', 'girl']);
 const BIASES = new Set(['runs_cool', 'neutral', 'runs_warm']);
 const FEEDBACK = new Set(['warm_dry', 'hot_sweaty', 'cool']);
 const FEEDBACK_ACTIONS = new Set(['keep', 'reduce_insulation', 'increase_insulation']);
-const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/;
+const ISO_INSTANT = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,3}))?(Z|[+-]\d{2}:\d{2})$/;
 
 function isObject(value) {
   return Boolean(value && typeof value === 'object' && !Array.isArray(value));
@@ -25,9 +25,19 @@ function enumValue(value, allowed, field) {
   return value;
 }
 
+function isValidCalendarDate(year, month, day) {
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+}
+
 function isoTimestamp(value, field) {
   requiredString(value, field);
-  if (!ISO_INSTANT.test(value) || !Number.isFinite(Date.parse(value))) throw new TypeError(`${field} is invalid`);
+  const match = ISO_INSTANT.exec(value);
+  if (!match) throw new TypeError(`${field} is invalid`);
+  const [, yearText, monthText, dayText] = match;
+  if (!isValidCalendarDate(Number(yearText), Number(monthText), Number(dayText)) || !Number.isFinite(Date.parse(value))) {
+    throw new TypeError(`${field} is invalid`);
+  }
   return value;
 }
 
@@ -36,7 +46,7 @@ function birthDateValue(value, now) {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new TypeError('profile.birthDate is invalid');
   const [year, month, day] = value.split('-').map(Number);
   const date = new Date(Date.UTC(year, month - 1, day));
-  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) throw new TypeError('profile.birthDate is invalid');
+  if (!isValidCalendarDate(year, month, day)) throw new TypeError('profile.birthDate is invalid');
   const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   if (date > today) throw new RangeError('profile.birthDate cannot be in the future');
   let ageMonths = (today.getUTCFullYear() - year) * 12 + (today.getUTCMonth() - (month - 1));
