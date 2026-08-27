@@ -56,7 +56,8 @@ function birthDateValue(value, now) {
 }
 
 function validateProfile(value, now) {
-  if (!isObject(value)) throw new TypeError('payload.profile is required');
+  if (value === null) return null;
+  if (!isObject(value)) throw new TypeError('payload.profile is invalid');
   return {
     profileId: requiredString(value.profileId, 'profile.profileId', { max: 100 }),
     displayName: nullableString(value.displayName, 'profile.displayName', { max: 40 }),
@@ -105,15 +106,16 @@ export function validateImportEnvelopeV1(value, { now = () => new Date() } = {})
   if (!Array.isArray(value.payload.feedback)) throw new TypeError('payload.feedback must be an array');
   const current = now();
   if (!(current instanceof Date) || !Number.isFinite(current.getTime())) throw new TypeError('now must return a valid Date');
-
-  return {
+  const appVersion = value.appVersion === undefined ? undefined : requiredString(value.appVersion, 'appVersion', { max: 40 });
+  const envelope = {
     schemaVersion: 1,
     exportedAt: isoTimestamp(value.exportedAt, 'exportedAt'),
-    appVersion: value.appVersion == null ? null : requiredString(value.appVersion, 'appVersion', { max: 40 }),
     payload: {
       profile: validateProfile(value.payload.profile, current),
       settings: validateSettings(value.payload.settings),
       feedback: value.payload.feedback.map(validateFeedbackEntry)
     }
   };
+  if (appVersion !== undefined) envelope.appVersion = appVersion;
+  return envelope;
 }
