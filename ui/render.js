@@ -52,7 +52,7 @@ function weatherDescription(code) {
   if (code === 0) return 'Klar';
   if ([1, 2].includes(code)) return 'Leicht bewölkt';
   if (code === 3) return 'Bewölkt';
-  return 'Wetter aktuell';
+  return 'Wetterlage';
 }
 
 function imageFallback(shell, label) {
@@ -109,23 +109,54 @@ function slotRole(slot) {
   return labels[slot] ?? 'Kleidungsstück';
 }
 
+function ageMinutesFromFetchedAt(fetchedAt) {
+  const fetchedMs = Date.parse(fetchedAt);
+  if (!Number.isFinite(fetchedMs)) return null;
+  return Math.max(0, (Date.now() - fetchedMs) / 60000);
+}
+
+function formatWeatherAge(ageMinutes) {
+  if (!Number.isFinite(ageMinutes)) return null;
+  const rounded = Math.max(0, Math.round(ageMinutes));
+  if (rounded < 1) return 'gerade eben';
+  if (rounded < 60) return `vor ${rounded} Min.`;
+  const hours = Math.floor(rounded / 60);
+  const minutes = rounded % 60;
+  return minutes ? `vor ${hours} Std. ${minutes} Min.` : `vor ${hours} Std.`;
+}
+
+function unavailableWeatherLabel(runtime) {
+  if (runtime.weatherCacheStatus === 'expired') return 'Gespeichertes Wetter zu alt';
+  if (runtime.weatherCacheStatus === 'location_mismatch') return 'Kein passender Wettercache';
+  if (runtime.weatherLoading) return 'Wetter wird geladen …';
+  return 'Wetter nicht verfügbar';
+}
+
 export function renderWeather(weather, location, runtime = {}) {
   document.querySelector('#locationLabel').textContent = location?.label || weather?.location?.label || 'Standort wählen';
   const current = weather?.current ?? null;
+  const age = current ? formatWeatherAge(ageMinutesFromFetchedAt(weather.fetchedAt)) : null;
+  const fromCache = weather?.origin === 'cache';
+  const cacheSuffix = fromCache
+    ? weather.freshness === 'stale'
+      ? ` · ältere gespeicherte Daten${age ? ` (${age})` : ''}`
+      : ` · gespeichert${age ? ` (${age})` : ''}`
+    : '';
   document.querySelector('#temperatureValue').textContent = current ? `${Math.round(current.airTempC)}°` : '–';
   document.querySelector('#weatherSymbol').textContent = current ? weatherIcon(current.weatherCode, current.isDay) : '◌';
   document.querySelector('#weatherDescription').textContent = current
-    ? `${weatherDescription(current.weatherCode)}${weather.freshness === 'stale' ? ' · gespeichert' : ''}`
-    : runtime.weatherLoading ? 'Wetter wird geladen …' : 'Wetter nicht verfügbar';
+    ? `${weatherDescription(current.weatherCode)}${cacheSuffix}`
+    : unavailableWeatherLabel(runtime);
 
   const facts = document.querySelector('#weatherFacts');
   facts.replaceChildren();
   const rows = current ? [
+    ['Stand', fromCache ? `${weather.freshness === 'stale' ? 'älter gespeichert' : 'gespeichert'}${age ? ` · ${age}` : ''}` : age ?? 'frisch geladen'],
     ['Gefühlt', current.apparentTempC == null ? '–' : `${Math.round(current.apparentTempC)}°`],
     ['Wind', current.windSpeedKmh == null ? '–' : `${Math.round(current.windSpeedKmh)} km/h`],
     ['Regen', current.precipProbabilityPct == null ? '–' : `${Math.round(current.precipProbabilityPct)} %`],
     ['UV', current.uvIndex == null ? '–' : current.uvIndex.toFixed(1)]
-  ] : [['Status', runtime.weatherError ? 'Fehler' : 'Keine Daten']];
+  ] : [['Status', runtime.weatherCacheStatus === 'expired' ? 'Cache zu alt' : runtime.weatherCacheStatus === 'location_mismatch' ? 'Cache anderer Ort' : runtime.weatherError ? 'Fehler' : 'Keine Daten']];
   for (const [nameText, valueText] of rows) {
     const row = document.createElement('div');
     row.className = 'weather-fact';
