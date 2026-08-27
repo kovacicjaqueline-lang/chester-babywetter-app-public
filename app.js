@@ -80,8 +80,16 @@ function renderCurrentRecommendation() {
 function renderRecommendation() { lastRecommendation = computeRecommendation(); renderCurrentRecommendation(); }
 function updateConnectionBanner() {
   const banner = document.querySelector('#connectionBanner');
-  if (!navigator.onLine) { banner.hidden = false; banner.textContent = state.weather ? 'Offline – gespeicherte Wetterdaten werden sichtbar gekennzeichnet weiterverwendet.' : 'Offline – Wetter kann gerade nicht aktualisiert werden.'; return; }
-  if (state.runtime.weatherError) { banner.hidden = false; banner.textContent = state.weather ? 'Wetter-Aktualisierung fehlgeschlagen – gespeicherte Daten werden verwendet.' : 'Wetter nicht verfügbar – Standort ändern oder später erneut versuchen.'; return; }
+  if (!navigator.onLine) {
+    banner.hidden = false;
+    banner.textContent = state.weather?.origin === 'manual'
+      ? 'Offline – manuell eingegebene Wetterwerte werden verwendet.'
+      : state.weather
+        ? 'Offline – gespeicherte Wetterdaten werden sichtbar gekennzeichnet weiterverwendet.'
+        : 'Offline – Wetter kann gerade nicht aktualisiert werden.';
+    return;
+  }
+  if (state.runtime.weatherError) { banner.hidden = false; banner.textContent = state.weather ? 'Wetter-Aktualisierung fehlgeschlagen – gespeicherte Daten werden verwendet.' : 'Wetter nicht verfügbar – Standort ändern oder Wetter manuell eingeben.'; return; }
   banner.hidden = true;
 }
 function syncWeatherOverrideForm() {
@@ -101,9 +109,13 @@ function syncWeatherOverrideForm() {
   const type = document.querySelector('#manualPrecipitationType');
   if (type) type.value = ['none','rain','snow','sleet','unknown'].includes(current?.precipitationType) ? current.precipitationType : 'unknown';
   const submit = document.querySelector('#applyWeatherOverrideButton');
-  if (submit) submit.disabled = !current;
+  if (submit) submit.disabled = false;
   const source = document.querySelector('#weatherOverrideSource');
-  if (source) source.textContent = current ? 'Die Werte sind mit dem aktuellen Wetter vorbelegt. Änderungen gelten nur für die aktuelle Wettersituation.' : 'Es sind noch keine Wetterdaten zum Anpassen verfügbar.';
+  if (source) {
+    if (!current) source.textContent = 'Keine automatischen Wetterdaten verfügbar. Trage mindestens die Lufttemperatur ein; weitere Werte sind optional.';
+    else if (state.weather?.freshness === 'stale' || state.weather?.origin === 'cache') source.textContent = 'Gespeicherte Werte sind vorbelegt. Beim Übernehmen gelten die eingetragenen aktuellen Werte als manuell; alte stündliche Prognosen werden nicht weiterverwendet.';
+    else source.textContent = 'Die Werte sind mit dem aktuellen Wetter vorbelegt. Änderungen gelten nur für die aktuelle Wettersituation.';
+  }
   const badge = document.querySelector('#weatherOverrideStatus');
   if (badge) {
     const manual = ['manual','api_with_manual_override'].includes(state.weather?.origin);
@@ -114,8 +126,12 @@ function syncWeatherOverrideForm() {
 function syncNeckFeedbackStatus() {
   const status = document.querySelector('#neckFeedbackStatus');
   if (!status) return;
-  const labels = { warm_dry:'Warm & trocken – Empfehlung beibehalten', hot_sweaty:'Heiß/schwitzig – dünner angepasst', cool:'Kühl – wärmer angepasst' };
-  status.textContent = state.neckFeedback ? labels[state.neckFeedback] : 'Noch keine Rückmeldung angewendet.';
+  if (!state.neckFeedback) { status.textContent = 'Noch keine Rückmeldung angewendet.'; return; }
+  if (state.neckFeedback === 'warm_dry') { status.textContent = 'Warm & trocken – Empfehlung beibehalten'; return; }
+  const trace = [...(lastRecommendation?.ruleTrace ?? [])].reverse().find((entry) => entry.ruleId === 'feedback.neck');
+  const changed = Boolean(trace?.target);
+  if (state.neckFeedback === 'cool') status.textContent = changed ? 'Kühl – wärmer angepasst' : 'Kühl – keine weitere sinnvolle oder sichere Schichtänderung möglich';
+  else status.textContent = changed ? 'Heiß/schwitzig – dünner angepasst' : 'Heiß/schwitzig – keine weitere sinnvolle oder sichere Schichtänderung möglich';
 }
 function renderAll() { document.body.dataset.styleTheme = state.profile.styleTheme; renderWeather(state.weather, state.location, state.runtime); renderHourly(state.weather); renderSituation(state.mode); renderSituationOptions(state.mode); renderSituationContext(state.mode, state.contexts[state.mode]); renderRecommendation(); renderCatalog(assetStore, state.profile.styleTheme); syncForms(); syncNeckFeedbackStatus(); updateConnectionBanner(); }
 function syncForms() { document.querySelector('#profileName').value = state.profile.displayName ?? ''; document.querySelector('#profileBirthDate').value = state.profile.birthDate ?? ''; document.querySelector('#locationInput').value = state.location?.label ?? ''; for (const input of document.querySelectorAll('input[name="warmthBias"]')) input.checked = input.value === state.profile.warmthBias; for (const input of document.querySelectorAll('input[name="styleTheme"]')) input.checked = input.value === state.profile.styleTheme; document.querySelector('#appVersion').textContent = APP_VERSION; syncWeatherOverrideForm(); }
@@ -151,7 +167,7 @@ function bindSituationContext() { document.querySelector('#situationContextField
 function bindProfile() { const dialog = document.querySelector('#profileDialog'); dialog.addEventListener('close', () => { if (dialog.returnValue !== 'save') return; const name = document.querySelector('#profileName').value.trim(); const birthDate = document.querySelector('#profileBirthDate').value; const bias = document.querySelector('input[name="warmthBias"]:checked')?.value ?? 'neutral'; state.profile.displayName = name ? name.slice(0,40) : null; state.profile.birthDate = birthDate || null; state.profile.warmthBias = BIASES.has(bias) ? bias : 'neutral'; persistProfile(); resetSession(); renderRecommendation(); syncNeckFeedbackStatus(); showToast('Babyprofil lokal gespeichert.'); }); }
 function bindLocation() {
   const form = document.querySelector('#locationForm'); form.addEventListener('submit', async (event) => { event.preventDefault(); const query = document.querySelector('#locationInput').value; const success = await changeLocation(query); if (success) closeDialog('locationDialog'); });
-  document.querySelector('#useBrowserLocationButton').addEventListener('click', async () => { if (DEMO_MODE) { await refreshWeather(DEFAULT_LOCATION); closeDialog('locationDialog'); return; } try { state.settings.allowLocation = true; persistSettings(); const bundle = await weatherService.useBrowserLocation(); state.weather = normalizeWeatherBundle(bundle); state.location = state.weather.location; cacheWeather(state.weather); resetSession(); renderAll(); closeDialog('locationDialog'); showToast('Aktueller Standort übernommen.'); } catch (error) { state.settings.allowLocation = error?.code === 'geolocation_denied' ? false : state.settings.allowLocation; persistSettings(); showToast(error?.code === 'geolocation_denied' ? 'Standortfreigabe abgelehnt – Ortssuche bleibt verfügbar.' : 'Aktueller Standort konnte nicht ermittelt werden.'); } });
+  document.querySelector('#useBrowserLocationButton').addEventListener('click', async () => { if (DEMO_MODE) { await refreshWeather(DEFAULT_LOCATION); closeDialog('locationDialog'); return; } try { state.settings.allowLocation = true; persistSettings(); const bundle = await weatherService.useBrowserLocation(); state.weather = normalizeWeatherBundle(bundle); state.location = state.weather.location; cacheWeather(state.weather); resetSession(); renderAll(); closeDialog('locationDialog'); showToast('Aktueller Standort übernommen.'); } catch (error) { state.settings.allowLocation = error?.code === 'geolocation_denied' ? false : state.settings.allowLocation; persistSettings(); showToast(error?.code === 'geolocation_denied' ? 'Standortfreigabe abgelehnt – Ortssuche und manuelles Wetter bleiben verfügbar.' : 'Aktueller Standort konnte nicht ermittelt werden.'); } });
 }
 function numberFromField(id, { required = false } = {}) {
   const raw = document.querySelector(`#${id}`)?.value?.trim() ?? '';
@@ -167,7 +183,6 @@ function bindWeatherOverride() {
   const form = document.querySelector('#weatherOverrideForm');
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    if (!state.weather) { showToast('Wetterdaten sind noch nicht verfügbar.'); return; }
     try {
       state.weather = applyManualWeatherOverride(state.weather, {
         airTempC: numberFromField('manualAirTempC', { required:true }),
@@ -177,7 +192,8 @@ function bindWeatherOverride() {
         precipMm: numberFromField('manualPrecipMm'),
         precipitationType: document.querySelector('#manualPrecipitationType').value,
         uvIndex: numberFromField('manualUvIndex')
-      });
+      }, { location: state.location ?? DEFAULT_LOCATION });
+      state.location = state.weather.location;
       state.runtime.weatherError = null;
       cacheWeather(state.weather);
       resetSession();
