@@ -67,7 +67,16 @@ function persistProfile() { state.profile.defaultMode = state.settings.defaultMo
 function persistSettings() { localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings)); localStorage.setItem(UI_STATE_KEY, JSON.stringify({ mode: state.mode, contexts: state.contexts, visualSeed: state.visualSeed })); }
 function cacheWeather(series) { try { localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify(series)); } catch { showToast('Wetterdaten konnten nicht lokal gespeichert werden.'); } }
 function cachedWeather(location) {
-  const assessment = assessCachedWeatherSeries(safeParse(WEATHER_CACHE_KEY), { location, maxAgeMinutes: state.settings.weatherCacheMaxAgeMinutes });
+  const options = { location, maxAgeMinutes: state.settings.weatherCacheMaxAgeMinutes };
+  const storedAssessment = assessCachedWeatherSeries(safeParse(WEATHER_CACHE_KEY), options);
+  const memoryAssessment = assessCachedWeatherSeries(state.weather, options);
+  const usable = [storedAssessment, memoryAssessment]
+    .filter((assessment) => assessment.series)
+    .sort((left, right) => (left.ageMinutes ?? Infinity) - (right.ageMinutes ?? Infinity))[0] ?? null;
+  const assessment = usable
+    ?? [storedAssessment, memoryAssessment].find((candidate) => candidate.status === 'expired')
+    ?? [storedAssessment, memoryAssessment].find((candidate) => candidate.status === 'location_mismatch')
+    ?? storedAssessment;
   state.runtime.weatherCacheStatus = assessment.status;
   state.runtime.weatherCacheAgeMinutes = assessment.ageMinutes;
   return assessment.series;
