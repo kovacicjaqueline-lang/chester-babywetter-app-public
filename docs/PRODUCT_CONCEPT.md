@@ -155,10 +155,12 @@ Zusätzliche Regeln:
 
 - Cache darf nur für denselben Wetterstandort wiederverwendet werden. Ein Cache eines anderen Orts wird verworfen.
 - Ungültiges oder deutlich in der Zukunft liegendes `fetchedAt` wird nicht als frischer Cache akzeptiert; bis zu fünf Minuten lokale Uhrabweichung dürfen als Alter `0` behandelt werden.
-- Ein verwendeter Cache hat `origin: "cache"`. Innerhalb der ersten 30 Minuten kann seine `freshness` weiterhin `fresh` sein; danach wird er `stale`.
+- Automatisch geladene Wetterdaten erhalten bei Wiederverwendung aus dem Cache `origin: "cache"`. Manuell eingegebene bzw. manuell überschriebene Wetterdaten behalten zur Nachvollziehbarkeit `origin: "manual"` bzw. `origin: "api_with_manual_override"`. Für beide gelten dieselben Freshness- und Ablaufgrenzen.
 - `stale` Wetter bleibt sichtbar als älter/gespeichert markiert und führt gemäß Outfit-Regeln zu `partial` plus `WEATHER_DATA_STALE`.
 - Zu alter, ungültiger oder standortfremder Cache wird nicht mit Temperatur-/Wind-/Regenwerten als aktuelles Wetter dargestellt. Für wetterabhängige Modi fehlt dann der erforderliche Wetterinput und die Empfehlung wird entsprechend blockiert oder teilweise verfügbar.
 - Bei fehlgeschlagenem Online-Refresh gelten dieselben Alters- und Standortgrenzen wie im Offline-Fall.
+- Solange automatische Wetterdaten online verwendet werden, versucht die App beim Übergang zu `stale` einen neuen Abruf; ein nutzbarer stale Datensatz bleibt nur Fallback, wenn die Aktualisierung nicht gelingt.
+- Bei einem stale automatischen Datensatz darf ein bereits erreichter stündlicher Prognosepunkt als thermischer Referenzpunkt verwendet werden. Das Wetterrisikofenster für Wind, Regen und UV muss trotzdem den tatsächlich ab jetzt geplanten Aufenthaltszeitraum abdecken und darf nicht an einem älteren Prognosezeitpunkt enden.
 - `weatherCacheMaxAgeMinutes` ist in V1 standardmäßig `120`. Eine lokale/importierte Einstellung darf die Wiederverwendung strenger machen, aber die harte 120-Minuten-Grenze nicht erweitern.
 - Schlafmodus bleibt davon vollständig unabhängig: Schlafempfehlungen verwenden ausschließlich `roomTempC`; Außenwetter oder Wettercache werden nicht in Schlafkleidung umgerechnet.
 
