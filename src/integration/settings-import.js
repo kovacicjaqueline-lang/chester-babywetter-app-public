@@ -3,6 +3,7 @@ const STYLES = new Set(['neutral', 'boy', 'girl']);
 const BIASES = new Set(['runs_cool', 'neutral', 'runs_warm']);
 const FEEDBACK = new Set(['warm_dry', 'hot_sweaty', 'cool']);
 const FEEDBACK_ACTIONS = new Set(['keep', 'reduce_insulation', 'increase_insulation']);
+const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/;
 
 function isObject(value) {
   return Boolean(value && typeof value === 'object' && !Array.isArray(value));
@@ -26,7 +27,7 @@ function enumValue(value, allowed, field) {
 
 function isoTimestamp(value, field) {
   requiredString(value, field);
-  if (!Number.isFinite(Date.parse(value))) throw new TypeError(`${field} is invalid`);
+  if (!ISO_INSTANT.test(value) || !Number.isFinite(Date.parse(value))) throw new TypeError(`${field} is invalid`);
   return value;
 }
 
