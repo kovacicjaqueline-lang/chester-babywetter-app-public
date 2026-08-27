@@ -81,6 +81,30 @@ test('Standort kann gewechselt werden', async ({ page }) => {
   await expect(page.locator('#locationLabel')).toContainText('Wien');
 });
 
+test('Wetter kann manuell überschrieben und wieder automatisch geladen werden', async ({ page }) => {
+  await openDemo(page);
+  const before = await selectedIds(page);
+  await page.locator('[data-open-dialog="weatherOverrideDialog"]').click();
+  await page.locator('#manualAirTempC').fill('5');
+  await page.locator('#manualWindSpeedKmh').fill('35');
+  await page.locator('#manualWindGustKmh').fill('45');
+  await page.locator('#manualPrecipProbabilityPct').fill('70');
+  await page.locator('#manualPrecipMm').fill('1');
+  await page.locator('#manualPrecipitationType').selectOption('rain');
+  await page.locator('#manualUvIndex').fill('1');
+  await page.locator('#applyWeatherOverrideButton').click();
+  await expect(page.locator('#temperatureValue')).toHaveText('5°');
+  await expect(page.locator('#weatherOverrideStatus')).toBeVisible();
+  await expect(page.locator('#weatherOverrideStatus')).toHaveText('Manuell angepasst');
+  await expect(page.locator('#weatherFacts')).toContainText('Gefühlt–');
+  expect(await selectedIds(page)).not.toEqual(before);
+
+  await page.locator('[data-open-dialog="weatherOverrideDialog"]').click();
+  await page.locator('#resetWeatherOverrideButton').click();
+  await expect(page.locator('#temperatureValue')).toHaveText('18°');
+  await expect(page.locator('#weatherOverrideStatus')).toBeHidden();
+});
+
 test('Offline-Zustand bleibt verständlich und verwendet Cache', async ({ page, context }) => {
   await openDemo(page);
   await page.evaluate(() => navigator.serviceWorker.ready);
@@ -141,11 +165,19 @@ test('Schlafmodus verwendet Raumtemperatur', async ({ page }) => {
   await expect(page.locator('[data-notice-code="SLEEP_USE_ROOM_TEMPERATURE"]')).toBeVisible();
 });
 
-test('Nackentest-Hinweis ist sichtbar', async ({ page }) => {
+test('Nackentest-Rückmeldung wird nur auf die aktuelle Empfehlung angewendet', async ({ page }) => {
   await openDemo(page);
-  await expect(page.getByTestId('neck-check')).toBeVisible();
-  await expect(page.getByTestId('neck-check')).toContainText('Warm & trocken');
+  await chooseSituation(page, 'outdoor');
+  const before = await selectedIds(page);
   await expect(page.getByTestId('neck-check')).toContainText('Kalte Hände oder Füße');
+  await page.getByRole('button', { name:'Nackentest anwenden' }).click();
+  await page.locator('[data-neck-feedback="cool"]').click();
+  await expect(page.locator('#neckFeedbackStatus')).toContainText('Kühl');
+  const after = await selectedIds(page);
+  expect(after).not.toEqual(before);
+
+  await chooseSituation(page, 'stroller');
+  await expect(page.locator('#neckFeedbackStatus')).toContainText('Noch keine Rückmeldung');
 });
 
 test('thermisch andere Kleidungsalternative löst Neubewertung aus', async ({ page }) => {
