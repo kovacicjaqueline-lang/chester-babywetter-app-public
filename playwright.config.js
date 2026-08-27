@@ -13,7 +13,7 @@ export default defineConfig({
     screenshot: 'only-on-failure'
   },
   webServer: {
-    command: 'npm run dev',
+    command: 'npm run dev -- --ip 127.0.0.1',
     url: 'http://127.0.0.1:8788',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000

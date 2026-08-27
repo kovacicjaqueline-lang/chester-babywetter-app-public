@@ -1,4 +1,4 @@
-import { createSession, lockItem, recommendOutfit, setWarmthOffset } from './src/index.js';
+import { createSession, lockItem, nextVisualSeed, recommendOutfit, setWarmthOffset } from './src/index.js';
 import { createWeatherService } from './src/weather/index.js';
 import { isWeatherSeries, markWeatherSeriesStale, normalizeWeatherBundle } from './src/integration/weather-series.js';
 import { APP_VERSION } from './src/version.js';
@@ -71,7 +71,11 @@ function computeRecommendation() {
     return { recommendationId: 'ui:blocked', requestId: 'ui:blocked', generatedAt: nowIso(), sessionId: session.sessionId, mode: state.mode, status: 'blocked', phases: [], slots: [], items: [], notices: [], ruleTrace: [], dataQuality: { weatherFreshness: state.weather?.freshness ?? null, missingFields: ['integration'], usedManualWeather: false, usedEstimatedCabinTemperature: false } };
   }
 }
-function renderRecommendation() { lastRecommendation = computeRecommendation(); renderOutfit({ recommendation: lastRecommendation, context: state.contexts[state.mode], warmthDirection: state.warmthDirection, styleTheme: state.profile.styleTheme, visualSeed: state.visualSeed }, assetStore); }
+function renderCurrentRecommendation() {
+  if (!lastRecommendation) return;
+  renderOutfit({ recommendation: lastRecommendation, context: state.contexts[state.mode], warmthDirection: state.warmthDirection, styleTheme: state.profile.styleTheme, visualSeed: state.visualSeed }, assetStore);
+}
+function renderRecommendation() { lastRecommendation = computeRecommendation(); renderCurrentRecommendation(); }
 function updateConnectionBanner() {
   const banner = document.querySelector('#connectionBanner');
   if (!navigator.onLine) { banner.hidden = false; banner.textContent = state.weather ? 'Offline – gespeicherte Wetterdaten werden sichtbar gekennzeichnet weiterverwendet.' : 'Offline – Wetter kann gerade nicht aktualisiert werden.'; return; }
@@ -103,7 +107,7 @@ function bindGlobalActions() {
     const situation = event.target.closest('[data-situation]'); if (situation && MODES.has(situation.dataset.situation)) { state.mode = situation.dataset.situation; state.settings.defaultMode = state.mode; persistSettings(); persistProfile(); resetSession(); renderSituation(state.mode); renderSituationOptions(state.mode); renderSituationContext(state.mode, state.contexts[state.mode]); renderRecommendation(); return; }
     const outfitCard = event.target.closest('[data-open-alternatives="true"]'); if (outfitCard && lastRecommendation) { alternativeSlot = lastRecommendation.slots.find((slot) => slot.phase === outfitCard.dataset.phase && slot.slot === outfitCard.dataset.slot) ?? null; if (alternativeSlot?.alternatives?.length) { renderAlternatives(alternativeSlot, assetStore, state.profile.styleTheme); openDialog('alternativeDialog'); } return; }
     const alternative = event.target.closest('[data-alternative-item-id]'); if (alternative) { session = lockItem(session, { phase: alternative.dataset.alternativePhase, slot: alternative.dataset.alternativeSlot, itemId: alternative.dataset.alternativeItemId, lockedAt: nowIso() }); closeDialog('alternativeDialog'); renderRecommendation(); showToast('Alternative gewählt – Outfit wurde neu bewertet.'); return; }
-    if (event.target.closest('#changeLookButton')) { state.visualSeed = Number.isSafeInteger(state.visualSeed) ? state.visualSeed + 1 : 0; persistSettings(); renderRecommendation(); return; }
+    if (event.target.closest('#changeLookButton')) { state.visualSeed = nextVisualSeed(state.visualSeed); persistSettings(); renderCurrentRecommendation(); return; }
     if (event.target.closest('#applySituationButton')) { closeDialog('situationDialog'); showToast(`Situation: ${document.querySelector('#situationLabel').textContent}`); }
   });
 }
