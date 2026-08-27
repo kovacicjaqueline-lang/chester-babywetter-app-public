@@ -1,4 +1,6 @@
-const CACHE_NAME = 'babywetter-shell-v0.2.0';
+const CACHE_NAME = 'babywetter-shell-v0.2.0-assets1';
+const ASSET_MANIFEST_PATH = '/assets/clothing/manifest.json';
+const VISUAL_MANIFEST_PATH = '/assets/clothing/visual-manifest.json';
 const SHELL = [
   '/',
   '/index.html',
@@ -6,8 +8,8 @@ const SHELL = [
   '/integration.css',
   '/app.js',
   '/manifest.webmanifest',
-  '/assets/clothing/manifest.json',
-  '/assets/clothing/visual-manifest.json',
+  ASSET_MANIFEST_PATH,
+  VISUAL_MANIFEST_PATH,
   '/src/index.js',
   '/src/version.js',
   '/src/clothing-catalog.js',
@@ -27,8 +29,55 @@ const SHELL = [
   '/ui/render.js'
 ];
 
+function normalizedClothingAssetPath(path) {
+  if (typeof path !== 'string') return null;
+  const normalized = path.replace(/^\/+/, '');
+  return normalized.startsWith('assets/clothing/') ? `/${normalized}` : null;
+}
+
+function collectClothingAssetPaths(assetManifest, visualManifest) {
+  const paths = new Set();
+  const add = (path) => {
+    const normalized = normalizedClothingAssetPath(path);
+    if (normalized) paths.add(normalized);
+  };
+
+  for (const group of assetManifest?.assetGroups ?? []) {
+    add(group?.assetPath);
+    for (const path of Object.values(group?.variantPaths ?? {})) add(path);
+  }
+
+  for (const variants of Object.values(visualManifest?.additionalVariants ?? {})) {
+    for (const variant of Array.isArray(variants) ? variants : []) add(variant?.assetPath);
+  }
+
+  return [...paths];
+}
+
+async function precacheClothingAssets(cache) {
+  const [assetResponse, visualResponse] = await Promise.all([
+    cache.match(ASSET_MANIFEST_PATH),
+    cache.match(VISUAL_MANIFEST_PATH)
+  ]);
+  if (!assetResponse || !visualResponse) throw new Error('Clothing manifests missing from app shell cache');
+
+  const [assetManifest, visualManifest] = await Promise.all([
+    assetResponse.json(),
+    visualResponse.json()
+  ]);
+  const assetPaths = collectClothingAssetPaths(assetManifest, visualManifest);
+  if (assetPaths.length) await cache.addAll(assetPaths);
+}
+
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()));
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(async (cache) => {
+        await cache.addAll(SHELL);
+        await precacheClothingAssets(cache);
+      })
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', (event) => {
