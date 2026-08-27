@@ -1,6 +1,7 @@
 import { createSession, lockItem, nextVisualSeed, recommendOutfit, setWarmthOffset } from './src/index.js';
 import { createWeatherService } from './src/weather/index.js';
 import { isWeatherSeries, markWeatherSeriesStale, normalizeWeatherBundle } from './src/integration/weather-series.js';
+import { validateImportEnvelopeV1 } from './src/integration/settings-import.js';
 import { APP_VERSION } from './src/version.js';
 import { ClothingAssetStore } from './ui/asset-store.js';
 import { renderAlternatives, renderCatalog, renderHourly, renderOutfit, renderSituation, renderSituationContext, renderSituationOptions, renderWeather } from './ui/render.js';
@@ -119,7 +120,26 @@ function bindLocation() {
 }
 function bindStyleSettings() { document.querySelectorAll('input[name="styleTheme"]').forEach((input) => { input.addEventListener('change', () => { if (!input.checked || !STYLES.has(input.value)) return; state.profile.styleTheme = input.value; persistProfile(); renderAll(); showToast('Kleidungsstil gespeichert.'); }); }); }
 function exportSettings() { const envelope = { schemaVersion: 1, exportedAt: nowIso(), appVersion: APP_VERSION, payload: { profile: state.profile, settings: state.settings, feedback: [] } }; const blob = new Blob([JSON.stringify(envelope, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'babywetter-einstellungen.json'; document.body.append(anchor); anchor.click(); anchor.remove(); URL.revokeObjectURL(url); showToast('Einstellungen als JSON exportiert.'); }
-async function importSettings(file) { if (!file) return; try { const parsed = JSON.parse(await file.text()); if (parsed?.schemaVersion !== 1 || !parsed?.payload?.profile || !parsed?.payload?.settings) throw new Error('unsupported schema'); const importedProfile = parsed.payload.profile; const importedSettings = parsed.payload.settings; if (!STYLES.has(importedProfile.styleTheme) || !BIASES.has(importedProfile.warmthBias) || !MODES.has(importedSettings.defaultMode)) throw new Error('invalid enum'); state.profile = { ...loadProfile(), ...importedProfile, updatedAt: nowIso() }; state.settings = { ...defaultSettings(), ...importedSettings }; state.mode = state.settings.defaultMode; persistProfile(); persistSettings(); resetSession(); renderAll(); showToast('Einstellungen importiert.'); } catch { showToast('Diese JSON-Datei konnte nicht importiert werden. Bestehende Einstellungen bleiben erhalten.'); } finally { document.querySelector('#importSettingsInput').value = ''; } }
+async function importSettings(file) {
+  if (!file) return;
+  try {
+    const parsed = validateImportEnvelopeV1(JSON.parse(await file.text()));
+    const importedProfile = parsed.payload.profile;
+    const importedSettings = parsed.payload.settings;
+    state.profile = { ...importedProfile, updatedAt: nowIso() };
+    state.settings = { ...importedSettings };
+    state.mode = state.settings.defaultMode;
+    persistProfile();
+    persistSettings();
+    resetSession();
+    renderAll();
+    showToast('Einstellungen importiert.');
+  } catch {
+    showToast('Diese JSON-Datei konnte nicht importiert werden. Bestehende Einstellungen bleiben erhalten.');
+  } finally {
+    document.querySelector('#importSettingsInput').value = '';
+  }
+}
 function bindImportExport() { document.querySelector('#exportSettingsButton').addEventListener('click', exportSettings); document.querySelector('#importSettingsInput').addEventListener('change', (event) => importSettings(event.target.files?.[0])); }
 function bindDialogs() { for (const dialog of document.querySelectorAll('dialog')) dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); }); }
 async function registerServiceWorker() { if (!('serviceWorker' in navigator)) return; try { await navigator.serviceWorker.register('./sw.js'); } catch { } }
