@@ -141,6 +141,31 @@ Provider-`feelsLike` wird nicht blind verwendet. Die Wetterdaten-Schicht normali
 
 Für den vorgesehenen Open-Meteo-Adapter kann `apparent_temperature` als bekannt interpretiert werden: Open-Meteo dokumentiert Windchill, relative Feuchte und Solarstrahlung als Bestandteile. Diese Faktoren dürfen dann thermisch nicht doppelt verrechnet werden.
 
+### 6.4 Cache, Freshness und Offline-Verwendung
+
+Die Freshness eines gespeicherten `WeatherSeries` wird ausschließlich aus `fetchedAt` berechnet. `current.time` bzw. `observedAt` ersetzt diesen Abrufzeitpunkt nicht.
+
+Normative V1-Grenzen:
+
+- `0 bis 30 Minuten` seit `fetchedAt` → `fresh`,
+- `> 30 bis einschließlich 120 Minuten` → `stale`, aber noch sinnvoll weiterverwendbar,
+- `> 120 Minuten` → zu alt; nicht mehr als Wetterinput für eine neue Outdoor-Empfehlung verwenden.
+
+Zusätzliche Regeln:
+
+- Cache darf nur für denselben Wetterstandort wiederverwendet werden. Ein Cache eines anderen Orts wird verworfen.
+- Ungültiges oder deutlich in der Zukunft liegendes `fetchedAt` wird nicht als frischer Cache akzeptiert; bis zu fünf Minuten lokale Uhrabweichung dürfen als Alter `0` behandelt werden.
+- Automatisch geladene Wetterdaten erhalten bei Wiederverwendung aus dem Cache `origin: "cache"`. Manuell eingegebene bzw. manuell überschriebene Wetterdaten behalten zur Nachvollziehbarkeit `origin: "manual"` bzw. `origin: "api_with_manual_override"`. Für beide gelten dieselben Freshness- und Ablaufgrenzen.
+- `stale` Wetter bleibt sichtbar als älter/gespeichert markiert und führt gemäß Outfit-Regeln zu `partial` plus `WEATHER_DATA_STALE`.
+- Zu alter, ungültiger oder standortfremder Cache wird nicht mit Temperatur-/Wind-/Regenwerten als aktuelles Wetter dargestellt. Für wetterabhängige Modi fehlt dann der erforderliche Wetterinput und die Empfehlung wird entsprechend blockiert oder teilweise verfügbar.
+- Bei fehlgeschlagenem Online-Refresh gelten dieselben Alters- und Standortgrenzen wie im Offline-Fall.
+- Solange automatische Wetterdaten online verwendet werden, versucht die App beim Übergang zu `stale` einen neuen Abruf; ein nutzbarer stale Datensatz bleibt nur Fallback, wenn die Aktualisierung nicht gelingt.
+- Bei einem stale automatischen Datensatz darf ein bereits erreichter stündlicher Prognosepunkt als thermischer Referenzpunkt verwendet werden. Das Wetterrisikofenster für Wind, Regen und UV muss trotzdem den tatsächlich ab jetzt geplanten Aufenthaltszeitraum abdecken und darf nicht an einem älteren Prognosezeitpunkt enden.
+- `weatherCacheMaxAgeMinutes` ist in V1 standardmäßig `120`. Eine lokale/importierte Einstellung darf die Wiederverwendung strenger machen, aber die harte 120-Minuten-Grenze nicht erweitern.
+- Schlafmodus bleibt davon vollständig unabhängig: Schlafempfehlungen verwenden ausschließlich `roomTempC`; Außenwetter oder Wettercache werden nicht in Schlafkleidung umgerechnet.
+
+Die 120-Minuten-Obergrenze entspricht dem bereits verwendeten Standard-Wetterrisikofenster der Engine. Jenseits dieses Fensters darf ein alter „Current“-Wert nicht als belastbare Beschreibung der aktuellen Situation fortgeschrieben werden.
+
 ## 7. Situationen
 
 ### 7.1 Draußen (`outdoor`)
@@ -343,7 +368,6 @@ Diese Quellen werden **nur** verwendet, um eine generische Produkt-Orientierung 
 
 Die wesentlichen **Produktentscheidungen sind für V1 geschlossen**. Offen bleiben nur technische/operative Punkte, die nicht stillschweigend erfunden werden dürfen:
 
-- konkrete Cache-Dauer und `stale`-Grenze der Wetterdaten,
 - exakte Form der Auto-Innenraumtemperatur-Schätzung,
 - finale Katalogzuordnung einzelner Assets zu `thermalWeight`,
 - spätere Mehrprofil-/Inventar-/Präferenzlern-Funktionen außerhalb V1.

@@ -209,6 +209,30 @@ Die UI darf API-Werte überschreiben. Der normalisierte Datensatz erhält dann `
 
 Fehlende optionale Wetterwerte sind `null` und werden nie als 0 interpretiert.
 
+### 5.6 Wettercache und Freshness
+
+`fetchedAt` ist für Cache-Alter und Freshness normativ. `current.time`/Provider-Beobachtungszeit darf dafür nicht als Ersatz verwendet werden.
+
+V1-Grenzen:
+
+- Alter `<= 30 Minuten`: `fresh`,
+- Alter `> 30` und `<= 120 Minuten`: `stale`, weiterhin nutzbar,
+- Alter `> 120 Minuten`: abgelaufen und nicht mehr als `WeatherSeries` an die Outfitengine geben.
+
+`expired` ist bewusst **kein** Wert von `WeatherFreshness`: zu alte Daten sind kein nutzbarer Wetterdatensatz mehr, sondern ein Integrations-/Runtime-Zustand. Bei automatisch geladenen Wetterdaten erhält ein wiederverwendeter Cache `origin: "cache"`. Manuell eingegebene bzw. manuell überschriebene Wetterdaten behalten dagegen `origin: "manual"` bzw. `origin: "api_with_manual_override"`, damit ihre Provenienz nicht verloren geht. Für alle Ursprünge bleiben die Freshness- und Ablaufgrenzen identisch.
+
+Zusätzliche Invarianten:
+
+- Cache darf nur für denselben Wetterstandort wiederverwendet werden.
+- Ungültiges `fetchedAt` macht einen Cache unbrauchbar.
+- Liegt `fetchedAt` mehr als fünf Minuten in der Zukunft, ist der Cache unbrauchbar; bis zu fünf Minuten lokale Uhrabweichung dürfen als Alter `0` behandelt werden.
+- `stale` Wetter führt in wetterabhängigen Phasen zu sichtbarer Unsicherheit (`partial` plus `WEATHER_DATA_STALE`).
+- Abgelaufene, ungültige oder standortfremde Cachewerte dürfen nicht als aktuelle Temperatur, Wind-, Regen- oder UV-Werte angezeigt werden.
+- Dieselben Grenzen gelten bei Offline-Nutzung und als Fallback nach fehlgeschlagenem Online-Refresh.
+- Bei automatischen Wetterdaten löst der Übergang zu `stale` online einen erneuten Abruf aus; ein stale Datensatz bleibt nur als zeitlich begrenzter Fallback erhalten, wenn die Aktualisierung nicht gelingt.
+- Wenn bei stale automatischem Wetter ein bereits erreichter stündlicher Prognosepunkt als neuer Referenzpunkt verwendet wird, muss das Wetterrisikofenster für Wind, Regen und UV weiterhin den ab tatsächlicher Request-Zeit geplanten Zeitraum abdecken. Zeitstempel der Wetterpunkte werden dafür nicht umgeschrieben.
+- Schlafmodus verwendet keinen Wettercache als thermischen Input; maßgeblich bleibt ausschließlich `roomTempC`.
+
 ## 6. Abgeleitete Wetter-/Thermalwerte
 
 Diese Strukturen müssen nicht persistent gespeichert werden.
@@ -571,6 +595,7 @@ Validierung:
 
 - `sleep`: `weather` darf `null` sein; `roomTempC` wird für vollständige Empfehlung benötigt,
 - `outdoor/stroller/carrier`: aktuelle Außentemperatur erforderlich; weitere fehlende Wetterwerte erlauben `partial`/Unsicherheit,
+- abgelaufener/ungültiger/standortfremder Wettercache gilt für den Engine-Request als fehlendes Wetter und wird nicht als `WeatherSeries` weitergereicht,
 - `car`: `cabinTempC` ist Pflicht, darf aber `estimated` sein,
 - `car` mit Outdoor-Transition braucht Wetter nur für die Transition-Phase.
 
@@ -860,11 +885,14 @@ Feedback kann optional lokal gespeichert/exportiert werden, wird in V1 aber nich
 type ConnectivityStatus = "online" | "offline" | "unknown";
 type LocationStatus = "idle" | "requesting" | "available" | "denied" | "unavailable" | "not_required";
 type WeatherStatus = "idle" | "loading" | "fresh" | "stale" | "manual" | "unavailable" | "error";
+type WeatherCacheStatus = "fresh" | "stale" | "expired" | "invalid" | "location_mismatch" | null;
 
 interface AppRuntimeState {
   connectivity: ConnectivityStatus;
   locationStatus: LocationStatus;
   weatherStatus: WeatherStatus;
+  weatherCacheStatus: WeatherCacheStatus;
+  weatherCacheAgeMinutes: number | null;
   recommendationStatus: RecommendationStatus;
   activeProfileId: string | null;
   activeMode: SituationMode;
@@ -881,7 +909,7 @@ interface AppError {
 }
 ```
 
-Die Achsen sind unabhängig. `offline + stale + partial` ist gültig.
+Die Achsen sind unabhängig. `offline + stale + partial` ist gültig. `offline + expired + weather:null + blocked` ist für wetterabhängige Modi ebenfalls gültig; im Schlafmodus kann trotz `weather:null` eine vollständige Empfehlung aus `roomTempC` entstehen.
 
 ## 26. Einstellungen
 
@@ -891,11 +919,11 @@ interface LocalSettings {
   temperatureUnit: "celsius";
   weatherMode: "auto_with_override";
   allowLocation: boolean | null;
-  weatherCacheMaxAgeMinutes: number | null;
+  weatherCacheMaxAgeMinutes: number;
 }
 ```
 
-Der Cache-Default bleibt technisch offen, bis Wetterintegration/Tests ihn festlegen.
+`weatherCacheMaxAgeMinutes` ist in V1 standardmäßig `120`. Ein gespeicherter oder importierter Wert darf die Wiederverwendung strenger machen, wird aber auf `30..120` Minuten begrenzt; die harte 120-Minuten-Grenze darf nicht erweitert werden.
 
 ## 27. Persistenz
 
@@ -903,7 +931,8 @@ Empfohlene Keys:
 
 - `babyweather.v1.profile`,
 - `babyweather.v1.settings`,
-- `babyweather.v1.feedback`.
+- `babyweather.v1.feedback`,
+- `babyweather.v1.weatherCache`.
 
 Aktuelle Recommendation-Sessions/Locks müssen nicht über App-Neustarts persistiert werden. Das verhindert, dass alte manuelle Outfitentscheidungen auf neues Wetter übertragen werden.
 
@@ -917,7 +946,7 @@ interface ExportPayloadV1 {
 }
 ```
 
-Keine Schlafsack-/Kleidungsinventare in V1 exportieren.
+Keine Schlafsack-/Kleidungsinventare in V1 exportieren. Der Wettercache selbst ist Laufzeit-/Offline-Datenbestand und wird nicht exportiert.
 
 ## 29. Importvalidierung
 
@@ -935,8 +964,9 @@ Vor Speicherung vollständig prüfen:
 10. `apparentTempTrusted: true` nur mit `apparentTempC != null`,
 11. `SleepBagTog` nur aus `{0.5,1.0,1.5,2.5,3.5}`,
 12. `cabinTempSource: estimated` muss als Schätzung bis ins Ergebnis gelangen,
-13. unbekannte Safety-Enums ablehnen,
-14. ungültiger Import überschreibt lokale Daten nicht teilweise.
+13. `weatherCacheMaxAgeMinutes`: Legacy-`null` aus älteren Schema-V1-Exports wird auf den V1-Standard `120` migriert; andere Werte müssen endliche Zahlen sein und werden auf `30..120` begrenzt,
+14. unbekannte Safety-Enums ablehnen,
+15. ungültiger Import überschreibt lokale Daten nicht teilweise.
 
 ## 30. Regel-ID-Schema
 
@@ -987,12 +1017,17 @@ Empfohlen:
 26. kalte Hände/Füße allein ändern die globale Wärmestufe nicht.
 27. Schuhe werden nur bei `standing|walking` bzw. tatsächlichem Bodenkontakt empfohlen.
 28. Nackentest/Swap-Historie verändert V1 nicht automatisch dauerhaft den `warmthBias`.
+29. Wettercache ist bis einschließlich 30 Minuten `fresh`, danach bis einschließlich 120 Minuten `stale` und erst danach abgelaufen.
+30. Abgelaufener, ungültiger oder standortfremder Cache wird nicht als aktuelles Wetter an die Engine gegeben oder mit alten Wetterwerten dargestellt.
+31. `stale` Wetter erzeugt `partial` plus `WEATHER_DATA_STALE`.
+32. Schlaf bleibt auch bei abgelaufenem/fehlendem Wettercache ausschließlich von `roomTempC` abhängig.
+33. Wiederverwendete manuelle Wetterwerte behalten ihre manuelle Provenienz und werden nicht durch ältere automatische Stundenwerte als `current` ersetzt.
+34. Bei stale automatischem Wetter deckt das Risikozeitfenster weiterhin den ab Request-Zeit geplanten Zeitraum ab.
 
 ## 32. Noch offene technische Datenentscheidungen
 
 Keine wesentlichen Produktentscheidungen sind mehr offen. Technisch noch festzulegen:
 
-- Wettercache-Dauer/`stale`-Grenze,
 - Algorithmus für `cabinTempSource: estimated`,
 - vollständige statische Katalogzuordnung aller konkreten Kleidungs- und Asset-IDs,
 - ob `ruleTrace` nur Laufzeitdaten bleibt oder in Debug-Exports aufgenommen wird.

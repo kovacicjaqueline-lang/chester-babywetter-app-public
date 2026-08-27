@@ -40,8 +40,26 @@ test('valid V1 import is returned as an explicit sanitized payload', () => {
   assert.equal(result.schemaVersion, 1);
   assert.equal(result.payload.profile.birthDate, '2026-01-24');
   assert.equal(result.payload.settings.weatherMode, 'auto_with_override');
+  assert.equal(result.payload.settings.weatherCacheMaxAgeMinutes, 120);
   assert.equal('injected' in result.payload.profile, false);
   assert.equal('injected' in result.payload.settings, false);
+});
+
+test('weather cache max age migrates legacy null and clamps finite V1 values to 30..120', () => {
+  const legacy = validEnvelope();
+  assert.equal(validateImportEnvelopeV1(legacy, { now: NOW }).payload.settings.weatherCacheMaxAgeMinutes, 120);
+
+  const strict = validEnvelope();
+  strict.payload.settings.weatherCacheMaxAgeMinutes = 15;
+  assert.equal(validateImportEnvelopeV1(strict, { now: NOW }).payload.settings.weatherCacheMaxAgeMinutes, 30);
+
+  const permissive = validEnvelope();
+  permissive.payload.settings.weatherCacheMaxAgeMinutes = 240;
+  assert.equal(validateImportEnvelopeV1(permissive, { now: NOW }).payload.settings.weatherCacheMaxAgeMinutes, 120);
+
+  const invalid = validEnvelope();
+  invalid.payload.settings.weatherCacheMaxAgeMinutes = '120';
+  assert.throws(() => validateImportEnvelopeV1(invalid, { now: NOW }), RangeError);
 });
 
 test('profile may be null and optional appVersion must be a string when present', () => {
@@ -90,8 +108,8 @@ test('future, impossible and outside-V1 birth dates are rejected', () => {
   assert.throws(() => validateImportEnvelopeV1(tooOld, { now: NOW }), RangeError);
 });
 
-test('non-finite/negative settings values and malformed timestamps are rejected', () => {
-  const cacheAge = validEnvelope(); cacheAge.payload.settings.weatherCacheMaxAgeMinutes = -1;
+test('invalid settings values and malformed timestamps are rejected', () => {
+  const cacheAge = validEnvelope(); cacheAge.payload.settings.weatherCacheMaxAgeMinutes = Number.NaN;
   assert.throws(() => validateImportEnvelopeV1(cacheAge, { now: NOW }), RangeError);
   const timestamp = validEnvelope(); timestamp.payload.profile.updatedAt = 'yesterday';
   assert.throws(() => validateImportEnvelopeV1(timestamp, { now: NOW }), TypeError);
