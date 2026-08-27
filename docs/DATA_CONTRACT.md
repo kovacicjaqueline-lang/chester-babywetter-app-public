@@ -297,6 +297,31 @@ interface CarContext {
 
 Ist die Innenraumtemperatur nicht bekannt, liefert die vorgelagerte Integrationslogik einen geschätzten Wert mit `cabinTempSource: "estimated"`. Die Outfitengine muss diesen Ursprung bis ins Ergebnis tragen.
 
+Normative V1-Schätzpolicy:
+
+```ts
+const V1_ESTIMATED_CABIN_TEMP_C = 20;
+
+function estimateCabinTemperature(): Pick<CarContext, "cabinTempC" | "cabinTempSource"> {
+  return {
+    cabinTempC: V1_ESTIMATED_CABIN_TEMP_C,
+    cabinTempSource: "estimated"
+  };
+}
+```
+
+Regeln:
+
+- die Funktion gehört zur Integrationslogik und nicht in die Outfitengine oder den DOM-Code,
+- sie nimmt in V1 bewusst **keine Wetterwerte** als Eingabe; insbesondere wird `airTempC` nicht in eine Innenraumtemperatur umgerechnet,
+- 20 °C ist eine grobe neutrale Annahme für einen klima-kontrollierten Fahrzeuginnenraum, keine Messung und keine Vorhersage,
+- mit den vorhandenen V1-Inputs fehlen HVAC-Status, Vorheizen/Vorkühlen, Parkdauer, solare Aufheizung und tatsächlicher Startzustand; eine dynamische Formel wäre deshalb scheinpräzise,
+- manuelle Änderung von `cabinTempC` setzt `cabinTempSource: "manual"`,
+- `cabinTempSource: "measured"` wird nur verwendet, wenn der Nutzer einen tatsächlich gemessenen Wert ausdrücklich so markiert,
+- Zurückschalten auf `estimated` setzt `cabinTempC` wieder auf 20 °C,
+- `outdoor_transition` verwendet weiterhin Außenwetter; `in_car` verwendet ausschließlich `cabinTempC`,
+- Gurtsicherheitsregeln sind unabhängig von `cabinTempSource` und vom geschätzten Temperaturwert.
+
 ### 7.5 Schlaf
 
 ```ts
@@ -831,6 +856,8 @@ Danach muss die Engine die Unterkleidung auf ein wärmeres Preset umstellen. Sie
 }
 ```
 
+Die `20` ist in V1 die feste neutrale Integrationsannahme und keine aus dem Außenwetter errechnete Temperatur.
+
 Ergebnis muss enthalten:
 
 - eigene Phase `outdoor_transition`,
@@ -987,12 +1014,17 @@ Empfohlen:
 26. kalte Hände/Füße allein ändern die globale Wärmestufe nicht.
 27. Schuhe werden nur bei `standing|walking` bzw. tatsächlichem Bodenkontakt empfohlen.
 28. Nackentest/Swap-Historie verändert V1 nicht automatisch dauerhaft den `warmthBias`.
+29. `cabinTempSource: estimated` wird von der Integrationslogik mit exakt 20 °C erzeugt und nie aus Außenwetter berechnet.
+30. `manual | measured | estimated` verändern keine Autositz-Gurtsicherheitsregeln.
+31. manuelle Änderung von `cabinTempC` setzt `cabinTempSource: manual`; Zurückschalten auf `estimated` setzt wieder 20 °C.
+32. `outdoor_transition` verwendet Außenwetter, während `in_car` ausschließlich `cabinTempC` als Temperaturreferenz verwendet.
 
 ## 32. Noch offene technische Datenentscheidungen
+
+Die V1-Entscheidung für `cabinTempSource: estimated` ist geschlossen: die Integrationslogik verwendet die neutrale, transparent gekennzeichnete 20-°C-Annahme ohne Außenwetter-Ableitung.
 
 Keine wesentlichen Produktentscheidungen sind mehr offen. Technisch noch festzulegen:
 
 - Wettercache-Dauer/`stale`-Grenze,
-- Algorithmus für `cabinTempSource: estimated`,
 - vollständige statische Katalogzuordnung aller konkreten Kleidungs- und Asset-IDs,
 - ob `ruleTrace` nur Laufzeitdaten bleibt oder in Debug-Exports aufgenommen wird.
