@@ -1,6 +1,7 @@
 export const WEATHER_FRESH_MAX_AGE_MINUTES = 30;
 export const WEATHER_CACHE_MAX_AGE_MINUTES = 120;
 export const WEATHER_CACHE_CLOCK_SKEW_MINUTES = 5;
+export const DEFAULT_WEATHER_RISK_WINDOW_MINUTES = 120;
 
 function finiteNumber(value) {
   return typeof value === 'number' && Number.isFinite(value);
@@ -8,6 +9,10 @@ function finiteNumber(value) {
 
 function validDateString(value) {
   return typeof value === 'string' && Number.isFinite(Date.parse(value));
+}
+
+function manualOrigin(origin) {
+  return origin === 'manual' || origin === 'api_with_manual_override';
 }
 
 function normalizePoint(point) {
@@ -114,6 +119,42 @@ function alignStaleSeriesToNow(series, nowMs) {
   };
 }
 
+export function compensateWeatherRiskHorizon(
+  context,
+  weather,
+  {
+    now = () => new Date(),
+    defaultWindowMinutes = DEFAULT_WEATHER_RISK_WINDOW_MINUTES
+  } = {}
+) {
+  const adjusted = structuredClone(context ?? {});
+  if (!weather || weather.freshness !== 'stale' || !validDateString(weather.current?.time)) return adjusted;
+
+  const nowValue = now();
+  const nowMs = nowValue instanceof Date ? nowValue.getTime() : Date.parse(nowValue);
+  const currentMs = Date.parse(weather.current.time);
+  if (!Number.isFinite(nowMs) || !Number.isFinite(currentMs) || nowMs <= currentMs) return adjusted;
+
+  const lagMinutes = (nowMs - currentMs) / 60000;
+  const fallbackWindow = finiteNumber(defaultWindowMinutes) && defaultWindowMinutes >= 0
+    ? defaultWindowMinutes
+    : DEFAULT_WEATHER_RISK_WINDOW_MINUTES;
+
+  if (['outdoor', 'stroller', 'carrier'].includes(adjusted.mode)) {
+    const planned = finiteNumber(adjusted.plannedMinutes) ? Math.max(0, adjusted.plannedMinutes) : fallbackWindow;
+    adjusted.plannedMinutes = planned + lagMinutes;
+  } else if (adjusted.mode === 'car' && adjusted.includeOutdoorTransition) {
+    const transition = finiteNumber(adjusted.outsideTransitionMinutes)
+      ? Math.max(0, adjusted.outsideTransitionMinutes)
+      : finiteNumber(adjusted.plannedMinutes)
+        ? Math.max(0, adjusted.plannedMinutes)
+        : fallbackWindow;
+    adjusted.outsideTransitionMinutes = transition + lagMinutes;
+  }
+
+  return adjusted;
+}
+
 export function assessCachedWeatherSeries(
   candidate,
   {
@@ -124,31 +165,34 @@ export function assessCachedWeatherSeries(
     maxClockSkewMinutes = WEATHER_CACHE_CLOCK_SKEW_MINUTES
   } = {}
 ) {
-  if (!isWeatherSeries(candidate)) return { status: 'invalid', ageMinutes: null, series: null };
+  const sourceOrigin = candidate && typeof candidate === 'object' && typeof candidate.origin === 'string'
+    ? candidate.origin
+    : null;
+  if (!isWeatherSeries(candidate)) return { status: 'invalid', ageMinutes: null, sourceOrigin, series: null };
   if (location && !sameWeatherLocation(candidate.location, location)) {
-    return { status: 'location_mismatch', ageMinutes: null, series: null };
+    return { status: 'location_mismatch', ageMinutes: null, sourceOrigin, series: null };
   }
 
   const nowValue = now();
   const nowMs = nowValue instanceof Date ? nowValue.getTime() : Date.parse(nowValue);
   const fetchedMs = Date.parse(candidate.fetchedAt);
   if (!Number.isFinite(nowMs) || !Number.isFinite(fetchedMs)) {
-    return { status: 'invalid', ageMinutes: null, series: null };
+    return { status: 'invalid', ageMinutes: null, sourceOrigin, series: null };
   }
 
   const rawAgeMinutes = (nowMs - fetchedMs) / 60000;
   if (rawAgeMinutes < -Math.abs(maxClockSkewMinutes)) {
-    return { status: 'invalid', ageMinutes: rawAgeMinutes, series: null };
+    return { status: 'invalid', ageMinutes: rawAgeMinutes, sourceOrigin, series: null };
   }
   const ageMinutes = Math.max(0, rawAgeMinutes);
   if (!finiteNumber(maxAgeMinutes) || maxAgeMinutes < 0 || ageMinutes > maxAgeMinutes) {
-    return { status: 'expired', ageMinutes, series: null };
+    return { status: 'expired', ageMinutes, sourceOrigin, series: null };
   }
 
   const freshness = ageMinutes <= freshMaxAgeMinutes ? 'fresh' : 'stale';
   let series = {
     ...structuredClone(candidate),
-    origin: 'cache',
+    origin: manualOrigin(candidate.origin) ? candidate.origin : 'cache',
     freshness
   };
   if (freshness === 'stale') series = alignStaleSeriesToNow(series, nowMs);
@@ -156,6 +200,7 @@ export function assessCachedWeatherSeries(
   return {
     status: freshness,
     ageMinutes,
+    sourceOrigin,
     series
   };
 }
