@@ -94,6 +94,26 @@ export function sameWeatherLocation(left, right) {
   return false;
 }
 
+function alignStaleSeriesToNow(series, nowMs) {
+  const currentMs = Date.parse(series.current.time);
+  const promoted = series.hourly
+    .filter((point) => validDateString(point?.time))
+    .filter((point) => {
+      const pointMs = Date.parse(point.time);
+      return pointMs > currentMs && pointMs <= nowMs;
+    })
+    .sort((left, right) => Date.parse(left.time) - Date.parse(right.time))
+    .at(-1);
+
+  if (!promoted) return series;
+  const promotedMs = Date.parse(promoted.time);
+  return {
+    ...series,
+    current: structuredClone(promoted),
+    hourly: series.hourly.filter((point) => validDateString(point?.time) && Date.parse(point.time) > promotedMs)
+  };
+}
+
 export function assessCachedWeatherSeries(
   candidate,
   {
@@ -126,13 +146,16 @@ export function assessCachedWeatherSeries(
   }
 
   const freshness = ageMinutes <= freshMaxAgeMinutes ? 'fresh' : 'stale';
+  let series = {
+    ...structuredClone(candidate),
+    origin: 'cache',
+    freshness
+  };
+  if (freshness === 'stale') series = alignStaleSeriesToNow(series, nowMs);
+
   return {
     status: freshness,
     ageMinutes,
-    series: {
-      ...structuredClone(candidate),
-      origin: 'cache',
-      freshness
-    }
+    series
   };
 }
