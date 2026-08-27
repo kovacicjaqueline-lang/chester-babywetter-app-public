@@ -99,6 +99,14 @@ export function sameWeatherLocation(left, right) {
   return false;
 }
 
+function validHourlyAfter(series, cutoffMs) {
+  return series.hourly.filter((point) => (
+    validDateString(point?.time) &&
+    finiteNumber(point?.airTempC) &&
+    Date.parse(point.time) > cutoffMs
+  ));
+}
+
 function alignStaleSeriesToNow(series, nowMs) {
   const currentMs = Date.parse(series.current.time);
   const promoted = series.hourly
@@ -110,12 +118,19 @@ function alignStaleSeriesToNow(series, nowMs) {
     .sort((left, right) => Date.parse(left.time) - Date.parse(right.time))
     .at(-1);
 
-  if (!promoted) return series;
+  if (!promoted) return { ...series, hourly: validHourlyAfter(series, nowMs) };
   const promotedMs = Date.parse(promoted.time);
   return {
     ...series,
     current: structuredClone(promoted),
-    hourly: series.hourly.filter((point) => validDateString(point?.time) && finiteNumber(point?.airTempC) && Date.parse(point.time) > promotedMs)
+    hourly: validHourlyAfter(series, promotedMs)
+  };
+}
+
+function pruneStaleManualForecast(series, nowMs) {
+  return {
+    ...series,
+    hourly: validHourlyAfter(series, nowMs)
   };
 }
 
@@ -190,12 +205,15 @@ export function assessCachedWeatherSeries(
   }
 
   const freshness = ageMinutes <= freshMaxAgeMinutes ? 'fresh' : 'stale';
+  const isManual = manualOrigin(candidate.origin);
   let series = {
     ...structuredClone(candidate),
-    origin: manualOrigin(candidate.origin) ? candidate.origin : 'cache',
+    origin: isManual ? candidate.origin : 'cache',
     freshness
   };
-  if (freshness === 'stale' && !manualOrigin(candidate.origin)) series = alignStaleSeriesToNow(series, nowMs);
+  if (freshness === 'stale') {
+    series = isManual ? pruneStaleManualForecast(series, nowMs) : alignStaleSeriesToNow(series, nowMs);
+  }
 
   return {
     status: freshness,
