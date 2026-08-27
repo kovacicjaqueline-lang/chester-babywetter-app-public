@@ -57,7 +57,17 @@ test('gültiger Import wird vollständig validiert und unbekannte Felder werden 
 
 test('Import ohne Profil behält das lokale Profil und übernimmt validierte Einstellungen', async ({ page }) => {
   await openDemo(page);
+  await page.locator('[data-close-dialog="settingsDialog"]').click();
+  await page.locator('[data-open-dialog="profileDialog"]').first().click();
+  await page.locator('#profileName').fill('Bestehendes Baby');
+  await page.locator('#profileBirthDate').fill('2026-01-24');
+  await page.locator('input[name="warmthBias"][value="runs_warm"]').check();
+  await page.locator('#saveProfileButton').click();
+  await expect(page.locator('#profileDialog')).toBeHidden();
+
   const before = await page.evaluate(() => JSON.parse(localStorage.getItem('babyweather.v1.profile')));
+  expect(before).not.toBeNull();
+  await page.locator('[data-open-dialog="settingsDialog"]').first().click();
   const envelope = validEnvelope();
   envelope.payload.profile = null;
   await uploadJson(page, envelope);
@@ -66,9 +76,9 @@ test('Import ohne Profil behält das lokale Profil und übernimmt validierte Ein
 
   const after = await page.evaluate(() => JSON.parse(localStorage.getItem('babyweather.v1.profile')));
   expect(after.profileId).toBe(before.profileId);
-  expect(after.displayName).toBe(before.displayName);
-  expect(after.birthDate).toBe(before.birthDate);
-  expect(after.warmthBias).toBe(before.warmthBias);
+  expect(after.displayName).toBe('Bestehendes Baby');
+  expect(after.birthDate).toBe('2026-01-24');
+  expect(after.warmthBias).toBe('runs_warm');
   expect(after.styleTheme).toBe(before.styleTheme);
   expect(after.defaultMode).toBe('outdoor');
 });
