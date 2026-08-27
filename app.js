@@ -126,7 +126,7 @@ async function importSettings(file) {
     const parsed = validateImportEnvelopeV1(JSON.parse(await file.text()));
     const importedProfile = parsed.payload.profile;
     const importedSettings = parsed.payload.settings;
-    state.profile = { ...importedProfile, updatedAt: nowIso() };
+    state.profile = importedProfile === null ? { ...state.profile } : { ...importedProfile, updatedAt: nowIso() };
     state.settings = { ...importedSettings };
     state.mode = state.settings.defaultMode;
     persistProfile();
