@@ -64,8 +64,9 @@ test('Nackentest-Rückmeldung wird nur auf die aktuelle Empfehlung angewendet', 
   await openDemo(page);
   await chooseSituation(page, 'outdoor');
   const before = await selectedIds(page);
-  await expect(page.getByTestId('neck-check')).toContainText('Kalte Hände oder Füße');
+  await expect(page.getByTestId('neck-check')).not.toContainText('Kalte Hände oder Füße');
   await page.getByRole('button', { name:'Nackentest anwenden' }).click();
+  await expect(page.locator('#neckFeedbackDialog')).toContainText('Kalte Hände oder Füße');
   await page.locator('[data-neck-feedback="cool"]').click();
   await expect(page.locator('#neckFeedbackStatus')).toContainText('Kühl – wärmer angepasst');
   expect(await selectedIds(page)).not.toEqual(before);
