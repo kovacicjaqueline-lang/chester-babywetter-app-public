@@ -16,11 +16,11 @@
   text-transform: uppercase;
 }
 
-/* Keep the live feedback status out of the static Nackentest guidance row. */
-.neck-check > div:last-child > .neck-feedback-status {
+/* The generic paragraph grid rule also matches the live status. The id-level override keeps it on its own row. */
+#neckFeedbackStatus {
   grid-column: 1 / -1;
-  grid-row: 4;
-  margin: 3px 0 0;
+  grid-row: 3;
+  margin: 4px 0 0;
 }
 
 @media (max-width: 520px) {
