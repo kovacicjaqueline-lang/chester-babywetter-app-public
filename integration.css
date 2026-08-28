@@ -16,6 +16,13 @@
   text-transform: uppercase;
 }
 
+/* Keep the live feedback status out of the static Nackentest guidance row. */
+.neck-check > div:last-child > .neck-feedback-status {
+  grid-column: 1 / -1;
+  grid-row: 4;
+  margin: 3px 0 0;
+}
+
 @media (max-width: 520px) {
   .weather-fact:first-child {
     grid-column: auto;

@@ -166,6 +166,7 @@ function evaluateOutdoorLike(result, request, phase, effectiveMode) {
   const thermalWeightBeforeProtection = bodyThermalWeight(state);
   applyRainProtection(state, result, request, rain, phase, effectiveMode);
   applyWindProtection(state, result, wind, phase, effectiveMode);
+  preferLightWindShellInWarmWeather(state, thermal.thermalReferenceC, rain, wind, effectiveMode);
   rebalanceFunctionalProtection(state, thermalWeightBeforeProtection, effectiveMode);
 
   applySunProtection(state, result, request, uv, thermal.thermalReferenceC, phase, effectiveMode);
@@ -396,6 +397,14 @@ function bodyThermalWeight(state) {
     total += CLOTHING_CATALOG[selection.itemId]?.thermalWeight ?? 0;
   }
   return total;
+}
+
+function preferLightWindShellInWarmWeather(state, temp, rain, wind, mode) {
+  if (!['outdoor','stroller'].includes(mode) || temp < 24 || rain.required || wind.requiredProtection <= 0) return;
+  const outer = state.map.get('outer');
+  if (!outer || !['light_transition_jacket','softshell_jacket'].includes(outer.itemId)) return;
+  if (!outer.reasonCodes.includes('WIND_PROTECTION_REQUIRED')) return;
+  setSelected(state,'outer','rain_jacket','engine','on_body',['WIND_PROTECTION_REQUIRED','WARM_WEATHER_LIGHT_SHELL']);
 }
 
 function rebalanceFunctionalProtection(state, thermalWeightBeforeProtection, mode) {
