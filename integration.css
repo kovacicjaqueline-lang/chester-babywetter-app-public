@@ -328,6 +328,9 @@ body {
 .warmth-control button[data-warmth="balanced"] {
   padding-inline: 9px;
 }
+.warmth-control button[data-warmth="balanced"].is-active {
+  display: none;
+}
 
 .look-row {
   justify-content: flex-end;
@@ -501,23 +504,44 @@ body {
   bottom: calc(18px + var(--safe-bottom));
 }
 
+@media (max-width: 520px) {
+  .weather-hero {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .weather-facts {
+    width: 100%;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px 8px;
+  }
+  .weather-fact {
+    justify-items: start;
+  }
+  .weather-fact:first-child {
+    grid-column: 1 / -1;
+    order: 2;
+    justify-content: flex-start;
+    margin-top: 1px;
+  }
+}
+
 @media (max-width: 390px) {
   .app-shell {
     padding-inline: 14px;
   }
   .weather-hero {
-    gap: 10px;
+    gap: 7px;
   }
   .weather-facts {
-    grid-template-columns: repeat(2, max-content);
-    gap: 7px 11px;
+    min-width: 0;
+    gap: 5px 6px;
   }
   .outfit-card {
     padding: 14px;
   }
   .outfit-grid {
     grid-auto-columns: initial;
-    grid-template-columns: repeat(auto-fit, minmax(88px, 102px));
+    grid-template-columns: repeat(auto-fit, minmax(84px, 96px));
     gap: 10px;
   }
 }
