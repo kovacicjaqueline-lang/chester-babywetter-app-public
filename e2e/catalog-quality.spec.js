@@ -53,3 +53,33 @@ test('Alternativen verwenden vorhandene hochwertige Visual-Varianten', async ({ 
   await expect(image).toHaveAttribute('src', /leggings\/sage-rib-01\.webp$/);
   await expect.poll(() => image.evaluate((node) => node.naturalWidth)).toBeGreaterThanOrEqual(256);
 });
+
+test('Alternative behält nach echter Auswahl dieselbe Visual-Variante', async ({ page }) => {
+  await page.goto('/?demo=1');
+  await expect(page.locator('#confidencePill')).not.toHaveText('Lädt …');
+
+  const outfitCard = page.locator('#outfitGrid [data-open-alternatives="true"]').first();
+  await expect(outfitCard).toBeVisible();
+  await outfitCard.click();
+  await expect(page.locator('#alternativeDialog')).toHaveAttribute('open', '');
+
+  const option = page.locator('#alternativeOptions [data-alternative-item-id]').first();
+  await expect(option).toBeVisible();
+  const itemId = await option.getAttribute('data-alternative-item-id');
+  const slot = await option.getAttribute('data-alternative-slot');
+  const phase = await option.getAttribute('data-alternative-phase');
+  const previewImage = option.locator('img[data-clothing-image="true"]');
+  await expect(previewImage).toBeVisible();
+  const previewSrc = await previewImage.getAttribute('src');
+  expect(itemId).toBeTruthy();
+  expect(slot).toBeTruthy();
+  expect(phase).toBeTruthy();
+  expect(previewSrc).toBeTruthy();
+
+  await option.click();
+  await expect(page.locator('#alternativeDialog')).not.toHaveAttribute('open', '');
+
+  const selectedCard = page.locator(`#outfitGrid [data-phase="${phase}"][data-slot="${slot}"][data-item-id="${itemId}"]`);
+  await expect(selectedCard).toBeVisible();
+  await expect(selectedCard.locator('img[data-clothing-image="true"]')).toHaveAttribute('src', previewSrc);
+});
