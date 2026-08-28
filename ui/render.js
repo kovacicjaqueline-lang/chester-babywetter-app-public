@@ -34,6 +34,14 @@ const NOTICE_COPY = Object.freeze({
   RAIN_PROTECTION_OPTIONAL: ['Regenschutz optional', 'Regen ist möglich; ein leichter Regenschutz kann sinnvoll sein.']
 });
 
+const REDUNDANT_NOTICE_CODES = new Set([
+  'CHECK_NECK',
+  'CAR_CABIN_TEMPERATURE_ESTIMATED',
+  'SLEEP_USE_ROOM_TEMPERATURE',
+  'SLEEP_GENERIC_TOG_ORIENTATION',
+  'WEATHER_DATA_STALE'
+]);
+
 function weatherIcon(code, isDay) {
   if ([95, 96, 99].includes(code)) return '⛈';
   if ([71, 73, 75, 77, 85, 86].includes(code)) return '❄';
@@ -109,22 +117,6 @@ function slotRole(slot) {
   return labels[slot] ?? 'Kleidungsstück';
 }
 
-function ageMinutesFromFetchedAt(fetchedAt) {
-  const fetchedMs = Date.parse(fetchedAt);
-  if (!Number.isFinite(fetchedMs)) return null;
-  return Math.max(0, (Date.now() - fetchedMs) / 60000);
-}
-
-function formatWeatherAge(ageMinutes) {
-  if (!Number.isFinite(ageMinutes)) return null;
-  const rounded = Math.max(0, Math.round(ageMinutes));
-  if (rounded < 1) return 'gerade eben';
-  if (rounded < 60) return `vor ${rounded} Min.`;
-  const hours = Math.floor(rounded / 60);
-  const minutes = rounded % 60;
-  return minutes ? `vor ${hours} Std. ${minutes} Min.` : `vor ${hours} Std.`;
-}
-
 function unavailableWeatherLabel(runtime) {
   if (runtime.weatherCacheStatus === 'expired') return 'Gespeichertes Wetter zu alt';
   if (runtime.weatherCacheStatus === 'location_mismatch') return 'Kein passender Wettercache';
@@ -135,23 +127,15 @@ function unavailableWeatherLabel(runtime) {
 export function renderWeather(weather, location, runtime = {}) {
   document.querySelector('#locationLabel').textContent = location?.label || weather?.location?.label || 'Standort wählen';
   const current = weather?.current ?? null;
-  const age = current ? formatWeatherAge(ageMinutesFromFetchedAt(weather.fetchedAt)) : null;
-  const fromCache = weather?.origin === 'cache';
-  const cacheSuffix = fromCache
-    ? weather.freshness === 'stale'
-      ? ` · ältere gespeicherte Daten${age ? ` (${age})` : ''}`
-      : ` · gespeichert${age ? ` (${age})` : ''}`
-    : '';
   document.querySelector('#temperatureValue').textContent = current ? `${Math.round(current.airTempC)}°` : '–';
   document.querySelector('#weatherSymbol').textContent = current ? weatherIcon(current.weatherCode, current.isDay) : '◌';
   document.querySelector('#weatherDescription').textContent = current
-    ? `${weatherDescription(current.weatherCode)}${cacheSuffix}`
+    ? weatherDescription(current.weatherCode)
     : unavailableWeatherLabel(runtime);
 
   const facts = document.querySelector('#weatherFacts');
   facts.replaceChildren();
   const rows = current ? [
-    ['Stand', fromCache ? `${weather.freshness === 'stale' ? 'älter gespeichert' : 'gespeichert'}${age ? ` · ${age}` : ''}` : age ?? 'frisch geladen'],
     ['Gefühlt', current.apparentTempC == null ? '–' : `${Math.round(current.apparentTempC)}°`],
     ['Wind', current.windSpeedKmh == null ? '–' : `${Math.round(current.windSpeedKmh)} km/h`],
     ['Regen', current.precipProbabilityPct == null ? '–' : `${Math.round(current.precipProbabilityPct)} %`],
@@ -288,20 +272,12 @@ export function renderSituationContext(mode, context) {
       selectField('Sonne', 'sunExposure', [['shade', 'Schatten'], ['partial', 'Teilweise Sonne'], ['direct', 'Direkte Sonne'], ['unknown', 'Unbekannt']], context.sunExposure),
       selectField('Windschutz', 'windProtection', [['none', 'Kein Windschutz'], ['partial', 'Teilweise'], ['good', 'Gut'], ['unknown', 'Unbekannt']], context.windProtection)
     );
-    const note = document.createElement('p');
-    note.className = 'dialog-note situation-note';
-    note.textContent = 'Kinderwagen ist nicht automatisch passiv. Bei Schlaf wird die eigene wärmere Kinderwagenlogik verwendet.';
-    host.append(note);
   }
   if (mode === 'carrier') {
     host.append(
       selectField('Sonne', 'sunExposure', [['shade', 'Schatten'], ['partial', 'Teilweise Sonne'], ['direct', 'Direkte Sonne'], ['unknown', 'Unbekannt']], context.sunExposure),
       selectField('Position', 'placement', [['over_wearer_outerwear', 'Über der Jacke'], ['under_wearer_outerwear', 'Unter der Jacke']], context.placement)
     );
-    const note = document.createElement('p');
-    note.className = 'dialog-note situation-note';
-    note.textContent = 'Körperwärme wird am Rumpf berücksichtigt. Ein passendes Tragecover kann die Engine selbst empfehlen.';
-    host.append(note);
   }
   if (mode === 'car') {
     host.append(
@@ -313,16 +289,12 @@ export function renderSituationContext(mode, context) {
   }
   if (mode === 'sleep') {
     host.append(numberField('Raumtemperatur', 'roomTempC', context.roomTempC, 5, 35, '°C'));
-    const note = document.createElement('p');
-    note.className = 'dialog-note situation-note';
-    note.textContent = 'Schlafen verwendet ausschließlich die Raumtemperatur als Umgebungs-Temperaturinput. TOG ist eine generische Orientierung.';
-    host.append(note);
   }
 }
 
 function renderNotices(recommendation) {
   const host = document.querySelector('#safetyNotice');
-  const notices = recommendation?.notices?.filter((notice) => notice.code !== 'CHECK_NECK') ?? [];
+  const notices = recommendation?.notices?.filter((notice) => !REDUNDANT_NOTICE_CODES.has(notice.code)) ?? [];
   host.replaceChildren();
   host.hidden = notices.length === 0;
   for (const notice of notices) {
@@ -335,11 +307,14 @@ function renderNotices(recommendation) {
     marker.textContent = notice.severity === 'hard_rule' ? '!' : '✦';
     const copy = document.createElement('div');
     const title = document.createElement('strong');
-    const text = document.createElement('p');
     const mapped = NOTICE_COPY[notice.code] ?? [notice.code, ''];
     title.textContent = mapped[0];
-    text.textContent = mapped[1];
-    copy.append(title, text);
+    copy.append(title);
+    if (notice.severity === 'hard_rule' && mapped[1]) {
+      const text = document.createElement('p');
+      text.textContent = mapped[1];
+      copy.append(text);
+    }
     row.append(marker, copy);
     host.append(row);
   }
@@ -354,8 +329,8 @@ function reasonFor(context, recommendation) {
       : 'Kinderwagenzustand, Aktivität, Wetter und Windschutz werden gemeinsam bewertet.';
   if (context.mode === 'carrier') return 'Körperkontakt reduziert den Wärmebedarf am bedeckten Rumpf; exponierte Bereiche werden separat geschützt.';
   if (context.mode === 'car') return context.cabinTempSource === 'estimated'
-    ? `Für die Fahrt werden vorläufig ${context.cabinTempC} °C Innenraumtemperatur angenommen. Gurtsicherheit hat Vorrang: nur geeignete dünne Schichten unter dem Gurt.`
-    : `Für die Fahrt werden ${context.cabinTempC} °C Innenraumtemperatur verwendet. Gurtsicherheit hat Vorrang: nur geeignete dünne Schichten unter dem Gurt.`;
+    ? `Für die Fahrt werden vorläufig ${context.cabinTempC} °C Innenraumtemperatur angenommen.`
+    : `Für die Fahrt werden ${context.cabinTempC} °C Innenraumtemperatur verwendet.`;
   if (context.mode === 'sleep') return `Die Schlafempfehlung basiert auf ${context.roomTempC ?? 'der fehlenden'} °C Raumtemperatur, nicht auf dem Außenwetter.`;
   return 'Temperatur, Wetter, Aktivität und Exposition bestimmen die Empfehlung gemeinsam.';
 }
@@ -397,8 +372,6 @@ export function renderOutfit({ recommendation, context, warmthDirection, styleTh
     button.setAttribute('aria-pressed', String(active));
     button.disabled = recommendation?.status === 'blocked';
   }
-  const lookLabel = document.querySelector('#lookLabel');
-  lookLabel.textContent = visual.look ? `Look: ${visual.look.themeLabel}` : 'Look wird geladen';
   document.querySelector('#changeLookButton').disabled = assetStore.status !== 'ready' || !visibleSlots.length;
   renderNotices(recommendation);
   const assetNotice = document.querySelector('#assetNotice');
