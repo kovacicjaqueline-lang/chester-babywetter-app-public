@@ -19,6 +19,8 @@ export { TEMPERATURE_BANDS, createSession, setWarmthOffset, lockItem, temperatur
 const BODY_THERMAL_SLOTS = Object.freeze(['base_torso','legs','mid','outer','feet','head','hands']);
 const PROTECTION_REBALANCE_PRIORITY = Object.freeze(['mid','legs','base_torso','feet','head','hands']);
 const CARRIER_PROTECTION_REBALANCE_PRIORITY = Object.freeze(['mid','base_torso']);
+// Keep the V1 wire code until DATA_CONTRACT and UI copy migrate together; the engine semantics are already broader.
+const SLEEP_NO_LOOSE_BEDDING_NOTICE_CODE = 'SLEEP_NO_LOOSE_BLANKET_OVER_BAG';
 
 export function recommendOutfit(input) {
   const request = normalizeRequest(input);
@@ -280,7 +282,7 @@ function evaluateCar(result, request) {
 function evaluateSleep(result, request) {
   const { context, profile, session, neckFeedback } = request;
   addNotice(result,'SLEEP_NO_HAT','hard_rule','main',['SAFE_SLEEP_HEAD_UNCOVERED'],{});
-  addNotice(result,'SLEEP_NO_LOOSE_BLANKET_OVER_BAG','hard_rule','main',['SAFE_SLEEP_NO_LOOSE_BLANKET'],{});
+  addNotice(result,SLEEP_NO_LOOSE_BEDDING_NOTICE_CODE,'hard_rule','main',['SAFE_SLEEP_NO_LOOSE_BEDDING'],{});
   addNotice(result,'SLEEP_NO_WEIGHTED_PRODUCTS','hard_rule','main',['SAFE_SLEEP_NO_WEIGHTED_PRODUCTS'],{});
   addNotice(result,'SLEEP_USE_ROOM_TEMPERATURE','hard_rule','main',['SLEEP_ROOM_TEMP_ONLY'],{});
   addNotice(result,'SLEEP_GENERIC_TOG_ORIENTATION','info','main',['SLEEP_GENERIC_TOG_ORIENTATION'],{});
