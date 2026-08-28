@@ -15,6 +15,26 @@ function variantPath(group, styleTheme) {
   return typeof group.assetPath === 'string' ? group.assetPath : null;
 }
 
+function preferredThemeIds(visualManifest, styleTheme) {
+  const profile = visualManifest?.sourceStyleProfiles?.[styleTheme];
+  return Array.isArray(profile?.themeIds) ? profile.themeIds : [];
+}
+
+function pickCatalogVariant(group, styleTheme, visualManifest) {
+  if (!group || !visualManifest) return null;
+  const additional = visualManifest.additionalVariants?.[group.category]
+    ?? visualManifest.additionalVariants?.[group.id]
+    ?? [];
+  if (!Array.isArray(additional) || !additional.length) return null;
+
+  const preferredThemes = new Set(preferredThemeIds(visualManifest, styleTheme));
+  const compatible = additional.find((variant) =>
+    Array.isArray(variant.themeIds) && variant.themeIds.some((themeId) => preferredThemes.has(themeId))
+  );
+  if (compatible) return compatible;
+  return styleTheme === 'neutral' ? additional[0] ?? null : null;
+}
+
 export class ClothingAssetStore {
   constructor() {
     this.status = 'idle';
@@ -67,6 +87,21 @@ export class ClothingAssetStore {
       alt: group.altText || group.label || itemId,
       label: group.label || itemId,
       assetPath
+    };
+  }
+
+  resolveCatalog(itemId, styleTheme = 'neutral') {
+    const group = this.group(itemId);
+    if (!group) return null;
+    const catalogVariant = pickCatalogVariant(group, styleTheme, this.visualManifest);
+    const assetPath = catalogVariant?.assetPath ?? variantPath(group, styleTheme);
+    if (!assetPath) return null;
+    return {
+      src: rootAssetUrl(assetPath),
+      alt: group.altText || group.label || itemId,
+      label: group.label || itemId,
+      assetPath,
+      visualVariantId: catalogVariant?.id ?? null
     };
   }
 
