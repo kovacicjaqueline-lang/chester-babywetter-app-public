@@ -167,3 +167,390 @@
   .outfit-grid { grid-auto-columns: 78px; }
   .card { padding-inline: 11px; }
 }
+
+/* Simplified mobile-first visual hierarchy. Keep all core actions, but remove duplicate navigation and decorative weight. */
+body {
+  background: #f7f3ef;
+}
+
+.app-shell {
+  width: min(100%, 680px);
+  padding: 0 16px calc(24px + var(--safe-bottom));
+}
+
+.topbar {
+  min-height: 48px;
+  padding-bottom: 2px;
+}
+.location-button > .eyebrow {
+  display: none;
+}
+.location-line {
+  gap: 6px;
+  font-size: .9rem;
+}
+.icon-button {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.weather-hero {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  min-height: 0;
+  padding: 14px 0 18px;
+  border-bottom: 1px solid var(--line);
+}
+.weather-hero .eyebrow {
+  font-size: .61rem;
+}
+.temperature {
+  font-size: clamp(3.6rem, 17vw, 4.9rem);
+  font-weight: 730;
+}
+.weather-symbol {
+  font-size: 1.8rem;
+}
+.weather-description {
+  margin-top: 7px;
+  font-size: .8rem;
+}
+.weather-adjust-row {
+  min-height: 24px;
+  margin-top: 4px;
+}
+.weather-adjust-row .text-button {
+  min-height: 28px;
+  font-size: .66rem;
+}
+.weather-facts {
+  grid-template-columns: repeat(2, max-content);
+  gap: 8px 16px;
+  min-width: 0;
+  padding: 0;
+  font-size: .65rem;
+}
+.weather-fact {
+  display: grid;
+  justify-items: end;
+  gap: 1px;
+}
+.weather-fact:first-child {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 5px;
+  color: var(--muted);
+  font-size: .6rem;
+}
+.weather-fact:not(:first-child) span {
+  font-size: .55rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.weather-fact strong {
+  font-size: .76rem;
+}
+
+.situation-strip {
+  margin: 0;
+}
+.situation-button {
+  grid-template-columns: 36px 1fr 16px;
+  gap: 9px;
+  min-height: 58px;
+  padding: 10px 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.situation-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  font-size: 1.05rem;
+}
+.situation-button strong {
+  font-size: .88rem;
+}
+.chevron {
+  font-size: 1.15rem;
+}
+
+.card {
+  box-shadow: none;
+}
+.outfit-card {
+  margin: 14px 0 0;
+  padding: 16px;
+  border: 1px solid #ebe3dc;
+  border-radius: 20px;
+  background: var(--surface-strong);
+}
+.outfit-card .section-heading .eyebrow {
+  display: none;
+}
+.section-heading h1 {
+  margin-top: 0;
+  font-size: 1.32rem;
+}
+.confidence-pill {
+  padding: 5px 8px;
+  font-size: .62rem;
+}
+
+.warmth-control {
+  display: flex;
+  justify-content: flex-start;
+  gap: 6px;
+  margin: 12px 0 8px;
+  padding: 0;
+  background: transparent;
+}
+.warmth-control button {
+  flex: 0 1 auto;
+  min-height: 34px;
+  padding: 5px 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  font-size: .66rem;
+}
+.warmth-control button.is-active {
+  border-color: transparent;
+  background: #f1ece7;
+  box-shadow: none;
+}
+.warmth-control button[data-warmth="balanced"] {
+  padding-inline: 9px;
+}
+.warmth-control button[data-warmth="balanced"].is-active {
+  display: none;
+}
+
+.look-row {
+  justify-content: flex-end;
+  min-height: 28px;
+  margin: 0 0 8px;
+}
+#lookLabel {
+  display: none;
+}
+#changeLookButton {
+  min-height: 28px;
+  padding: 3px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: .63rem;
+}
+
+.outfit-grid {
+  grid-auto-flow: row;
+  grid-auto-columns: initial;
+  grid-template-columns: repeat(auto-fit, minmax(92px, 108px));
+  justify-content: start;
+  gap: 12px;
+  overflow: visible;
+  scroll-snap-type: none;
+  padding: 4px 0 2px;
+}
+.clothing-card {
+  scroll-snap-align: none;
+}
+.clothing-image-shell {
+  border: 0;
+  border-radius: 18px;
+  background: #faf7f4;
+}
+.clothing-name {
+  margin-top: 7px;
+  font-size: .74rem;
+  line-height: 1.16;
+}
+.outfit-grid .clothing-role {
+  display: none;
+}
+
+.reason-box {
+  grid-template-columns: 1fr;
+  gap: 0;
+  margin-top: 12px;
+  padding: 10px 0 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+}
+.reason-box .reason-icon {
+  display: none;
+}
+.reason-box p {
+  color: var(--muted);
+  font-size: .67rem;
+  line-height: 1.38;
+}
+
+.safety-notice {
+  gap: 6px;
+  margin-top: 10px;
+}
+.notice-row {
+  grid-template-columns: 22px 1fr;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 12px;
+}
+.notice-marker {
+  width: 22px;
+  height: 22px;
+  font-size: .7rem;
+}
+.notice-row strong {
+  font-size: .7rem;
+}
+.notice-row p {
+  font-size: .65rem;
+}
+
+.neck-check {
+  grid-template-columns: 1fr;
+  gap: 0;
+  margin-top: 12px;
+  padding: 11px 0 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+}
+.neck-icon {
+  display: none;
+}
+.neck-check > div:last-child {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 8px;
+}
+.neck-check h2 {
+  font-size: .77rem;
+}
+.neck-check > div:last-child > p:not(.fine-print) {
+  font-size: .64rem;
+}
+.neck-check .fine-print {
+  color: var(--muted);
+  font-size: .58rem;
+}
+.neck-action-button {
+  min-height: 30px;
+  padding: 4px 8px;
+  border-color: var(--line);
+  background: transparent;
+  color: var(--ink);
+  font-size: .6rem;
+}
+.neck-feedback-status {
+  color: var(--muted);
+  font-size: .56rem;
+}
+
+.hourly-card {
+  margin: 16px 0 0;
+  padding: 13px 0 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+}
+.hourly-card .section-heading .eyebrow {
+  display: none;
+}
+.hourly-card .section-heading h2 {
+  font-size: .82rem;
+}
+.hourly-scroll {
+  grid-auto-columns: 56px;
+  gap: 5px;
+}
+.hour-card {
+  padding: 5px 2px;
+  border-radius: 11px;
+  background: rgba(255,255,255,.64);
+}
+
+.quick-actions {
+  margin: 8px 0 0;
+  gap: 4px;
+}
+.quick-actions button {
+  min-height: 44px;
+  justify-content: flex-start;
+  padding: 8px 2px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: .68rem;
+}
+.quick-actions button + button {
+  justify-content: flex-end;
+}
+
+.bottom-nav {
+  display: none;
+}
+.toast {
+  bottom: calc(18px + var(--safe-bottom));
+}
+
+@media (max-width: 520px) {
+  .weather-hero {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .weather-facts {
+    width: 100%;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px 8px;
+  }
+  .weather-fact {
+    justify-items: start;
+  }
+  .weather-fact:first-child {
+    grid-column: 1 / -1;
+    order: 2;
+    justify-content: flex-start;
+    margin-top: 1px;
+  }
+}
+
+@media (max-width: 390px) {
+  .app-shell {
+    padding-inline: 14px;
+  }
+  .weather-hero {
+    gap: 7px;
+  }
+  .weather-facts {
+    min-width: 0;
+    gap: 5px 6px;
+  }
+  .outfit-card {
+    padding: 14px;
+  }
+  .outfit-grid {
+    grid-auto-columns: initial;
+    grid-template-columns: repeat(auto-fit, minmax(84px, 96px));
+    gap: 10px;
+  }
+}
+
+@media (min-width: 600px) {
+  .app-shell {
+    padding-inline: 22px;
+  }
+  .outfit-grid {
+    grid-template-columns: repeat(auto-fit, minmax(108px, 128px));
+  }
+}
