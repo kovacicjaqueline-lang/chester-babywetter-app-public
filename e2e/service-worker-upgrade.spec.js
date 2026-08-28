@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-const OLD_CACHE = 'babywetter-shell-v0.2.0-assets5';
-const NEW_CACHE = 'babywetter-shell-v0.2.0-assets6';
+const OLD_CACHE = 'babywetter-shell-v0.2.0-assets6';
+const NEW_CACHE = 'babywetter-shell-v0.2.0-assets7';
 
 test('Service-Worker-Upgrade ersetzt den vorherigen App-Shell-Cache', async ({ page, context }) => {
   await page.goto('/?demo=1');
