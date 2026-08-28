@@ -88,6 +88,7 @@ test('Nackentest behauptet keine Änderung wenn keine sichere Wärmestufe mehr m
   await page.locator('#manualUvIndex').fill('0');
   await page.locator('#applyWeatherOverrideButton').click();
   const before = await selectedIds(page);
+  await expect(page.locator('[data-notice-code="EXTREME_COLD_CAUTION"]')).toContainText('Exposition begrenzen');
 
   await page.getByRole('button', { name:'Nackentest anwenden' }).click();
   await page.locator('[data-neck-feedback="cool"]').click();
