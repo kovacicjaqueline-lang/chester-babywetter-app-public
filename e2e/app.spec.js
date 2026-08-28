@@ -111,19 +111,19 @@ test('Offline-Zustand bleibt verständlich und verwendet frischen Cache', async 
   await context.setOffline(true);
   await expect(page.locator('#connectionBanner')).toBeVisible();
   await expect(page.locator('#connectionBanner')).toContainText('Offline');
-  await expect(page.locator('#weatherDescription')).toContainText('gespeichert');
-  await expect(page.locator('#weatherFacts')).toContainText('Stand');
+  await expect(page.locator('#weatherDescription')).not.toContainText('gespeichert');
+  await expect(page.locator('#weatherFacts')).not.toContainText('Stand');
   await expect(page.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
   await context.setOffline(false);
 });
 
-test('Stale-Wettercache bleibt bis 120 Minuten nutzbar und sichtbar als nicht aktuell markiert', async ({ page, context }) => {
+test('Stale-Wettercache bleibt bis 120 Minuten nutzbar und wird nur einmal prominent markiert', async ({ page, context }) => {
   await openDemo(page);
   const offlinePage = await restartFromPersistedCacheOffline(page, context, 60);
 
-  await expect(offlinePage.locator('#weatherDescription')).toContainText('ältere gespeicherte Daten');
+  await expect(offlinePage.locator('#weatherDescription')).not.toContainText('gespeichert');
   await expect(offlinePage.locator('#connectionBanner')).toContainText('ältere gespeicherte Wetterdaten');
-  await expect(offlinePage.locator('[data-notice-code="WEATHER_DATA_STALE"]')).toBeVisible();
+  await expect(offlinePage.locator('[data-notice-code="WEATHER_DATA_STALE"]')).toHaveCount(0);
   await expect(offlinePage.locator('#confidencePill')).toHaveText('Teilweise');
   await expect(offlinePage.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
   await context.setOffline(false);
@@ -142,7 +142,7 @@ test('Zu alter Wettercache wird nicht als aktuelles Wetter verwendet; Schlaf ble
 
   await chooseSituation(offlinePage, 'sleep');
   await expect(offlinePage.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
-  await expect(offlinePage.locator('[data-notice-code="SLEEP_USE_ROOM_TEMPERATURE"]')).toBeVisible();
+  await expect(offlinePage.locator('[data-notice-code="SLEEP_NO_HAT"]')).toBeVisible();
   await expect(offlinePage.locator('#outfitReason')).toContainText('Raumtemperatur');
   await context.setOffline(false);
 });
@@ -240,14 +240,17 @@ test('Schlafmodus verwendet Raumtemperatur', async ({ page }) => {
   const at24 = await selectedIds(page);
   expect(at24).not.toEqual(at185);
   await expect(page.locator('#outfitReason')).toContainText('24 °C Raumtemperatur');
-  await expect(page.locator('[data-notice-code="SLEEP_USE_ROOM_TEMPERATURE"]')).toBeVisible();
+  await expect(page.locator('[data-notice-code="SLEEP_NO_HAT"]')).toBeVisible();
 });
 
-test('Nackentest-Hinweis ist sichtbar', async ({ page }) => {
+test('Nackentest bleibt kurz sichtbar; Detailhinweis steht in Hilfe', async ({ page }) => {
   await openDemo(page);
   await expect(page.getByTestId('neck-check')).toBeVisible();
   await expect(page.getByTestId('neck-check')).toContainText('Warm & trocken');
-  await expect(page.getByTestId('neck-check')).toContainText('Kalte Hände oder Füße');
+  await expect(page.getByTestId('neck-check')).not.toContainText('Kalte Hände oder Füße');
+  await page.locator('[data-open-dialog="helpDialog"]').click();
+  await expect(page.locator('#helpDialog')).toBeVisible();
+  await expect(page.locator('#helpDialog')).toContainText('Kalte Hände oder Füße');
 });
 
 test('thermisch andere Kleidungsalternative löst Neubewertung aus', async ({ page }) => {
