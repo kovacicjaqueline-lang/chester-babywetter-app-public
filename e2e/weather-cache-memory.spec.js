@@ -13,7 +13,8 @@ test('frisch geladenes Wetter bleibt offline nutzbar, wenn localStorage-Cache fe
 
   await expect(page.locator('#connectionBanner')).toBeVisible();
   await expect(page.locator('#connectionBanner')).toContainText('Offline');
-  await expect(page.locator('#weatherDescription')).toContainText('gespeichert');
+  await expect(page.locator('#connectionBanner')).toContainText('gespeicherte Wetterdaten');
+  await expect(page.locator('#weatherDescription')).not.toContainText('gespeichert');
   await expect(page.locator('#temperatureValue')).toHaveText(temperatureBefore);
   await expect(page.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
 
@@ -48,8 +49,9 @@ test('aktives Wetter altert offline auch ohne Reload von fresh zu stale und dana
 
   await context.setOffline(true);
   await page.clock.fastForward(31 * 60 * 1000);
-  await expect(page.locator('#weatherDescription')).toContainText('ältere gespeicherte Daten');
-  await expect(page.locator('[data-notice-code="WEATHER_DATA_STALE"]')).toBeVisible();
+  await expect(page.locator('#connectionBanner')).toContainText('ältere gespeicherte Wetterdaten');
+  await expect(page.locator('#weatherDescription')).not.toContainText('ältere gespeicherte Daten');
+  await expect(page.locator('[data-notice-code="WEATHER_DATA_STALE"]')).toHaveCount(0);
   await expect(page.locator('#confidencePill')).toHaveText('Teilweise');
 
   await page.clock.fastForward(90 * 60 * 1000);
