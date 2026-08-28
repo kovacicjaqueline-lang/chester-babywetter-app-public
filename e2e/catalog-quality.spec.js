@@ -31,6 +31,26 @@ test('Katalog verwendet vorhandene hochwertige Visual-Varianten und lesbare Roll
   await expect(page.locator('#catalogGrid')).not.toContainText('legs');
 });
 
+test('häufige Mädchen-Outfitbilder haben Retina-taugliche Auflösung', async ({ page }) => {
+  await page.goto('/?demo=1');
+  const paths = [
+    '/assets/clothing/short_sleeve_bodysuit/girl.webp',
+    '/assets/clothing/light_trousers/girl.webp',
+    '/assets/clothing/socks/girl.webp',
+    '/assets/clothing/softshell_jacket/girl.webp'
+  ];
+  const dimensions = await page.evaluate(async (urls) => Promise.all(urls.map((src) => new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve({ src, width:image.naturalWidth, height:image.naturalHeight });
+    image.onerror = () => reject(new Error(`image failed: ${src}`));
+    image.src = src;
+  }))), paths);
+  for (const image of dimensions) {
+    expect(image.width, image.src).toBeGreaterThanOrEqual(256);
+    expect(image.height, image.src).toBeGreaterThanOrEqual(256);
+  }
+});
+
 test('Alternativen verwenden vorhandene hochwertige Visual-Varianten', async ({ page }) => {
   await page.goto('/?demo=1');
   await expect(page.locator('#confidencePill')).not.toHaveText('Lädt …');
