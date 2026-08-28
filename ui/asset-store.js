@@ -42,11 +42,13 @@ export class ClothingAssetStore {
     this.assetManifest = null;
     this.visualManifest = null;
     this.byId = new Map();
+    this.currentVisualContext = null;
   }
 
   async load() {
     this.status = 'loading';
     this.error = null;
+    this.currentVisualContext = null;
     try {
       const [assetResponse, visualResponse] = await Promise.all([
         fetch(MANIFEST_URL, { cache: 'no-store' }),
@@ -78,16 +80,8 @@ export class ClothingAssetStore {
   }
 
   resolve(itemId, styleTheme = 'neutral') {
-    const group = this.group(itemId);
-    if (!group) return null;
-    const assetPath = variantPath(group, styleTheme);
-    if (!assetPath) return null;
-    return {
-      src: rootAssetUrl(assetPath),
-      alt: group.altText || group.label || itemId,
-      label: group.label || itemId,
-      assetPath
-    };
+    const currentLookAsset = this.resolveCurrentLookAsset(itemId, styleTheme);
+    return currentLookAsset ?? this.resolveCatalog(itemId, styleTheme);
   }
 
   resolveCatalog(itemId, styleTheme = 'neutral') {
@@ -105,7 +99,7 @@ export class ClothingAssetStore {
     };
   }
 
-  resolveLook(recommendation, styleTheme = 'neutral', visualSeed = 0) {
+  resolveLook(recommendation, styleTheme = 'neutral', visualSeed = 0, themeId = null) {
     if (this.status !== 'ready' || !this.assetManifest || !this.visualManifest) {
       return { look: null, bySlot: new Map() };
     }
@@ -114,13 +108,48 @@ export class ClothingAssetStore {
       assetManifest: this.assetManifest,
       visualManifest: this.visualManifest,
       styleTheme,
-      visualSeed
+      visualSeed,
+      themeId
     });
+    const sessionAnchor = recommendation?.sessionId
+      || recommendation?.recommendationId
+      || recommendation?.requestId
+      || 'visual-session';
+    this.currentVisualContext = {
+      sessionAnchor,
+      styleTheme: look.styleTheme,
+      visualSeed: look.visualSeed,
+      themeId: look.themeId
+    };
     const bySlot = new Map();
     for (const item of look.items) {
       bySlot.set(`${item.phase}|${item.slot}`, item);
     }
     return { look, bySlot };
+  }
+
+  resolveCurrentLookAsset(itemId, styleTheme = 'neutral') {
+    const context = this.currentVisualContext;
+    const group = this.group(itemId);
+    if (!context || !group || context.styleTheme !== styleTheme || this.status !== 'ready' || !this.assetManifest || !this.visualManifest) {
+      return null;
+    }
+
+    const slotResult = { phase: 'preview', slot: 'preview', selected: { itemId } };
+    const look = selectVisualLook({
+      recommendation: {
+        sessionId: context.sessionAnchor,
+        slots: [slotResult]
+      },
+      assetManifest: this.assetManifest,
+      visualManifest: this.visualManifest,
+      styleTheme,
+      visualSeed: context.visualSeed,
+      themeId: context.themeId
+    });
+    const selectedVisual = look.items[0] ?? null;
+    const bySlot = new Map(selectedVisual ? [['preview|preview', selectedVisual]] : []);
+    return this.resolveSlot(slotResult, bySlot);
   }
 
   resolveSlot(slotResult, visualLookup) {
