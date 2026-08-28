@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "wrangler dev --port 8788",
     "test": "node --test",
+    "test:workflow": "node --test test/workflow-ci.test.js",
+    "check:node-compat": "node scripts/check-node-compat.mjs",
     "test:browser": "playwright test",
     "verify:deploy": "wrangler deploy --dry-run",
     "deploy": "wrangler deploy"
