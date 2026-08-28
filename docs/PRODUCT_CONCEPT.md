@@ -368,11 +368,10 @@ Diese Quellen werden **nur** verwendet, um eine generische Produkt-Orientierung 
 - ergoPouch What to Wear guide: https://www.ergopouch.com/pages/what-to-wear-guide
 - Tommee Tippee Groegg/Grobag quick guide: https://www.tommeetippee.com/media/PDFs/491359_TT_GROEGG_GLOBAL_WEB_LEAFLET.pdf
 
-## 15. Noch offene technische Entscheidungen
+## 15. Technischer Entscheidungsstatus
 
 Die V1-Entscheidung für `cabinTempSource: estimated` ist geschlossen: unbekannte Autoinnenraumtemperatur wird als transparente neutrale 20-°C-Klimaannahme modelliert und nicht aus Außentemperatur abgeleitet.
 
-Die wesentlichen **Produktentscheidungen sind für V1 geschlossen**. Offen bleiben nur technische/operative Punkte, die nicht stillschweigend erfunden werden dürfen:
+Die V1-Entscheidung zur finalen Katalogzuordnung und relativen `thermalWeight`-Kalibrierung ist ebenfalls geschlossen. Der vollständige Audit vom 2026-08-28 ist in `docs/THERMAL_WEIGHT_AUDIT.md` dokumentiert. Die aktuellen `thermalWeight`-, `thermalStepCredit`- und `sleepWarmthWeight`-Werte sind intern konsistent und werden durch gezielte Kataloginvarianten abgesichert.
 
-- finale Katalogzuordnung einzelner Assets zu `thermalWeight`,
-- spätere Mehrprofil-/Inventar-/Präferenzlern-Funktionen außerhalb V1.
+Damit sind die wesentlichen **Produkt- und Kalibrierungsentscheidungen für V1 geschlossen**. Spätere Mehrprofil-, Inventar- oder Präferenzlern-Funktionen bleiben ausdrücklich außerhalb des V1-Scopes und sind keine offenen V1-Entscheidungen.
