@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
-const guardScript = fileURLToPath(new URL('../tools/repository-guard.mjs', import.meta.url));
+const guardScript = fileURLToPath(new URL('../scripts/repository-guard.mjs', import.meta.url));
 
 function run(command, args, cwd, { expect = 0 } = {}) {
   const result = spawnSync(command, args, { cwd, encoding: 'utf8' });

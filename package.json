@@ -6,11 +6,13 @@
   "scripts": {
     "dev": "wrangler dev --port 8788",
     "test": "node --test",
-    "test:browser": "playwright test",
+    "test:workflow": "node --test test/workflow-ci.test.js",
     "test:repository-guard": "node --test test/repository-guard.test.js",
-    "guard:pre-push": "node tools/repository-guard.mjs check",
-    "workflow:finalize": "node tools/repository-guard.mjs lock",
-    "workflow:repair": "node tools/repository-guard.mjs unlock --repair",
+    "check:node-compat": "node scripts/check-node-compat.mjs",
+    "guard:pre-push": "node scripts/repository-guard.mjs check",
+    "workflow:finalize": "node scripts/repository-guard.mjs lock",
+    "workflow:repair": "node scripts/repository-guard.mjs unlock --repair",
+    "test:browser": "playwright test",
     "verify:deploy": "wrangler deploy --dry-run",
     "deploy": "wrangler deploy"
   },

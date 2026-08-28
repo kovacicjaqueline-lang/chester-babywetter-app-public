@@ -164,7 +164,7 @@ function changedFilesAgainstBase(repo, baseRef) {
   const baseCheck = runGit(repo, ['rev-parse', '--verify', `${baseRef}^{commit}`], { allowFailure: true });
   if (baseCheck.status !== 0) throw new Error(`PR base ref is not available locally: ${baseRef}`);
   const mergeBase = outputGit(repo, ['merge-base', baseRef, 'HEAD']);
-  const result = runGit(repo, ['diff', '--name-only', '--diff-filter=ACDMRTUXB', '-z', `${baseRef}...HEAD`]);
+  const result = runGit(repo, ['diff', '--name-only', '--no-renames', '--diff-filter=ACDMRTUXB', '-z', `${baseRef}...HEAD`]);
   const files = result.stdout.split('\0').filter(Boolean).map(normalizeRepoPath);
   return { mergeBase, files };
 }

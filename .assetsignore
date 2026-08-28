@@ -6,7 +6,7 @@ node_modules
 docs
 test
 e2e
-tools
+scripts
 test-results
 playwright-report
 package.json
@@ -14,4 +14,5 @@ package-lock.json
 playwright.config.js
 wrangler.jsonc
 README.md
+AGENTS.md
 .assetsignore
