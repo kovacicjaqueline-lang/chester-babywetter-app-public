@@ -268,9 +268,14 @@ export function renderSituationContext(mode, context) {
   if (mode === 'stroller') {
     const stateField = selectField('Zustand', 'strollerState', [['awake', 'Wach'], ['asleep', 'Schläft']], context.strollerState);
     const activityField = selectField('Aktivität wach', 'activity', [['calm', 'Ruhig'], ['normal', 'Normal'], ['active', 'Sehr aktiv']], context.activity);
-    activityField.hidden = context.strollerState === 'asleep';
+    const syncActivityVisibility = (strollerState) => {
+      const hidden = strollerState === 'asleep';
+      activityField.hidden = hidden;
+      activityField.style.display = hidden ? 'none' : '';
+    };
+    syncActivityVisibility(context.strollerState);
     stateField.querySelector('select').addEventListener('change', (event) => {
-      activityField.hidden = event.target.value === 'asleep';
+      syncActivityVisibility(event.target.value);
     });
     host.append(
       stateField,
