@@ -7,6 +7,10 @@
     "dev": "wrangler dev --port 8788",
     "test": "node --test",
     "test:browser": "playwright test",
+    "test:repository-guard": "node --test test/repository-guard.test.js",
+    "guard:pre-push": "node tools/repository-guard.mjs check",
+    "workflow:finalize": "node tools/repository-guard.mjs lock",
+    "workflow:repair": "node tools/repository-guard.mjs unlock --repair",
     "verify:deploy": "wrangler deploy --dry-run",
     "deploy": "wrangler deploy"
   },
