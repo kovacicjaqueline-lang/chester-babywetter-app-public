@@ -72,7 +72,13 @@ test('catalog keeps the style-specific base image when no compatible visual vari
   assert.equal(girlBody.visualVariantId, null);
 });
 
-test('standard resolve remains the physical base lookup used outside the catalog', () => {
+test('standard resolve shares the high-detail presentation lookup used by alternatives', () => {
   const store = createStore();
-  assert.equal(store.resolve('leggings', 'neutral').assetPath, 'assets/clothing/leggings/neutral.webp');
+  const neutral = store.resolve('leggings', 'neutral');
+  const girl = store.resolve('leggings', 'girl');
+
+  assert.equal(neutral.assetPath, 'assets/clothing/leggings/sage-rib-01.webp');
+  assert.equal(neutral.visualVariantId, 'sage-rib-01');
+  assert.equal(girl.assetPath, 'assets/clothing/leggings/mauve-knit-01.webp');
+  assert.equal(girl.visualVariantId, 'mauve-knit-01');
 });
