@@ -414,8 +414,8 @@ export function renderCatalog(assetStore, styleTheme) {
   const host = document.querySelector('#catalogGrid');
   host.replaceChildren();
   for (const group of assetStore.listGroups().filter((entry) => entry.assetPath || entry.variantPaths)) {
-    const asset = assetStore.resolve(group.id, styleTheme);
-    host.append(clothingCard({ itemId: group.id, asset, label: group.label ?? group.id, role: group.slot ?? '' }));
+    const asset = assetStore.resolveCatalog(group.id, styleTheme);
+    host.append(clothingCard({ itemId: group.id, asset, label: group.label ?? group.id, role: slotRole(group.slot) }));
   }
 }
 
