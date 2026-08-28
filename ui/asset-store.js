@@ -78,16 +78,7 @@ export class ClothingAssetStore {
   }
 
   resolve(itemId, styleTheme = 'neutral') {
-    const group = this.group(itemId);
-    if (!group) return null;
-    const assetPath = variantPath(group, styleTheme);
-    if (!assetPath) return null;
-    return {
-      src: rootAssetUrl(assetPath),
-      alt: group.altText || group.label || itemId,
-      label: group.label || itemId,
-      assetPath
-    };
+    return this.resolveCatalog(itemId, styleTheme);
   }
 
   resolveCatalog(itemId, styleTheme = 'neutral') {
