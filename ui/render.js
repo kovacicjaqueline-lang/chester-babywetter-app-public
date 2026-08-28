@@ -370,6 +370,9 @@ export function renderOutfit({ recommendation, context, warmthDirection, styleTh
   const statusLabel = { ready: 'Passend', ready_with_estimate: 'Mit Schätzung', partial: 'Teilweise', blocked: 'Angaben fehlen' };
   pill.textContent = statusLabel[recommendation?.status] ?? 'Prüfen';
   pill.dataset.status = recommendation?.status ?? 'blocked';
+  const showStatus = recommendation?.status !== 'ready';
+  pill.hidden = !showStatus;
+  pill.style.display = showStatus ? '' : 'none';
   for (const button of document.querySelectorAll('[data-warmth]')) {
     const active = button.dataset.warmth === warmthDirection;
     button.classList.toggle('is-active', active);
