@@ -1,5 +1,6 @@
 import { createSession, lockItem, nextVisualSeed, recommendOutfit, setWarmthOffset } from './src/index.js';
 import { createWeatherService } from './src/weather/index.js';
+import { estimateCabinTemperature } from './src/integration/cabin-temperature.js';
 import { WEATHER_CACHE_MAX_AGE_MINUTES, WEATHER_FRESH_MAX_AGE_MINUTES, assessCachedWeatherSeries, compensateWeatherRiskHorizon, normalizeWeatherBundle } from './src/integration/weather-series.js';
 import { applyManualWeatherOverride } from './src/integration/manual-weather.js';
 import { validateImportEnvelopeV1 } from './src/integration/settings-import.js';
@@ -33,7 +34,7 @@ const DEFAULT_CONTEXTS = Object.freeze({
   outdoor: { mode: 'outdoor', plannedMinutes: 60, activity: 'normal', activitySource: 'user', sunExposure: 'shade', groundContact: 'none' },
   stroller: { mode: 'stroller', plannedMinutes: 60, strollerState: 'awake', activity: 'normal', activitySource: 'user', sunExposure: 'shade', windProtection: 'partial' },
   carrier: { mode: 'carrier', plannedMinutes: 60, sunExposure: 'shade', placement: 'over_wearer_outerwear' },
-  car: { mode: 'car', plannedMinutes: 30, includeOutdoorTransition: true, outsideTransitionMinutes: 5, cabinTempC: 20, cabinTempSource: 'estimated' },
+  car: { mode: 'car', plannedMinutes: 30, includeOutdoorTransition: true, outsideTransitionMinutes: 5, ...estimateCabinTemperature() },
   sleep: { mode: 'sleep', roomTempC: 18.5 }
 });
 function sanitizeWeatherCacheMaxAgeMinutes(value) {
@@ -57,7 +58,13 @@ function sanitizeContexts(candidate) {
     if (mode === 'outdoor') { if (['calm','normal','active'].includes(source.activity)) contexts.outdoor.activity = source.activity; if (['shade','partial','direct','unknown'].includes(source.sunExposure)) contexts.outdoor.sunExposure = source.sunExposure; if (['none','standing','walking'].includes(source.groundContact)) contexts.outdoor.groundContact = source.groundContact; }
     if (mode === 'stroller') { if (['awake','asleep'].includes(source.strollerState)) contexts.stroller.strollerState = source.strollerState; if (['calm','normal','active'].includes(source.activity)) contexts.stroller.activity = source.activity; if (['shade','partial','direct','unknown'].includes(source.sunExposure)) contexts.stroller.sunExposure = source.sunExposure; if (['none','partial','good','unknown'].includes(source.windProtection)) contexts.stroller.windProtection = source.windProtection; }
     if (mode === 'carrier') { if (['shade','partial','direct','unknown'].includes(source.sunExposure)) contexts.carrier.sunExposure = source.sunExposure; if (['under_wearer_outerwear','over_wearer_outerwear'].includes(source.placement)) contexts.carrier.placement = source.placement; }
-    if (mode === 'car') { if (Number.isFinite(source.cabinTempC)) contexts.car.cabinTempC = source.cabinTempC; if (['manual','measured','estimated'].includes(source.cabinTempSource)) contexts.car.cabinTempSource = source.cabinTempSource; if (typeof source.includeOutdoorTransition === 'boolean') contexts.car.includeOutdoorTransition = source.includeOutdoorTransition; if (source.outsideTransitionMinutes === null || Number.isFinite(source.outsideTransitionMinutes)) contexts.car.outsideTransitionMinutes = source.outsideTransitionMinutes; }
+    if (mode === 'car') {
+      if (source.cabinTempSource === 'estimated') Object.assign(contexts.car, estimateCabinTemperature());
+      else if (['manual','measured'].includes(source.cabinTempSource) && Number.isFinite(source.cabinTempC)) { contexts.car.cabinTempC = source.cabinTempC; contexts.car.cabinTempSource = source.cabinTempSource; }
+      else if (Number.isFinite(source.cabinTempC)) { contexts.car.cabinTempC = source.cabinTempC; contexts.car.cabinTempSource = 'manual'; }
+      if (typeof source.includeOutdoorTransition === 'boolean') contexts.car.includeOutdoorTransition = source.includeOutdoorTransition;
+      if (source.outsideTransitionMinutes === null || Number.isFinite(source.outsideTransitionMinutes)) contexts.car.outsideTransitionMinutes = source.outsideTransitionMinutes;
+    }
     if (mode === 'sleep' && (source.roomTempC === null || Number.isFinite(source.roomTempC))) contexts.sleep.roomTempC = source.roomTempC;
   }
   return contexts;
@@ -267,7 +274,25 @@ function bindGlobalActions() {
     if (event.target.closest('#applySituationButton')) { closeDialog('situationDialog'); showToast(`Situation: ${document.querySelector('#situationLabel').textContent}`); }
   });
 }
-function bindSituationContext() { document.querySelector('#situationContextFields').addEventListener('change', (event) => { const target = event.target; const field = target.dataset?.contextField; if (!field) return; const context = state.contexts[state.mode]; if (target.type === 'checkbox') context[field] = target.checked; else if (target.type === 'number') context[field] = target.value === '' ? null : Number(target.value); else context[field] = target.value || null; if (field === 'activity') context.activitySource = 'user'; if (field === 'cabinTempC') context.cabinTempSource = 'manual'; persistSettings(); resetSession(); renderRecommendation(); syncNeckFeedbackStatus(); }); }
+function bindSituationContext() {
+  document.querySelector('#situationContextFields').addEventListener('change', (event) => {
+    const target = event.target; const field = target.dataset?.contextField; if (!field) return; const context = state.contexts[state.mode];
+    if (target.type === 'checkbox') context[field] = target.checked;
+    else if (target.type === 'number') context[field] = target.value === '' ? null : Number(target.value);
+    else context[field] = target.value || null;
+    if (field === 'activity') context.activitySource = 'user';
+    if (state.mode === 'car' && field === 'cabinTempC') {
+      context.cabinTempSource = 'manual';
+      const sourceField = document.querySelector('#situationContextFields [data-context-field="cabinTempSource"]');
+      if (sourceField) sourceField.value = 'manual';
+    }
+    if (state.mode === 'car' && field === 'cabinTempSource' && context.cabinTempSource === 'estimated') {
+      Object.assign(context, estimateCabinTemperature());
+      renderSituationContext('car', context);
+    }
+    persistSettings(); resetSession(); renderRecommendation(); syncNeckFeedbackStatus();
+  });
+}
 function bindProfile() { const dialog = document.querySelector('#profileDialog'); dialog.addEventListener('close', () => { if (dialog.returnValue !== 'save') return; const name = document.querySelector('#profileName').value.trim(); const birthDate = document.querySelector('#profileBirthDate').value; const bias = document.querySelector('input[name="warmthBias"]:checked')?.value ?? 'neutral'; state.profile.displayName = name ? name.slice(0,40) : null; state.profile.birthDate = birthDate || null; state.profile.warmthBias = BIASES.has(bias) ? bias : 'neutral'; persistProfile(); resetSession(); renderRecommendation(); syncNeckFeedbackStatus(); showToast('Babyprofil lokal gespeichert.'); }); }
 function bindLocation() {
   const form = document.querySelector('#locationForm'); form.addEventListener('submit', async (event) => { event.preventDefault(); const query = document.querySelector('#locationInput').value; const success = await changeLocation(query); if (success) closeDialog('locationDialog'); });

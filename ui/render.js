@@ -353,7 +353,9 @@ function reasonFor(context, recommendation) {
       ? 'Ein waches, sehr aktives Baby im Kinderwagen wird leichter bewertet als ein schlafendes Baby.'
       : 'Kinderwagenzustand, Aktivität, Wetter und Windschutz werden gemeinsam bewertet.';
   if (context.mode === 'carrier') return 'Körperkontakt reduziert den Wärmebedarf am bedeckten Rumpf; exponierte Bereiche werden separat geschützt.';
-  if (context.mode === 'car') return 'Gurtsicherheit hat Vorrang: nur geeignete dünne Schichten unter dem Gurt.';
+  if (context.mode === 'car') return context.cabinTempSource === 'estimated'
+    ? `Für die Fahrt werden vorläufig ${context.cabinTempC} °C Innenraumtemperatur angenommen. Gurtsicherheit hat Vorrang: nur geeignete dünne Schichten unter dem Gurt.`
+    : `Für die Fahrt werden ${context.cabinTempC} °C Innenraumtemperatur verwendet. Gurtsicherheit hat Vorrang: nur geeignete dünne Schichten unter dem Gurt.`;
   if (context.mode === 'sleep') return `Die Schlafempfehlung basiert auf ${context.roomTempC ?? 'der fehlenden'} °C Raumtemperatur, nicht auf dem Außenwetter.`;
   return 'Temperatur, Wetter, Aktivität und Exposition bestimmen die Empfehlung gemeinsam.';
 }
