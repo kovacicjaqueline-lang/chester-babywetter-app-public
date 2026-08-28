@@ -64,8 +64,9 @@ test('Nackentest-Rückmeldung wird nur auf die aktuelle Empfehlung angewendet', 
   await openDemo(page);
   await chooseSituation(page, 'outdoor');
   const before = await selectedIds(page);
-  await expect(page.getByTestId('neck-check')).toContainText('Kalte Hände oder Füße');
+  await expect(page.getByTestId('neck-check')).not.toContainText('Kalte Hände oder Füße');
   await page.getByRole('button', { name:'Nackentest anwenden' }).click();
+  await expect(page.locator('#neckFeedbackDialog')).toContainText('Kalte Hände oder Füße');
   await page.locator('[data-neck-feedback="cool"]').click();
   await expect(page.locator('#neckFeedbackStatus')).toContainText('Kühl – wärmer angepasst');
   expect(await selectedIds(page)).not.toEqual(before);
@@ -87,6 +88,7 @@ test('Nackentest behauptet keine Änderung wenn keine sichere Wärmestufe mehr m
   await page.locator('#manualUvIndex').fill('0');
   await page.locator('#applyWeatherOverrideButton').click();
   const before = await selectedIds(page);
+  await expect(page.locator('[data-notice-code="EXTREME_COLD_CAUTION"]')).toContainText('Exposition begrenzen');
 
   await page.getByRole('button', { name:'Nackentest anwenden' }).click();
   await page.locator('[data-neck-feedback="cool"]').click();

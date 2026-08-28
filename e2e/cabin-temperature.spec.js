@@ -24,7 +24,7 @@ test('unknown cabin temperature starts with the visibly marked V1 estimate', asy
 
   await expect(page.locator('#confidencePill')).toHaveText('Mit Schätzung');
   await expect(page.locator('#outfitReason')).toContainText('20 °C Innenraumtemperatur angenommen');
-  await expect(page.locator('[data-notice-code="CAR_CABIN_TEMPERATURE_ESTIMATED"]')).toBeVisible();
+  await expect(page.locator('[data-notice-code="CAR_CABIN_TEMPERATURE_ESTIMATED"]')).toHaveCount(0);
   await expect(page.locator('[data-notice-code="CAR_SEAT_NO_BULKY_LAYERS"]')).toBeVisible();
 
   await openCarDetails(page);
@@ -68,7 +68,7 @@ test('measured source stays explicit and switching back to estimated resets to n
 
   await expect(page.locator('#confidencePill')).toHaveText('Mit Schätzung');
   await expect(page.locator('#outfitReason')).toContainText('20 °C Innenraumtemperatur angenommen');
-  await expect(page.locator('[data-notice-code="CAR_CABIN_TEMPERATURE_ESTIMATED"]')).toBeVisible();
+  await expect(page.locator('[data-notice-code="CAR_CABIN_TEMPERATURE_ESTIMATED"]')).toHaveCount(0);
   await expect(page.locator('[data-notice-code="CAR_SEAT_NO_BULKY_LAYERS"]')).toBeVisible();
   await expect(page.locator('#outfitGrid [data-phase="outdoor_transition"]').first()).toBeVisible();
   await expect(page.locator('#outfitGrid [data-phase="in_car"]').first()).toBeVisible();

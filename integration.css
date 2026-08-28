@@ -1,1 +1,27 @@
 /* Compatibility stylesheet retained for the V1 shell cache. UI styles are consolidated in styles.css. */
+
+/* Weather freshness is shown by the connection banner, so all remaining facts use one compact layout. */
+.weather-fact:first-child {
+  grid-column: auto;
+  display: grid;
+  justify-content: space-between;
+  justify-items: end;
+  gap: 1px;
+  color: inherit;
+  font-size: inherit;
+}
+.weather-fact:first-child span {
+  font-size: .55rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 520px) {
+  .weather-fact:first-child {
+    grid-column: auto;
+    order: initial;
+    justify-content: space-between;
+    justify-items: start;
+    margin-top: 0;
+  }
+}

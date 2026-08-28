@@ -17,7 +17,6 @@
   <div class="app-shell">
     <header class="topbar">
       <button class="location-button" type="button" data-open-dialog="locationDialog" aria-label="Standort ändern">
-        <span class="eyebrow">Aktueller Ort</span>
         <span class="location-line"><span aria-hidden="true">⌖</span> <strong id="locationLabel">Salzburg, Österreich</strong></span>
       </button>
       <div class="topbar-actions">
@@ -47,7 +46,7 @@
       </section>
       <section class="card outfit-card" aria-labelledby="outfitHeading">
         <div class="section-heading">
-          <div><p class="eyebrow">Empfehlung</p><h1 id="outfitHeading">So passt es jetzt</h1></div>
+          <h1 id="outfitHeading">So passt es jetzt</h1>
           <span class="confidence-pill" id="confidencePill" data-status="partial">Lädt …</span>
         </div>
         <div class="warmth-control" role="group" aria-label="Outfit wärmer oder dünner wählen">
@@ -55,7 +54,7 @@
           <button type="button" class="is-active" data-warmth="balanced" aria-pressed="true">Passend</button>
           <button type="button" data-warmth="warmer">Wärmer</button>
         </div>
-        <div class="look-row"><small id="lookLabel">Look wird geladen</small><button id="changeLookButton" type="button" class="text-button">Anderer Look</button></div>
+        <div class="look-row"><button id="changeLookButton" type="button" class="text-button">Anderer Look</button></div>
         <div class="outfit-grid" id="outfitGrid" aria-live="polite"></div>
         <div class="reason-box"><span class="reason-icon" aria-hidden="true">✦</span><p id="outfitReason">Wetter und Situation werden ausgewertet.</p></div>
         <div id="safetyNotice" class="safety-notice" aria-live="polite" hidden></div>
@@ -64,16 +63,15 @@
           <div>
             <h2>Nackentest</h2>
             <p>Warm & trocken: passt. Heiß/schwitzig: dünner. Kühl: wärmer.</p>
-            <p class="fine-print">Kalte Hände oder Füße allein sind kein zuverlässiger Friernachweis.</p>
             <div class="neck-action-row">
               <button type="button" class="neck-action-button" data-open-dialog="neckFeedbackDialog">Nackentest anwenden</button>
-              <span id="neckFeedbackStatus" class="neck-feedback-status" role="status">Noch keine Rückmeldung angewendet.</span>
             </div>
+            <p id="neckFeedbackStatus" class="neck-feedback-status" role="status"></p>
           </div>
         </div>
       </section>
       <section class="card hourly-card" aria-labelledby="hourlyHeading">
-        <div class="section-heading compact"><div><p class="eyebrow">Nächste Stunden</p><h2 id="hourlyHeading">Stündliche Vorschau</h2></div></div>
+        <div class="section-heading compact"><h2 id="hourlyHeading">Stündliche Vorschau</h2></div>
         <div class="hourly-scroll" id="hourlyForecast" tabindex="0" aria-label="Stündliche Wettervorschau"></div>
       </section>
       <div id="assetNotice" class="asset-notice" role="status" hidden></div>
@@ -83,12 +81,6 @@
         <button type="button" data-open-dialog="helpDialog"><span aria-hidden="true">?</span>Hilfe & Sicherheit</button>
       </section>
     </main>
-    <nav class="bottom-nav" aria-label="Hauptnavigation">
-      <button class="is-active" type="button" aria-current="page"><span aria-hidden="true">⌂</span><span>Outfit</span></button>
-      <button type="button" data-open-dialog="situationDialog"><span aria-hidden="true">◎</span><span>Situation</span></button>
-      <button type="button" data-open-dialog="catalogDialog"><span aria-hidden="true">▦</span><span>Katalog</span></button>
-      <button type="button" data-open-dialog="settingsDialog"><span aria-hidden="true">⚙</span><span>Mehr</span></button>
-    </nav>
   </div>
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
   <dialog id="profileDialog" class="sheet-dialog" aria-labelledby="profileTitle">
@@ -97,7 +89,6 @@
       <label class="field">Name<input id="profileName" name="profileName" autocomplete="off" maxlength="40"></label>
       <label class="field">Geburtsdatum<input id="profileBirthDate" name="profileBirthDate" type="date"></label>
       <fieldset class="choice-fieldset"><legend>Wärmetendenz</legend><label><input type="radio" name="warmthBias" value="runs_cool"> Eher kälteempfindlich</label><label><input type="radio" name="warmthBias" value="neutral"> Neutral</label><label><input type="radio" name="warmthBias" value="runs_warm"> Eher warm</label></fieldset>
-      <p class="dialog-note">Diese Einstellung bleibt bewusst manuell. Nackentest-Feedback verändert sie nicht automatisch.</p>
       <button class="primary-button" value="save" id="saveProfileButton">Profil speichern</button>
     </form>
   </dialog>
@@ -106,7 +97,6 @@
       <header class="sheet-header"><div><p class="eyebrow">Wetterort</p><h2 id="locationTitle">Standort</h2></div><button class="icon-button" type="button" data-close-dialog="locationDialog" aria-label="Standort schließen">×</button></header>
       <label class="field">Ort oder PLZ<input id="locationInput" name="location" inputmode="search" autocomplete="postal-code" placeholder="z. B. Wien"></label>
       <button class="secondary-button" type="button" id="useBrowserLocationButton">Aktuellen Standort verwenden</button>
-      <p class="dialog-note">Wetterdaten werden über Open-Meteo geladen. Bei abgelehnter Standortfreigabe bleibt die Ortssuche verfügbar.</p>
       <button class="primary-button" type="submit" id="saveLocationButton">Ort übernehmen</button>
     </form>
   </dialog>
@@ -123,7 +113,6 @@
         <label class="field">Niederschlagsart<select id="manualPrecipitationType"><option value="none">Keiner</option><option value="rain">Regen</option><option value="snow">Schnee</option><option value="sleet">Schneeregen</option><option value="unknown">Unbekannt</option></select></label>
         <label class="field">UV-Index<input id="manualUvIndex" type="number" inputmode="decimal" min="0" max="20" step="0.1"></label>
       </div>
-      <p class="dialog-note">Bei manueller Anpassung verwendet die Engine die eingegebene Lufttemperatur statt eines alten API-„Gefühlt“-Werts. Die stündliche Vorhersage bleibt als Zukunftsprognose erhalten.</p>
       <div class="settings-actions">
         <button class="primary-button" type="submit" id="applyWeatherOverrideButton">Manuelle Werte verwenden</button>
         <button class="secondary-button" type="button" id="resetWeatherOverrideButton">Automatisches Wetter neu laden</button>
@@ -136,7 +125,6 @@
   <dialog id="neckFeedbackDialog" class="sheet-dialog" aria-labelledby="neckFeedbackTitle">
     <div class="sheet">
       <header class="sheet-header"><div><p class="eyebrow">Aktuelle Rückmeldung</p><h2 id="neckFeedbackTitle">Wie fühlt sich der Nacken an?</h2></div><button class="icon-button" type="button" data-close-dialog="neckFeedbackDialog" aria-label="Nackentest schließen">×</button></header>
-      <p class="dialog-note">Die Rückmeldung verändert nur die aktuelle Empfehlung und wird nicht als langfristige Wärmetendenz gelernt.</p>
       <div class="feedback-options">
         <button type="button" class="feedback-option" data-neck-feedback="warm_dry"><strong>Warm & trocken</strong><small>Empfehlung beibehalten.</small></button>
         <button type="button" class="feedback-option" data-neck-feedback="hot_sweaty"><strong>Heiß oder schwitzig</strong><small>Eine sinnvolle Schicht reduzieren.</small></button>
@@ -146,20 +134,17 @@
     </div>
   </dialog>
   <dialog id="alternativeDialog" class="sheet-dialog" aria-labelledby="alternativeTitle">
-    <div class="sheet"><header class="sheet-header"><div><p class="eyebrow">Austauschen</p><h2 id="alternativeTitle">Alternative wählen</h2></div><button class="icon-button" type="button" data-close-dialog="alternativeDialog" aria-label="Alternativen schließen">×</button></header><p class="dialog-note">Thermisch andere Alternativen werden von der Engine als komplettes Outfit neu bewertet.</p><div id="alternativeOptions" class="alternative-options"></div></div>
+    <div class="sheet"><header class="sheet-header"><div><p class="eyebrow">Austauschen</p><h2 id="alternativeTitle">Alternative wählen</h2></div><button class="icon-button" type="button" data-close-dialog="alternativeDialog" aria-label="Alternativen schließen">×</button></header><div id="alternativeOptions" class="alternative-options"></div></div>
   </dialog>
   <dialog id="catalogDialog" class="sheet-dialog" aria-labelledby="catalogTitle">
-    <div class="sheet"><header class="sheet-header"><div><p class="eyebrow">Alle Teile</p><h2 id="catalogTitle">Kleidungskatalog</h2></div><button class="icon-button" type="button" data-close-dialog="catalogDialog" aria-label="Katalog schließen">×</button></header><p class="dialog-note">Stilvarianten verändern nur Farben, Muster und Darstellung – nie Wärmelogik oder Sicherheitsregeln.</p><div id="catalogGrid" class="catalog-grid"></div></div>
+    <div class="sheet"><header class="sheet-header"><div><p class="eyebrow">Alle Teile</p><h2 id="catalogTitle">Kleidungskatalog</h2></div><button class="icon-button" type="button" data-close-dialog="catalogDialog" aria-label="Katalog schließen">×</button></header><div id="catalogGrid" class="catalog-grid"></div></div>
   </dialog>
   <dialog id="settingsDialog" class="sheet-dialog" aria-labelledby="settingsTitle">
-    <div class="sheet"><header class="sheet-header"><div><p class="eyebrow">Lokal gespeichert</p><h2 id="settingsTitle">Einstellungen</h2></div><button class="icon-button" type="button" data-close-dialog="settingsDialog" aria-label="Einstellungen schließen">×</button></header>
+    <div class="sheet"><header class="sheet-header"><h2 id="settingsTitle">Einstellungen</h2><button class="icon-button" type="button" data-close-dialog="settingsDialog" aria-label="Einstellungen schließen">×</button></header>
       <fieldset class="choice-fieldset"><legend>Kleidungsstil</legend><label><input type="radio" name="styleTheme" value="neutral"> Neutral</label><label><input type="radio" name="styleTheme" value="boy"> Blau-/Grünvarianten</label><label><input type="radio" name="styleTheme" value="girl"> Rosa-/Beerentöne</label></fieldset>
-      <div class="settings-actions"><button class="secondary-button" type="button" id="exportSettingsButton">JSON exportieren</button><label class="secondary-button file-button">JSON importieren<input type="file" id="importSettingsInput" accept="application/json,.json"></label><button class="secondary-button" type="button" data-open-dialog="statusDialog">Offline-/Fehlerzustand</button></div>
-      <p class="dialog-note">Profil und Einstellungen bleiben lokal in diesem Browser. Keine Anmeldung, keine Datenbank.</p><p class="version-line">Version <span id="appVersion">0.2.0</span></p>
+      <div class="settings-actions"><button class="secondary-button" type="button" id="exportSettingsButton">JSON exportieren</button><label class="secondary-button file-button">JSON importieren<input type="file" id="importSettingsInput" accept="application/json,.json"></label></div>
+      <p class="version-line">Version <span id="appVersion">0.2.0</span></p>
     </div>
-  </dialog>
-  <dialog id="statusDialog" class="sheet-dialog" aria-labelledby="statusTitle">
-    <div class="sheet"><header class="sheet-header"><div><p class="eyebrow">Datenqualität</p><h2 id="statusTitle">Offline & Fehler</h2></div><button class="icon-button" type="button" data-close-dialog="statusDialog" aria-label="Status schließen">×</button></header><div class="status-card status-card--offline"><strong>Offline</strong><p>Bereits gespeicherte Wetterdaten können weiter angezeigt werden und werden als nicht aktuell gekennzeichnet.</p></div><div class="status-card status-card--error"><strong>Wetter nicht verfügbar</strong><p>Die App erfindet keine Wetterwerte. Ortssuche und Schlafmodus bleiben unabhängig davon nutzbar.</p><button class="secondary-button" type="button" data-open-dialog="locationDialog">Standort ändern</button></div><div class="status-card"><strong>Teilweise Empfehlung</strong><p>Fehlende optionale Wetterwerte werden nicht als 0 interpretiert. Eingeschränkte Datenqualität bleibt sichtbar.</p></div></div>
   </dialog>
   <dialog id="helpDialog" class="sheet-dialog" aria-labelledby="helpTitle">
     <div class="sheet"><header class="sheet-header"><div><p class="eyebrow">Wichtig</p><h2 id="helpTitle">Hilfe & Sicherheitsregeln</h2></div><button class="icon-button" type="button" data-close-dialog="helpDialog" aria-label="Hilfe schließen">×</button></header><ul class="safety-list"><li><strong>Nackentest zuerst:</strong> warm und trocken passt; heiß/schwitzig bedeutet weniger, kühl bedeutet mehr Isolation.</li><li>Kalte Hände oder Füße allein sind kein zuverlässiger Friernachweis.</li><li><strong>Autositz:</strong> keine voluminöse Jacke und keinen Winteroverall unter dem Gurt.</li><li><strong>Trage:</strong> Körperwärme zählt am Rumpf als zusätzliche Wärme; exponierte Bereiche separat schützen.</li><li><strong>Kinderwagen:</strong> wach und aktiv wird anders bewertet als schlafend. Wagen nicht luftstromhemmend abdecken.</li><li><strong>Schlafen:</strong> Raumtemperatur statt Außenwetter; keine Mütze, keine lose Decke und keine gewichteten Schlafprodukte. TOG ist Orientierung.</li></ul><p class="dialog-note">Die App ist eine Entscheidungshilfe und keine medizinische Anwendung. Sie kann thermischen Komfort nicht garantieren.</p></div>
