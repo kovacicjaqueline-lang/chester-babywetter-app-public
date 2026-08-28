@@ -10,16 +10,25 @@ const packageJson = JSON.parse(read('package.json'));
 const playwrightConfig = read('playwright.config.js');
 const assetsIgnore = read('.assetsignore');
 
-test('workflow exposes a targeted local regression command', () => {
+test('workflow exposes targeted local regression commands', () => {
   assert.equal(packageJson.scripts['test:workflow'], 'node --test test/workflow-ci.test.js');
+  assert.equal(packageJson.scripts['check:node-compat'], 'node scripts/check-node-compat.mjs');
 });
 
-test('CI runs each major gate exactly once without serial dependencies', () => {
-  assert.match(workflow, /^  unit-tests:$/m);
+test('CI keeps a Node matrix without duplicating the full unit gate', () => {
+  assert.match(workflow, /^  node-checks:$/m);
+  assert.match(workflow, /node-version: 22/);
+  assert.match(workflow, /node-version: 24/);
+  assert.match(workflow, /gate: unit/);
+  assert.match(workflow, /gate: compatibility/);
+  assert.equal(count(workflow, /^\s+run: npm test$/gm), 1);
+  assert.equal(count(workflow, /^\s+run: npm run check:node-compat$/gm), 1);
+});
+
+test('CI runs major gates without serial dependencies', () => {
   assert.match(workflow, /^  browser-tests:$/m);
   assert.match(workflow, /^  deploy-dry-run:$/m);
   assert.doesNotMatch(workflow, /^\s+needs:/m);
-  assert.equal(count(workflow, /^\s+run: npm test$/gm), 1);
   assert.equal(count(workflow, /^\s+run: npm run test:browser$/gm), 1);
   assert.equal(count(workflow, /^\s+run: npm run verify:deploy$/gm), 1);
 });
@@ -51,4 +60,5 @@ test('repository-only workflow instructions are not deployed as app assets', () 
   assert.match(assetsIgnore, /^AGENTS\.md$/m);
   assert.match(assetsIgnore, /^docs$/m);
   assert.match(assetsIgnore, /^\.github$/m);
+  assert.match(assetsIgnore, /^scripts$/m);
 });

@@ -16,19 +16,32 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  unit-tests:
-    name: Node 22 tests
+  node-checks:
+    name: Node ${{ matrix.node-version }} ${{ matrix.gate }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - node-version: 22
+            gate: unit
+          - node-version: 24
+            gate: compatibility
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${{ matrix.node-version }}
       - name: Install dependencies
+        if: matrix.gate == 'unit'
         run: npm install
       - name: Unit tests
+        if: matrix.gate == 'unit'
         run: npm test
+      - name: Runtime syntax compatibility
+        if: matrix.gate == 'compatibility'
+        run: npm run check:node-compat
 
   browser-tests:
     name: Browser tests

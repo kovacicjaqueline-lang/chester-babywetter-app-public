@@ -44,7 +44,7 @@ Unit- und Regressionstests:
 npm test
 ```
 
-Die CI verwendet Node.js 22 als kanonische Node-Laufzeit für die Unit-Suite.
+Die CI behält eine Node-Testmatrix, ohne die Vollsuite doppelt auszuführen: Node 22 ist der kanonische Unit-Gate; Node 24 führt nur einen leichten Runtime-Syntax-Kompatibilitätscheck aus.
 
 Gezielter Workflow-/CI-Regressionscheck:
 

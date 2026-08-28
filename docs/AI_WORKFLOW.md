@@ -97,15 +97,20 @@ Nach dem Push diesen CI-Job tatsächlich prüfen.
 
 ## 6. CI-Design dieser App
 
-Die Standard-CI besteht aus drei voneinander unabhängigen Gates:
+Die Standard-CI besteht aus drei voneinander unabhängigen Bereichen:
 
-1. Node-/Unit-Tests auf Node 22,
+1. Node-Matrix,
 2. Playwright-Browsertests auf Chromium,
 3. Wrangler Deploy-Dry-Run.
 
-Sie laufen parallel, weil Browser- und Deploy-Prüfung keine erfolgreichen Unit-Tests als technische Vorbedingung benötigen.
+Die Node-Matrix hat zwei klar getrennte Aufgaben:
 
-Jeder Gate läuft pro CI-Lauf genau einmal. Ein zweiter Node-Major ist kein Grund, die komplette Unit-Suite identisch erneut auszuführen. Zusätzliche Runtime-Kompatibilitätschecks dürfen nur eingeführt werden, wenn sie einen eigenen, klar abgegrenzten Zweck haben.
+- Node 22 führt die vollständige Unit-/Regression-Suite genau einmal aus.
+- Node 24 führt nur `npm run check:node-compat` aus. Dieser leichte Kompatibilitätscheck prüft die Syntax der ausgelieferten JavaScript-Runtime-Dateien mit Node 24 und ist kein zweiter Unit-Gate.
+
+Browser, Deploy und die Node-Matrix laufen parallel, weil sie keine erfolgreichen Ergebnisse voneinander als technische Vorbedingung benötigen.
+
+Die vollständige Unit-Suite läuft pro CI-Lauf genau einmal. Ein zweiter Node-Major ist kein Grund, dieselbe Suite erneut auszuführen. Zusätzliche Runtime-Kompatibilitätschecks müssen einen eigenen, klar abgegrenzten Zweck haben und dürfen den Unit-Gate nicht duplizieren.
 
 CI läuft für Pull Requests gegen `main` und nach Pushes auf `main`. Feature-Branch-Pushes mit offenem PR sollen nicht zusätzlich denselben Workflow doppelt auslösen.
 
