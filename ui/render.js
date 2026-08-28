@@ -326,13 +326,13 @@ function reasonFor(context, recommendation) {
     ? 'Beim Schlafen im Kinderwagen wird thermisch wärmer bewertet; Outdoor-Wetter bleibt relevant.'
     : context.activity === 'active'
       ? 'Ein waches, sehr aktives Baby im Kinderwagen wird leichter bewertet als ein schlafendes Baby.'
-      : 'Kinderwagenzustand, Aktivität, Wetter und Windschutz werden gemeinsam bewertet.';
+      : null;
   if (context.mode === 'carrier') return 'Körperkontakt reduziert den Wärmebedarf am bedeckten Rumpf; exponierte Bereiche werden separat geschützt.';
   if (context.mode === 'car') return context.cabinTempSource === 'estimated'
     ? `Für die Fahrt werden vorläufig ${context.cabinTempC} °C Innenraumtemperatur angenommen.`
     : `Für die Fahrt werden ${context.cabinTempC} °C Innenraumtemperatur verwendet.`;
   if (context.mode === 'sleep') return `Die Schlafempfehlung basiert auf ${context.roomTempC ?? 'der fehlenden'} °C Raumtemperatur, nicht auf dem Außenwetter.`;
-  return 'Temperatur, Wetter, Aktivität und Exposition bestimmen die Empfehlung gemeinsam.';
+  return null;
 }
 
 export function renderOutfit({ recommendation, context, warmthDirection, styleTheme, visualSeed }, assetStore) {
@@ -361,11 +361,18 @@ export function renderOutfit({ recommendation, context, warmthDirection, styleTh
     grid.append(empty);
   }
 
-  document.querySelector('#outfitReason').textContent = reasonFor(context, recommendation);
+  const reason = reasonFor(context, recommendation);
+  const reasonBox = document.querySelector('.reason-box');
+  document.querySelector('#outfitReason').textContent = reason ?? '';
+  reasonBox.hidden = !reason;
+  reasonBox.style.display = reason ? '' : 'none';
   const pill = document.querySelector('#confidencePill');
   const statusLabel = { ready: 'Passend', ready_with_estimate: 'Mit Schätzung', partial: 'Teilweise', blocked: 'Angaben fehlen' };
   pill.textContent = statusLabel[recommendation?.status] ?? 'Prüfen';
   pill.dataset.status = recommendation?.status ?? 'blocked';
+  const showStatus = recommendation?.status !== 'ready';
+  pill.hidden = !showStatus;
+  pill.style.display = showStatus ? '' : 'none';
   for (const button of document.querySelectorAll('[data-warmth]')) {
     const active = button.dataset.warmth === warmthDirection;
     button.classList.toggle('is-active', active);
