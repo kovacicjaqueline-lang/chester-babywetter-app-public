@@ -16,6 +16,10 @@ Die App ist statisch und verwendet HTML, CSS und Vanilla JavaScript. Die Bereich
 
 Profil und Einstellungen werden lokal im Browser gespeichert. Es gibt in V1 keine Anmeldung und keine Datenbank.
 
+## Repository-Workflow
+
+Coding-Aufträge richten sich nach `AGENTS.md` und `docs/AI_WORKFLOW.md`. Dort sind BASE_SHA-Arbeitsweise, scope-basierte Testmatrix, Pre-Push-Regeln, CI-Fehlerdiagnose und der Integrationscheck vor finalem Review festgelegt.
+
 ## Voraussetzungen
 
 - Node.js 22 oder neuer
@@ -40,7 +44,13 @@ Unit- und Regressionstests:
 npm test
 ```
 
-Die CI führt diese Tests mit Node.js 22 und 24 aus.
+Die CI verwendet Node.js 22 als kanonische Node-Laufzeit für die Unit-Suite.
+
+Gezielter Workflow-/CI-Regressionscheck:
+
+```bash
+npm run test:workflow
+```
 
 Playwright-Browsertests:
 
@@ -49,7 +59,7 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-Die Browser-Suite prüft unter anderem Start ohne Console-Fehler, Standard-Outfit, Kinderwagen/Trage/Autositz/Schlaf, echte Kleidungsbilder, Standortwechsel, Offline-Verhalten, Persistenz und das 375×812-Mobile-Layout.
+Die Browser-Suite prüft unter anderem Start ohne Console-Fehler, Standard-Outfit, Kinderwagen/Trage/Autositz/Schlaf, echte Kleidungsbilder, Standortwechsel, Offline-Verhalten, Persistenz und das 375×812-Mobile-Layout. In CI laufen die Testdateien mit bewusst begrenzten zwei Workern; für Diagnose kann mit `npm run test:browser -- --workers=1` seriell ausgeführt werden.
 
 ## Deployment prüfen
 
@@ -63,7 +73,7 @@ Das führt `wrangler deploy --dry-run` aus.
 
 ## Cloudflare Workers Assets
 
-`wrangler.jsonc` verwendet Workers Static Assets und das Projekt-Root als Assets-Verzeichnis. `.assetsignore` verhindert, dass Entwicklungs- und Testdateien als öffentliche Assets hochgeladen werden.
+`wrangler.jsonc` verwendet Workers Static Assets und das Projekt-Root als Assets-Verzeichnis. `.assetsignore` verhindert, dass Entwicklungs-, Workflow- und Testdateien als öffentliche Assets hochgeladen werden.
 
 Lokal:
 
