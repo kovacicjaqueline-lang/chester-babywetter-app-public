@@ -53,6 +53,7 @@ test('gültiger Import wird vollständig validiert und unbekannte Felder werden 
   expect(stored.profile.injected).toBeUndefined();
   expect(stored.settings.injected).toBeUndefined();
   expect(stored.settings.weatherMode).toBe('auto_with_override');
+  expect(stored.settings.weatherCacheMaxAgeMinutes).toBe(120);
 });
 
 test('Import ohne Profil behält das lokale Profil und übernimmt validierte Einstellungen', async ({ page }) => {
@@ -64,9 +65,9 @@ test('Import ohne Profil behält das lokale Profil und übernimmt validierte Ein
   await page.locator('input[name="warmthBias"][value="runs_warm"]').check();
   await page.locator('#saveProfileButton').click();
   await expect(page.locator('#profileDialog')).toBeHidden();
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('babyweather.v1.profile'))).not.toBeNull();
 
   const before = await page.evaluate(() => JSON.parse(localStorage.getItem('babyweather.v1.profile')));
-  expect(before).not.toBeNull();
   await page.locator('[data-open-dialog="settingsDialog"]').first().click();
   const envelope = validEnvelope();
   envelope.payload.profile = null;

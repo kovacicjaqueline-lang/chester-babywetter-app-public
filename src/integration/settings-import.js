@@ -1,3 +1,5 @@
+import { WEATHER_CACHE_MAX_AGE_MINUTES, WEATHER_FRESH_MAX_AGE_MINUTES } from './weather-series.js';
+
 const MODES = new Set(['outdoor', 'stroller', 'carrier', 'car', 'sleep']);
 const STYLES = new Set(['neutral', 'boy', 'girl']);
 const BIASES = new Set(['runs_cool', 'neutral', 'runs_warm']);
@@ -70,10 +72,14 @@ function validateProfile(value, now) {
   };
 }
 
+function weatherCacheMaxAge(value) {
+  if (value === null) return WEATHER_CACHE_MAX_AGE_MINUTES;
+  if (!Number.isFinite(value)) throw new RangeError('settings.weatherCacheMaxAgeMinutes is invalid');
+  return Math.min(WEATHER_CACHE_MAX_AGE_MINUTES, Math.max(WEATHER_FRESH_MAX_AGE_MINUTES, Math.round(value)));
+}
+
 function validateSettings(value) {
   if (!isObject(value)) throw new TypeError('payload.settings is required');
-  const cacheAge = value.weatherCacheMaxAgeMinutes;
-  if (cacheAge !== null && (!Number.isFinite(cacheAge) || cacheAge < 0)) throw new RangeError('settings.weatherCacheMaxAgeMinutes is invalid');
   if (value.allowLocation !== null && typeof value.allowLocation !== 'boolean') throw new TypeError('settings.allowLocation is invalid');
   if (value.temperatureUnit !== 'celsius') throw new TypeError('settings.temperatureUnit is invalid');
   if (value.weatherMode !== 'auto_with_override') throw new TypeError('settings.weatherMode is invalid');
@@ -82,7 +88,7 @@ function validateSettings(value) {
     temperatureUnit: 'celsius',
     weatherMode: 'auto_with_override',
     allowLocation: value.allowLocation,
-    weatherCacheMaxAgeMinutes: cacheAge
+    weatherCacheMaxAgeMinutes: weatherCacheMaxAge(value.weatherCacheMaxAgeMinutes)
   };
 }
 
