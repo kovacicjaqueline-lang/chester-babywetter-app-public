@@ -310,7 +310,7 @@ function renderNotices(recommendation) {
     const mapped = NOTICE_COPY[notice.code] ?? [notice.code, ''];
     title.textContent = mapped[0];
     copy.append(title);
-    if (notice.severity === 'hard_rule' && mapped[1]) {
+    if (notice.severity !== 'info' && mapped[1]) {
       const text = document.createElement('p');
       text.textContent = mapped[1];
       copy.append(text);
