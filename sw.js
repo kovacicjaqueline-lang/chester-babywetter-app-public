@@ -1,4 +1,4 @@
-const CACHE_NAME = 'babywetter-shell-v0.2.0-assets9';
+const CACHE_NAME = 'babywetter-shell-v0.2.0-assets10';
 const ASSET_MANIFEST_PATH = '/assets/clothing/manifest.json';
 const VISUAL_MANIFEST_PATH = '/assets/clothing/visual-manifest.json';
 const SHELL = [
