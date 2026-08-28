@@ -17,6 +17,8 @@ BASE_SHA=$(git rev-parse origin/main)
 
 Danach `AGENTS.md`, diese Datei und nur die für den Scope relevanten Dateien/Fachdokumente lesen. Nicht vorsorglich das gesamte Repository oder alle Fachdocs analysieren.
 
+Der eingefrorene `BASE_SHA` beantwortet nur die Frage, was sich seit Beginn des Arbeitsstrangs auf `main` verändert hat und ob davon etwas für den eigenen Scope relevant ist. Er ist **nicht automatisch die Diffbasis für Scope-Prüfungen vor einem Push**. Dafür ist die tatsächliche PR-Basis bzw. der aktuelle relevante `main`-Ref maßgeblich; siehe Abschnitt 5.
+
 ### 1.2 Welche Fachdokumente sind relevant?
 
 - Outfit-/Temperatur-/Situation-/Safety-Änderung: `docs/OUTFIT_RULES.md` und relevante Teile von `docs/DATA_CONTRACT.md`; bei Produktverhalten zusätzlich `docs/PRODUCT_CONCEPT.md`.
@@ -65,6 +67,7 @@ Immer mit dem kleinsten direkt betroffenen Test beginnen. Danach nur den erforde
 | --- | --- | --- | --- |
 | Nur Markdown/Fachdoku/README ohne ausführbaren Einfluss | keiner | keiner | keiner |
 | `AGENTS.md`, `docs/AI_WORKFLOW.md`, CI-/Runner-Regeln | `npm run test:workflow` wenn ausführbare Workflow-/Runner-Dateien betroffen sind | keiner bei reiner Doku | `npm test` nur wenn Testentdeckung oder npm-Scripts geändert wurden |
+| Repository-Guard / Pre-Push-Schutz | `npm run test:repository-guard` | `npm test`, wenn npm-Scripts oder Testentdeckung geändert wurden | `npm run test:workflow` nur bei zusätzlicher CI-/Runner-Änderung |
 | einzelne Engine-/Utility-/Datenfunktion | passendes `node --test <testdatei>` | `npm test` | Browser nur bei sichtbarer Integration |
 | Wetter-/Integration-/Import-Code | passende Datei unter `test/weather/` bzw. `test/integration/` | `npm test` | relevante Playwright-Spec bei UI-/Persistenzwirkung |
 | Outfit-/Safety-/Schlaflogik | kleinstmöglicher Outfit-/TOG-Test | `npm test` | relevante Situations-Specs; bei breitem Verhalten `npm run test:browser` |
@@ -77,13 +80,46 @@ Immer mit dem kleinsten direkt betroffenen Test beginnen. Danach nur den erforde
 
 Ein Full-Gate ist keine Standardreaktion auf kleine Änderungen.
 
-## 5. Pre-Push-Regel
+## 5. Pre-Push-Regel und Scope-Sanity-Check
 
 Vor einem Push mit Code-, Test- oder Konfigurationsänderungen:
 
 1. kleinsten direkt betroffenen Test lokal ausführen,
 2. nur die laut Matrix nötigen weiteren Gates ausführen,
-3. erst dann pushen.
+3. den technischen Pre-Push-Guard mit der **tatsächlichen PR-Basis** ausführen,
+4. erst dann pushen.
+
+Beispiel:
+
+```bash
+npm run guard:pre-push -- \
+  --base-ref origin/main \
+  --allow package.json \
+  --allow scripts/repository-guard.mjs \
+  --allow test/repository-guard.test.js \
+  --allow docs/AI_WORKFLOW.md
+```
+
+Der Guard blockiert mindestens:
+
+- dirty/uncommitted Working Tree,
+- untracked Dateien,
+- PR-eigene Dateien außerhalb aller explizit über `--allow` freigegebenen Pfade bzw. `verzeichnis/**`-Präfixe,
+- versehentlich erzeugte 0-Byte-Dateien.
+
+Eine absichtlich leere Datei ist nur mit einer eigenen expliziten Ausnahme zulässig, zum Beispiel `--allow-empty docs/ABSICHTLICH_LEER.md`. `--allow-empty` ersetzt nicht die normale Scope-Freigabe über `--allow`.
+
+### PR-Diffbasis ist nicht der Start-BASE_SHA
+
+Für den Scope-Check darf der eingefrorene Start-`BASE_SHA` nicht automatisch als Diffbasis verwendet werden. Standard ist `origin/main`; bei einer anders basierten PR ist der entsprechende tatsächliche Base-Ref anzugeben.
+
+Der Guard verwendet Triple-Dot-Semantik (`<base-ref>...HEAD`) und damit die Merge-Base der tatsächlichen PR-Basis. Beispiel:
+
+1. Branch enthält eigene Änderung A.
+2. `main` schreitet fort und erhält Änderung B.
+3. B überlappt relevant und wird deshalb bewusst in den Branch integriert.
+4. Der PR-Diff enthält weiterhin nur A.
+5. Der Pre-Push-Guard bewertet ebenfalls nur A; ein Diff gegen den ursprünglichen Start-`BASE_SHA` wäre hier falsch, weil es A+B sehen würde.
 
 CI soll deterministische Fehler bestätigen, nicht erstmals entdecken.
 
@@ -113,6 +149,8 @@ Browser, Deploy und die Node-Matrix laufen parallel, weil sie keine erfolgreiche
 Die vollständige Unit-Suite läuft pro CI-Lauf genau einmal. Ein zweiter Node-Major ist kein Grund, dieselbe Suite erneut auszuführen. Zusätzliche Runtime-Kompatibilitätschecks müssen einen eigenen, klar abgegrenzten Zweck haben und dürfen den Unit-Gate nicht duplizieren.
 
 CI läuft für Pull Requests gegen `main` und nach Pushes auf `main`. Feature-Branch-Pushes mit offenem PR sollen nicht zusätzlich denselben Workflow doppelt auslösen.
+
+PR-Metadatenaktionen wie Draft → Ready, Labels, Reviewstatus, CI-Abfragen oder Merge-Vorbereitung dürfen den Branch-HEAD nicht verändern und dadurch keinen neuen CI-Lauf erzeugen.
 
 ## 7. Playwright
 
@@ -190,17 +228,53 @@ Unabhängige Arbeiten dürfen parallel auf getrennten Branches laufen. Arbeiten 
 
 Fremde Branch-Änderungen nicht ungefragt übernehmen.
 
-## 11. Finalisierung
+## 11. Finalisierung und Repository-Write-Lock
+
+### Implementierungs-/Reparaturphase
+
+In der Implementierungs-/Reparaturphase dürfen Repository-Inhalte innerhalb des beauftragten Scopes geändert, getestet, committet und gepusht werden.
+
+### Finalisierungsphase
+
+Sobald der finale inhaltliche Commit feststeht und nur noch Diff-/CI-Prüfung, Draft → Ready, Labels, Reviewstatus oder Merge-Vorbereitung anstehen, beginnt die Finalisierungsphase.
+
+Vor diesen Metadatenaktionen bei sauberem Working Tree den finalen HEAD lokal sperren:
+
+```bash
+npm run workflow:finalize
+```
+
+Der Lock wird ausschließlich als Git-interne Arbeitsmetadatei gespeichert und gehört nicht zum Repository-Tree. Ab dann gilt ein Repository-Write-Lock:
+
+- keine Datei-, Blob-, Tree-, Commit- oder Branch-Ref-Schreibaktion allein wegen einer PR-Metadatenaktion,
+- Draft → Ready, CI-/Statusabfragen, Labels, Reviews und Merge-Vorbereitung sind metadata-only,
+- der Branch-HEAD muss unverändert bleiben,
+- `npm run guard:pre-push` blockiert einen Push, falls sich der gelockte HEAD dennoch geändert hat.
+
+Eine PR-Metadatenaktion darf niemals allein einen neuen Commit, Push oder CI-Lauf verursachen.
+
+Wenn nach Beginn der Finalisierungsphase ein tatsächlicher inhaltlicher Fix nötig wird, zuerst bewusst in die Reparaturphase zurückkehren:
+
+```bash
+npm run workflow:repair
+```
+
+Danach den Fix durchführen, die laut Matrix betroffenen Tests erneut ausführen, Diff erneut reviewen und erst mit dem neuen finalen HEAD wieder `npm run workflow:finalize` ausführen.
+
+### Abschlussablauf
 
 Vor Abschluss:
 
 1. Scope-Diff prüfen,
 2. genau einmal aktuellen `main` gegen `BASE_SHA` auf relevante Überschneidung prüfen,
 3. nur bei relevanter Integration betroffene Tests wiederholen,
-4. committen und pushen,
-5. Draft-PR gegen `main` erstellen oder aktualisieren,
-6. tatsächliche CI-Ergebnisse prüfen,
-7. nicht mergen ohne ausdrückliche Freigabe.
+4. finalen inhaltlichen Commit erstellen,
+5. diesen finalen HEAD mit `npm run workflow:finalize` sperren,
+6. Pre-Push-Guard gegen die tatsächliche PR-Basis ausführen,
+7. Branch pushen und Draft-PR gegen `main` erstellen oder aktualisieren,
+8. tatsächliche CI-Ergebnisse am finalen Head-SHA prüfen,
+9. ab jetzt nur noch metadata-only handeln; für einen inhaltlichen Fix zuerst `npm run workflow:repair`,
+10. nicht mergen ohne ausdrückliche Freigabe.
 
 Arbeitsbericht:
 
