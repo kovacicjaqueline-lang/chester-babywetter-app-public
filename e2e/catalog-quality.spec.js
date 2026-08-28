@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 async function openCatalog(page) {
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/?demo=1');
   await expect(page.locator('#confidencePill')).not.toHaveText('Lädt …');
   await page.getByRole('button', { name: /Kleidungskatalog/ }).first().click();
