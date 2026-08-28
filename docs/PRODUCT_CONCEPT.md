@@ -227,7 +227,11 @@ Die App zeigt zwei klar getrennte Sets:
 1. **Zum Auto / vom Auto** (`outdoor_transition`),
 2. **Im Autositz** (`in_car`).
 
-Für die Fahrt wird eine Innenraumtemperatur verwendet. Ist sie nicht bekannt, darf sie geschätzt werden und die App kennzeichnet die Schätzung sichtbar. Außentemperatur allein wird nicht als dauerhafte Innenraumtemperatur behandelt.
+Für die Fahrt wird eine Innenraumtemperatur verwendet. Ist sie nicht bekannt, verwendet V1 bewusst eine **neutrale, klima-kontrollierte Schätzannahme von 20 °C** und kennzeichnet sie sichtbar als `estimated`. Die Schätzung wird **nicht** aus der Außentemperatur abgeleitet.
+
+Eine dynamische Ableitung wäre mit den V1-Inputs scheinpräzise: Es fehlen insbesondere tatsächlicher Innenraumzustand, Heizung/Klimaanlage, Vorheizen/Vorkühlen, Parkdauer und solare Aufheizung. Das Außenwetter bleibt deshalb ausschließlich für `outdoor_transition` maßgeblich; `in_car` nutzt die bekannte oder geschätzte Innenraumtemperatur.
+
+Die 20-°C-Annahme ist jederzeit schnell korrigierbar. Eine Änderung des Temperaturwerts gilt als `manual`; `measured` wird nur verwendet, wenn ein tatsächlich gemessener Wert ausdrücklich so markiert wird. Beim Zurückschalten auf `estimated` wird wieder die neutrale 20-°C-Annahme eingesetzt. Keine Gurtsicherheitsregel darf von dieser Schätzung oder ihrer Höhe abgeleitet werden.
 
 Voluminöse Jacken und Winteroveralls dürfen nicht unter dem Gurt empfohlen werden. Ein für draußen empfohlener Overall muss beim Wechsel in die Fahrphase explizit entfernt werden. Zusätzliche Decke/Jacke nur über dem korrekt geschlossenen Gurt.
 
@@ -366,8 +370,9 @@ Diese Quellen werden **nur** verwendet, um eine generische Produkt-Orientierung 
 
 ## 15. Noch offene technische Entscheidungen
 
+Die V1-Entscheidung für `cabinTempSource: estimated` ist geschlossen: unbekannte Autoinnenraumtemperatur wird als transparente neutrale 20-°C-Klimaannahme modelliert und nicht aus Außentemperatur abgeleitet.
+
 Die wesentlichen **Produktentscheidungen sind für V1 geschlossen**. Offen bleiben nur technische/operative Punkte, die nicht stillschweigend erfunden werden dürfen:
 
-- exakte Form der Auto-Innenraumtemperatur-Schätzung,
 - finale Katalogzuordnung einzelner Assets zu `thermalWeight`,
 - spätere Mehrprofil-/Inventar-/Präferenzlern-Funktionen außerhalb V1.
