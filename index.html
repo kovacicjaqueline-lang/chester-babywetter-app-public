@@ -40,7 +40,7 @@
       <section class="situation-strip" aria-label="Aktuelle Situation">
         <button class="situation-button" type="button" data-open-dialog="situationDialog">
           <span class="situation-icon" id="situationIcon" aria-hidden="true">◌</span>
-          <span><span class="eyebrow">Situation</span><strong id="situationLabel">Kinderwagen</strong></span>
+          <strong id="situationLabel">Kinderwagen</strong>
           <span class="chevron" aria-hidden="true">›</span>
         </button>
       </section>
@@ -49,12 +49,12 @@
           <h1 id="outfitHeading">So passt es jetzt</h1>
           <span class="confidence-pill" id="confidencePill" data-status="partial">Lädt …</span>
         </div>
-        <div class="warmth-control" role="group" aria-label="Outfit wärmer oder dünner wählen">
+        <div class="warmth-control" role="group" aria-label="Outfit anpassen">
           <button type="button" data-warmth="cooler">Dünner</button>
           <button type="button" class="is-active" data-warmth="balanced" aria-pressed="true">Passend</button>
           <button type="button" data-warmth="warmer">Wärmer</button>
+          <button id="changeLookButton" type="button" class="text-button">Anderer Look</button>
         </div>
-        <div class="look-row"><button id="changeLookButton" type="button" class="text-button">Anderer Look</button></div>
         <div class="outfit-grid" id="outfitGrid" aria-live="polite"></div>
         <div class="reason-box"><span class="reason-icon" aria-hidden="true">✦</span><p id="outfitReason">Wetter und Situation werden ausgewertet.</p></div>
         <div id="safetyNotice" class="safety-notice" aria-live="polite" hidden></div>
