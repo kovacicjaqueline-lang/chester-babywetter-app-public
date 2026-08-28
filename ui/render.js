@@ -266,9 +266,15 @@ export function renderSituationContext(mode, context) {
     );
   }
   if (mode === 'stroller') {
+    const stateField = selectField('Zustand', 'strollerState', [['awake', 'Wach'], ['asleep', 'Schläft']], context.strollerState);
+    const activityField = selectField('Aktivität wach', 'activity', [['calm', 'Ruhig'], ['normal', 'Normal'], ['active', 'Sehr aktiv']], context.activity);
+    activityField.hidden = context.strollerState === 'asleep';
+    stateField.querySelector('select').addEventListener('change', (event) => {
+      activityField.hidden = event.target.value === 'asleep';
+    });
     host.append(
-      selectField('Zustand', 'strollerState', [['awake', 'Wach'], ['asleep', 'Schläft']], context.strollerState),
-      selectField('Aktivität wach', 'activity', [['calm', 'Ruhig'], ['normal', 'Normal'], ['active', 'Sehr aktiv']], context.activity),
+      stateField,
+      activityField,
       selectField('Sonne', 'sunExposure', [['shade', 'Schatten'], ['partial', 'Teilweise Sonne'], ['direct', 'Direkte Sonne'], ['unknown', 'Unbekannt']], context.sunExposure),
       selectField('Windschutz', 'windProtection', [['none', 'Kein Windschutz'], ['partial', 'Teilweise'], ['good', 'Gut'], ['unknown', 'Unbekannt']], context.windProtection)
     );
