@@ -186,7 +186,24 @@ Keine normale Aktivitätskorrektur. Körperkontakt wird über die Trage-Regeln a
 
 Keine Aktivitätskorrektur.
 
-### 4.1 Alter als thermische Feinjustierung
+### 4.1 Mobilitätsstand und aktuelle Aktivität
+
+`BabyProfile.mobilityStage` beschreibt die allgemeine Entwicklung und ist **keine thermische Aktivitätsstufe**:
+
+- `low_mobility` → wenig mobil,
+- `crawling` → krabbelt,
+- `walking` → läuft.
+
+Der Mobilitätsstand erzeugt selbst `0 thermalSteps`. Insbesondere gilt:
+
+- `walking + activity: normal` hat dieselbe Aktivitätskorrektur wie `low_mobility + activity: normal`,
+- ein laufendes Kind wird erst über `activity: active` thermisch leichter bewertet,
+- auch ein noch nicht laufendes Kind kann bei starkem Strampeln/Krabbeln `activity: active` sein,
+- `strollerState: asleep` ignoriert die Aktivitätswirkung weiterhin unabhängig vom Mobilitätsstand.
+
+Der Mobilitätsstand darf in der UI als Entwicklungsinformation verwendet werden, um passende situative Optionen anzubieten oder vorzuschlagen. Er setzt `activity` oder `groundContact` aber niemals automatisch und ersetzt diese Angaben nicht.
+
+### 4.2 Alter als thermische Feinjustierung
 
 Das Alter wird aus `BabyProfile.birthDate` zum `requestedAt` der Empfehlung berechnet. Es gibt keinen separaten dauerhaft gespeicherten Alterswert.
 
@@ -200,7 +217,7 @@ Die Korrektur gilt für `outdoor`, `stroller`, `carrier`, `indoor` sowie für si
 
 Ab `28 °C` wird **keine zusätzliche Isolation allein wegen jungen Alters** ergänzt. Sonnen-/UV-Schutz und Hitzewarnungen bleiben unabhängig davon aktiv.
 
-Der Altersfaktor ist absichtlich klein: Er bedeutet nicht pauschal „eine zusätzliche Schicht“. Aktivität, Situation, externe Isolation, `warmthBias`, Wetter und Nackentest werden weiterhin separat berücksichtigt. Ein sieben Monate altes Baby erhält deshalb bei identischen übrigen Inputs keinen Altersaufschlag, während ein ein Monate altes Baby moderat wärmer kalibriert wird.
+Der Altersfaktor ist absichtlich klein: Er bedeutet nicht pauschal „eine zusätzliche Schicht“. Aktivität, Situation, externe Isolation, `warmthBias`, Wetter und Nackentest werden weiterhin separat berücksichtigt. Ein sieben Monate altes Baby erhält deshalb bei identischen übrigen Inputs keinen Altersaufschlag, während ein einmonatiges Baby moderat wärmer kalibriert wird.
 
 Für `sleep` gibt es **keine** thermische Alterskorrektur; Schlafkleidung bleibt ausschließlich an Raumtemperatur, generischer TOG-Orientierung, Wärmetendenz und Nackentest ausgerichtet.
 
@@ -457,6 +474,8 @@ Für die körpernahen Slots wird dieselbe kalibrierte Temperaturstaffel als Ausg
 - `standing`: wettergerechte Schuhe abhängig von Untergrund/Wetter,
 - `walking`: Schuhe als regulärer Outfit-Slot; Regen/Kälte beeinflussen die Variante.
 
+`groundContact` beschreibt die aktuelle Draußensituation. `profile.mobilityStage: walking` darf deshalb nicht automatisch `groundContact: walking` setzen; ein Kind, das laufen kann, kann aktuell trotzdem getragen werden, sitzen oder ohne Bodenkontakt unterwegs sein.
+
 Schuhe sind austauschbar und beeinflussen nicht die globale Rumpf-Wärmebewertung.
 
 ## 13. Schlafmodus – generische TOG-Orientierung
@@ -695,3 +714,6 @@ Mindestens:
 32. Ein Baby unter drei vollendeten Monaten erhält bei thermischer Referenz `<28 °C` in Wachkleidungsmodi `+0.5 thermalStep`; ab drei Monaten entfällt dieser Altersaufschlag.
 33. Unbekanntes Alter erzeugt keinen thermischen Altersaufschlag; die konservative direkte-Sonne-Regel bleibt davon unabhängig.
 34. Schlafempfehlungen ändern sich durch den thermischen Altersfaktor nicht.
+35. `mobilityStage` allein verändert keine thermische Stufe und keine fachliche Item-Auswahl bei identischen übrigen Inputs.
+36. `walking + activity: normal` ist thermisch identisch zu `low_mobility + activity: normal`; eine leichtere Empfehlung entsteht erst durch `activity: active`.
+37. `mobilityStage: walking` setzt weder `activity: active` noch `groundContact: walking` automatisch.
