@@ -25,13 +25,12 @@ function triggerWarmth(direction) {
   if (button && !button.disabled) button.click();
 }
 
-function bindHorizontalSwipe(element, onSwipe, { ignoreInteractive = false } = {}) {
+function bindHorizontalSwipe(element, onSwipe) {
   if (!element) return;
   let start = null;
 
   element.addEventListener('pointerdown', (event) => {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
-    if (ignoreInteractive && event.target.closest('button, a, input, select, textarea, #outfitGrid')) return;
     start = { x: event.clientX, y: event.clientY, pointerId: event.pointerId };
   });
 
@@ -110,11 +109,12 @@ function initSwipeControls() {
   });
 
   const outfitCard = document.querySelector('.outfit-card');
-  bindHorizontalSwipe(outfitCard, (direction) => {
+  const outfitSwipeSurface = outfitCard?.querySelector(':scope > .section-heading');
+  bindHorizontalSwipe(outfitSwipeSurface, (direction) => {
     triggerWarmth(direction);
     flash(outfitCard);
     announce(direction > 0 ? 'Outfit wärmer angepasst' : 'Outfit dünner angepasst');
-  }, { ignoreInteractive: true });
+  });
 
   document.querySelectorAll('dialog.sheet-dialog').forEach(bindSheetDismiss);
 }
