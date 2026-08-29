@@ -23,6 +23,11 @@
   margin: 4px 0 0;
 }
 
+/* Keep the skip-link target focusable without WebKit drawing a blue outline around the whole app content. */
+#main:focus {
+  outline: none;
+}
+
 @media (max-width: 520px) {
   .weather-fact:first-child {
     grid-column: auto;
