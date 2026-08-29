@@ -3,6 +3,7 @@ import { WEATHER_CACHE_MAX_AGE_MINUTES, WEATHER_FRESH_MAX_AGE_MINUTES } from './
 const MODES = new Set(['outdoor', 'stroller', 'carrier', 'car', 'indoor', 'sleep']);
 const STYLES = new Set(['neutral', 'boy', 'girl']);
 const BIASES = new Set(['runs_cool', 'neutral', 'runs_warm']);
+const MOBILITY_STAGES = new Set(['low_mobility', 'crawling', 'walking']);
 const FEEDBACK = new Set(['warm_dry', 'hot_sweaty', 'cool']);
 const FEEDBACK_ACTIONS = new Set(['keep', 'reduce_insulation', 'increase_insulation']);
 const ISO_INSTANT = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,3}))?(Z|[+-]\d{2}:\d{2})$/;
@@ -64,6 +65,9 @@ function validateProfile(value, now) {
     profileId: requiredString(value.profileId, 'profile.profileId', { max: 100 }),
     displayName: nullableString(value.displayName, 'profile.displayName', { max: 40 }),
     birthDate: birthDateValue(value.birthDate, now),
+    mobilityStage: value.mobilityStage === undefined
+      ? 'low_mobility'
+      : enumValue(value.mobilityStage, MOBILITY_STAGES, 'profile.mobilityStage'),
     warmthBias: enumValue(value.warmthBias, BIASES, 'profile.warmthBias'),
     styleTheme: enumValue(value.styleTheme, STYLES, 'profile.styleTheme'),
     defaultMode: enumValue(value.defaultMode, MODES, 'profile.defaultMode'),
