@@ -33,6 +33,8 @@ Für Outdoor-relevante Modi wird eine thermische Referenz bestimmt:
 3. Faktoren, die bereits in `apparentTempC` enthalten sind, werden thermisch nicht erneut addiert.
 4. Wind-, Regen- und UV-Schutz bleiben unabhängig davon als Funktionsanforderungen erhalten.
 
+Für `indoor` wird ausschließlich `roomTempC` verwendet. Außenwetter, Wind, Regen und UV fließen dort nicht in die thermische Empfehlung ein. Für `sleep` gilt ebenfalls `roomTempC`, jedoch mit eigener TOG-/Schlaflogik.
+
 Für Open-Meteo kann `apparent_temperature` als bekannter Adapterwert mit `wind`, `humidity` und `sun` markiert werden, weil Open-Meteo diese Bestandteile dokumentiert.
 
 ### 2.2 `thermalStep`
@@ -152,21 +154,29 @@ Die App gibt weiterhin ein Outfit aus, erzeugt aber `EXTREME_COLD_CAUTION`. Sie 
 
 ### Outdoor
 
-- `calm`: `+0.5 thermalStep`,
+Die sichtbare V1-Auswahl unterscheidet nur:
+
 - `normal`: `0`,
 - `active`: `-1 thermalStep`.
 
-Die App schlägt Aktivität möglichst aus Kontext/Alter vor und fragt nur, wenn die Unterscheidung relevant ist.
+`calm` bleibt als Legacy-Wert im Datenvertrag lesbar, wird von der App-Integration aber auf `normal` migriert und nicht mehr separat angeboten. Damit unterscheiden sich „ruhig“ und „normal“ in neu erzeugten App-Requests nicht.
 
 ### Kinderwagen
 
-Kinderwagen ist **nicht automatisch passiv**.
+Kinderwagen ist **nicht automatisch passiv**. Die UI bietet genau `Schläft`, `Wach`, `Sehr aktiv` und mappt dies intern auf die bestehenden Achsen:
 
-- `awake + active`: `0` relativ zur Outdoor-Normalbaseline,
-- `awake + normal/calm`: `+0.5`,
-- `asleep`: `+1`; Aktivitätswert wird thermisch ignoriert.
+- `Schläft` → `asleep`: `+1`; Aktivitätswert wird thermisch ignoriert,
+- `Wach` → `awake + normal`: `+0.5` relativ zur Outdoor-Normalbaseline,
+- `Sehr aktiv` → `awake + active`: `0` relativ zur Outdoor-Normalbaseline.
 
 Damit kann ein Baby, das im Kinderwagen stark strampelt/rockt, deutlich leichter angezogen werden als ein schlafendes Baby bei gleichem Wetter.
+
+### Drinnen
+
+- `normal`: `0`,
+- `active`: `-1 thermalStep`.
+
+Ruhiges Wachsein fällt unter `normal` und ist kein eigener thermischer Zustand.
 
 ### Trage
 
@@ -304,21 +314,21 @@ Der Wärmekredit ersetzt bei Bedarf Kleidung am Körper. Er darf nie funktionale
 
 #### `14 bis <18 °C`
 
-- `awake + active`: normalerweise keine externe Isolation,
-- `awake + calm/normal`: leichte Decke optional,
-- `asleep`: leichte Decke bevorzugt.
+- `Sehr aktiv` (`awake + active`): normalerweise keine externe Isolation,
+- `Wach` (`awake + normal`): leichte Decke optional,
+- `Schläft` (`asleep`): leichte Decke bevorzugt.
 
 #### `10 bis <14 °C`
 
-- `awake + active`: leichte Decke oder keine externe Isolation mit entsprechend wärmerer Körperkleidung,
-- `awake + calm/normal`: leichter Fußsack bevorzugt,
-- `asleep`: leichter Fußsack bevorzugt.
+- `Sehr aktiv`: leichte Decke oder keine externe Isolation mit entsprechend wärmerer Körperkleidung,
+- `Wach`: leichter Fußsack bevorzugt,
+- `Schläft`: leichter Fußsack bevorzugt.
 
 #### `5 bis <10 °C`
 
-- `awake + active`: leichter Fußsack bevorzugt,
-- `awake + calm/normal`: warmer Fußsack bevorzugt,
-- `asleep`: warmer Fußsack bevorzugt.
+- `Sehr aktiv`: leichter Fußsack bevorzugt,
+- `Wach`: warmer Fußsack bevorzugt,
+- `Schläft`: warmer Fußsack bevorzugt.
 
 #### `<5 °C`
 
@@ -409,7 +419,21 @@ Zusätzliche Decke/Jacke:
 
 - nur **über** dem bereits korrekt geschlossenen Gurt.
 
-## 11. Schuhe / Bodenkontakt
+## 11. Modus `indoor`
+
+`indoor` ist normale Wachkleidung anhand der Raumtemperatur und nicht Schlafkleidung.
+
+- thermische Referenz: ausschließlich `roomTempC`,
+- `normal`: keine Aktivitätskorrektur,
+- `active`: `-1 thermalStep`,
+- keine Wind-, Regen- oder UV-Regeln,
+- keine wetterbedingte Außenschicht,
+- keine Mütze oder Handschuhe allein aus der Raumtemperaturbaseline,
+- keine TOG-/Schlafsacklogik.
+
+Für die körpernahen Slots wird dieselbe kalibrierte Temperaturstaffel als Ausgangspunkt verwendet; reine Außenschutzslots werden im Drinnenmodus entfernt. Damit bleiben Body, Hose, Mittelschicht und Füße konsistent zur bestehenden Kalibrierung, ohne Außenwetter zu simulieren oder anzuzeigen.
+
+## 12. Schuhe / Bodenkontakt
 
 - `groundContact: none`: keine Schuhe allein aus Temperaturgründen; Socken/Booties je Bedarf,
 - `standing`: wettergerechte Schuhe abhängig von Untergrund/Wetter,
@@ -417,9 +441,9 @@ Zusätzliche Decke/Jacke:
 
 Schuhe sind austauschbar und beeinflussen nicht die globale Rumpf-Wärmebewertung.
 
-## 12. Schlafmodus – generische TOG-Orientierung
+## 13. Schlafmodus – generische TOG-Orientierung
 
-### 12.1 Sicherheitsrahmen
+### 13.1 Sicherheitsrahmen
 
 - Raumtemperatur, nicht Außentemperatur,
 - keine Mütze,
@@ -433,13 +457,13 @@ Schuhe sind austauschbar und beeinflussen nicht die globale Rumpf-Wärmebewertun
 
 16–20 °C bleibt der Safer-Sleep-Orientierungsbereich.
 
-### 12.2 Warum trotzdem eine generische Tabelle existiert
+### 13.2 Warum trotzdem eine generische Tabelle existiert
 
 Der Lullaby Trust stellt bewusst keine universelle TOG/Kleidungs-Tabelle bereit, weil Material, Layer und Baby variieren. V1 braucht für die gewünschte Austauschfunktion dennoch eine generische Produktorientierung.
 
 Die folgenden Bänder sind daher aus überlappenden Bereichen mehrerer Schlafsackanbieter kalibriert und werden in der UI als **Orientierung** gekennzeichnet.
 
-### 12.3 Verfügbare Schlafsack-Slots
+### 13.3 Verfügbare Schlafsack-Slots
 
 - `none`,
 - `0.5`,
@@ -448,7 +472,7 @@ Die folgenden Bänder sind daher aus überlappenden Bereichen mehrerer Schlafsac
 - `2.5`,
 - `3.5 TOG`.
 
-### 12.4 Schlaf-Wärmegewicht
+### 13.4 Schlaf-Wärmegewicht
 
 Nur für die interne Austauschlogik:
 
@@ -470,7 +494,7 @@ Unterkleidung:
 
 Diese Punkte sind **keine TOG-Einheiten**; sie sind lediglich Rebalancing-Gewichte.
 
-### 12.5 Kalibrierte Hauptempfehlungen
+### 13.5 Kalibrierte Hauptempfehlungen
 
 | Raumtemperatur | Hauptempfehlung | typische gleichwertige Alternative |
 |---|---|---|
@@ -486,7 +510,7 @@ Unter `16 °C` erscheint zusätzlich ein Hinweis, den Raum wenn möglich Richtun
 
 Bei sehr heißem Raum darf `kein Schlafsack` die klare Hauptempfehlung sein.
 
-### 12.6 Dynamischer Schlafsacktausch
+### 13.6 Dynamischer Schlafsacktausch
 
 Beim Wechsel des Schlafsacks:
 
@@ -502,13 +526,13 @@ Beispiel bei 18–20 °C:
 - Nutzer wählt `1.0 TOG`,
 - Engine ergänzt entsprechend mehr körpernahe Schlafkleidung statt loser Bettware.
 
-### 12.7 `wärmer` / `dünner` im Schlafmodus
+### 13.7 `wärmer` / `dünner` im Schlafmodus
 
 Die Schnellkorrektur verändert das interne Zielgewicht um ungefähr `+1` bzw. `-1`, bevorzugt durch Austausch **eines** Elements. Sicherheitsregeln bleiben unverändert.
 
-## 13. Austausch- und Rebalancingregeln
+## 14. Austausch- und Rebalancingregeln
 
-### 13.1 Slots
+### 14.1 Slots
 
 Empfehlungen bestehen aus semantischen Slots, z. B.:
 
@@ -525,7 +549,7 @@ Empfehlungen bestehen aus semantischen Slots, z. B.:
 - `sleep_bag`,
 - `sleep_underlayer`.
 
-### 13.2 Alternative wählen
+### 14.2 Alternative wählen
 
 Beim Tap auf ein Teil:
 
@@ -536,7 +560,7 @@ Beim Tap auf ein Teil:
 5. Wahl locken,
 6. gesamte Empfehlung neu berechnen.
 
-### 13.3 Rebalancing
+### 14.3 Rebalancing
 
 Die Engine verändert zuerst den kleinstmöglichen anderen Slot.
 
@@ -547,11 +571,11 @@ Beispiele:
 - Regenverdeck → kein Regenverdeck bei Regen: Regenjacke wird erforderlich,
 - 2.5 TOG → 1.0 TOG: Schlaf-Unterkleidung wird wärmer.
 
-### 13.4 Lock-Lebensdauer
+### 14.4 Lock-Lebensdauer
 
 Ein manueller Lock gilt nur für die aktuelle Recommendation-Session. Bei komplett neuem Wetter/Ort/Modus darf eine neue Empfehlung ohne alten Lock gestartet werden.
 
-## 14. Nackentest
+## 15. Nackentest
 
 ### `warm_dry`
 
@@ -570,7 +594,7 @@ Ein manueller Lock gilt nur für die aktuelle Recommendation-Session. Bei komple
 
 Kalte Hände/Füße allein verändern die globale Wärmestufe nicht.
 
-## 15. Wärmetendenz
+## 16. Wärmetendenz
 
 - `runs_cool`: `+0.5 thermalStep`,
 - `neutral`: `0`,
@@ -578,7 +602,7 @@ Kalte Hände/Füße allein verändern die globale Wärmestufe nicht.
 
 V1 verwendet bewusst nur einen kleinen Bias. Er wird nicht automatisch gelernt.
 
-## 16. Extremwetter-Hinweise
+## 17. Extremwetter-Hinweise
 
 Produkt-Schwellen für zusätzliche Hinweise:
 
@@ -589,7 +613,7 @@ Produkt-Schwellen für zusätzliche Hinweise:
 
 Die Engine zeigt weiterhin ein Outfit, empfiehlt aber Exposition zu reduzieren/anzupassen und häufig zu kontrollieren. Keine garantierte Aufenthaltsdauer nennen.
 
-## 17. Strukturierte Safety-/Reason-Codes
+## 18. Strukturierte Safety-/Reason-Codes
 
 Mindestens:
 
@@ -617,32 +641,36 @@ Mindestens:
 - `STRONG_WIND_CAUTION`,
 - `MANUAL_LOCK_OVERRIDDEN_FOR_SAFETY`.
 
-## 18. Kalibrierungs-Invarianten für Tests
+## 19. Kalibrierungs-Invarianten für Tests
 
 1. Kinderwagen setzt Aktivität nicht automatisch auf passiv.
 2. `strollerState: asleep` ist thermisch wärmer als `awake + active` bei identischem Wetter.
-3. Warmer Fußsack kann Körperkleidung ersetzen.
-4. Austausch warmer Fußsack → leichte Decke muss Rebalancing auslösen.
-5. Regenverdeck und Regenjacke werden im geschützten Kinderwagen nicht unnötig doppelt verlangt.
-6. Sonnensegel/Sonnenschirm wird bei direkter Sonne im Kinderwagen bevorzugt.
-7. Wind wird nicht thermisch doppelt gerechnet, wenn `apparentTempIncludes` Wind enthält.
-8. Windschutz kann trotzdem trotz scheinbarer Temperatur verlangt werden.
-9. `precipProbability <40` allein erzeugt kein Regenelement.
-10. `precipProbability >=60` im relevanten Zeitraum erzeugt Regenschutz.
-11. Trage reduziert Rumpfisolation, nicht automatisch Fuß-/Kopfschutz.
-12. Jacke + Tragecover dürfen nicht unbegrenzt Wärmekredite stapeln.
-13. Winteroverall ist nie `under_harness`.
-14. Schlaf nutzt nie Außentemperatur.
-15. Alle fünf TOGs plus `none` sind austauschbar.
-16. TOG-Tausch rebalanciert Unterkleidung.
-17. Schlafmodus empfiehlt nie lose Bettware – auch bei `sleep_bag_none`.
-18. `styleTheme` verändert keine Fachentscheidung.
-19. Manueller Item-Lock bleibt in derselben Session erhalten.
-20. Sicherheitsregel darf Lock überstimmen und muss einen strukturierten Grund liefern.
-21. `wärmer` / `dünner` verändert möglichst wenig Teile.
-22. Nackentest lernt in V1 keinen permanenten Bias.
-23. Schuhe werden ohne Bodenkontakt nicht automatisch empfohlen.
-24. `cabinTempSource: estimated` bedeutet in V1 exakt die neutrale 20-°C-Annahme und wird nicht aus Außenwetter abgeleitet.
-25. `manual` und `measured` verwenden den angegebenen Innenraumwert ohne Schätzkennzeichnung.
-26. Manuelle Änderung der Innenraumtemperatur setzt die Quelle auf `manual`; Zurückschalten auf `estimated` setzt wieder 20 °C.
-27. Gurtsicherheitsregeln sind für `manual | measured | estimated` identisch und unabhängig von der Schätzhöhe.
+3. Die UI bildet Kinderwagen genau auf `Schläft | Wach | Sehr aktiv` ab; `Ruhig` ist kein eigener Zustand.
+4. Warmer Fußsack kann Körperkleidung ersetzen.
+5. Austausch warmer Fußsack → leichte Decke muss Rebalancing auslösen.
+6. Regenverdeck und Regenjacke werden im geschützten Kinderwagen nicht unnötig doppelt verlangt.
+7. Sonnensegel/Sonnenschirm wird bei direkter Sonne im Kinderwagen bevorzugt.
+8. Wind wird nicht thermisch doppelt gerechnet, wenn `apparentTempIncludes` Wind enthält.
+9. Windschutz kann trotzdem trotz scheinbarer Temperatur verlangt werden.
+10. `precipProbability <40` allein erzeugt kein Regenelement.
+11. `precipProbability >=60` im relevanten Zeitraum erzeugt Regenschutz.
+12. Trage reduziert Rumpfisolation, nicht automatisch Fuß-/Kopfschutz.
+13. Jacke + Tragecover dürfen nicht unbegrenzt Wärmekredite stapeln.
+14. Winteroverall ist nie `under_harness`.
+15. `indoor` verwendet ausschließlich `roomTempC` und keine Wetterdaten.
+16. `indoor` empfiehlt keine reinen Außenschutzslots wie Outer, Mütze, Handschuhe oder Schuhe allein aus der Temperaturbaseline.
+17. `indoor + active` ist thermisch leichter als `indoor + normal`.
+18. Schlaf nutzt nie Außentemperatur.
+19. Alle fünf TOGs plus `none` sind austauschbar.
+20. TOG-Tausch rebalanciert Unterkleidung.
+21. Schlafmodus empfiehlt nie lose Bettware – auch bei `sleep_bag_none`.
+22. `styleTheme` verändert keine Fachentscheidung.
+23. Manueller Item-Lock bleibt in derselben Session erhalten.
+24. Sicherheitsregel darf Lock überstimmen und muss einen strukturierten Grund liefern.
+25. `wärmer` / `dünner` verändert möglichst wenig Teile.
+26. Nackentest lernt in V1 keinen permanenten Bias.
+27. Schuhe werden ohne Bodenkontakt nicht automatisch empfohlen.
+28. `cabinTempSource: estimated` bedeutet in V1 exakt die neutrale 20-°C-Annahme und wird nicht aus Außenwetter abgeleitet.
+29. `manual` und `measured` verwenden den angegebenen Innenraumwert ohne Schätzkennzeichnung.
+30. Manuelle Änderung der Innenraumtemperatur setzt die Quelle auf `manual`; Zurückschalten auf `estimated` setzt wieder 20 °C.
+31. Gurtsicherheitsregeln sind für `manual | measured | estimated` identisch und unabhängig von der Schätzhöhe.
