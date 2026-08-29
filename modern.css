@@ -154,6 +154,8 @@ body {
   border-radius: 30px;
   background: rgba(255,255,255,.92);
   box-shadow: var(--shadow-soft);
+}
+.outfit-card > .section-heading {
   touch-action: pan-y;
 }
 .section-heading h1 { font-size: 1.35rem; }
@@ -170,7 +172,7 @@ body {
   background: #f0f3f6;
 }
 .warmth-control::after {
-  content: "auch per Wischgeste";
+  content: "Überschrift wischen";
   position: absolute;
   right: 4px;
   top: -16px;
@@ -207,6 +209,7 @@ body {
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   padding: 3px 2px 10px;
+  touch-action: pan-x;
   -webkit-overflow-scrolling: touch;
 }
 .clothing-card { scroll-snap-align: start; }
