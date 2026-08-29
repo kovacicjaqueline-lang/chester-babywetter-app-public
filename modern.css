@@ -1,62 +1,73 @@
 :root {
-  --bg: #dff0ff;
+  --bg: #e6f3ff;
   --surface: rgba(255,255,255,.72);
   --surface-strong: #fff;
-  --ink: #24344d;
-  --muted: #71809a;
-  --line: rgba(61,91,128,.10);
-  --accent: #4f7fb7;
-  --sage: #e7f4ef;
-  --sage-ink: #4f7468;
-  --warning: #fff0d9;
+  --ink: #243651;
+  --muted: #71819a;
+  --line: rgba(65,91,128,.08);
+  --accent: #537eae;
+  --sage: #e8f4ee;
+  --sage-ink: #4d7466;
+  --warning: #fff3dd;
   --danger: #f9dfdf;
-  --radius-lg: 30px;
-  --radius-md: 20px;
-  --shadow-soft: 0 16px 42px rgba(76,117,165,.10);
-  --shadow-card: 0 8px 22px rgba(76,117,165,.08);
+  --radius-lg: 32px;
+  --radius-md: 22px;
+  --shadow-soft: 0 18px 44px rgba(69,107,150,.10);
+  --shadow-card: 0 9px 24px rgba(69,107,150,.09);
 }
 
 html { scroll-behavior: smooth; }
 
 body {
+  font-family: ui-rounded, "SF Pro Rounded", "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--ink);
   background:
-    radial-gradient(circle at 86% 7%, rgba(255,225,126,.42), transparent 10rem),
-    radial-gradient(circle at 8% 22%, rgba(255,255,255,.55), transparent 19rem),
-    linear-gradient(180deg, #bddfff 0%, #d9edff 35%, #edf7ff 70%, #f8fbff 100%);
+    radial-gradient(circle at 83% 8%, rgba(255,226,139,.44), transparent 9rem),
+    radial-gradient(ellipse at 5% 19%, rgba(255,255,255,.58), transparent 15rem),
+    radial-gradient(ellipse at 92% 39%, rgba(255,255,255,.32), transparent 19rem),
+    linear-gradient(180deg, #bfddf7 0%, #d8eafb 28%, #e9f4fc 62%, #f8fbfd 100%);
+  background-attachment: fixed;
 }
 
 .app-shell {
   width: min(100%, 720px);
-  padding: 0 16px calc(104px + var(--safe-bottom));
+  padding: 0 17px calc(104px + var(--safe-bottom));
 }
 
 .topbar {
   position: sticky;
   top: 0;
   z-index: 50;
-  min-height: 60px;
-  margin-inline: -16px;
-  padding: max(10px, env(safe-area-inset-top)) 16px 6px;
-  background: linear-gradient(180deg, rgba(190,223,255,.92), rgba(202,229,255,.70) 72%, rgba(202,229,255,0));
+  min-height: 58px;
+  margin-inline: -17px;
+  padding: max(10px, env(safe-area-inset-top)) 17px 4px;
+  background: linear-gradient(180deg, rgba(191,221,248,.92), rgba(205,229,249,.52) 78%, rgba(205,229,249,0));
   border-bottom: 0;
-  backdrop-filter: blur(18px) saturate(145%);
+  backdrop-filter: blur(18px) saturate(140%);
 }
 
 .location-button {
-  min-height: 40px;
-  padding: 0 12px;
+  min-height: 38px;
+  padding: 0 5px;
   border: 0;
   border-radius: 999px;
-  background: rgba(255,255,255,.64);
+  background: transparent;
   box-shadow: none;
 }
 
-.location-line { font-size: .86rem; }
+.location-line {
+  font-size: .9rem;
+  font-weight: 760;
+  letter-spacing: -.015em;
+}
 
 .icon-button {
+  width: 38px;
+  height: 38px;
   border: 0;
-  background: rgba(255,255,255,.64);
-  box-shadow: none;
+  border-radius: 50%;
+  background: rgba(255,255,255,.68);
+  box-shadow: 0 6px 18px rgba(69,107,150,.06);
 }
 
 .weather-hero {
@@ -66,9 +77,9 @@ body {
   display: grid;
   grid-template-columns: 1fr;
   justify-items: center;
-  gap: 14px;
-  margin-top: 6px;
-  padding: 24px 4px 12px;
+  gap: 12px;
+  margin-top: 2px;
+  padding: 28px 2px 18px;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -76,17 +87,30 @@ body {
   backdrop-filter: none;
 }
 
+.weather-hero::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: -18px;
+  left: 50%;
+  width: min(94vw, 600px);
+  height: 280px;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse, rgba(255,255,255,.46), rgba(255,255,255,0) 69%);
+  pointer-events: none;
+}
+
 .weather-hero::after {
   content: "";
   position: absolute;
   z-index: -1;
-  top: -12px;
-  left: 50%;
-  width: min(82vw, 520px);
-  height: 250px;
-  transform: translateX(-50%);
+  top: 68px;
+  right: 4%;
+  width: 74px;
+  height: 74px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,255,255,.34), rgba(255,255,255,0) 70%);
+  background: radial-gradient(circle, rgba(255,230,151,.34), rgba(255,230,151,0) 72%);
+  filter: blur(2px);
   pointer-events: none;
 }
 
@@ -99,62 +123,67 @@ body {
 .weather-hero .eyebrow {
   display: inline-flex;
   padding: 0;
-  border-radius: 0;
   background: transparent;
-  color: #5f7692;
-  font-size: .62rem;
+  color: #688099;
+  font-size: .58rem;
+  font-weight: 780;
+  letter-spacing: .12em;
 }
 
 .temperature-line {
   justify-content: center;
-  margin-top: 2px;
+  gap: 12px;
+  margin-top: 0;
 }
 
 .temperature {
-  font-size: clamp(5rem, 22vw, 6.2rem);
-  font-weight: 710;
-  color: #22344f;
-  letter-spacing: -.06em;
+  font-size: clamp(5.1rem, 22vw, 6.4rem);
+  font-weight: 660;
+  color: #243651;
+  letter-spacing: -.075em;
+  line-height: .95;
 }
 
 .weather-symbol {
-  font-size: 2.45rem;
-  filter: saturate(.9);
+  transform: translateY(-2px);
+  font-size: 2.65rem;
+  filter: saturate(.86) drop-shadow(0 5px 10px rgba(69,107,150,.08));
 }
 
 .weather-description {
-  margin-top: 6px;
-  color: #506681;
-  font-size: .92rem;
-  font-weight: 680;
+  margin-top: 7px;
+  color: #526985;
+  font-size: .94rem;
+  font-weight: 690;
+  letter-spacing: -.01em;
 }
 
 .weather-adjust-row {
   justify-content: center;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .weather-adjust-row .text-button {
-  min-height: 30px;
-  padding-inline: 2px;
-  color: #4f77a6;
+  min-height: 28px;
+  padding-inline: 4px;
+  color: #557ba6;
+  font-size: .72rem;
+  font-weight: 700;
 }
 
 .weather-facts {
-  width: min(100%, 440px);
+  width: min(100%, 430px);
   grid-template-columns: repeat(4, minmax(0,1fr));
-  gap: 0;
-  margin-inline: auto;
-  padding: 8px 0 0;
-  border-radius: 0;
+  gap: 4px;
+  margin: 3px auto 0;
+  padding: 10px 0 0;
   background: transparent;
 }
 
 .weather-fact {
   min-width: 0;
-  padding: 6px 5px;
+  padding: 4px 3px 5px;
   border: 0;
-  border-right: 1px solid rgba(61,91,128,.10);
   border-radius: 0;
   background: transparent;
   box-shadow: none;
@@ -162,24 +191,34 @@ body {
   text-align: center;
 }
 
-.weather-fact:last-child { border-right: 0; }
-.weather-fact span { text-align: center; }
+.weather-fact span {
+  order: 2;
+  margin-top: 2px;
+  text-align: center;
+  color: #8390a3;
+  font-size: .52rem;
+  font-weight: 760;
+  letter-spacing: .06em;
+}
+
 .weather-fact strong {
-  font-size: .8rem;
-  color: #2d4160;
+  order: 1;
+  color: #314761;
+  font-size: .83rem;
+  font-weight: 760;
 }
 
 .situation-strip {
   margin: 12px 0 0;
-  padding: 0 2px 12px;
-  border-bottom: 1px solid rgba(61,91,128,.09);
+  padding: 2px 1px 9px;
+  border-bottom: 0;
   touch-action: pan-y;
 }
 
 .situation-button {
-  grid-template-columns: 40px 1fr 22px;
-  min-height: 60px;
-  padding: 6px 0;
+  grid-template-columns: 38px 1fr 22px;
+  min-height: 56px;
+  padding: 5px 1px;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -188,16 +227,19 @@ body {
 }
 
 .situation-button strong {
-  font-size: .96rem;
-  color: #2c405e;
+  font-size: .98rem;
+  font-weight: 760;
+  color: #2e435f;
+  letter-spacing: -.015em;
 }
 
 .situation-icon {
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  background: rgba(255,255,255,.58);
-  color: #4f7468;
+  background: rgba(239,248,244,.74);
+  color: #55786c;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.55);
 }
 
 .situation-strip::after { content: none; }
@@ -207,7 +249,7 @@ body {
 .outfit-card {
   position: relative;
   margin-top: 0;
-  padding: 18px 0 8px;
+  padding: 13px 0 6px;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -216,32 +258,34 @@ body {
 }
 
 .outfit-card > .section-heading {
-  padding-inline: 2px;
+  padding-inline: 1px;
   touch-action: pan-y;
 }
 
 .section-heading h1 {
-  font-size: 1.3rem;
-  color: #283b57;
+  font-size: 1.18rem;
+  font-weight: 780;
+  color: #2a3f5a;
+  letter-spacing: -.025em;
 }
 
 .confidence-pill {
-  padding: 5px 8px;
+  padding: 4px 8px;
   border: 0;
-  background: rgba(255,255,255,.50);
-  color: #486759;
-  font-size: .6rem;
+  background: rgba(255,255,255,.42);
+  color: #4d7365;
+  font-size: .56rem;
   box-shadow: none;
 }
 
 .warmth-control {
   position: relative;
-  gap: 2px;
-  margin: 10px 0 12px;
-  padding: 3px;
+  gap: 1px;
+  margin: 8px 0 15px;
+  padding: 2px;
   border: 0;
   border-radius: 999px;
-  background: rgba(255,255,255,.42);
+  background: rgba(255,255,255,.24);
   box-shadow: none;
 }
 
@@ -249,9 +293,11 @@ body {
 
 .warmth-control button {
   flex: 1 1 0;
-  min-height: 36px;
+  min-height: 34px;
   border: 0;
-  color: #71809a;
+  color: #75869c;
+  font-size: .66rem;
+  font-weight: 720;
 }
 
 .warmth-control button.is-active {
@@ -259,27 +305,27 @@ body {
   align-items: center;
   justify-content: center;
   background: rgba(255,255,255,.88);
-  color: #2d4160;
-  box-shadow: 0 3px 10px rgba(76,117,165,.07);
+  color: #314762;
+  box-shadow: 0 5px 15px rgba(69,107,150,.07);
 }
 
 #changeLookButton {
   flex: 0 0 auto;
-  min-width: 84px;
+  min-width: 88px;
   border: 0;
   background: transparent;
-  color: #4f77a6;
+  color: #557aa5;
 }
 
 .outfit-grid {
   grid-auto-flow: column;
-  grid-auto-columns: minmax(110px, 32%);
+  grid-auto-columns: minmax(112px, 32%);
   grid-template-columns: none;
   justify-content: start;
-  gap: 13px;
+  gap: 14px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
-  padding: 4px 2px 10px;
+  padding: 4px 2px 14px;
   touch-action: pan-x;
   -webkit-overflow-scrolling: touch;
 }
@@ -290,39 +336,62 @@ body {
 }
 
 .clothing-image-shell {
+  position: relative;
+  overflow: hidden;
   border: 0;
-  border-radius: 24px;
-  background: rgba(255,255,255,.76);
-  box-shadow: 0 8px 20px rgba(76,117,165,.08);
+  border-radius: 30px;
+  background: linear-gradient(145deg, rgba(255,255,255,.90), rgba(247,250,252,.68));
+  box-shadow:
+    0 12px 28px rgba(69,107,150,.09),
+    inset 0 0 0 1px rgba(255,255,255,.58);
+}
+
+.clothing-card:nth-child(3n + 2) .clothing-image-shell {
+  background: linear-gradient(145deg, rgba(248,252,255,.92), rgba(238,247,255,.70));
+}
+
+.clothing-card:nth-child(3n + 3) .clothing-image-shell {
+  background: linear-gradient(145deg, rgba(255,253,249,.94), rgba(249,246,241,.70));
 }
 
 .clothing-name {
   margin-top: 8px;
-  color: #2d4160;
-  font-size: .76rem;
-  font-weight: 760;
+  padding-inline: 3px;
+  color: #344963;
+  font-size: .73rem;
+  font-weight: 740;
+  line-height: 1.08;
+  text-align: center;
 }
 
 .reason-box {
-  margin-top: 8px;
-  padding: 10px 2px 12px;
+  margin-top: 6px;
+  padding: 9px 2px 11px;
   border: 0;
-  border-bottom: 1px solid rgba(61,91,128,.09);
   border-radius: 0;
   background: transparent;
 }
 
-.reason-box p { color: #697791; }
+.reason-box p {
+  color: #748198;
+  font-size: .72rem;
+  line-height: 1.45;
+}
 
 .notice-row {
+  margin-top: 5px;
+  padding: 10px 11px;
   border: 0;
-  border-radius: 0;
-  background: transparent;
+  border-radius: 15px;
+  background: rgba(255,247,229,.56);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.40);
 }
 
+.notice-row strong { color: #4b5360; }
+
 .neck-check {
-  margin-top: 8px;
-  padding: 12px 2px 10px;
+  margin-top: 7px;
+  padding: 10px 2px 8px;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -332,15 +401,16 @@ body {
   min-height: 34px;
   border: 0;
   border-radius: 999px;
-  background: rgba(255,255,255,.62);
-  color: #355578;
+  background: rgba(255,255,255,.54);
+  color: #3d5f84;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.34);
 }
 
 .hourly-card {
-  margin: 8px 0 0;
-  padding: 14px 0 8px;
+  margin: 12px 0 0;
+  padding: 13px 0 7px;
   border: 0;
-  border-top: 1px solid rgba(61,91,128,.09);
+  border-top: 1px solid rgba(65,91,128,.07);
   border-radius: 0;
   background: transparent;
   box-shadow: none;
@@ -348,24 +418,26 @@ body {
 }
 
 .hourly-card .section-heading h2 {
-  font-size: .94rem;
-  color: #2d4160;
+  font-size: .88rem;
+  font-weight: 760;
+  color: #344963;
+  letter-spacing: -.015em;
 }
 
 .hourly-scroll {
-  grid-auto-columns: 70px;
-  gap: 4px;
-  padding: 7px 0 4px;
+  grid-auto-columns: 67px;
+  gap: 2px;
+  padding: 8px 0 3px;
   scroll-snap-type: x mandatory;
 }
 
 .hour-card {
-  min-height: 88px;
+  min-height: 86px;
   align-content: center;
   gap: 5px;
   padding: 8px 4px;
   border: 0;
-  border-radius: 16px;
+  border-radius: 22px;
   background: transparent;
   box-shadow: none;
   scroll-snap-align: start;
@@ -374,31 +446,33 @@ body {
 .hour-card[aria-current="true"],
 .hour-card.is-current,
 .hour-card.is-selected {
-  background: rgba(255,255,255,.56);
+  background: rgba(255,255,255,.57);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.30);
 }
 
-.hour-card .hour-symbol { font-size: 1.28rem; }
-.hour-card strong { color: #2d4160; }
+.hour-card .hour-symbol { font-size: 1.32rem; }
+.hour-card strong {
+  color: #344963;
+  font-size: .75rem;
+}
 
 .quick-actions {
   gap: 0;
-  margin: 4px 0 0;
-  border-top: 1px solid rgba(61,91,128,.09);
+  margin: 3px 0 0;
+  border-top: 1px solid rgba(65,91,128,.07);
 }
 
 .quick-actions button {
-  min-height: 46px;
+  min-height: 44px;
   justify-content: center !important;
   padding: 8px 10px;
   border: 0;
-  border-right: 1px solid rgba(61,91,128,.08);
   border-radius: 0;
   background: transparent;
-  color: #65758e;
+  color: #708096;
   box-shadow: none;
+  font-size: .68rem;
 }
-
-.quick-actions button:last-child { border-right: 0; }
 
 .bottom-nav {
   position: fixed;
@@ -409,50 +483,53 @@ body {
   width: min(calc(100% - 24px), 500px);
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 3px;
-  padding: 6px;
+  gap: 2px;
+  padding: 5px;
   border: 0;
-  border-radius: 24px;
-  background: rgba(249,252,255,.82);
-  box-shadow: 0 12px 34px rgba(61,91,128,.13);
-  backdrop-filter: blur(24px) saturate(160%);
+  border-radius: 26px;
+  background: rgba(250,253,255,.78);
+  box-shadow: 0 14px 38px rgba(62,91,126,.13);
+  backdrop-filter: blur(24px) saturate(150%);
 }
 
 .bottom-nav a,
 .bottom-nav button {
-  min-height: 48px;
+  min-height: 47px;
   display: grid;
   place-items: center;
   align-content: center;
   gap: 2px;
   padding: 4px;
   border: 0;
-  border-radius: 18px;
+  border-radius: 20px;
   background: transparent;
-  color: #74849c;
-  font-size: .58rem;
+  color: #7a899c;
+  font-size: .56rem;
   font-weight: 700;
   text-decoration: none;
 }
 
 .bottom-nav a:first-child {
-  background: rgba(228,240,251,.9);
-  color: #385a80;
+  background: rgba(226,239,249,.82);
+  color: #416587;
 }
 
-.bottom-nav .nav-icon { font-size: 1.02rem; line-height: 1; }
+.bottom-nav .nav-icon {
+  font-size: 1.02rem;
+  line-height: 1;
+}
 
 .sheet-dialog {
   width: min(100% - 10px, 560px);
   max-height: min(92vh, 780px);
   margin-bottom: 5px;
-  border-radius: 30px 30px 24px 24px;
-  box-shadow: 0 -12px 55px rgba(48,67,91,.22);
+  border-radius: 32px 32px 25px 25px;
+  box-shadow: 0 -12px 55px rgba(48,67,91,.20);
 }
 
 .sheet-dialog::backdrop {
-  background: rgba(38,55,79,.26);
-  backdrop-filter: blur(5px);
+  background: rgba(38,55,79,.24);
+  backdrop-filter: blur(6px);
 }
 
 .sheet { padding: 20px 18px 22px; }
@@ -461,8 +538,8 @@ body {
   top: -20px;
   margin: -20px -18px 14px;
   padding: 24px 18px 14px;
-  border-radius: 30px 30px 0 0;
-  background: rgba(255,255,255,.95);
+  border-radius: 32px 32px 0 0;
+  background: rgba(255,255,255,.96);
   touch-action: pan-y;
 }
 
@@ -471,7 +548,7 @@ body {
   position: absolute;
   top: 8px;
   left: 50%;
-  width: 42px;
+  width: 40px;
   height: 4px;
   transform: translateX(-50%);
   border-radius: 999px;
@@ -481,7 +558,7 @@ body {
 .field input,
 .field select {
   min-height: 50px;
-  border-radius: 16px;
+  border-radius: 18px;
   background: #f7fbff;
 }
 
@@ -489,42 +566,42 @@ body {
 .situation-option,
 .feedback-option,
 .alternative-option {
-  border-radius: 18px;
+  border-radius: 20px;
 }
 
 .primary-button,
 .secondary-button,
 .file-button {
   min-height: 50px;
-  border-radius: 16px;
+  border-radius: 18px;
 }
 
-.primary-button { background: #35567b; }
+.primary-button { background: #3d5f84; }
 
 @media (max-width: 520px) {
   .weather-hero {
-    gap: 12px;
-    padding-top: 22px;
+    gap: 11px;
+    padding-top: 24px;
   }
 
   .weather-facts {
     grid-template-columns: repeat(4, minmax(0,1fr));
   }
 
-  .outfit-grid { grid-auto-columns: minmax(108px, 32vw); }
+  .outfit-grid { grid-auto-columns: minmax(109px, 32vw); }
 }
 
 @media (max-width: 390px) {
-  .app-shell { padding-inline: 14px; }
+  .app-shell { padding-inline: 15px; }
 
   .topbar {
-    margin-inline: -14px;
-    padding-inline: 14px;
+    margin-inline: -15px;
+    padding-inline: 15px;
   }
 
   .weather-hero { padding-inline: 0; }
-  .weather-fact { padding-inline: 3px; }
-  .outfit-grid { grid-auto-columns: 104px; }
+  .weather-fact { padding-inline: 2px; }
+  .outfit-grid { grid-auto-columns: 105px; }
   .bottom-nav { width: calc(100% - 16px); }
 }
 
@@ -541,7 +618,7 @@ body {
   .outfit-grid {
     grid-auto-flow: column;
     grid-template-columns: none;
-    grid-auto-columns: 132px;
+    grid-auto-columns: 136px;
     overflow-x: auto;
   }
 }
@@ -550,13 +627,16 @@ body {
   .situation-button,
   .outfit-card,
   .hour-card,
+  .clothing-image-shell,
   .bottom-nav a,
   .bottom-nav button {
     transition: transform .18s ease, background .18s ease, box-shadow .18s ease;
   }
 
+  .clothing-card:active .clothing-image-shell { transform: scale(.975); }
+
   .situation-strip.is-swipe-changing .situation-button,
   .outfit-card.is-swipe-changing {
-    transform: scale(.985);
+    transform: scale(.99);
   }
 }
