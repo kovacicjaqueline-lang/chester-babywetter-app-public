@@ -30,6 +30,24 @@
   outline: none;
 }
 
+/* Outfit copy cleanup: keep the current multi-row outfit grid from modern.css and move the swipe affordance to the visible controls. */
+.outfit-card > .section-heading {
+  justify-content: flex-end;
+  touch-action: auto;
+}
+.warmth-control {
+  touch-action: pan-y;
+}
+.warmth-control::after {
+  content: none;
+}
+#safetyNotice .notice-row[data-notice-code="STROLLER_DO_NOT_COVER_AIRFLOW"] {
+  display: none;
+}
+#safetyNotice:not(:has(.notice-row:not([data-notice-code="STROLLER_DO_NOT_COVER_AIRFLOW"]))) {
+  display: none;
+}
+
 @media (max-width: 520px) {
   .weather-fact:first-child {
     grid-column: auto;
