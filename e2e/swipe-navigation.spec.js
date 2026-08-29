@@ -23,15 +23,27 @@ test('Situation lässt sich auf der Startseite nach links und rechts wischen', a
   await expect(page.locator('#situationLabel')).toHaveText('Kinderwagen');
 });
 
-test('Outfit reagiert auf horizontale Wischgeste mit derselben Wärmeaktion wie die Buttons', async ({ page }) => {
+test('Outfit-Überschrift reagiert auf Wischgeste, Kleidungs-Carousel bleibt horizontal bedienbar', async ({ page }) => {
   await openDemo(page);
   await expect(page.locator('[data-warmth="balanced"]')).toHaveAttribute('aria-pressed', 'true');
 
-  await swipe(page, '.outfit-card', { y: 18 });
+  await swipe(page, '.outfit-card > .section-heading', { y: 18 });
   await expect(page.locator('[data-warmth="warmer"]')).toHaveAttribute('aria-pressed', 'true');
 
-  await swipe(page, '.outfit-card', { fromX: 80, toX: 280, y: 18 });
+  await swipe(page, '.outfit-card > .section-heading', { fromX: 80, toX: 280, y: 18 });
   await expect(page.locator('[data-warmth="cooler"]')).toHaveAttribute('aria-pressed', 'true');
+
+  const touchActions = await page.evaluate(() => ({
+    card: getComputedStyle(document.querySelector('.outfit-card')).touchAction,
+    heading: getComputedStyle(document.querySelector('.outfit-card > .section-heading')).touchAction,
+    grid: getComputedStyle(document.querySelector('#outfitGrid')).touchAction
+  }));
+  expect(touchActions.card).toBe('auto');
+  expect(touchActions.heading).toBe('pan-y');
+  expect(touchActions.grid).toBe('pan-x');
+
+  const scrollable = await page.locator('#outfitGrid').evaluate((element) => element.scrollWidth > element.clientWidth);
+  expect(scrollable).toBe(true);
 });
 
 test('Bottom-Sheet kann über den Kopfbereich nach unten geschlossen werden', async ({ page }) => {
