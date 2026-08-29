@@ -14,7 +14,7 @@ const NOTICE_COPY = Object.freeze({
   CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT: ['Gurtpassform prüfen', 'Bei dieser dünnen Schicht prüfen, ob der Gurt weiterhin korrekt eng anliegt.'],
   CAR_CABIN_TEMPERATURE_ESTIMATED: ['Innenraumtemperatur geschätzt', 'Die Innenraumtemperatur ist eine Schätzung und kann manuell angepasst werden.'],
   SLEEP_NO_HAT: ['Beim Schlafen keine Mütze', 'In Innenräumen bleibt der Kopf beim Schlafen frei.'],
-  SLEEP_NO_LOOSE_BLANKET_OVER_BAG: ['Keine lose Decke im Bett', 'Keine lose Decke zusätzlich über dem Schlafsack verwenden.'],
+  SLEEP_NO_LOOSE_BLANKET_OVER_BAG: ['Keine lose Bettware im Bett', 'Keine lose Decke oder andere lose Bettware als Wärmeausgleich verwenden – unabhängig davon, ob ein Schlafsack getragen wird.'],
   SLEEP_NO_WEIGHTED_PRODUCTS: ['Keine gewichteten Schlafprodukte', 'Keine beschwerten Schlafsäcke oder Decken verwenden.'],
   SLEEP_USE_ROOM_TEMPERATURE: ['Raumtemperatur ist maßgeblich', 'Für Schlafempfehlungen wird die Raumtemperatur verwendet, nicht das Außenwetter.'],
   SLEEP_GENERIC_TOG_ORIENTATION: ['TOG als Orientierung', 'Die TOG-Auswahl ist eine generische Orientierung und ersetzt nicht den Nackentest.'],
