@@ -21,11 +21,11 @@ test('Nackentest-Hinweis und Feedbackstatus überlappen mobil nicht', async ({ p
   expect(statusBox.y).toBeGreaterThanOrEqual(guidanceBox.y + guidanceBox.height - 0.5);
 });
 
-test('Outfit-Karte blendet redundante Überschrift und dauerhaften Kinderwagenhinweis aus', async ({ page }) => {
+test('Outfit-Karte entfernt redundante Überschrift und blendet dauerhaften Kinderwagenhinweis aus', async ({ page }) => {
   await openDemo(page);
 
-  await expect(page.locator('#outfitHeading')).toHaveCount(1);
-  await expect(page.locator('#outfitHeading')).not.toBeVisible();
+  await expect(page.locator('#outfitHeading')).toHaveCount(0);
+  await expect(page.locator('#outfitCard')).toHaveAttribute('aria-label', 'Outfit-Empfehlung');
 
   const airflowNotice = page.locator('[data-notice-code="STROLLER_DO_NOT_COVER_AIRFLOW"]');
   await expect(airflowNotice).toHaveCount(1);

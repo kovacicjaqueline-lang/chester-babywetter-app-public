@@ -158,9 +158,6 @@ body {
 .outfit-card > .section-heading {
   justify-content: flex-end;
 }
-.outfit-card > .section-heading h1 {
-  display: none;
-}
 .section-heading h1 { font-size: 1.35rem; }
 .confidence-pill {
   padding: 6px 10px;

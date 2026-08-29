@@ -73,7 +73,7 @@ function createBottomNav() {
   nav.className = 'bottom-nav';
   nav.setAttribute('aria-label', 'Schnellnavigation');
   nav.innerHTML = `
-    <a href="#outfitHeading"><span class="nav-icon" aria-hidden="true">⌂</span><span>Outfit</span></a>
+    <a href="#outfitCard"><span class="nav-icon" aria-hidden="true">⌂</span><span>Outfit</span></a>
     <button type="button" data-open-dialog="situationDialog"><span class="nav-icon" aria-hidden="true">◌</span><span>Situation</span></button>
     <button type="button" data-open-dialog="catalogDialog"><span class="nav-icon" aria-hidden="true">▦</span><span>Kleidung</span></button>
     <button type="button" data-open-dialog="settingsDialog"><span class="nav-icon" aria-hidden="true">•••</span><span>Mehr</span></button>`;
