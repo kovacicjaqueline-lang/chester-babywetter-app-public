@@ -6,14 +6,15 @@ import { applyManualWeatherOverride } from './src/integration/manual-weather.js'
 import { validateImportEnvelopeV1 } from './src/integration/settings-import.js';
 import { APP_VERSION } from './src/version.js';
 import { ClothingAssetStore } from './ui/asset-store.js';
-import { renderAlternatives, renderCatalog, renderHourly, renderOutfit, renderSituation, renderSituationContext, renderSituationOptions, renderWeather } from './ui/render.js';
+import { renderAlternatives, renderCatalog, renderHourly, renderOutfit, renderWeather } from './ui/render.js';
+import { renderSituation, renderSituationContext, renderSituationOptions } from './ui/render-situations.js';
 
 const PROFILE_KEY = 'babyweather.v1.profile';
 const SETTINGS_KEY = 'babyweather.v1.settings';
 const UI_STATE_KEY = 'babyweather.v1.uiState';
 const WEATHER_CACHE_KEY = 'babyweather.v1.weatherCache';
 const DEMO_MODE = new URLSearchParams(location.search).get('demo') === '1';
-const MODES = new Set(['outdoor', 'stroller', 'carrier', 'car', 'sleep']);
+const MODES = new Set(['outdoor', 'stroller', 'carrier', 'car', 'indoor', 'sleep']);
 const STYLES = new Set(['neutral', 'boy', 'girl']);
 const BIASES = new Set(['runs_cool', 'neutral', 'runs_warm']);
 const NECK_FEEDBACKS = new Set(['warm_dry', 'hot_sweaty', 'cool']);
@@ -35,6 +36,7 @@ const DEFAULT_CONTEXTS = Object.freeze({
   stroller: { mode: 'stroller', plannedMinutes: 60, strollerState: 'awake', activity: 'normal', activitySource: 'user', sunExposure: 'shade', windProtection: 'partial' },
   carrier: { mode: 'carrier', plannedMinutes: 60, sunExposure: 'shade', placement: 'over_wearer_outerwear' },
   car: { mode: 'car', plannedMinutes: 30, includeOutdoorTransition: true, outsideTransitionMinutes: 5, ...estimateCabinTemperature() },
+  indoor: { mode: 'indoor', roomTempC: 20, activity: 'normal', activitySource: 'user' },
   sleep: { mode: 'sleep', roomTempC: 18.5 }
 });
 function sanitizeWeatherCacheMaxAgeMinutes(value) {
@@ -55,8 +57,8 @@ function sanitizeContexts(candidate) {
   const contexts = structuredClone(DEFAULT_CONTEXTS); if (!candidate || typeof candidate !== 'object') return contexts;
   for (const mode of MODES) {
     if (!candidate[mode] || typeof candidate[mode] !== 'object') continue; const source = candidate[mode];
-    if (mode === 'outdoor') { if (['calm','normal','active'].includes(source.activity)) contexts.outdoor.activity = source.activity; if (['shade','partial','direct','unknown'].includes(source.sunExposure)) contexts.outdoor.sunExposure = source.sunExposure; if (['none','standing','walking'].includes(source.groundContact)) contexts.outdoor.groundContact = source.groundContact; }
-    if (mode === 'stroller') { if (['awake','asleep'].includes(source.strollerState)) contexts.stroller.strollerState = source.strollerState; if (['calm','normal','active'].includes(source.activity)) contexts.stroller.activity = source.activity; if (['shade','partial','direct','unknown'].includes(source.sunExposure)) contexts.stroller.sunExposure = source.sunExposure; if (['none','partial','good','unknown'].includes(source.windProtection)) contexts.stroller.windProtection = source.windProtection; }
+    if (mode === 'outdoor') { contexts.outdoor.activity = source.activity === 'active' ? 'active' : 'normal'; if (['shade','partial','direct','unknown'].includes(source.sunExposure)) contexts.outdoor.sunExposure = source.sunExposure; if (['none','standing','walking'].includes(source.groundContact)) contexts.outdoor.groundContact = source.groundContact; }
+    if (mode === 'stroller') { contexts.stroller.strollerState = source.strollerState === 'asleep' ? 'asleep' : 'awake'; contexts.stroller.activity = source.strollerState === 'asleep' ? 'normal' : source.activity === 'active' ? 'active' : 'normal'; if (['shade','partial','direct','unknown'].includes(source.sunExposure)) contexts.stroller.sunExposure = source.sunExposure; if (['none','partial','good','unknown'].includes(source.windProtection)) contexts.stroller.windProtection = source.windProtection; }
     if (mode === 'carrier') { if (['shade','partial','direct','unknown'].includes(source.sunExposure)) contexts.carrier.sunExposure = source.sunExposure; if (['under_wearer_outerwear','over_wearer_outerwear'].includes(source.placement)) contexts.carrier.placement = source.placement; }
     if (mode === 'car') {
       if (source.cabinTempSource === 'estimated') Object.assign(contexts.car, estimateCabinTemperature());
@@ -65,6 +67,7 @@ function sanitizeContexts(candidate) {
       if (typeof source.includeOutdoorTransition === 'boolean') contexts.car.includeOutdoorTransition = source.includeOutdoorTransition;
       if (source.outsideTransitionMinutes === null || Number.isFinite(source.outsideTransitionMinutes)) contexts.car.outsideTransitionMinutes = source.outsideTransitionMinutes;
     }
+    if (mode === 'indoor') { if (source.roomTempC === null || Number.isFinite(source.roomTempC)) contexts.indoor.roomTempC = source.roomTempC; contexts.indoor.activity = source.activity === 'active' ? 'active' : 'normal'; }
     if (mode === 'sleep' && (source.roomTempC === null || Number.isFinite(source.roomTempC))) contexts.sleep.roomTempC = source.roomTempC;
   }
   return contexts;
@@ -112,7 +115,7 @@ function syncActiveWeatherFreshness(location = state.location) {
 }
 function resetSession() { session = createSession(`ui:${Date.now()}:${Math.random().toString(36).slice(2)}`); state.warmthDirection = 'balanced'; state.neckFeedback = null; }
 function requestForCurrentState() {
-  const weather = state.mode === 'sleep' ? null : state.weather;
+  const weather = ['sleep','indoor'].includes(state.mode) ? null : state.weather;
   const baseContext = structuredClone(state.contexts[state.mode]);
   const context = weather ? compensateWeatherRiskHorizon(baseContext, weather) : baseContext;
   return { requestId: `ui:${state.mode}`, requestedAt: nowIso(), profile: structuredClone(state.profile), context, weather, session, neckFeedback: state.neckFeedback };
@@ -277,10 +280,16 @@ function bindGlobalActions() {
 function bindSituationContext() {
   document.querySelector('#situationContextFields').addEventListener('change', (event) => {
     const target = event.target; const field = target.dataset?.contextField; if (!field) return; const context = state.contexts[state.mode];
-    if (target.type === 'checkbox') context[field] = target.checked;
-    else if (target.type === 'number') context[field] = target.value === '' ? null : Number(target.value);
-    else context[field] = target.value || null;
-    if (field === 'activity') context.activitySource = 'user';
+    if (state.mode === 'stroller' && field === 'strollerBehavior') {
+      context.strollerState = target.value === 'asleep' ? 'asleep' : 'awake';
+      context.activity = target.value === 'very_active' ? 'active' : 'normal';
+      context.activitySource = 'user';
+    } else {
+      if (target.type === 'checkbox') context[field] = target.checked;
+      else if (target.type === 'number') context[field] = target.value === '' ? null : Number(target.value);
+      else context[field] = target.value || null;
+      if (field === 'activity') { context.activity = context.activity === 'active' ? 'active' : 'normal'; context.activitySource = 'user'; }
+    }
     if (state.mode === 'car' && field === 'cabinTempC') {
       context.cabinTempSource = 'manual';
       const sourceField = document.querySelector('#situationContextFields [data-context-field="cabinTempSource"]');
