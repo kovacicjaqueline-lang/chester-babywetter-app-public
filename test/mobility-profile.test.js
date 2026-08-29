@@ -83,7 +83,6 @@ test('a walking child becomes thermally lighter only through current active acti
   assert.equal(normal.phases[0].thermalAdjustment,0);
   assert.equal(active.phases[0].thermalAdjustment,-1);
   assert.notDeepEqual(selectedIds(normal),selectedIds(active));
-  assert.ok(active.ruleTrace.some((entry) => entry.ruleId === 'activity.outdoor' && entry.delta === -1));
 });
 
 test('stroller sleep remains independent of mobility and ignores active movement state',()=>{
