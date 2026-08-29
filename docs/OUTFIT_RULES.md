@@ -14,7 +14,7 @@ Die Engine wendet Regeln in dieser Reihenfolge an:
 3. thermische Baseline,
 4. Wetter-Schutzanforderungen,
 5. Aktivität und externe Isolation,
-6. manuelle Wärmetendenz,
+6. Alter in den ersten Lebensmonaten und manuelle Wärmetendenz,
 7. manuelle Item-Locks / Austausch,
 8. `wärmer` / `dünner`,
 9. Nackentest-Korrektur,
@@ -185,6 +185,24 @@ Keine normale Aktivitätskorrektur. Körperkontakt wird über die Trage-Regeln a
 ### Auto / Schlaf
 
 Keine Aktivitätskorrektur.
+
+### 4.1 Alter als thermische Feinjustierung
+
+Das Alter wird aus `BabyProfile.birthDate` zum `requestedAt` der Empfehlung berechnet. Es gibt keinen separaten dauerhaft gespeicherten Alterswert.
+
+Für Wachkleidung gilt als vorsichtige V1-Produktheuristik:
+
+- `0 bis <3 vollendete Monate`: `+0.5 thermalStep`, sofern die jeweilige thermische Referenz `<28 °C` ist,
+- `>=3 Monate`: `0`,
+- unbekanntes/ungültiges Alter: `0` thermische Alterskorrektur.
+
+Die Korrektur gilt für `outdoor`, `stroller`, `carrier`, `indoor` sowie für sichere körpernahe Kleidung in `car/in_car`. Die Autositz-Gurtsicherheitsregeln bleiben dabei immer vorrangig. `outdoor_transition` übernimmt dieselbe Outdoor-Regel.
+
+Ab `28 °C` wird **keine zusätzliche Isolation allein wegen jungen Alters** ergänzt. Sonnen-/UV-Schutz und Hitzewarnungen bleiben unabhängig davon aktiv.
+
+Der Altersfaktor ist absichtlich klein: Er bedeutet nicht pauschal „eine zusätzliche Schicht“. Aktivität, Situation, externe Isolation, `warmthBias`, Wetter und Nackentest werden weiterhin separat berücksichtigt. Ein sieben Monate altes Baby erhält deshalb bei identischen übrigen Inputs keinen Altersaufschlag, während ein ein Monate altes Baby moderat wärmer kalibriert wird.
+
+Für `sleep` gibt es **keine** thermische Alterskorrektur; Schlafkleidung bleibt ausschließlich an Raumtemperatur, generischer TOG-Orientierung, Wärmetendenz und Nackentest ausgerichtet.
 
 ## 5. Windkalibrierung
 
@@ -674,3 +692,6 @@ Mindestens:
 29. `manual` und `measured` verwenden den angegebenen Innenraumwert ohne Schätzkennzeichnung.
 30. Manuelle Änderung der Innenraumtemperatur setzt die Quelle auf `manual`; Zurückschalten auf `estimated` setzt wieder 20 °C.
 31. Gurtsicherheitsregeln sind für `manual | measured | estimated` identisch und unabhängig von der Schätzhöhe.
+32. Ein Baby unter drei vollendeten Monaten erhält bei thermischer Referenz `<28 °C` in Wachkleidungsmodi `+0.5 thermalStep`; ab drei Monaten entfällt dieser Altersaufschlag.
+33. Unbekanntes Alter erzeugt keinen thermischen Altersaufschlag; die konservative direkte-Sonne-Regel bleibt davon unabhängig.
+34. Schlafempfehlungen ändern sich durch den thermischen Altersfaktor nicht.
