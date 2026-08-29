@@ -109,7 +109,7 @@ function initSwipeControls() {
   });
 
   const outfitCard = document.querySelector('.outfit-card');
-  const outfitSwipeSurface = outfitCard?.querySelector(':scope > .section-heading');
+  const outfitSwipeSurface = outfitCard?.querySelector(':scope > .warmth-control');
   bindHorizontalSwipe(outfitSwipeSurface, (direction) => {
     triggerWarmth(direction);
     flash(outfitCard);

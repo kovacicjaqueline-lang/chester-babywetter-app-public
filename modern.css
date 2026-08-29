@@ -156,7 +156,10 @@ body {
   box-shadow: var(--shadow-soft);
 }
 .outfit-card > .section-heading {
-  touch-action: pan-y;
+  justify-content: flex-end;
+}
+.outfit-card > .section-heading h1 {
+  display: none;
 }
 .section-heading h1 { font-size: 1.35rem; }
 .confidence-pill {
@@ -170,14 +173,7 @@ body {
   padding: 4px;
   border-radius: 999px;
   background: #f0f3f6;
-}
-.warmth-control::after {
-  content: "Überschrift wischen";
-  position: absolute;
-  right: 4px;
-  top: -16px;
-  color: #9299a2;
-  font-size: .52rem;
+  touch-action: pan-y;
 }
 .warmth-control button {
   flex: 1 1 0;
@@ -229,6 +225,12 @@ body {
 .notice-row {
   border: 1px solid rgba(31,38,48,.04);
   border-radius: 16px;
+}
+#safetyNotice .notice-row[data-notice-code="STROLLER_DO_NOT_COVER_AIRFLOW"] {
+  display: none;
+}
+#safetyNotice:not(:has(.notice-row:not([data-notice-code="STROLLER_DO_NOT_COVER_AIRFLOW"]))) {
+  display: none;
 }
 .neck-check {
   margin-top: 14px;
