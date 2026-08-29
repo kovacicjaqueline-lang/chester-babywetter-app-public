@@ -13,37 +13,35 @@ async function openStrollerDialog(page) {
   await expect(page.locator('#situationLabel')).toHaveText('Kinderwagen');
 }
 
-test('Kinderwagen zeigt Aktivität nur im Wachzustand und behält den Wert', async ({ page }) => {
+test('Kinderwagen bündelt Zustand und Aktivität in Schläft, Wach und Sehr aktiv', async ({ page }) => {
   await openDemo(page);
   await openStrollerDialog(page);
 
-  const state = page.locator('#situationDialog [data-context-field="strollerState"]');
-  const activity = page.locator('#situationDialog [data-context-field="activity"]');
+  const behavior = page.locator('#situationDialog [data-context-field="strollerBehavior"]');
+  await expect(behavior).toHaveValue('awake');
+  await expect(behavior.locator('option')).toHaveText(['Schläft', 'Wach', 'Sehr aktiv']);
+  await expect(page.locator('#situationDialog [data-context-field="strollerState"]')).toHaveCount(0);
+  await expect(page.locator('#situationDialog [data-context-field="activity"]')).toHaveCount(0);
 
-  await expect(state).toHaveValue('awake');
-  await expect(activity).toBeVisible();
-  await activity.selectOption('active');
+  await behavior.selectOption('very_active');
   await expect(page.locator('#outfitReason')).toContainText('sehr aktives Baby');
 
-  await state.selectOption('asleep');
-  await expect(activity).toBeHidden();
+  await behavior.selectOption('asleep');
   await expect(page.locator('#outfitReason')).toContainText('Schlafen im Kinderwagen');
 
-  await state.selectOption('awake');
-  await expect(activity).toBeVisible();
-  await expect(activity).toHaveValue('active');
-  await expect(page.locator('#outfitReason')).toContainText('sehr aktives Baby');
+  await behavior.selectOption('awake');
+  await expect(page.locator('#outfitReason')).not.toContainText('sehr aktives Baby');
 });
 
-test('Kinderwagen-Schlafzustand bleibt im mobilen Dialog ohne irrelevantes Aktivitätsfeld', async ({ page }, testInfo) => {
+test('Kinderwagen-Dialog zeigt auf Mobile nur einen kompakten Zustandswähler', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await openDemo(page);
   await openStrollerDialog(page);
 
-  const state = page.locator('#situationDialog [data-context-field="strollerState"]');
-  const activity = page.locator('#situationDialog [data-context-field="activity"]');
-  await state.selectOption('asleep');
-  await expect(activity).toBeHidden();
+  const behavior = page.locator('#situationDialog [data-context-field="strollerBehavior"]');
+  await behavior.selectOption('asleep');
+  await expect(behavior).toHaveValue('asleep');
+  await expect(page.locator('#situationDialog [data-context-field="activity"]')).toHaveCount(0);
 
   const screenshotPath = testInfo.outputPath('stroller-asleep-375x812.jpg');
   await page.screenshot({ path: screenshotPath, type: 'jpeg', quality: 60, fullPage: false });
