@@ -7,5 +7,19 @@
   "scope": "/",
   "display": "standalone",
   "background_color": "#f7f1eb",
-  "theme_color": "#f7efe7"
+  "theme_color": "#f7efe7",
+  "icons": [
+    {
+      "src": "/assets/icons/icon-192.webp",
+      "sizes": "192x192",
+      "type": "image/webp",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icons/icon-512.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any"
+    }
+  ]
 }
