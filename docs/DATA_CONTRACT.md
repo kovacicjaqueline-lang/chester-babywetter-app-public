@@ -31,7 +31,7 @@ Unbekannte höhere Schema-Versionen dürfen nicht stillschweigend importiert wer
 ## 3. Kern-Enums
 
 ```ts
-type SituationMode = "outdoor" | "stroller" | "carrier" | "car" | "sleep";
+type SituationMode = "outdoor" | "stroller" | "carrier" | "car" | "indoor" | "sleep";
 type ActivityLevel = "calm" | "normal" | "active";
 type ActivitySource = "default" | "inferred" | "user";
 type WarmthBias = "runs_cool" | "neutral" | "runs_warm";
@@ -62,6 +62,8 @@ type ItemKind =
   | "carrier_accessory"
   | "sleep_bag";
 ```
+
+`calm` bleibt in Schema V1 aus Rückwärtskompatibilitätsgründen lesbar. Die aktuelle App erzeugt für normale/ruhige Wachaktivität `normal`; vorhandenes `calm` wird beim Laden der UI-Kontexte auf `normal` normalisiert. Sichtbar unterschieden werden nur `normal` und `active` bzw. im Kinderwagen `Schläft | Wach | Sehr aktiv`.
 
 ## 4. Babyprofil
 
@@ -231,7 +233,7 @@ Zusätzliche Invarianten:
 - Dieselben Grenzen gelten bei Offline-Nutzung und als Fallback nach fehlgeschlagenem Online-Refresh.
 - Bei automatischen Wetterdaten löst der Übergang zu `stale` online einen erneuten Abruf aus; ein stale Datensatz bleibt nur als zeitlich begrenzter Fallback erhalten, wenn die Aktualisierung nicht gelingt.
 - Wenn bei stale automatischem Wetter ein bereits erreichter stündlicher Prognosepunkt als neuer Referenzpunkt verwendet wird, muss das Wetterrisikofenster für Wind, Regen und UV weiterhin den ab tatsächlicher Request-Zeit geplanten Zeitraum abdecken. Zeitstempel der Wetterpunkte werden dafür nicht umgeschrieben.
-- Schlafmodus verwendet keinen Wettercache als thermischen Input; maßgeblich bleibt ausschließlich `roomTempC`.
+- `sleep` und `indoor` verwenden keinen Wettercache als thermischen Input; maßgeblich bleibt ausschließlich `roomTempC`.
 
 ## 6. Abgeleitete Wetter-/Thermalwerte
 
@@ -273,6 +275,8 @@ interface OutdoorContext {
 }
 ```
 
+Für neu erzeugte UI-Kontexte gilt `activity: "normal" | "active"`; `calm` ist nur noch ein lesbarer Legacy-Wert und wird beim Laden auf `normal` normalisiert.
+
 ### 7.2 Kinderwagen
 
 ```ts
@@ -291,7 +295,9 @@ Invariante:
 
 - `strollerState: "asleep"` überschreibt die Aktivitätswirkung thermisch,
 - `strollerState: "awake"` darf `activity: "active"` haben,
-- Kinderwagen ist nie automatisch gleichbedeutend mit passiv.
+- Kinderwagen ist nie automatisch gleichbedeutend mit passiv,
+- die UI zeigt keine zwei getrennten Felder mehr, sondern mappt `Schläft` → `asleep + normal`, `Wach` → `awake + normal`, `Sehr aktiv` → `awake + active`,
+- `calm` wird bei geladenen UI-Kontexten wie `normal` behandelt.
 
 ### 7.3 Trage
 
@@ -346,7 +352,26 @@ Regeln:
 - `outdoor_transition` verwendet weiterhin Außenwetter; `in_car` verwendet ausschließlich `cabinTempC`,
 - Gurtsicherheitsregeln sind unabhängig von `cabinTempSource` und vom geschätzten Temperaturwert.
 
-### 7.5 Schlaf
+### 7.5 Drinnen
+
+```ts
+interface IndoorContext {
+  mode: "indoor";
+  roomTempC: number | null;
+  activity: ActivityLevel;
+  activitySource: ActivitySource;
+}
+```
+
+Invarianten:
+
+- `roomTempC` ist der einzige thermische Umgebungsinput,
+- `weather` wird für `indoor` nicht benötigt und darf `null` sein,
+- die aktuelle UI erzeugt nur `activity: "normal" | "active"`,
+- `calm` wird beim Laden wie `normal` behandelt,
+- `indoor` verwendet keine TOG-/Schlafsacklogik und keine Outdoor-Wetterrisiken.
+
+### 7.6 Schlaf
 
 ```ts
 interface SleepContext {
@@ -363,6 +388,7 @@ type SituationContext =
   | StrollerContext
   | CarrierContext
   | CarContext
+  | IndoorContext
   | SleepContext;
 ```
 
@@ -619,6 +645,7 @@ interface OutfitRecommendationRequest {
 Validierung:
 
 - `sleep`: `weather` darf `null` sein; `roomTempC` wird für vollständige Empfehlung benötigt,
+- `indoor`: `weather` darf `null` sein; `roomTempC` wird für vollständige Empfehlung benötigt,
 - `outdoor/stroller/carrier`: aktuelle Außentemperatur erforderlich; weitere fehlende Wetterwerte erlauben `partial`/Unsicherheit,
 - abgelaufener/ungültiger/standortfremder Wettercache gilt für den Engine-Request als fehlendes Wetter und wird nicht als `WeatherSeries` weitergereicht,
 - `car`: `cabinTempC` ist Pflicht, darf aber `estimated` sein,
@@ -690,7 +717,7 @@ interface RecommendationPhaseEvaluation {
 }
 ```
 
-Nicht-Auto-Modi verwenden `main`. Auto verwendet `in_car` und optional `outdoor_transition`.
+Nicht-Auto-Modi einschließlich `indoor` verwenden `main`. Auto verwendet `in_car` und optional `outdoor_transition`.
 
 ## 17. Hinweise / Safety Codes
 
@@ -799,7 +826,7 @@ interface OutfitRecommendation {
 }
 ```
 
-Bei 8 °C könnte die Engine z. B. einen leichten Fußsack statt des warmen Fußsacks wählen, weil `awake + active` thermisch leichter bewertet wird als `asleep`.
+In der UI entspricht dieses Beispiel `Sehr aktiv`. Bei 8 °C könnte die Engine z. B. einen leichten Fußsack statt des warmen Fußsacks wählen, weil `awake + active` thermisch leichter bewertet wird als `asleep`.
 
 ## 21. Austausch-Beispiel Fußsack → Decke
 
@@ -892,7 +919,23 @@ Ergebnis muss enthalten:
 - `CAR_CABIN_TEMPERATURE_ESTIMATED`,
 - keine voluminöse Schicht `under_harness`.
 
-## 24. Nackentest
+## 24. Drinnen-Beispiel
+
+```json
+{
+  "context": {
+    "mode": "indoor",
+    "roomTempC": 20,
+    "activity": "normal",
+    "activitySource": "user"
+  },
+  "weather": null
+}
+```
+
+Die Empfehlung verwendet `thermalReferenceSource: "room_temp"`. `activity: "active"` wird thermisch leichter bewertet; Außenwetterrisiken und TOG-Schlaflogik bleiben inaktiv.
+
+## 25. Nackentest
 
 ```ts
 interface NeckFeedbackEvent {
@@ -908,7 +951,7 @@ interface NeckFeedbackEvent {
 
 Feedback kann optional lokal gespeichert/exportiert werden, wird in V1 aber nicht für automatisches Langzeitlernen verwendet.
 
-## 25. Runtime-State
+## 26. Runtime-State
 
 ```ts
 type ConnectivityStatus = "online" | "offline" | "unknown";
@@ -938,9 +981,9 @@ interface AppError {
 }
 ```
 
-Die Achsen sind unabhängig. `offline + stale + partial` ist gültig. `offline + expired + weather:null + blocked` ist für wetterabhängige Modi ebenfalls gültig; im Schlafmodus kann trotz `weather:null` eine vollständige Empfehlung aus `roomTempC` entstehen.
+Die Achsen sind unabhängig. `offline + stale + partial` ist gültig. `offline + expired + weather:null + blocked` ist für wetterabhängige Modi ebenfalls gültig; in `sleep` und `indoor` kann trotz `weather:null` eine vollständige Empfehlung aus `roomTempC` entstehen.
 
-## 26. Einstellungen
+## 27. Einstellungen
 
 ```ts
 interface LocalSettings {
@@ -954,7 +997,7 @@ interface LocalSettings {
 
 `weatherCacheMaxAgeMinutes` ist in V1 standardmäßig `120`. Ein gespeicherter oder importierter Wert darf die Wiederverwendung strenger machen, wird aber auf `30..120` Minuten begrenzt; die harte 120-Minuten-Grenze darf nicht erweitert werden.
 
-## 27. Persistenz
+## 28. Persistenz
 
 Empfohlene Keys:
 
@@ -965,7 +1008,7 @@ Empfohlene Keys:
 
 Aktuelle Recommendation-Sessions/Locks müssen nicht über App-Neustarts persistiert werden. Das verhindert, dass alte manuelle Outfitentscheidungen auf neues Wetter übertragen werden.
 
-## 28. JSON-Export
+## 29. JSON-Export
 
 ```ts
 interface ExportPayloadV1 {
@@ -977,13 +1020,13 @@ interface ExportPayloadV1 {
 
 Keine Schlafsack-/Kleidungsinventare in V1 exportieren. Der Wettercache selbst ist Laufzeit-/Offline-Datenbestand und wird nicht exportiert.
 
-## 29. Importvalidierung
+## 30. Importvalidierung
 
 Vor Speicherung vollständig prüfen:
 
 1. gültiges JSON,
 2. unterstützte `schemaVersion`,
-3. bekannte Enums,
+3. bekannte Enums einschließlich `indoor`,
 4. Pflichtfelder,
 5. endliche Zahlen,
 6. Prozentwerte 0–100,
@@ -997,7 +1040,7 @@ Vor Speicherung vollständig prüfen:
 14. unbekannte Safety-Enums ablehnen,
 15. ungültiger Import überschreibt lokale Daten nicht teilweise.
 
-## 30. Regel-ID-Schema
+## 31. Regel-ID-Schema
 
 Empfohlen:
 
@@ -1009,55 +1052,60 @@ Empfohlen:
 - `weather.uv.*`,
 - `situation.stroller.*`,
 - `situation.carrier.*`,
-- `situation.car.transition.*`,
-- `situation.car.in_car.*`,
+- `situation.car.*`,
+- `situation.indoor.*`,
 - `situation.sleep.*`,
 - `swap.*`,
 - `feedback.neck.*`,
 - `safety.*`.
 
-## 31. Testinvarianten
+## 32. Testinvarianten
 
 1. `styleTheme` ändert keine Fach-Item-IDs oder Safety-Codes.
 2. Kinderwagen erzwingt nicht `activity: calm/passive`.
-3. `awake + active` und `asleep` im Kinderwagen dürfen unterschiedliche Empfehlungen erzeugen.
-4. Fußsack/Decke werden von der App empfohlen und nicht als Besitz vorausgesetzt.
-5. Zubehörtausch löst vollständiges Rebalancing aus.
-6. Manueller Lock bleibt innerhalb der Session bestehen.
-7. Safety darf Lock überstimmen und erzeugt `MANUAL_LOCK_OVERRIDDEN_FOR_SAFETY`.
-8. Regenverdeck kann Regenjacke im geschützten Kinderwagen ersetzen.
-9. Sonnensegel/Sonnenschirm ist als Kinderwagen-Zubehör modellierbar.
-10. `apparentTempIncludes: wind` verhindert doppelten thermischen Windmodifikator.
-11. Windschutz-Anforderung bleibt trotzdem aktiv.
-12. Fehlende Wetterfelder sind nie automatisch 0.
-13. `precipProbability >=60` im relevanten Fenster löst Regenschutz aus.
-14. `precipProbability <40` allein löst keinen Regenschutz aus.
-15. Trage-Körperwärme wirkt primär am bedeckten Rumpf.
-16. Tragecover/Jacke stapeln Wärmekredit nur bis zum definierten Cap.
-17. Winteroverall ist in `car/in_car` nie `under_harness`.
-18. geschätzte Autotemperatur wird sichtbar als Schätzung markiert.
-19. Schlaf verwendet ausschließlich `roomTempC` als Umgebungs-Temperaturinput.
-20. `sleep_bag_none`, 0.5, 1.0, 1.5, 2.5 und 3.5 TOG sind austauschbar.
-21. TOG-Tausch verändert bei Bedarf `sleep_underlayer`.
-22. Schlafmodus erzeugt nie lose Bettware als Wärmeausgleich – auch nicht bei `sleep_bag_none`.
-23. `wärmer` / `dünner` verändert möglichst wenige Slots.
-24. `hot_sweaty` erhöht Isolation nie.
-25. `cool` reduziert Isolation nie.
-26. kalte Hände/Füße allein ändern die globale Wärmestufe nicht.
-27. Schuhe werden nur bei `standing|walking` bzw. tatsächlichem Bodenkontakt empfohlen.
-28. Nackentest/Swap-Historie verändert V1 nicht automatisch dauerhaft den `warmthBias`.
-29. Wettercache ist bis einschließlich 30 Minuten `fresh`, danach bis einschließlich 120 Minuten `stale` und erst danach abgelaufen.
-30. Abgelaufener, ungültiger oder standortfremder Cache wird nicht als aktuelles Wetter an die Engine gegeben oder mit alten Wetterwerten dargestellt.
-31. `stale` Wetter erzeugt `partial` plus `WEATHER_DATA_STALE`.
-32. Schlaf bleibt auch bei abgelaufenem/fehlendem Wettercache ausschließlich von `roomTempC` abhängig.
-33. Wiederverwendete manuelle Wetterwerte behalten ihre manuelle Provenienz und werden nicht durch ältere automatische Stundenwerte als `current` ersetzt.
-34. Bei stale automatischem Wetter deckt das Risikozeitfenster weiterhin den ab Request-Zeit geplanten Zeitraum ab.
-35. `cabinTempSource: estimated` wird von der Integrationslogik mit exakt 20 °C erzeugt und nie aus Außenwetter berechnet.
-36. `manual | measured | estimated` verändern keine Autositz-Gurtsicherheitsregeln.
-37. manuelle Änderung von `cabinTempC` setzt `cabinTempSource: manual`; Zurückschalten auf `estimated` setzt wieder 20 °C.
-38. `outdoor_transition` verwendet Außenwetter, während `in_car` ausschließlich `cabinTempC` als Temperaturreferenz verwendet.
+3. Die Kinderwagen-UI bietet genau `Schläft | Wach | Sehr aktiv` und mappt diese Werte deterministisch auf `strollerState`/`activity`.
+4. `awake + active` und `asleep` im Kinderwagen dürfen unterschiedliche Empfehlungen erzeugen.
+5. Fußsack/Decke werden von der App empfohlen und nicht als Besitz vorausgesetzt.
+6. Zubehörtausch löst vollständiges Rebalancing aus.
+7. Manueller Lock bleibt innerhalb der Session bestehen.
+8. Safety darf Lock überstimmen und erzeugt `MANUAL_LOCK_OVERRIDDEN_FOR_SAFETY`.
+9. Regenverdeck kann Regenjacke im geschützten Kinderwagen ersetzen.
+10. Sonnensegel/Sonnenschirm ist als Kinderwagen-Zubehör modellierbar.
+11. `apparentTempIncludes: wind` verhindert doppelten thermischen Windmodifikator.
+12. Windschutz-Anforderung bleibt trotzdem aktiv.
+13. Fehlende Wetterfelder sind nie automatisch 0.
+14. `precipProbability >=60` im relevanten Fenster löst Regenschutz aus.
+15. `precipProbability <40` allein löst keinen Regenschutz aus.
+16. Trage-Körperwärme wirkt primär am bedeckten Rumpf.
+17. Tragecover/Jacke stapeln Wärmekredit nur bis zum definierten Cap.
+18. Winteroverall ist in `car/in_car` nie `under_harness`.
+19. geschätzte Autotemperatur wird sichtbar als Schätzung markiert.
+20. `indoor` verwendet ausschließlich `roomTempC` und funktioniert mit `weather:null`.
+21. `indoor + active` ist thermisch leichter als `indoor + normal`.
+22. `indoor` erzeugt keine wetterbezogenen Außenschutzslots allein aus der Raumtemperatur.
+23. Schlaf verwendet ausschließlich `roomTempC` als Umgebungs-Temperaturinput.
+24. `sleep_bag_none`, 0.5, 1.0, 1.5, 2.5 und 3.5 TOG sind austauschbar.
+25. TOG-Tausch verändert bei Bedarf `sleep_underlayer`.
+26. Schlafmodus erzeugt nie lose Bettware als Wärmeausgleich – auch nicht bei `sleep_bag_none`.
+27. `wärmer` / `dünner` verändert möglichst wenige Slots.
+28. `hot_sweaty` erhöht Isolation nie.
+29. `cool` reduziert Isolation nie.
+30. kalte Hände/Füße allein ändern die globale Wärmestufe nicht.
+31. Schuhe werden nur bei `standing|walking` bzw. tatsächlichem Bodenkontakt empfohlen.
+32. Nackentest/Swap-Historie verändert V1 nicht automatisch dauerhaft den `warmthBias`.
+33. Wettercache ist bis einschließlich 30 Minuten `fresh`, danach bis einschließlich 120 Minuten `stale` und erst danach abgelaufen.
+34. Abgelaufener, ungültiger oder standortfremder Cache wird nicht als aktuelles Wetter an die Engine gegeben oder mit alten Wetterwerten dargestellt.
+35. `stale` Wetter erzeugt `partial` plus `WEATHER_DATA_STALE`.
+36. Schlaf und Drinnen bleiben auch bei abgelaufenem/fehlendem Wettercache ausschließlich von `roomTempC` abhängig.
+37. Wiederverwendete manuelle Wetterwerte behalten ihre manuelle Provenienz und werden nicht durch ältere automatische Stundenwerte als `current` ersetzt.
+38. Bei stale automatischem Wetter deckt das Risikozeitfenster weiterhin den ab Request-Zeit geplanten Zeitraum ab.
+39. `cabinTempSource: estimated` wird von der Integrationslogik mit exakt 20 °C erzeugt und nie aus Außenwetter berechnet.
+40. `manual | measured | estimated` verändern keine Autositz-Gurtsicherheitsregeln.
+41. manuelle Änderung von `cabinTempC` setzt `cabinTempSource: manual`; Zurückschalten auf `estimated` setzt wieder 20 °C.
+42. `outdoor_transition` verwendet Außenwetter, während `in_car` ausschließlich `cabinTempC` als Temperaturreferenz verwendet.
+43. `calm` wird von der aktuellen App-Integration bei geladenen Outdoor-/Kinderwagenkontexten auf `normal` normalisiert.
 
-## 32. Noch offene technische Datenentscheidungen
+## 33. Noch offene technische Datenentscheidungen
 
 Die V1-Entscheidung für `cabinTempSource: estimated` ist geschlossen: die Integrationslogik verwendet die neutrale, transparent gekennzeichnete 20-°C-Annahme ohne Außenwetter-Ableitung.
 

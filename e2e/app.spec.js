@@ -10,7 +10,7 @@ async function chooseSituation(page, mode) {
   await page.locator('[data-open-dialog="situationDialog"]').first().click();
   await page.locator(`[data-situation="${mode}"]`).click();
   await page.locator('#applySituationButton').click();
-  await expect(page.locator('#situationLabel')).toHaveText({ outdoor:'Draußen', stroller:'Kinderwagen', carrier:'Trage', car:'Autositz', sleep:'Schlafen' }[mode]);
+  await expect(page.locator('#situationLabel')).toHaveText({ outdoor:'Draußen', stroller:'Kinderwagen', carrier:'Trage', car:'Autositz', indoor:'Drinnen', sleep:'Schlafen' }[mode]);
 }
 async function selectedIds(page) { return page.locator('#outfitGrid [data-item-id]').evaluateAll((nodes) => nodes.map((node) => node.dataset.itemId)); }
 
@@ -53,7 +53,7 @@ test('Kinderwagen verändert die Empfehlung', async ({ page }) => {
   const outdoor = await selectedIds(page);
   await chooseSituation(page, 'stroller');
   await page.locator('[data-open-dialog="situationDialog"]').first().click();
-  await page.locator('#situationDialog [data-context-field="strollerState"]').selectOption('asleep');
+  await page.locator('#situationDialog [data-context-field="strollerBehavior"]').selectOption('asleep');
   await page.locator('#applySituationButton').click();
   const stroller = await selectedIds(page);
   expect(stroller).not.toEqual(outdoor);
