@@ -42,7 +42,7 @@ Enthalten:
 - automatische Wetterermittlung über Standort,
 - manuelle Ortswahl und manuelle Wetterüberschreibung,
 - Empfehlung auch bei teilweise fehlenden optionalen Wetterdaten mit sichtbarer Unsicherheit,
-- Modi `outdoor`, `stroller`, `carrier`, `car`, `sleep`,
+- Modi `outdoor`, `stroller`, `carrier`, `car`, `indoor`, `sleep`,
 - austauschbare Outfit- und Zubehörteile,
 - `wärmer` / `dünner`,
 - Nackentest-Button,
@@ -162,7 +162,7 @@ Zusätzliche Regeln:
 - Solange automatische Wetterdaten online verwendet werden, versucht die App beim Übergang zu `stale` einen neuen Abruf; ein nutzbarer stale Datensatz bleibt nur Fallback, wenn die Aktualisierung nicht gelingt.
 - Bei einem stale automatischen Datensatz darf ein bereits erreichter stündlicher Prognosepunkt als thermischer Referenzpunkt verwendet werden. Das Wetterrisikofenster für Wind, Regen und UV muss trotzdem den tatsächlich ab jetzt geplanten Aufenthaltszeitraum abdecken und darf nicht an einem älteren Prognosezeitpunkt enden.
 - `weatherCacheMaxAgeMinutes` ist in V1 standardmäßig `120`. Eine lokale/importierte Einstellung darf die Wiederverwendung strenger machen, aber die harte 120-Minuten-Grenze nicht erweitern.
-- Schlafmodus bleibt davon vollständig unabhängig: Schlafempfehlungen verwenden ausschließlich `roomTempC`; Außenwetter oder Wettercache werden nicht in Schlafkleidung umgerechnet.
+- Schlaf- und Drinnenmodus bleiben davon vollständig unabhängig: Beide verwenden ausschließlich `roomTempC`; Außenwetter oder Wettercache werden nicht in die Kleidungsempfehlung umgerechnet.
 
 Die 120-Minuten-Obergrenze entspricht dem bereits verwendeten Standard-Wetterrisikofenster der Engine. Jenseits dieses Fensters darf ein alter „Current“-Wert nicht als belastbare Beschreibung der aktuellen Situation fortgeschrieben werden.
 
@@ -180,16 +180,28 @@ Die App berücksichtigt:
 - UV/Sonne,
 - Bodenkontakt.
 
-Aktivität wird möglichst aus Kontext und Alter vorgeschlagen; der Nutzer muss sie nicht bei jedem Start einstellen. Bei Bedarf kann sie korrigiert werden.
+Aktivität wird möglichst aus Kontext und Alter vorgeschlagen; der Nutzer muss sie nicht bei jedem Start einstellen. Bei Bedarf kann sie korrigiert werden. In der UI werden `normal` und `active` angeboten; ein älterer gespeicherter Wert `calm` wird wie `normal` behandelt.
 
 ### 7.2 Kinderwagen (`stroller`)
 
 Kinderwagen bedeutet **nicht automatisch passiv**.
 
-Erfasst bzw. ableitbar:
+Die UI fragt bewusst nicht mehr getrennt nach „Zustand“ und „Aktivität“, sondern bietet genau drei verständliche Zustände:
 
-- `wach` oder `schläft`,
-- Aktivität bei Wachsein (`ruhig/normal/aktiv`),
+- `Schläft`,
+- `Wach`,
+- `Sehr aktiv`.
+
+Intern werden diese weiterhin kompatibel auf die getrennten Fachachsen abgebildet:
+
+- `Schläft` → `strollerState: asleep`, Aktivitätswirkung wird ignoriert,
+- `Wach` → `strollerState: awake` + `activity: normal`,
+- `Sehr aktiv` → `strollerState: awake` + `activity: active`.
+
+`Ruhig` ist kein eigener thermischer Zustand mehr; bestehende Werte werden wie `normal` behandelt.
+
+Zusätzlich relevant:
+
 - Sonnenexposition,
 - Windschutz des Wagens,
 - Wetter.
@@ -235,7 +247,21 @@ Die 20-°C-Annahme ist jederzeit schnell korrigierbar. Eine Änderung des Temper
 
 Voluminöse Jacken und Winteroveralls dürfen nicht unter dem Gurt empfohlen werden. Ein für draußen empfohlener Overall muss beim Wechsel in die Fahrphase explizit entfernt werden. Zusätzliche Decke/Jacke nur über dem korrekt geschlossenen Gurt.
 
-### 7.5 Schlafen (`sleep`)
+### 7.5 Drinnen (`indoor`)
+
+`Drinnen` ist ein eigener Wachmodus und ausdrücklich **nicht** der Schlafmodus.
+
+Die Empfehlung verwendet:
+
+- `roomTempC` als thermischen Umgebungsinput,
+- Aktivität `normal` oder `active`,
+- keinen Wettercache und keine Außenwetterwerte.
+
+`normal` umfasst auch ruhiges normales Wachsein. `active` ist für deutlich stärkere Bewegung/Strampeln gedacht und darf thermisch leichter bewertet werden.
+
+Im Drinnenmodus werden keine wetterbezogenen Außenschutzteile allein aus der Temperatur abgeleitet, insbesondere keine Regen-/Windschicht, Mütze oder Handschuhe. Schlafsack-/TOG-Logik bleibt ausschließlich dem Modus `sleep` vorbehalten.
+
+### 7.6 Schlafen (`sleep`)
 
 Schlafen verwendet ausschließlich Raumtemperatur als thermischen Umgebungsinput; Außentemperatur wird nicht zur Schlafkleidung umgerechnet.
 
@@ -272,8 +298,9 @@ Die App soll Aktivität so selten wie möglich abfragen.
 Grundprinzip:
 
 - `carrier`: thermische Sonderlogik über Körperkontakt; keine normale Aktivitätsfrage,
-- `stroller`: `wach/schläft` plus bei Wachsein Aktivität; ein Baby kann im Wagen sehr aktiv sein,
-- `outdoor`: Standard `normal`; bei offensichtlich mobilem/spielendem Kind kann `active` vorgeschlagen werden,
+- `stroller`: ein einziger UI-Zustand `Schläft | Wach | Sehr aktiv`; intern wird `Sehr aktiv` als `awake + active` abgebildet,
+- `indoor`: `normal | active`; `calm` ist kein eigener UI-Zustand und wird wie `normal` behandelt,
+- `outdoor`: Standard `normal`; bei offensichtlich mobilem/spielendem Kind kann `active` vorgeschlagen werden; `calm` wird in der UI nicht separat angeboten,
 - `car` und `sleep`: keine normale Aktivitätskorrektur.
 
 ## 9. Bodenkontakt und Schuhe
@@ -329,6 +356,7 @@ Beispiele:
 - `offline + stale + partial`,
 - `location denied + manual weather + ready`,
 - `car/in_car + geschätzte Innenraumtemperatur + ready_with_estimate`,
+- `indoor + roomTemp fehlt + blocked`,
 - `sleep + roomTemp fehlt + blocked`.
 
 ## 14. Quellenbasis und Kalibrierungsstatus
@@ -341,7 +369,7 @@ Stand der fachlichen Prüfung: 2026-08-25.
   - Babys unter 12 Monaten im Schatten halten.
 - WHO, Ultraviolet radiation / UV Index: https://www.who.int/news-room/fact-sheets/detail/ultraviolet-radiation
   - Schutzmaßnahmen ab UVI 3.
-- NHS, Keeping your baby safe in the sun: https://www.nhs.uk/baby/first-aid-and-safety/safety/safety-in-the-sun/
+- NHS, Keeping your baby safe in the sun: https://www.nhs.uk/baby/first-aid-and-safety/safety-in-the-sun/
   - kleine Babys aus direkter Sonne; leichte Kleidung; Sonnenschutz am Kinderwagen; keine Decke über dem Wagen.
 - The Lullaby Trust, How to dress your baby for sleep: https://www.lullabytrust.org.uk/baby-safety/baby-product-information/dress-your-baby-for-sleep/
   - 16–20 °C Orientierung; Nacken/Brust prüfen; keine universelle TOG/Kleidungs-Tabelle.
