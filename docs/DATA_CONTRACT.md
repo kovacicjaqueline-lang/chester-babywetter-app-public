@@ -34,6 +34,7 @@ Unbekannte höhere Schema-Versionen dürfen nicht stillschweigend importiert wer
 type SituationMode = "outdoor" | "stroller" | "carrier" | "car" | "indoor" | "sleep";
 type ActivityLevel = "calm" | "normal" | "active";
 type ActivitySource = "default" | "inferred" | "user";
+type MobilityStage = "low_mobility" | "crawling" | "walking";
 type WarmthBias = "runs_cool" | "neutral" | "runs_warm";
 type StyleTheme = "neutral" | "boy" | "girl";
 type NeckFeedback = "warm_dry" | "hot_sweaty" | "cool";
@@ -65,6 +66,8 @@ type ItemKind =
 
 `calm` bleibt in Schema V1 aus Rückwärtskompatibilitätsgründen lesbar. Die aktuelle App erzeugt für normale/ruhige Wachaktivität `normal`; vorhandenes `calm` wird beim Laden der UI-Kontexte auf `normal` normalisiert. Sichtbar unterschieden werden nur `normal` und `active` bzw. im Kinderwagen `Schläft | Wach | Sehr aktiv`.
 
+`MobilityStage` beschreibt die allgemeine Entwicklung des Kindes und ist ausdrücklich nicht dasselbe wie `ActivityLevel`. `walking` bedeutet nicht automatisch `active`; `ActivityLevel` bleibt situationsbezogen.
+
 ## 4. Babyprofil
 
 V1 hat genau ein aktives lokales Profil.
@@ -74,6 +77,7 @@ interface BabyProfile {
   profileId: string;
   displayName: string | null;
   birthDate: string | null; // YYYY-MM-DD
+  mobilityStage: MobilityStage;
   warmthBias: WarmthBias;
   styleTheme: StyleTheme;
   defaultMode: SituationMode;
@@ -89,6 +93,7 @@ Beispiel:
   "profileId": "baby_001",
   "displayName": "Baby",
   "birthDate": "2026-01-24",
+  "mobilityStage": "crawling",
   "warmthBias": "neutral",
   "styleTheme": "neutral",
   "defaultMode": "stroller",
@@ -100,8 +105,10 @@ Beispiel:
 Regeln:
 
 - V1-Scope: 0–24 Monate,
-- `birthDate` bleibt optional,
+- `birthDate` bleibt optional und ist die einzige persistente Altersquelle; das aktuelle Alter wird zum `requestedAt` abgeleitet und nicht zusätzlich gespeichert,
 - bei unbekanntem Alter + direkter Sonne gilt konservativ die `<12 Monate`-Sonnenregel,
+- `mobilityStage` ist Pflicht in neu gespeicherten Profilen; ältere Schema-V1-Profile ohne dieses Feld werden beim Laden/Import auf `low_mobility` migriert,
+- `mobilityStage` verändert selbst keine thermische Stufe und setzt weder `activity` noch `groundContact` automatisch,
 - kein Kleidungsinventar,
 - kein Schlafsackinventar,
 - keine Hersteller-/Markenfelder für Schlafsäcke,
@@ -275,7 +282,7 @@ interface OutdoorContext {
 }
 ```
 
-Für neu erzeugte UI-Kontexte gilt `activity: "normal" | "active"`; `calm` ist nur noch ein lesbarer Legacy-Wert und wird beim Laden auf `normal` normalisiert.
+Für neu erzeugte UI-Kontexte gilt `activity: "normal" | "active"`; `calm` ist nur noch ein lesbarer Legacy-Wert und wird beim Laden auf `normal` normalisiert. `profile.mobilityStage` ist hiervon unabhängig und setzt `activity` oder `groundContact` nicht automatisch.
 
 ### 7.2 Kinderwagen
 
@@ -297,7 +304,8 @@ Invariante:
 - `strollerState: "awake"` darf `activity: "active"` haben,
 - Kinderwagen ist nie automatisch gleichbedeutend mit passiv,
 - die UI zeigt keine zwei getrennten Felder mehr, sondern mappt `Schläft` → `asleep + normal`, `Wach` → `awake + normal`, `Sehr aktiv` → `awake + active`,
-- `calm` wird bei geladenen UI-Kontexten wie `normal` behandelt.
+- `calm` wird bei geladenen UI-Kontexten wie `normal` behandelt,
+- `mobilityStage` verändert diese Zuordnung nicht.
 
 ### 7.3 Trage
 
@@ -650,6 +658,8 @@ Validierung:
 - abgelaufener/ungültiger/standortfremder Wettercache gilt für den Engine-Request als fehlendes Wetter und wird nicht als `WeatherSeries` weitergereicht,
 - `car`: `cabinTempC` ist Pflicht, darf aber `estimated` sein,
 - `car` mit Outdoor-Transition braucht Wetter nur für die Transition-Phase.
+
+`profile.mobilityStage` ist Teil des Profils, aber kein direkter thermischer Request-Parameter. Die Outfitengine darf allein aufgrund eines anderen Mobilitätsstands bei identischem Kontext keine andere thermische Entscheidung treffen.
 
 ## 14. Alternative und projizierte Änderungen
 
@@ -1026,7 +1036,7 @@ Vor Speicherung vollständig prüfen:
 
 1. gültiges JSON,
 2. unterstützte `schemaVersion`,
-3. bekannte Enums einschließlich `indoor`,
+3. bekannte Enums einschließlich `indoor` und `MobilityStage`,
 4. Pflichtfelder,
 5. endliche Zahlen,
 6. Prozentwerte 0–100,
@@ -1037,8 +1047,9 @@ Vor Speicherung vollständig prüfen:
 11. `SleepBagTog` nur aus `{0.5,1.0,1.5,2.5,3.5}`,
 12. `cabinTempSource: estimated` muss als Schätzung bis ins Ergebnis gelangen,
 13. `weatherCacheMaxAgeMinutes`: Legacy-`null` aus älteren Schema-V1-Exports wird auf den V1-Standard `120` migriert; andere Werte müssen endliche Zahlen sein und werden auf `30..120` begrenzt,
-14. unbekannte Safety-Enums ablehnen,
-15. ungültiger Import überschreibt lokale Daten nicht teilweise.
+14. fehlendes `profile.mobilityStage` aus älteren Schema-V1-Exports wird auf `low_mobility` migriert; ein vorhandener unbekannter Wert wird abgelehnt,
+15. unbekannte Safety-Enums ablehnen,
+16. ungültiger Import überschreibt lokale Daten nicht teilweise.
 
 ## 31. Regel-ID-Schema
 
@@ -1046,6 +1057,7 @@ Empfohlen:
 
 - `baseline.temp.*`,
 - `activity.*`,
+- `profile.age`,
 - `weather.apparent.*`,
 - `weather.wind.*`,
 - `weather.rain.*`,
@@ -1058,6 +1070,8 @@ Empfohlen:
 - `swap.*`,
 - `feedback.neck.*`,
 - `safety.*`.
+
+Für `mobilityStage` ist in V1 keine thermische Regel-ID vorgesehen, weil der Profilwert selbst keine thermische Regel auslöst.
 
 ## 32. Testinvarianten
 
@@ -1104,10 +1118,16 @@ Empfohlen:
 41. manuelle Änderung von `cabinTempC` setzt `cabinTempSource: manual`; Zurückschalten auf `estimated` setzt wieder 20 °C.
 42. `outdoor_transition` verwendet Außenwetter, während `in_car` ausschließlich `cabinTempC` als Temperaturreferenz verwendet.
 43. `calm` wird von der aktuellen App-Integration bei geladenen Outdoor-/Kinderwagenkontexten auf `normal` normalisiert.
+44. Neu gespeicherte Profile enthalten genau einen bekannten `mobilityStage`; ältere V1-Profile ohne Feld werden auf `low_mobility` migriert.
+45. Unterschiedliche `mobilityStage`-Werte verändern bei identischem `activity`-Kontext keine thermische Empfehlung.
+46. `mobilityStage: walking` setzt weder `activity: active` noch `groundContact: walking` automatisch.
+47. Das aktuelle Alter wird aus `birthDate` und `requestedAt` abgeleitet; es gibt kein zweites persistentes Altersfeld.
 
 ## 33. Noch offene technische Datenentscheidungen
 
 Die V1-Entscheidung für `cabinTempSource: estimated` ist geschlossen: die Integrationslogik verwendet die neutrale, transparent gekennzeichnete 20-°C-Annahme ohne Außenwetter-Ableitung.
+
+Die V1-Profilentscheidung für Alter und Mobilität ist ebenfalls geschlossen: `birthDate` bleibt die einzige Altersquelle; `mobilityStage` wird separat gespeichert und ist kein thermischer Aktivitätsersatz.
 
 Keine wesentlichen Produktentscheidungen sind mehr offen. Technisch noch festzulegen:
 
