@@ -14,6 +14,7 @@ function validEnvelope() {
         profileId: 'baby_local',
         displayName: 'Baby',
         birthDate: '2026-01-24',
+        mobilityStage: 'crawling',
         warmthBias: 'neutral',
         styleTheme: 'neutral',
         defaultMode: 'stroller',
@@ -39,10 +40,25 @@ test('valid V1 import is returned as an explicit sanitized payload', () => {
   const result = validateImportEnvelopeV1(input, { now: NOW });
   assert.equal(result.schemaVersion, 1);
   assert.equal(result.payload.profile.birthDate, '2026-01-24');
+  assert.equal(result.payload.profile.mobilityStage, 'crawling');
   assert.equal(result.payload.settings.weatherMode, 'auto_with_override');
   assert.equal(result.payload.settings.weatherCacheMaxAgeMinutes, 120);
   assert.equal('injected' in result.payload.profile, false);
   assert.equal('injected' in result.payload.settings, false);
+});
+
+test('legacy V1 profiles without mobility migrate conservatively to low_mobility', () => {
+  const legacy = validEnvelope();
+  delete legacy.payload.profile.mobilityStage;
+  assert.equal(validateImportEnvelopeV1(legacy, { now: NOW }).payload.profile.mobilityStage, 'low_mobility');
+
+  const walking = validEnvelope();
+  walking.payload.profile.mobilityStage = 'walking';
+  assert.equal(validateImportEnvelopeV1(walking, { now: NOW }).payload.profile.mobilityStage, 'walking');
+
+  const invalid = validEnvelope();
+  invalid.payload.profile.mobilityStage = 'running';
+  assert.throws(() => validateImportEnvelopeV1(invalid, { now: NOW }), TypeError);
 });
 
 test('weather cache max age migrates legacy null and clamps finite V1 values to 30..120', () => {
