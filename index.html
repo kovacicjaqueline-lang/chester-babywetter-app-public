@@ -88,6 +88,8 @@
       <header class="sheet-header"><h2 id="profileTitle">Babyprofil</h2><button class="icon-button" value="cancel" aria-label="Babyprofil schließen">×</button></header>
       <label class="field">Name<input id="profileName" name="profileName" autocomplete="off" maxlength="40"></label>
       <label class="field">Geburtsdatum<input id="profileBirthDate" name="profileBirthDate" type="date"></label>
+      <fieldset class="choice-fieldset"><legend>Mobilität</legend><label><input type="radio" name="mobilityStage" value="low_mobility"> Wenig mobil</label><label><input type="radio" name="mobilityStage" value="crawling"> Krabbelt</label><label><input type="radio" name="mobilityStage" value="walking"> Läuft</label></fieldset>
+      <p class="dialog-note">Beschreibt die Entwicklung. Wie aktiv dein Baby gerade ist, stellst du bei der jeweiligen Situation ein.</p>
       <fieldset class="choice-fieldset"><legend>Wärmetendenz</legend><label><input type="radio" name="warmthBias" value="runs_cool"> Eher kälteempfindlich</label><label><input type="radio" name="warmthBias" value="neutral"> Neutral</label><label><input type="radio" name="warmthBias" value="runs_warm"> Eher warm</label></fieldset>
       <button class="primary-button" value="save" id="saveProfileButton">Profil speichern</button>
     </form>
