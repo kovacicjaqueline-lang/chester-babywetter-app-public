@@ -58,3 +58,15 @@ test('warm stroller wind protection keeps light leg coverage and avoids insulate
   assert.ok(selected.has('rain_jacket'));
   assert.ok(!selected.has('softshell_jacket'));
 });
+
+test('warm outdoor wind protection keeps light leg coverage and avoids insulated softshell', () => {
+  const result = recommendOutfit(request({
+    mode:'outdoor', plannedMinutes:60, activity:'normal', activitySource:'user', sunExposure:'shade', groundContact:'none'
+  }, weather(26, { windSpeedKmh:14, windGustKmh:40 })));
+  const selected = new Set(result.slots.filter((slot) => slot.phase === 'main').map((slot) => slot.selected.itemId));
+
+  assert.ok(selected.has('short_sleeve_bodysuit'));
+  assert.ok(selected.has('light_trousers'));
+  assert.ok(selected.has('rain_jacket'));
+  assert.ok(!selected.has('softshell_jacket'));
+});
