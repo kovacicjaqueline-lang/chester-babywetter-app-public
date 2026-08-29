@@ -1,6 +1,6 @@
 import { WEATHER_CACHE_MAX_AGE_MINUTES, WEATHER_FRESH_MAX_AGE_MINUTES } from './weather-series.js';
 
-const MODES = new Set(['outdoor', 'stroller', 'carrier', 'car', 'sleep']);
+const MODES = new Set(['outdoor', 'stroller', 'carrier', 'car', 'indoor', 'sleep']);
 const STYLES = new Set(['neutral', 'boy', 'girl']);
 const BIASES = new Set(['runs_cool', 'neutral', 'runs_warm']);
 const FEEDBACK = new Set(['warm_dry', 'hot_sweaty', 'cool']);
