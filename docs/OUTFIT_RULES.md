@@ -424,7 +424,8 @@ Schuhe sind austauschbar und beeinflussen nicht die globale Rumpf-Wärmebewertun
 - Raumtemperatur, nicht Außentemperatur,
 - keine Mütze,
 - Kopf frei,
-- keine lose Decke über Schlafsack,
+- keine lose Decke oder andere lose Bettware im Schlafbereich – unabhängig davon, ob ein Schlafsack gewählt ist,
+- zusätzliche Wärme nur über geeignete körpernahe Schlafkleidung oder einen passenden Schlafsack,
 - keine Wärmflasche/Heizdecke,
 - keine gewichteten Schlafprodukte,
 - Schlafsack passend sitzend,
@@ -481,7 +482,7 @@ Diese Punkte sind **keine TOG-Einheiten**; sie sind lediglich Rebalancing-Gewich
 | `16–<18 °C` | 2.5 TOG + Langarmbody | 3.5 TOG + Kurzarmbody |
 | `<16 °C` | 3.5 TOG + Langarmbody | 2.5 TOG + Kurzarmbody + leichter Pyjama |
 
-Unter `16 °C` erscheint zusätzlich ein Hinweis, den Raum wenn möglich Richtung 16–20 °C zu bringen und nicht einfach weitere lose Decken hinzuzufügen.
+Unter `16 °C` erscheint zusätzlich ein Hinweis, den Raum wenn möglich Richtung 16–20 °C zu bringen und nicht einfach lose Bettware als zusätzliche Wärme zu verwenden.
 
 Bei sehr heißem Raum darf `kein Schlafsack` die klare Hauptempfehlung sein.
 
@@ -499,7 +500,7 @@ Beispiel bei 18–20 °C:
 
 - Hauptset: `2.5 TOG + Kurzarmbody`,
 - Nutzer wählt `1.0 TOG`,
-- Engine ergänzt entsprechend mehr körpernahe Schlafkleidung statt eine lose Decke.
+- Engine ergänzt entsprechend mehr körpernahe Schlafkleidung statt loser Bettware.
 
 ### 12.7 `wärmer` / `dünner` im Schlafmodus
 
@@ -599,7 +600,7 @@ Mindestens:
 - `CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT`,
 - `CAR_CABIN_TEMPERATURE_ESTIMATED`,
 - `SLEEP_NO_HAT`,
-- `SLEEP_NO_LOOSE_BLANKET_OVER_BAG`,
+- `SLEEP_NO_LOOSE_BEDDING`,
 - `SLEEP_NO_WEIGHTED_PRODUCTS`,
 - `SLEEP_USE_ROOM_TEMPERATURE`,
 - `SLEEP_GENERIC_TOG_ORIENTATION`,
@@ -634,7 +635,7 @@ Mindestens:
 14. Schlaf nutzt nie Außentemperatur.
 15. Alle fünf TOGs plus `none` sind austauschbar.
 16. TOG-Tausch rebalanciert Unterkleidung.
-17. Schlafmodus empfiehlt nie lose Decke über Schlafsack.
+17. Schlafmodus empfiehlt nie lose Bettware – auch bei `sleep_bag_none`.
 18. `styleTheme` verändert keine Fachentscheidung.
 19. Manueller Item-Lock bleibt in derselben Session erhalten.
 20. Sicherheitsregel darf Lock überstimmen und muss einen strukturierten Grund liefern.

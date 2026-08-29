@@ -14,9 +14,10 @@ function assertNoLooseSleepBedding(result) {
     const definition = CLOTHING_CATALOG[slotResult.selected.itemId];
     return definition?.category === 'blanket' || /(?:blanket|bedding|duvet|pillow)/.test(slotResult.selected.itemId);
   }));
-  const safetyNotice = result.notices.find((notice) => notice.code === 'SLEEP_NO_LOOSE_BLANKET_OVER_BAG');
+  const safetyNotice = result.notices.find((notice) => notice.code === 'SLEEP_NO_LOOSE_BEDDING');
   assert.ok(safetyNotice);
   assert.ok(safetyNotice.reasonCodes.includes('SAFE_SLEEP_NO_LOOSE_BEDDING'));
+  assert.ok(!result.notices.some((notice) => notice.code === 'SLEEP_NO_LOOSE_BLANKET_OVER_BAG'));
 }
 
 test('generic V1 TOG orientation has calibrated bands',()=>{

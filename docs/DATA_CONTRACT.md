@@ -355,7 +355,7 @@ interface SleepContext {
 }
 ```
 
-Kein Feld für eigenen Schlafsack oder Herstellerdaten.
+Kein Feld für eigenen Schlafsack oder Herstellerdaten. Lose Bettware ist im `sleep`-Modus unabhängig von der gewählten Schlafsackoption kein zulässiger Wärmeausgleich; zusätzliche Wärme wird nur über geeignete körpernahe Schlafkleidung oder einen passenden Schlafsack modelliert.
 
 ```ts
 type SituationContext =
@@ -713,7 +713,7 @@ Normative Codes mindestens:
 - `CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT`,
 - `CAR_CABIN_TEMPERATURE_ESTIMATED`,
 - `SLEEP_NO_HAT`,
-- `SLEEP_NO_LOOSE_BLANKET_OVER_BAG`,
+- `SLEEP_NO_LOOSE_BEDDING`,
 - `SLEEP_NO_WEIGHTED_PRODUCTS`,
 - `SLEEP_USE_ROOM_TEMPERATURE`,
 - `SLEEP_GENERIC_TOG_ORIENTATION`,
@@ -729,6 +729,8 @@ Normative Codes mindestens:
 - `EXTREME_HEAT_CAUTION`,
 - `STRONG_WIND_CAUTION`,
 - `MANUAL_LOCK_OVERRIDDEN_FOR_SAFETY`.
+
+`SLEEP_NO_LOOSE_BEDDING` gilt für den gesamten `sleep`-Modus: keine lose Decke oder andere lose Bettware im Schlafbereich, unabhängig davon, ob `sleep_bag_none` oder ein TOG-Schlafsack gewählt ist.
 
 ## 18. Regelspur
 
@@ -866,7 +868,7 @@ Wählt der Nutzer `sleep_bag_1_0`, wird gespeichert:
 }
 ```
 
-Danach muss die Engine die Unterkleidung auf ein wärmeres Preset umstellen. Sie darf keine lose Decke über dem Schlafsack als thermischen Ausgleich erzeugen.
+Danach muss die Engine die Unterkleidung auf ein wärmeres Preset umstellen. Sie darf keine lose Bettware als thermischen Ausgleich erzeugen; dieselbe Regel gilt ausdrücklich auch bei `sleep_bag_none`.
 
 ## 23. Auto-Beispiel mit Schätzung
 
@@ -1037,7 +1039,7 @@ Empfohlen:
 19. Schlaf verwendet ausschließlich `roomTempC` als Umgebungs-Temperaturinput.
 20. `sleep_bag_none`, 0.5, 1.0, 1.5, 2.5 und 3.5 TOG sind austauschbar.
 21. TOG-Tausch verändert bei Bedarf `sleep_underlayer`.
-22. Schlafsacktausch erzeugt nie lose Decke über dem Schlafsack.
+22. Schlafmodus erzeugt nie lose Bettware als Wärmeausgleich – auch nicht bei `sleep_bag_none`.
 23. `wärmer` / `dünner` verändert möglichst wenige Slots.
 24. `hot_sweaty` erhöht Isolation nie.
 25. `cool` reduziert Isolation nie.

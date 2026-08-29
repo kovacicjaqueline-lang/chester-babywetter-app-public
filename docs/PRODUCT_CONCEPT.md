@@ -258,10 +258,12 @@ Harte Schlafregeln:
 
 - keine Mütze in Innenräumen beim Schlafen,
 - Kopf frei,
-- keine lose Decke über einem Schlafsack,
+- keine lose Decke oder andere lose Bettware im Schlafbereich – unabhängig davon, ob ein Schlafsack gewählt ist,
 - keine Wärmflasche/Heizdecke,
 - keine gewichteten Schlafprodukte,
 - Schlafsack muss passend sitzen.
+
+Zusätzliche Wärme wird im `sleep`-Modus ausschließlich über geeignete körpernahe Schlafkleidung oder einen passenden Schlafsack ausgeglichen.
 
 ## 8. Aktivität
 
