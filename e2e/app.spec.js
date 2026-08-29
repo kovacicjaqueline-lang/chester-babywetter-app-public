@@ -53,7 +53,7 @@ test('Kinderwagen verändert die Empfehlung', async ({ page }) => {
   const outdoor = await selectedIds(page);
   await chooseSituation(page, 'stroller');
   await page.locator('[data-open-dialog="situationDialog"]').first().click();
-  await page.locator('#situationDialog [data-context-field="strollerState"]').selectOption('asleep');
+  await page.locator('#situationDialog [data-context-field="strollerBehavior"]').selectOption('asleep');
   await page.locator('#applySituationButton').click();
   const stroller = await selectedIds(page);
   expect(stroller).not.toEqual(outdoor);
