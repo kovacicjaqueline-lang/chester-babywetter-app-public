@@ -76,7 +76,7 @@ function createBottomNav() {
   nav.className = 'bottom-nav';
   nav.setAttribute('aria-label', 'Schnellnavigation');
   nav.innerHTML = `
-    <a href="#outfitHeading"><span class="nav-icon" aria-hidden="true">⌂</span><span>Outfit</span></a>
+    <a href="#outfitCard"><span class="nav-icon" aria-hidden="true">⌂</span><span>Outfit</span></a>
     <button type="button" data-open-dialog="situationDialog"><span class="nav-icon" aria-hidden="true">◌</span><span>Situation</span></button>
     <button type="button" data-open-dialog="catalogDialog"><span class="nav-icon" aria-hidden="true">▦</span><span>Kleidung</span></button>
     <button type="button" data-open-dialog="settingsDialog"><span class="nav-icon" aria-hidden="true">•••</span><span>Mehr</span></button>`;
@@ -127,7 +127,6 @@ function ensureHourlySelectionStyles() {
     .hour-choice small { color: var(--muted); font-size: .56rem; }
     .hour-choice.is-selected { border-color: rgba(155,109,85,.55); background: #fff7f1; box-shadow: 0 0 0 2px rgba(155,109,85,.10); }
     .hour-choice.is-selected > span:first-child { color: var(--accent); font-weight: 820; }
-    .hour-choice:disabled { cursor: default; opacity: .52; }
     .recommendation-time-label { margin: 6px 0 0; color: var(--accent); font-size: .72rem; font-weight: 780; }
   `;
   document.head.append(style);
@@ -147,26 +146,21 @@ function ensureRecommendationTimeLabel() {
 }
 
 function updateRecommendationTime(snapshot) {
-  const heading = document.querySelector('#outfitHeading');
   const label = ensureRecommendationTimeLabel();
-  if (!heading || !label) return;
+  if (!label) return;
   const weatherDriven = WEATHER_SELECTION_MODES.has(snapshot.mode);
   label.hidden = !weatherDriven;
-  if (!weatherDriven) {
-    heading.textContent = 'So passt es jetzt';
-    return;
-  }
-  heading.textContent = snapshot.selectedTime ? 'So passt es' : 'So passt es jetzt';
-  label.textContent = snapshot.selectedTime ? `Für ${formattedHour(snapshot.selectedTime)}` : 'Für jetzt';
+  label.textContent = weatherDriven
+    ? (snapshot.selectedTime ? `Für ${formattedHour(snapshot.selectedTime)}` : 'Für jetzt')
+    : '';
 }
 
-function hourlyChoice(option, snapshot, disabled) {
+function hourlyChoice(option, snapshot) {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = `hour-choice${option.time === snapshot.selectedTime ? ' is-selected' : ''}`;
   button.dataset.hourlyChoice = option.kind;
   if (option.time) button.dataset.hourlyStartTime = option.time;
-  button.disabled = disabled;
   button.setAttribute('aria-pressed', String(option.time === snapshot.selectedTime));
 
   const time = document.createElement('span');
@@ -195,7 +189,7 @@ function renderHourlySelection(host) {
   if (!snapshot.options.length) return;
   host.classList.add('hourly-scroll--selectable');
   host.setAttribute('aria-label', 'Stündliche Wettervorschau, Zeitpunkt für Empfehlung wählen');
-  host.replaceChildren(...snapshot.options.map((option) => hourlyChoice(option, snapshot, false)));
+  host.replaceChildren(...snapshot.options.map((option) => hourlyChoice(option, snapshot)));
 }
 
 function triggerRecommendationRecalculation() {
@@ -211,7 +205,7 @@ function bindHourlySelection() {
 
   host.addEventListener('click', (event) => {
     const choice = event.target.closest('[data-hourly-choice]');
-    if (!(choice instanceof HTMLButtonElement) || choice.disabled) return;
+    if (!(choice instanceof HTMLButtonElement)) return;
     const next = choice.dataset.hourlyChoice === 'now' ? null : choice.dataset.hourlyStartTime;
     if (!setHourlySelectionStart(next)) return;
     announce(next ? `Outfit für ${formattedHour(next)} wird berechnet` : 'Outfit für jetzt wird berechnet');
@@ -239,7 +233,7 @@ function initSwipeControls() {
   });
 
   const outfitCard = document.querySelector('.outfit-card');
-  const outfitSwipeSurface = outfitCard?.querySelector(':scope > .section-heading');
+  const outfitSwipeSurface = outfitCard?.querySelector(':scope > .warmth-control');
   bindHorizontalSwipe(outfitSwipeSurface, (direction) => {
     triggerWarmth(direction);
     flash(outfitCard);
