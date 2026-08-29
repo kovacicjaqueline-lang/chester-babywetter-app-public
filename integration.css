@@ -1,3 +1,5 @@
+@import url('./modern.css');
+
 /* Compatibility stylesheet retained for the V1 shell cache. UI styles are consolidated in styles.css. */
 
 /* Weather freshness is shown by the connection banner, so all remaining facts use one compact layout. */
