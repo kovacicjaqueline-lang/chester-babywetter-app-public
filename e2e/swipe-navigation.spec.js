@@ -24,6 +24,7 @@ test('Situation lässt sich auf der Startseite nach links und rechts wischen', a
 });
 
 test('Outfit-Überschrift reagiert auf Wischgeste, Kleidungs-Carousel bleibt horizontal bedienbar', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
   await openDemo(page);
   await expect(page.locator('[data-warmth="balanced"]')).toHaveAttribute('aria-pressed', 'true');
 
