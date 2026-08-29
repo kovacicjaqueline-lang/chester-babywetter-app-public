@@ -15,10 +15,10 @@ function point(temp, overrides={}) {
   };
 }
 
-function weather(temp) {
+function weather(temp, overrides={}) {
   return {
     weatherId:'weather_test', location:{locationId:'loc',label:'Testort',latitude:47.8,longitude:13,timezone:'Europe/Vienna'},
-    origin:'api', source:'test', fetchedAt:'2026-08-25T12:00:00.000Z', freshness:'fresh', current:point(temp), hourly:[]
+    origin:'api', source:'test', fetchedAt:'2026-08-25T12:00:00.000Z', freshness:'fresh', current:point(temp, overrides), hourly:[]
   };
 }
 
@@ -44,4 +44,17 @@ test('car stays partial when outdoor transition is blocked but in-car is ready',
   assert.equal(result.phases.find((phase) => phase.phase === 'outdoor_transition')?.status, 'blocked');
   assert.equal(result.phases.find((phase) => phase.phase === 'in_car')?.status, 'ready');
   assert.equal(result.status, 'partial');
+});
+
+test('warm stroller wind protection keeps light leg coverage and avoids insulated softshell', () => {
+  const result = recommendOutfit(request({
+    mode:'stroller', plannedMinutes:60, strollerState:'awake', activity:'normal', activitySource:'user',
+    windProtection:'none', sunExposure:'shade'
+  }, weather(26, { windSpeedKmh:14, windGustKmh:40 })));
+  const selected = new Set(result.slots.filter((slot) => slot.phase === 'main').map((slot) => slot.selected.itemId));
+
+  assert.ok(selected.has('short_sleeve_bodysuit'));
+  assert.ok(selected.has('light_trousers'));
+  assert.ok(selected.has('rain_jacket'));
+  assert.ok(!selected.has('softshell_jacket'));
 });

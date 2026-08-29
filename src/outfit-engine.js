@@ -166,6 +166,7 @@ function evaluateOutdoorLike(result, request, phase, effectiveMode) {
   const thermalWeightBeforeProtection = bodyThermalWeight(state);
   applyRainProtection(state, result, request, rain, phase, effectiveMode);
   applyWindProtection(state, result, wind, phase, effectiveMode);
+  preferLightWindShellInWarmWeather(state, thermal.thermalReferenceC, rain, wind, effectiveMode);
   rebalanceFunctionalProtection(state, thermalWeightBeforeProtection, effectiveMode);
 
   applySunProtection(state, result, request, uv, thermal.thermalReferenceC, phase, effectiveMode);
@@ -279,7 +280,7 @@ function evaluateCar(result, request) {
 function evaluateSleep(result, request) {
   const { context, profile, session, neckFeedback } = request;
   addNotice(result,'SLEEP_NO_HAT','hard_rule','main',['SAFE_SLEEP_HEAD_UNCOVERED'],{});
-  addNotice(result,'SLEEP_NO_LOOSE_BLANKET_OVER_BAG','hard_rule','main',['SAFE_SLEEP_NO_LOOSE_BLANKET'],{});
+  addNotice(result,'SLEEP_NO_LOOSE_BEDDING','hard_rule','main',['SAFE_SLEEP_NO_LOOSE_BEDDING'],{});
   addNotice(result,'SLEEP_NO_WEIGHTED_PRODUCTS','hard_rule','main',['SAFE_SLEEP_NO_WEIGHTED_PRODUCTS'],{});
   addNotice(result,'SLEEP_USE_ROOM_TEMPERATURE','hard_rule','main',['SLEEP_ROOM_TEMP_ONLY'],{});
   addNotice(result,'SLEEP_GENERIC_TOG_ORIENTATION','info','main',['SLEEP_GENERIC_TOG_ORIENTATION'],{});
@@ -396,6 +397,14 @@ function bodyThermalWeight(state) {
     total += CLOTHING_CATALOG[selection.itemId]?.thermalWeight ?? 0;
   }
   return total;
+}
+
+function preferLightWindShellInWarmWeather(state, temp, rain, wind, mode) {
+  if (!['outdoor','stroller'].includes(mode) || temp < 24 || rain.required || wind.requiredProtection <= 0) return;
+  const outer = state.map.get('outer');
+  if (!outer || !['light_transition_jacket','softshell_jacket'].includes(outer.itemId)) return;
+  if (!outer.reasonCodes.includes('WIND_PROTECTION_REQUIRED')) return;
+  setSelected(state,'outer','rain_jacket','engine','on_body',['WIND_PROTECTION_REQUIRED','WARM_WEATHER_LIGHT_SHELL']);
 }
 
 function rebalanceFunctionalProtection(state, thermalWeightBeforeProtection, mode) {

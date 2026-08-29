@@ -7,6 +7,19 @@ const req=(roomTempC,session=createSession('sleep'),extra={})=>({requestId:'slee
 const id=(r,slot)=>r.slots.find(s=>s.slot===slot)?.selected.itemId;
 const notices=(r)=>r.notices.map(n=>n.code);
 
+function assertNoLooseSleepBedding(result) {
+  assert.ok(result.slots.every((slotResult) => ['sleep_bag','sleep_underlayer'].includes(slotResult.slot)));
+  assert.ok(result.slots.every((slotResult) => CLOTHING_CATALOG[slotResult.selected.itemId]?.sleepSafe));
+  assert.ok(!result.slots.some((slotResult) => {
+    const definition = CLOTHING_CATALOG[slotResult.selected.itemId];
+    return definition?.category === 'blanket' || /(?:blanket|bedding|duvet|pillow)/.test(slotResult.selected.itemId);
+  }));
+  const safetyNotice = result.notices.find((notice) => notice.code === 'SLEEP_NO_LOOSE_BEDDING');
+  assert.ok(safetyNotice);
+  assert.ok(safetyNotice.reasonCodes.includes('SAFE_SLEEP_NO_LOOSE_BEDDING'));
+  assert.ok(!result.notices.some((notice) => notice.code === 'SLEEP_NO_LOOSE_BLANKET_OVER_BAG'));
+}
+
 test('generic V1 TOG orientation has calibrated bands',()=>{
   assert.equal(genericTogGuidanceForRoomTemp(28).sleepBagId,'sleep_bag_none');
   assert.equal(genericTogGuidanceForRoomTemp(25).sleepBagId,'sleep_bag_0_5');
@@ -56,12 +69,34 @@ test('sleep bag lock remains manual and alternatives project underlayer changes'
   assert.ok(bag.alternatives.some(a=>a.projectedChanges.some(c=>c.slot==='sleep_underlayer')));
 });
 
-test('sleep never recommends loose blanket or hat and emits safety codes',()=>{
+test('sleep never recommends loose bedding or a hat and emits broad safety semantics',()=>{
   const r=recommendOutfit(req(16));
-  assert.ok(!r.slots.some(s=>['head'].includes(s.slot) || /blanket/.test(s.selected.itemId)));
+  assertNoLooseSleepBedding(r);
+  assert.ok(!r.slots.some(s=>s.slot==='head'));
   assert.ok(notices(r).includes('SLEEP_NO_HAT'));
-  assert.ok(notices(r).includes('SLEEP_NO_LOOSE_BLANKET_OVER_BAG'));
   assert.ok(notices(r).includes('SLEEP_NO_WEIGHTED_PRODUCTS'));
+});
+
+test('sleep_bag_none stays free of loose bedding for every selection path',()=>{
+  const fromGuidance=recommendOutfit(req(28));
+
+  const bagLock=lockItem(createSession('none-lock'),{slot:'sleep_bag',itemId:'sleep_bag_none'});
+  const fromBagLock=recommendOutfit(req(19,bagLock));
+
+  const underlayerLock=lockItem(createSession('underlayer-lock'),{slot:'sleep_underlayer',itemId:'sleep_under_long_body_plus_light_pajamas'});
+  const fromUnderlayerRebalance=recommendOutfit(req(25,underlayerLock));
+
+  for (const result of [fromGuidance,fromBagLock,fromUnderlayerRebalance]) {
+    assert.equal(id(result,'sleep_bag'),'sleep_bag_none');
+    assertNoLooseSleepBedding(result);
+  }
+
+  const noneBag=fromGuidance.slots.find((slotResult)=>slotResult.slot==='sleep_bag');
+  assert.ok(noneBag.alternatives.every((alternative)=>
+    alternative.projectedChanges.every((change)=>
+      !/(?:blanket|bedding|duvet|pillow)/.test(`${change.fromItemId ?? ''} ${change.toItemId ?? ''}`)
+    )
+  ));
 });
 
 test('warmer/cooler sleep correction prefers underlayer single-slot change',()=>{
