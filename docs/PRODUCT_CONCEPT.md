@@ -15,6 +15,7 @@ Die App gibt eine konkrete, nachvollziehbare Kleidungsempfehlung für ein Baby a
 - tatsächliche Sonnenexposition,
 - Aktivität,
 - Situation,
+- Alter aus dem Geburtsdatum als kleine thermische Feinjustierung in den ersten Lebensmonaten,
 - manuell gesetzte Wärmetendenz,
 - Nackentest als reale Rückmeldung.
 
@@ -111,17 +112,32 @@ V1-Felder:
 
 Nicht benötigt:
 
+- ein separat gepflegtes Altersfeld; das Alter wird aus `birthDate` berechnet,
 - Geschlecht als Fachparameter,
 - Gewicht/Körpergröße für die Wärmelogik,
 - medizinische Diagnosen,
 - Kleidungsinventar,
 - Schlafsackinventar.
 
-### 5.1 Wärmetendenz
+### 5.1 Alter
+
+Das optionale Geburtsdatum ist die einzige Altersquelle. Die App berechnet daraus für jede Empfehlung das aktuelle Alter und speichert keine redundante Monatszahl.
+
+V1 verwendet Alter bewusst nur als kleine thermische Feinjustierung:
+
+- unter drei vollendeten Monaten bei thermischer Referenz unter 28 °C: moderat wärmer (`+0.5 thermalStep`),
+- ab drei Monaten: kein allgemeiner thermischer Altersaufschlag,
+- bei unbekanntem Alter: kein thermischer Altersaufschlag,
+- ab 28 °C: keine zusätzliche Isolation allein aufgrund jungen Alters,
+- Schlaf: keine Alterskorrektur; Raumtemperatur und TOG-/Schlaflogik bleiben maßgeblich.
+
+Damit kann die gleiche Situation für ein ein Monate altes Baby geringfügig wärmer ausfallen als für ein sieben Monate altes Baby, ohne eine pauschale „eine Schicht mehr“-Regel einzuführen. Aktivität, Situation, Wetter, externe Isolation, Wärmetendenz und Nackentest bleiben separate Faktoren.
+
+### 5.2 Wärmetendenz
 
 Die Wärmetendenz wird bewusst vom Nutzer gesetzt. Sie darf die Empfehlung höchstens moderat verschieben und niemals Sicherheitsregeln überschreiben.
 
-### 5.2 Stil
+### 5.3 Stil
 
 `neutral`, `boy` und `girl` steuern ausschließlich Farben, Muster und Asset-Varianten. Die fachlichen `itemId`s bleiben identisch.
 
@@ -361,7 +377,7 @@ Beispiele:
 
 ## 14. Quellenbasis und Kalibrierungsstatus
 
-Stand der fachlichen Prüfung: 2026-08-25.
+Stand der fachlichen Prüfung: 2026-08-29.
 
 ### Sicherheits-/Gesundheitsquellen
 
@@ -371,6 +387,14 @@ Stand der fachlichen Prüfung: 2026-08-25.
   - Schutzmaßnahmen ab UVI 3.
 - NHS, Keeping your baby safe in the sun: https://www.nhs.uk/baby/first-aid-and-safety/safety-in-the-sun/
   - kleine Babys aus direkter Sonne; leichte Kleidung; Sonnenschutz am Kinderwagen; keine Decke über dem Wagen.
+- NHS, How to dress a newborn baby: https://www.nhs.uk/best-start-in-life/baby/baby-basics/caring-for-your-baby/how-to-dress-a-newborn/
+  - kleine Babys regulieren ihre Temperatur weniger zuverlässig; Überhitzung durch zu viel Kleidung bleibt ausdrücklich zu vermeiden.
+- HealthyChildren/AAP, Your Baby's First Month: Growth & Physical Appearance: https://www.healthychildren.org/English/ages-stages/baby/Pages/First-Month-Physical-Appearance-and-Growth.aspx
+  - in den ersten Wochen ist die Temperaturregulation noch im Übergang; warm bei Kälte und leicht bei Hitze anziehen, nicht pauschal überbündeln.
+- Fleming P, Azaz Y, Wigfield R. Development of thermoregulation in infancy: possible implications for SIDS. J Clin Pathol. 1992;45(Suppl):17-19. https://pubmed.ncbi.nlm.nih.gov/1474152/
+  - beschreibt relevante thermoregulatorische Veränderungen über die ersten drei Lebensmonate; die V1-`<3 Monate`-Grenze ist daraus als vorsichtige Produktkalibrierung abgeleitet, nicht als medizinische Norm.
+- Yu Y, Koyama Y, Shimada S. Development of the thermoregulatory mechanism - Raising the possibility that it is acquired at birth. Neuroscience. 2025. https://pubmed.ncbi.nlm.nih.gov/40345478/
+  - neuere Übersichtsarbeit unterstreicht, dass infantile Thermoregulation differenziert betrachtet werden muss; deshalb verwendet V1 nur einen kleinen Altersfaktor statt einer pauschalen Extraschicht.
 - The Lullaby Trust, How to dress your baby for sleep: https://www.lullabytrust.org.uk/baby-safety/baby-product-information/dress-your-baby-for-sleep/
   - 16–20 °C Orientierung; Nacken/Brust prüfen; keine universelle TOG/Kleidungs-Tabelle.
 - The Lullaby Trust, Cold weather: https://www.lullabytrust.org.uk/baby-safety/travel-and-weather/cold-weather/
@@ -403,5 +427,7 @@ Diese Quellen werden **nur** verwendet, um eine generische Produkt-Orientierung 
 Die V1-Entscheidung für `cabinTempSource: estimated` ist geschlossen: unbekannte Autoinnenraumtemperatur wird als transparente neutrale 20-°C-Klimaannahme modelliert und nicht aus Außentemperatur abgeleitet.
 
 Die V1-Entscheidung zur finalen Katalogzuordnung und relativen `thermalWeight`-Kalibrierung ist ebenfalls geschlossen. Der vollständige Audit vom 2026-08-28 ist in `docs/THERMAL_WEIGHT_AUDIT.md` dokumentiert. Die aktuellen `thermalWeight`-, `thermalStepCredit`- und `sleepWarmthWeight`-Werte sind intern konsistent und werden durch gezielte Kataloginvarianten abgesichert.
+
+Die V1-Alterskalibrierung ist geschlossen: `birthDate` aus dem Babyprofil wird ohne redundantes Altersfeld ausgewertet; unter drei vollendeten Monaten gilt außerhalb des Schlafmodus bei thermischer Referenz unter 28 °C ein kleiner `+0.5 thermalStep`-Faktor. Ab drei Monaten entfällt der allgemeine Altersaufschlag.
 
 Damit sind die wesentlichen **Produkt- und Kalibrierungsentscheidungen für V1 geschlossen**. Spätere Mehrprofil-, Inventar- oder Präferenzlern-Funktionen bleiben ausdrücklich außerhalb des V1-Scopes und sind keine offenen V1-Entscheidungen.
