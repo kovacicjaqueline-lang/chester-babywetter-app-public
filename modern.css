@@ -201,18 +201,17 @@ body {
 }
 
 .outfit-grid {
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(104px, 31%);
-  grid-template-columns: none;
-  justify-content: start;
+  grid-auto-flow: row;
+  grid-auto-columns: initial;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  justify-content: stretch;
   gap: 11px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
+  overflow: visible;
+  scroll-snap-type: none;
   padding: 3px 2px 10px;
-  touch-action: pan-x;
-  -webkit-overflow-scrolling: touch;
+  touch-action: auto;
 }
-.clothing-card { scroll-snap-align: start; }
+.clothing-card { scroll-snap-align: none; }
 .clothing-image-shell {
   border-radius: 22px;
   background: linear-gradient(155deg, #fbfcfd, #f2f5f7);
@@ -383,7 +382,6 @@ body {
     min-width: 0;
     padding-inline: 4px;
   }
-  .outfit-grid { grid-auto-columns: minmax(102px, 31vw); }
 }
 
 @media (max-width: 390px) {
@@ -394,7 +392,6 @@ body {
   }
   .weather-hero { padding: 20px 16px; }
   .outfit-card { padding-inline: 14px; }
-  .outfit-grid { grid-auto-columns: 100px; }
   .bottom-nav { width: calc(100% - 16px); }
 }
 
@@ -405,10 +402,7 @@ body {
     padding-inline: 20px;
   }
   .outfit-grid {
-    grid-auto-flow: column;
-    grid-template-columns: none;
-    grid-auto-columns: 126px;
-    overflow-x: auto;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
   }
 }
 
