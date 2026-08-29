@@ -74,7 +74,15 @@ function syntheticIndoorWeather(roomTempC, requestedAt) {
 
 function adaptIndoorResult(result, roomTempC) {
   result.mode = 'indoor';
-  result.slots = result.slots.filter((entry) => !INDOOR_HIDDEN_SLOTS.has(entry.slot));
+  result.slots = result.slots
+    .filter((entry) => !INDOOR_HIDDEN_SLOTS.has(entry.slot))
+    .map((entry) => ({
+      ...entry,
+      alternatives:entry.alternatives.map((alternative) => ({
+        ...alternative,
+        projectedChanges:alternative.projectedChanges.filter((change) => !INDOOR_HIDDEN_SLOTS.has(change.slot))
+      }))
+    }));
   result.items = result.items.filter((entry) => !INDOOR_HIDDEN_SLOTS.has(entry.slot));
   result.notices = result.notices.filter((notice) => !INDOOR_WEATHER_NOTICE_CODES.has(notice.code));
   result.ruleTrace = result.ruleTrace.filter((entry) => !entry.ruleId.startsWith('weather.') && !entry.ruleId.startsWith('situation.stroller.'));
