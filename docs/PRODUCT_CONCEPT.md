@@ -13,9 +13,10 @@ Die App gibt eine konkrete, nachvollziehbare Kleidungsempfehlung für ein Baby a
 - Regen bzw. Niederschlagswahrscheinlichkeit,
 - Sonne und UV-Index,
 - tatsächliche Sonnenexposition,
-- Aktivität,
+- aktuelle Aktivität,
 - Situation,
 - Alter aus dem Geburtsdatum als kleine thermische Feinjustierung in den ersten Lebensmonaten,
+- Mobilitätsstand als Entwicklungsinformation im Babyprofil, getrennt von der aktuellen Aktivität,
 - manuell gesetzte Wärmetendenz,
 - Nackentest als reale Rückmeldung.
 
@@ -33,6 +34,7 @@ Die App ist eine Entscheidungshilfe und keine medizinische Anwendung. Sie gibt k
 8. **Sicherheitsregeln schlagen Komfortoptimierung und manuelle Locks.**
 9. **Kalte Hände oder Füße allein sind kein ausreichender Friernachweis.**
 10. **Geschlecht beeinflusst nie Wärme- oder Sicherheitslogik.**
+11. **Mobilitätsstand ist nicht aktuelle Aktivität.** `Läuft` im Profil macht ein Outfit nicht automatisch dünner; thermische Bewegungswärme wird ausschließlich über den aktuellen Situationskontext bewertet.
 
 ## 3. Festgelegter V1-Scope
 
@@ -105,6 +107,7 @@ V1-Felder:
 - `profileId`,
 - optional `displayName`,
 - optional `birthDate`,
+- `mobilityStage: low_mobility | crawling | walking`,
 - `warmthBias: runs_cool | neutral | runs_warm`,
 - `styleTheme: neutral | boy | girl`,
 - `defaultMode`,
@@ -131,13 +134,27 @@ V1 verwendet Alter bewusst nur als kleine thermische Feinjustierung:
 - ab 28 °C: keine zusätzliche Isolation allein aufgrund jungen Alters,
 - Schlaf: keine Alterskorrektur; Raumtemperatur und TOG-/Schlaflogik bleiben maßgeblich.
 
-Damit kann die gleiche Situation für ein ein Monate altes Baby geringfügig wärmer ausfallen als für ein sieben Monate altes Baby, ohne eine pauschale „eine Schicht mehr“-Regel einzuführen. Aktivität, Situation, Wetter, externe Isolation, Wärmetendenz und Nackentest bleiben separate Faktoren.
+Damit kann die gleiche Situation für ein einmonatiges Baby geringfügig wärmer ausfallen als für ein sieben Monate altes Baby, ohne eine pauschale „eine Schicht mehr“-Regel einzuführen. Aktivität, Situation, Wetter, externe Isolation, Wärmetendenz und Nackentest bleiben separate Faktoren.
 
-### 5.2 Wärmetendenz
+### 5.2 Mobilität
+
+Der Mobilitätsstand beschreibt die allgemeine Entwicklung und wird im Babyprofil lokal gespeichert:
+
+- `low_mobility` → wenig mobil,
+- `crawling` → krabbelt,
+- `walking` → läuft.
+
+Mobilität und aktuelle Aktivität sind bewusst getrennt. Ein Kind, das bereits läuft, kann gerade ruhig sitzen, im Kinderwagen schlafen oder sehr aktiv herumgehen. Deshalb verändert `mobilityStage` **keinen** `thermalStep` direkt und erzeugt allein keine andere Kleidungsempfehlung.
+
+Die aktuelle Bewegungswärme kommt weiterhin ausschließlich aus dem Situationsfeld `activity`. Ein laufendes Kind mit `activity: normal` erhält dieselbe Aktivitätskorrektur wie ein wenig mobiles Kind mit `activity: normal`; bei `activity: active` greift die vorhandene Aktivitätskorrektur. Im schlafenden Kinderwagen wird Aktivität weiterhin ignoriert.
+
+Der Mobilitätsstand darf in der UI helfen, passende Aktivitäts- oder Bodenkontaktoptionen verständlich anzubieten oder vorzuschlagen. Er darf diese situativen Angaben jedoch nicht stillschweigend ersetzen.
+
+### 5.3 Wärmetendenz
 
 Die Wärmetendenz wird bewusst vom Nutzer gesetzt. Sie darf die Empfehlung höchstens moderat verschieben und niemals Sicherheitsregeln überschreiben.
 
-### 5.3 Stil
+### 5.4 Stil
 
 `neutral`, `boy` und `girl` steuern ausschließlich Farben, Muster und Asset-Varianten. Die fachlichen `itemId`s bleiben identisch.
 
@@ -196,7 +213,7 @@ Die App berücksichtigt:
 - UV/Sonne,
 - Bodenkontakt.
 
-Aktivität wird möglichst aus Kontext und Alter vorgeschlagen; der Nutzer muss sie nicht bei jedem Start einstellen. Bei Bedarf kann sie korrigiert werden. In der UI werden `normal` und `active` angeboten; ein älterer gespeicherter Wert `calm` wird wie `normal` behandelt.
+Der Mobilitätsstand aus dem Profil kann helfen, passende Aktivitäts- oder Bodenkontaktoptionen vorzuschlagen. Maßgeblich für die thermische Bewegungswärme bleibt jedoch immer die aktuelle `activity`. In der UI werden `normal` und `active` angeboten; ein älterer gespeicherter Wert `calm` wird wie `normal` behandelt.
 
 ### 7.2 Kinderwagen (`stroller`)
 
@@ -309,15 +326,17 @@ Zusätzliche Wärme wird im `sleep`-Modus ausschließlich über geeignete körpe
 
 ## 8. Aktivität
 
-Die App soll Aktivität so selten wie möglich abfragen.
+Die App soll Aktivität so selten wie möglich abfragen. Mobilitätsstand und aktuelle Aktivität bleiben dabei getrennte Achsen: `mobilityStage` beschreibt, was das Kind grundsätzlich schon kann; `activity` beschreibt, wie stark es sich in der aktuellen Situation tatsächlich bewegt.
 
 Grundprinzip:
 
 - `carrier`: thermische Sonderlogik über Körperkontakt; keine normale Aktivitätsfrage,
 - `stroller`: ein einziger UI-Zustand `Schläft | Wach | Sehr aktiv`; intern wird `Sehr aktiv` als `awake + active` abgebildet,
 - `indoor`: `normal | active`; `calm` ist kein eigener UI-Zustand und wird wie `normal` behandelt,
-- `outdoor`: Standard `normal`; bei offensichtlich mobilem/spielendem Kind kann `active` vorgeschlagen werden; `calm` wird in der UI nicht separat angeboten,
+- `outdoor`: Standard `normal`; bei aktuell deutlich mobilem/spielendem Kind kann `active` gewählt werden; `calm` wird in der UI nicht separat angeboten,
 - `car` und `sleep`: keine normale Aktivitätskorrektur.
+
+Ein im Profil als `walking` gespeichertes Kind erhält nicht automatisch `activity: active`. Umgekehrt kann auch ein noch nicht laufendes Kind aktuell sehr aktiv strampeln oder krabbeln und deshalb `active` sein.
 
 ## 9. Bodenkontakt und Schuhe
 
@@ -326,6 +345,8 @@ Schuhe werden nur empfohlen, wenn draußen tatsächlicher Bodenkontakt geplant i
 - `none` → Socken/Booties,
 - `standing` → geeignete Schuhe optional/erforderlich je Untergrund/Wetter,
 - `walking` → wettergerechte Schuhe.
+
+`groundContact: walking` beschreibt die aktuelle Draußensituation und ist nicht identisch mit `profile.mobilityStage: walking`.
 
 ## 10. Sonne und UV
 
@@ -429,5 +450,7 @@ Die V1-Entscheidung für `cabinTempSource: estimated` ist geschlossen: unbekannt
 Die V1-Entscheidung zur finalen Katalogzuordnung und relativen `thermalWeight`-Kalibrierung ist ebenfalls geschlossen. Der vollständige Audit vom 2026-08-28 ist in `docs/THERMAL_WEIGHT_AUDIT.md` dokumentiert. Die aktuellen `thermalWeight`-, `thermalStepCredit`- und `sleepWarmthWeight`-Werte sind intern konsistent und werden durch gezielte Kataloginvarianten abgesichert.
 
 Die V1-Alterskalibrierung ist geschlossen: `birthDate` aus dem Babyprofil wird ohne redundantes Altersfeld ausgewertet; unter drei vollendeten Monaten gilt außerhalb des Schlafmodus bei thermischer Referenz unter 28 °C ein kleiner `+0.5 thermalStep`-Faktor. Ab drei Monaten entfällt der allgemeine Altersaufschlag.
+
+Die V1-Mobilitätsmodellierung ist geschlossen: `mobilityStage` wird im Babyprofil gespeichert, bleibt aber strikt von der situationsbezogenen `activity` getrennt und verändert selbst keine thermische Stufe. Bewegungswärme wird weiterhin ausschließlich über die aktuelle Aktivität bewertet.
 
 Damit sind die wesentlichen **Produkt- und Kalibrierungsentscheidungen für V1 geschlossen**. Spätere Mehrprofil-, Inventar- oder Präferenzlern-Funktionen bleiben ausdrücklich außerhalb des V1-Scopes und sind keine offenen V1-Entscheidungen.
