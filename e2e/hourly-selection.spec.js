@@ -58,11 +58,13 @@ test('Drinnen und Schlafen bleiben unabhängig von der Außenwetter-Stundenauswa
   await openDemo(page);
   await chooseSituation(page, 'indoor');
   await expect(page.locator('#outfitTimeLabel')).toBeHidden();
-  await expect(page.locator('#hourlyForecast [data-hourly-choice]').first()).toBeDisabled();
+  await expect(page.locator('#hourlyForecast [data-hourly-choice]')).toHaveCount(0);
+  await expect(page.locator('#hourlyForecast .hour-card').first()).toBeVisible();
   await expect(page.locator('#outfitReason')).toContainText('Raumtemperatur');
 
   await chooseSituation(page, 'sleep');
   await expect(page.locator('#outfitTimeLabel')).toBeHidden();
-  await expect(page.locator('#hourlyForecast [data-hourly-choice]').first()).toBeDisabled();
+  await expect(page.locator('#hourlyForecast [data-hourly-choice]')).toHaveCount(0);
+  await expect(page.locator('#hourlyForecast .hour-card').first()).toBeVisible();
   await expect(page.locator('#outfitReason')).toContainText('Raumtemperatur');
 });
