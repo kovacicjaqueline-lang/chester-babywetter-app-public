@@ -187,11 +187,15 @@ function hourlyChoice(option, snapshot, disabled) {
 function renderHourlySelection(host) {
   const snapshot = getHourlySelectionSnapshot();
   updateRecommendationTime(snapshot);
+  if (!WEATHER_SELECTION_MODES.has(snapshot.mode)) {
+    host.classList.remove('hourly-scroll--selectable');
+    host.setAttribute('aria-label', 'Stündliche Wettervorschau');
+    return;
+  }
   if (!snapshot.options.length) return;
-  const disabled = !WEATHER_SELECTION_MODES.has(snapshot.mode);
   host.classList.add('hourly-scroll--selectable');
-  host.setAttribute('aria-label', disabled ? 'Stündliche Wettervorschau' : 'Stündliche Wettervorschau, Zeitpunkt für Empfehlung wählen');
-  host.replaceChildren(...snapshot.options.map((option) => hourlyChoice(option, snapshot, disabled)));
+  host.setAttribute('aria-label', 'Stündliche Wettervorschau, Zeitpunkt für Empfehlung wählen');
+  host.replaceChildren(...snapshot.options.map((option) => hourlyChoice(option, snapshot, false)));
 }
 
 function triggerRecommendationRecalculation() {
