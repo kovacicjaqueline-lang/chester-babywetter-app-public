@@ -11,7 +11,7 @@ import {
   phaseStatusFromResult, summarizeWeatherWindow, thermalEnvironment, makeCarSafeBaseline,
   mergeResult, enforceCarSafetyAfterLocks, findLock, nearestSleepUnderlayer, overrideUnsafeLock,
   blockPhase, alternativeCandidateIds, thermalSignature, diffRecommendations, addTrace, roundHalf,
-  isFiniteNumber, clamp
+  ageMonths, isFiniteNumber, clamp
 } from './outfit-engine-support.js';
 
 export { TEMPERATURE_BANDS, createSession, setWarmthOffset, lockItem, temperatureBandFor } from './outfit-engine-support.js';
@@ -120,6 +120,10 @@ function evaluateOutdoorLike(result, request, phase, effectiveMode) {
   const wind = evaluateWind(weatherWindow, thermal, context, effectiveMode);
   adjustment += wind.thermalAdjustment;
   if (wind.thermalAdjustment) traceThermal(result,'weather.wind.thermal',phase,wind.thermalAdjustment,'WIND_THERMAL_EFFECT');
+
+  const ageAdjustment = youngInfantThermalAdjustment(profile.birthDate, request.requestedAt, thermal.thermalReferenceC);
+  adjustment += ageAdjustment;
+  if (ageAdjustment) traceThermal(result,'profile.age',phase,ageAdjustment,'YOUNG_INFANT_AGE_WARMTH');
 
   const bias = warmthBiasAdjustment(profile.warmthBias);
   adjustment += bias;
@@ -236,9 +240,11 @@ function evaluateCar(result, request) {
   seedBaseline(state, band.id, 'car');
   makeCarSafeBaseline(state);
 
+  const ageAdjustment = youngInfantThermalAdjustment(profile.birthDate, request.requestedAt, context.cabinTempC);
+  if (ageAdjustment) traceThermal(result,'profile.age','in_car',ageAdjustment,'YOUNG_INFANT_AGE_WARMTH');
   const bias = warmthBiasAdjustment(profile.warmthBias);
   const neck = neckFeedbackAdjustment(neckFeedback);
-  applyThermalDelta(state, bias, new Set(), 'car');
+  applyThermalDelta(state, ageAdjustment + bias, new Set(), 'car');
   makeCarSafeBaseline(state);
 
   applyBodyLocksAndRebalance(state,result,request,'in_car','car');
@@ -270,7 +276,7 @@ function evaluateCar(result, request) {
     thermalReferenceC:context.cabinTempC,
     thermalReferenceSource:'cabin_temp',
     thermalBand:band.id,
-    thermalAdjustment:roundHalf(bias + neck + session.warmthOffset),
+    thermalAdjustment:roundHalf(ageAdjustment + bias + neck + session.warmthOffset),
     missingFields:[]
   });
   if (result.status !== 'partial' && result.status !== 'blocked') result.status = inCarStatus;
@@ -478,6 +484,12 @@ function sanitizeAutomaticConditionalCarLayers(state) {
     if (slot === 'mid') setSelected(state,'mid','thin_sweater','engine','under_harness',['IN_CAR_THERMAL_BASELINE']);
     else state.map.delete(slot);
   }
+}
+
+function youngInfantThermalAdjustment(birthDate, at, thermalReferenceC) {
+  const age = ageMonths(birthDate, at);
+  if (age == null || age >= 3 || thermalReferenceC >= 28) return 0;
+  return 0.5;
 }
 
 function nearestSleepBag(targetWeight, preferredId) {
