@@ -23,7 +23,7 @@ test('Situation lässt sich auf der Startseite nach links und rechts wischen', a
   await expect(page.locator('#situationLabel')).toHaveText('Kinderwagen');
 });
 
-test('Outfit-Überschrift reagiert auf Wischgeste, Kleidungs-Carousel bleibt horizontal bedienbar', async ({ page }) => {
+test('Outfit-Überschrift reagiert auf Wischgeste, Kleidungsraster bleibt ohne Horizontal-Scroll', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await openDemo(page);
   await expect(page.locator('[data-warmth="balanced"]')).toHaveAttribute('aria-pressed', 'true');
@@ -41,10 +41,10 @@ test('Outfit-Überschrift reagiert auf Wischgeste, Kleidungs-Carousel bleibt hor
   }));
   expect(touchActions.card).toBe('auto');
   expect(touchActions.heading).toBe('pan-y');
-  expect(touchActions.grid).toBe('pan-x');
+  expect(touchActions.grid).toBe('auto');
 
   const scrollable = await page.locator('#outfitGrid').evaluate((element) => element.scrollWidth > element.clientWidth);
-  expect(scrollable).toBe(true);
+  expect(scrollable).toBe(false);
 });
 
 test('Bottom-Sheet kann über den Kopfbereich nach unten geschlossen werden', async ({ page }) => {
