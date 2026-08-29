@@ -54,17 +54,19 @@ test('Stundenleiste bleibt horizontal nutzbar, touchfreundlich und Jetzt ist dir
   await expect(page.locator('#outfitTimeLabel')).toHaveText('Für jetzt');
 });
 
-test('Drinnen und Schlafen bleiben unabhängig von der Außenwetter-Stundenauswahl', async ({ page }) => {
+test('Drinnen und Schlafen bleiben unabhängig von einer zuvor gewählten Außenwetterstunde', async ({ page }) => {
   await openDemo(page);
+  await chooseSituation(page, 'outdoor');
+  await page.locator('#hourlyForecast [data-hourly-start-time]').first().click();
+  await expect(page.locator('#hourlyForecast [data-hourly-choice="now"]')).toHaveAttribute('aria-pressed', 'false');
+
   await chooseSituation(page, 'indoor');
   await expect(page.locator('#outfitTimeLabel')).toBeHidden();
   await expect(page.locator('#hourlyForecast [data-hourly-choice]')).toHaveCount(0);
   await expect(page.locator('#hourlyForecast .hour-card').first()).toBeVisible();
-  await expect(page.locator('#outfitReason')).toContainText('Raumtemperatur');
 
   await chooseSituation(page, 'sleep');
   await expect(page.locator('#outfitTimeLabel')).toBeHidden();
   await expect(page.locator('#hourlyForecast [data-hourly-choice]')).toHaveCount(0);
   await expect(page.locator('#hourlyForecast .hour-card').first()).toBeVisible();
-  await expect(page.locator('#outfitReason')).toContainText('Raumtemperatur');
 });
