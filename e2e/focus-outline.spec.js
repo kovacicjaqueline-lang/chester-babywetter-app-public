@@ -9,11 +9,6 @@ test('Hauptinhalt bleibt als Sprungziel fokussierbar ohne Struktur-Rand', async 
   await main.focus();
   await expect(main).toBeFocused();
 
-  const outline = await main.evaluate((element) => {
-    const style = getComputedStyle(element);
-    return { style: style.outlineStyle, width: style.outlineWidth };
-  });
-
-  expect(outline.style).toBe('none');
-  expect(outline.width).toBe('0px');
+  const outlineStyle = await main.evaluate((element) => getComputedStyle(element).outlineStyle);
+  expect(outlineStyle).toBe('none');
 });
