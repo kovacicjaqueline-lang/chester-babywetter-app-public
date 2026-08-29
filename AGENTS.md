@@ -17,7 +17,8 @@ Maßgebliche Fachdokumente sind je nach Scope insbesondere:
 
 - `docs/PRODUCT_CONCEPT.md` für Produkt- und Interaktionssemantik,
 - `docs/OUTFIT_RULES.md` für Outfit-, Temperatur-, Situations- und Sicherheitslogik,
-- `docs/DATA_CONTRACT.md` für Schnittstellen und persistente Datenformen.
+- `docs/DATA_CONTRACT.md` für Schnittstellen und persistente Datenformen,
+- `docs/IMAGE_ASSET_GUIDELINES.md` für Generierung, technische Qualität und Sichtaudit von Kleidungs- und Zubehörbildern.
 
 Fachdokumente nicht vorsorglich vollständig laden. Nur die für den Auftrag tatsächlich relevanten Dokumente und Abschnitte lesen.
 
