@@ -334,20 +334,20 @@ body {
 }
 
 .outfit-grid {
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(118px, 34%);
-  grid-template-columns: none;
-  justify-content: start;
-  gap: 16px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
+  grid-auto-flow: row;
+  grid-auto-columns: initial;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  justify-content: stretch;
+  gap: 12px;
+  overflow: visible;
+  scroll-snap-type: none;
   padding: 2px 3px 17px;
-  touch-action: pan-x;
-  -webkit-overflow-scrolling: touch;
+  touch-action: auto;
 }
 
 .clothing-card {
-  scroll-snap-align: start;
+  min-width: 0;
+  scroll-snap-align: none;
   padding-bottom: 2px;
 }
 
@@ -608,8 +608,6 @@ body {
   .weather-facts {
     grid-template-columns: repeat(4, minmax(0,1fr));
   }
-
-  .outfit-grid { grid-auto-columns: minmax(114px, 33vw); }
 }
 
 @media (max-width: 390px) {
@@ -622,7 +620,6 @@ body {
 
   .weather-hero { padding-inline: 0; }
   .weather-fact { padding-inline: 1px; }
-  .outfit-grid { grid-auto-columns: 108px; }
   .bottom-nav { width: calc(100% - 18px); }
 }
 
@@ -635,13 +632,6 @@ body {
   }
 
   .weather-hero { padding-inline: 20px; }
-
-  .outfit-grid {
-    grid-auto-flow: column;
-    grid-template-columns: none;
-    grid-auto-columns: 140px;
-    overflow-x: auto;
-  }
 }
 
 @media (prefers-reduced-motion: no-preference) {
