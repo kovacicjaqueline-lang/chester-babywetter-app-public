@@ -3,6 +3,7 @@ import { createSession, lockItem } from './outfit-engine.js';
 import { recommendOutfit } from './recommendation-mode-adapter.js';
 
 const FALSE_BOUNDED_COVERAGE_FIELD = 'weather.hourly.coverage';
+const CAR_SEAT_COMPATIBILITY_RANK = Object.freeze({ prohibited:0, conditional:1, allowed:2 });
 
 function phaseOrderFor(context, recommendation) {
   if (context.mode === 'car') {
@@ -96,9 +97,87 @@ function selectedItemId(recommendation, phase, slot) {
   return recommendation.slots.find((entry) => entry.phase === phase && entry.slot === slot)?.selected.itemId ?? null;
 }
 
+function phaseEntries(recommendation, phase) {
+  return recommendation.slots.filter((entry) => entry.phase === phase);
+}
+
+function protectionMaximum(entries, field) {
+  return entries.reduce((maximum, entry) => Math.max(maximum, CLOTHING_CATALOG[entry.selected.itemId]?.[field] ?? 0), 0);
+}
+
+function selectedProtection(entry, field) {
+  return CLOTHING_CATALOG[entry?.selected.itemId]?.[field] ?? 0;
+}
+
+function hasReason(entry, reasonCode) {
+  return entry?.selected.reasonCodes?.includes(reasonCode) === true;
+}
+
+function phaseNotice(recommendation, phase, code) {
+  return tripNoticesFrom(recommendation).some((notice) => notice.phase === phase && notice.code === code);
+}
+
+function phaseTrace(recommendation, phase, ruleId) {
+  return (recommendation.ruleTrace ?? []).some((trace) => trace.phase === phase && trace.ruleId === ruleId);
+}
+
+/**
+ * Continuity optimization may only reuse an Engine-provided equivalent item
+ * when doing so preserves the concrete protection and safety already selected
+ * by the Engine for this checkpoint.
+ */
+export function preservesFunctionalProtection(before, after, phase) {
+  const beforeEntries = phaseEntries(before, phase);
+  const afterEntries = phaseEntries(after, phase);
+  const afterBySlot = new Map(afterEntries.map((entry) => [entry.slot, entry]));
+  const rainRequired = phaseTrace(before, phase, 'weather.rain.required')
+    || phaseNotice(before, phase, 'STROLLER_RAIN_COVER');
+  const windRequired = phaseTrace(before, phase, 'weather.wind.protection');
+  const uvRequired = phaseNotice(before, phase, 'UV_SHADE_AND_COVERAGE');
+
+  if (rainRequired && protectionMaximum(afterEntries, 'rainProtection') < protectionMaximum(beforeEntries, 'rainProtection')) {
+    return false;
+  }
+  if (windRequired && protectionMaximum(afterEntries, 'windProtection') < protectionMaximum(beforeEntries, 'windProtection')) {
+    return false;
+  }
+
+  for (const beforeEntry of beforeEntries) {
+    const afterEntry = afterBySlot.get(beforeEntry.slot) ?? null;
+    const beforeDefinition = CLOTHING_CATALOG[beforeEntry.selected.itemId];
+    const afterDefinition = CLOTHING_CATALOG[afterEntry?.selected.itemId];
+    if (!beforeDefinition) continue;
+
+    const rainSlotRequired = rainRequired && (
+      hasReason(beforeEntry, 'RAIN_PROTECTION_REQUIRED')
+      || hasReason(beforeEntry, 'STROLLER_RAIN_COVER')
+      || (beforeEntry.slot === 'footwear' && beforeDefinition.rainProtection > 0)
+    );
+    if (rainSlotRequired && selectedProtection(afterEntry, 'rainProtection') < beforeDefinition.rainProtection) return false;
+
+    const windSlotRequired = windRequired && hasReason(beforeEntry, 'WIND_PROTECTION_REQUIRED');
+    if (windSlotRequired && selectedProtection(afterEntry, 'windProtection') < beforeDefinition.windProtection) return false;
+
+    if (uvRequired && beforeDefinition.sunCoverage > 0
+      && selectedProtection(afterEntry, 'sunCoverage') < beforeDefinition.sunCoverage) {
+      return false;
+    }
+
+    if (beforeEntry.selected.wearPosition === 'under_harness'
+      && afterEntry?.selected.wearPosition === 'under_harness'
+      && afterDefinition) {
+      const beforeRank = CAR_SEAT_COMPATIBILITY_RANK[beforeDefinition.carSeatCompatibility] ?? 0;
+      const afterRank = CAR_SEAT_COMPATIBILITY_RANK[afterDefinition.carSeatCompatibility] ?? 0;
+      if (afterRank < beforeRank) return false;
+    }
+  }
+  return true;
+}
+
 function acceptableEquivalentProjection(before, after, phase, slot, itemId) {
   if (selectedItemId(after, phase, slot) !== itemId) return false;
   if (qualityRank(after) > qualityRank(before)) return false;
+  if (!preservesFunctionalProtection(before, after, phase)) return false;
   return !tripNoticesFrom(after).some((notice) =>
     ['MANUAL_LOCK_LIMITS_WEATHER_PROTECTION', 'MANUAL_LOCK_OVERRIDDEN_FOR_SAFETY'].includes(notice.code));
 }
