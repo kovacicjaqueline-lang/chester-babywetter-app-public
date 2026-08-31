@@ -1133,3 +1133,287 @@ Keine wesentlichen Produktentscheidungen sind mehr offen. Technisch noch festzul
 
 - vollständige statische Katalogzuordnung aller konkreten Kleidungs- und Asset-IDs,
 - ob `ruleTrace` nur Laufzeitdaten bleibt oder in Debug-Exports aufgenommen wird.
+
+## 34. Tagesausflug-Planer – Eingabevertrag
+
+Der Tagesausflug-Planer liegt oberhalb von `OutfitRecommendationRequest`. Er erzeugt mehrere bestehende Engine-Requests und verändert die Outfit-Engine nicht.
+
+### 34.1 Enums
+
+```ts
+type TripPlanStatus = "ready" | "ready_with_estimate" | "partial" | "blocked";
+type TripActionKind = "add" | "remove" | "replace" | "reposition" | "safety_instruction";
+type TripCoverageIssueCode =
+  | "missing_thermal_forecast"
+  | "forecast_gap"
+  | "missing_room_temperature"
+  | "invalid_segment"
+  | "weather_unavailable";
+```
+
+### 34.2 Segmentkontexte
+
+`plannedMinutes` ist im normalisierten Trip-Input absichtlich **nicht** enthalten. Die Planungslogik leitet es aus dem jeweiligen Checkpoint-Intervall ab.
+
+```ts
+type TripSegmentContext =
+  | Omit<OutdoorContext, "plannedMinutes">
+  | Omit<StrollerContext, "plannedMinutes">
+  | Omit<CarrierContext, "plannedMinutes">
+  | Omit<CarContext, "plannedMinutes">
+  | IndoorContext
+  | SleepContext;
+
+interface TripSegment {
+  segmentId: string;
+  startTime: string;
+  endTime: string;
+  context: TripSegmentContext;
+}
+
+interface TripPlan {
+  tripId: string;
+  startTime: string;
+  endTime: string;
+  segments: TripSegment[];
+}
+```
+
+Normative Validierung:
+
+- `endTime > startTime`,
+- Segmente sind chronologisch sortiert, überlappen nicht und decken den gesamten Plan lückenlos ab,
+- erstes `segment.startTime === plan.startTime`,
+- letztes `segment.endTime === plan.endTime`,
+- benachbarte Segmente grenzen exakt aneinander,
+- `segment.endTime > segment.startTime`,
+- ein UI-Modell mit reinen Wechselzeitpunkten muss vor Übergabe an den Planer in diese normalisierte Form umgewandelt werden,
+- `strollerState: asleep` bleibt `stroller` und wird nicht automatisch in `sleep` umgewandelt,
+- `sleep` benötigt `roomTempC`, `car` benötigt weiterhin `cabinTempC` und `cabinTempSource`.
+
+### 34.3 Planer-Request
+
+```ts
+interface TripPlannerRequest {
+  requestId: string;
+  requestedAt: string;
+  profile: BabyProfile;
+  plan: TripPlan;
+  weather: WeatherSeries | null;
+}
+```
+
+Ein gemischter Plan darf `weather: null` nur dann vollständig auswertbar sein, wenn keine wetterabhängige Phase vorkommt. `indoor`, `sleep` und `car/in_car` bleiben von Außenwetter unabhängig; eine `car/outdoor_transition` benötigt Wetter.
+
+## 35. Trip-Checkpoints und Engine-Requests
+
+Checkpoints sind reine Runtime-Daten und werden nicht persistiert.
+
+```ts
+interface TripCheckpoint {
+  checkpointId: string;
+  segmentId: string;
+  startTime: string;
+  endTime: string;
+  weatherPointTime: string | null;
+  engineRequest: OutfitRecommendationRequest;
+  recommendation: OutfitRecommendation;
+}
+```
+
+Checkpoint-Regeln:
+
+- mindestens Trip-Start, jeder Segmentstart und jeder nutzbare stündliche Wetterpunkt innerhalb wetterabhängiger Segmente,
+- doppelte Zeitpunkte werden zusammengeführt,
+- für `indoor`/`sleep` genügt ohne Kontextänderung ein Segment-Checkpoint,
+- `car/in_car` benötigt keinen stündlichen Außenwetter-Checkpoint; `outdoor_transition` verwendet den passenden Außenwetterpunkt,
+- Wetterwerte werden nicht interpoliert und Wetterzeitstempel nicht umgeschrieben,
+- kann ein wetterabhängiger Checkpoint nicht auf reale nutzbare Prognosedaten gestützt werden, entsteht eine Coverage-Lücke statt einer Extrapolation.
+
+### 35.1 Abgeleitetes `plannedMinutes`
+
+Für einen Engine-Request an einem Checkpoint gilt:
+
+```text
+plannedMinutes = checkpoint.endTime - checkpoint.startTime in Minuten
+```
+
+Der Wert wird nur in die bestehenden Kontexte `outdoor`, `stroller`, `carrier` und `car` eingesetzt. `outsideTransitionMinutes` im Auto bleibt ein eigener Parameter.
+
+### 35.2 Abgeleitete Wetterserie
+
+Für jeden wetterabhängigen Checkpoint wird eine nicht persistente `WeatherSeries` abgeleitet:
+
+- `current` ist der reale für diesen Checkpoint verwendete `WeatherPoint`,
+- `hourly` enthält nur reale relevante Punkte bis vor `checkpoint.endTime`,
+- `weatherId`, `location`, `origin`, `source`, `fetchedAt` und `freshness` bleiben unverändert,
+- die Quell-`WeatherSeries` wird nicht mutiert,
+- die Semantik entspricht der bestehenden stündlichen Zeitwahl, wird aber für mehrere Checkpoints wiederholt.
+
+Damit sieht die Outfit-Engine nur das lokale Zeitfenster. Später benötigte Kleidung wird vom Trip-Comparator in die Packliste verschoben statt vorsorglich als ganztägiges Start-Outfit zu erscheinen.
+
+## 36. TripResult
+
+### 36.1 Start-Outfit
+
+```ts
+interface TripOutfitItem {
+  phase: RecommendationPhase;
+  slot: OutfitSlot;
+  itemId: string;
+  wearPosition: WearPosition;
+}
+
+interface TripOutfitState {
+  at: string;
+  segmentId: string;
+  sourceRecommendationId: string;
+  items: TripOutfitItem[];
+}
+```
+
+### 36.2 Packliste
+
+```ts
+interface TripPackItem {
+  itemId: string;
+  firstNeededAt: string;
+  segmentIds: string[];
+  reasonCodes: string[];
+}
+```
+
+V1 führt keine Reserve-Stückzahlen oder Kleidungsinventare. Ein `itemId` erscheint höchstens einmal in `packList`. Ein Teil des Start-Outfits wird nie zusätzlich als Packteil dupliziert.
+
+### 36.3 Wechselaktionen
+
+```ts
+interface TripAction {
+  actionId: string;
+  at: string;
+  segmentId: string;
+  kind: TripActionKind;
+  phase: RecommendationPhase | null;
+  slot: OutfitSlot | null;
+  fromItemId: string | null;
+  toItemId: string | null;
+  fromWearPosition: WearPosition | null;
+  toWearPosition: WearPosition | null;
+  reasonCodes: string[];
+  safetyCritical: boolean;
+}
+```
+
+Eine Aktion wird nur erzeugt, wenn praktisch etwas geändert werden muss. Identische fachliche Item-Sets, reine Reason-Code-Änderungen und eine andere Engine-Hauptauswahl bei weiterhin sicherer `equivalent`-Alternative erzeugen keine künstliche Aktion.
+
+Änderungen von `wearPosition`, insbesondere rund um `car/in_car`, sind relevante Aktionen, wenn der Nutzer tatsächlich umpositionieren oder ein Teil entfernen muss.
+
+### 36.4 Coverage
+
+```ts
+interface TripCoverageIssue {
+  startTime: string;
+  endTime: string;
+  code: TripCoverageIssueCode;
+  segmentId: string | null;
+}
+
+interface TripCoverage {
+  plannedStartTime: string;
+  plannedEndTime: string;
+  coveredUntil: string | null;
+  issues: TripCoverageIssue[];
+}
+```
+
+### 36.5 Gesamtergebnis
+
+```ts
+interface TripResult {
+  tripResultId: string;
+  requestId: string;
+  tripId: string;
+  generatedAt: string;
+  status: TripPlanStatus;
+  startOutfit: TripOutfitState | null;
+  packList: TripPackItem[];
+  actions: TripAction[];
+  notices: RecommendationNotice[];
+  coverage: TripCoverage;
+}
+```
+
+Statusregeln:
+
+- `blocked`: Start-Outfit kann wegen fehlender erforderlicher Daten/ungültigem Plan nicht belastbar erzeugt werden,
+- `partial`: Start ist auswertbar, aber spätere Abdeckung oder einzelne Engine-Empfehlungen sind unvollständig,
+- `ready_with_estimate`: vollständig abgedeckt, aber mindestens eine relevante Auto-Auswertung nutzt die transparente `estimated`-Innenraumtemperatur,
+- `ready`: vollständig abgedeckt ohne solche Schätzung und ohne unvollständige Daten.
+
+## 37. Vergleichs- und Optimierungsregeln
+
+Der Comparator darf ausschließlich von der Engine bereits als `equivalent` angebotene Alternativen zur Kontinuitätsoptimierung verwenden. `warmer`/`cooler` werden nicht aus Bequemlichkeit gleichgesetzt.
+
+Lexikographische Priorität:
+
+1. harte Safety-Regeln,
+2. erforderliche thermische sowie Wind-/Regen-/UV-Funktion,
+3. Zahl der zusätzlichen unterschiedlichen Pack-`itemId`s minimieren,
+4. Zahl der realen Wechselaktionen minimieren,
+5. bei Gleichstand Engine-Hauptauswahl bzw. kleinste thermische Abweichung bevorzugen.
+
+Packlistenregeln:
+
+- später benötigtes, am Start nicht vorhandenes Item → genau einmal in `packList`,
+- Startteil später ausziehen und erneut anziehen → kein zusätzliches Packitem,
+- ein wiederverwendbares gleichwertiges Item wird gegenüber zwei redundanten Varianten bevorzugt,
+- Safety darf zusätzliche Teile und Aktionen erzwingen,
+- keine Reservewäsche/Schmutzersatz ohne separates Inventar-/Reservekonzept.
+
+Safety-Hinweise und Extremwetter-Hinweise dürfen in `TripResult.notices` erscheinen, auch wenn daraus keine Kleidungsaktion folgt.
+
+## 38. Fehlende Prognose und Wetterwechsel
+
+- Kein thermisch verwertbarer Forecast am Start eines wetterabhängigen Plans → `blocked`.
+- Spätere nicht abgedeckte Forecast-Lücke → `partial`; keine stillschweigende Fortschreibung über die Lücke.
+- Fehlende optionale Wetterfelder bleiben `null` und werden von den bestehenden Engine-Regeln als Unsicherheit behandelt.
+- Wetterwechsel erzeugen erst dann eine Aktion, wenn eine lokale Checkpoint-Empfehlung eine praktische Änderung erfordert.
+- Ein Wetterwechsel ohne Outfitänderung erzeugt keine künstliche Aktion.
+
+## 39. Persistenz des Planers
+
+Für den ersten Runtime-Scope gelten `TripPlan`, `TripCheckpoint` und `TripResult` als flüchtiger Zustand. Es werden **keine** neuen Keys zu Abschnitt 28 und **keine** Felder zu `ExportPayloadV1` hinzugefügt.
+
+Insbesondere nicht persistieren:
+
+- `TripResult`,
+- Checkpoints,
+- abgeleitete Wetter-Slices,
+- alte Packlisten/Aktionsfolgen,
+- Wetter-Snapshots innerhalb eines Trips.
+
+Eine spätere explizite Funktion zum Speichern eines Ausflugs darf nur die nutzereigenen Planinputs speichern und muss beim Öffnen neu rechnen. Diese Persistenz-/Exportfunktion ist nicht Teil des ersten Planer-Runtime-Scopes und benötigt eine eigene Datenvertragsentscheidung.
+
+## 40. Abgrenzung zur stündlichen Einzelzeit-Auswahl
+
+Die stündliche Einzelzeit-Auswahl bleibt flüchtiger UI-/Integrationszustand mit genau einer gewählten Startzeit und einem abgeleiteten Engine-Request. Der Tagesausflug-Planer verwaltet dagegen einen Zeitraum, mehrere Checkpoints und optional mehrere SituationContexts.
+
+Beide dürfen gemeinsame **reine** Wetter-Slicing-Hilfslogik verwenden, aber nicht denselben mutierbaren Auswahlzustand. Die Auswahl einer Einzelstunde darf keinen Trip ändern; das Öffnen/Ändern eines Trips darf die normale Stunden-Auswahl nicht überschreiben.
+
+## 41. Zusätzliche Planer-Testinvarianten für die spätere Implementierung
+
+48. Ein Trip ohne Situationswechsel erzeugt intern mehrere Wetter-Checkpoints, aber primär nur Start-Outfit, Packliste und relevante Aktionen.
+49. `plannedMinutes` eines Trip-Engine-Requests entspricht dem lokalen Checkpoint-Intervall und ist kein separat gespeicherter Segmentwert.
+50. Abgeleitete Wetter-Slices mutieren die Quell-`WeatherSeries` nicht und schreiben keine Wetterzeitstempel um.
+51. Ein Startteil erscheint nie zusätzlich in `packList`.
+52. Dasselbe spätere Item erscheint höchstens einmal in `packList`, auch wenn es mehrfach verwendet wird.
+53. Eine weiterhin sichere `equivalent`-Alternative darf einen rein kosmetischen/unnötigen Wechsel unterdrücken.
+54. Eine `warmer`- oder `cooler`-Alternative darf nicht nur zur Wechsel-/Packlistenreduktion als gleichwertig behandelt werden.
+55. Safety-Transitions im Autositz dürfen nie zur Minimierung von Aktionen unterdrückt werden.
+56. `strollerState: asleep` bleibt im Trip `stroller`; `sleep` verwendet ausschließlich `roomTempC`/TOG.
+57. Fehlende Prognose am wetterabhängigen Trip-Start führt zu `blocked`; eine spätere Lücke führt bei auswertbarem Start zu `partial`.
+58. Der Planer extrapoliert Wetter nicht über eine Coverage-Lücke und erfindet dort keine Wechselaktion.
+59. `TripResult` und abgeleitete Checkpoints werden im ersten Planer-Scope weder in `localStorage` noch im V1-Export persistiert.
+60. Stündliche Einzelzeit-Auswahl und Trip-Planer überschreiben ihren flüchtigen Auswahlzustand nicht gegenseitig.
+
+Die ausführliche fachliche Begründung und Produktsemantik steht in `docs/DAY_TRIP_PLANNER.md`.

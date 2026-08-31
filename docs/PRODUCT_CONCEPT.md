@@ -46,6 +46,8 @@ Enthalten:
 - manuelle Ortswahl und manuelle Wetterüberschreibung,
 - Empfehlung auch bei teilweise fehlenden optionalen Wetterdaten mit sichtbarer Unsicherheit,
 - Modi `outdoor`, `stroller`, `carrier`, `car`, `indoor`, `sleep`,
+- auswählbare zukünftige Stunden als Startzeit einer Einzel-Empfehlung,
+- fachlich definierter Tagesausflug-Planer als Planungs-/Vergleichsschicht mit Start-Outfit, Mitnehmen und relevanten Wechselaktionen,
 - austauschbare Outfit- und Zubehörteile,
 - `wärmer` / `dünner`,
 - Nackentest-Button,
@@ -454,3 +456,50 @@ Die V1-Alterskalibrierung ist geschlossen: `birthDate` aus dem Babyprofil wird o
 Die V1-Mobilitätsmodellierung ist geschlossen: `mobilityStage` wird im Babyprofil gespeichert, bleibt aber strikt von der situationsbezogenen `activity` getrennt und verändert selbst keine thermische Stufe. Bewegungswärme wird weiterhin ausschließlich über die aktuelle Aktivität bewertet.
 
 Damit sind die wesentlichen **Produkt- und Kalibrierungsentscheidungen für V1 geschlossen**. Spätere Mehrprofil-, Inventar- oder Präferenzlern-Funktionen bleiben ausdrücklich außerhalb des V1-Scopes und sind keine offenen V1-Entscheidungen.
+
+## 16. Tagesausflug planen
+
+Der Tagesausflug-Planer ergänzt die schnelle Einzel-Empfehlung um einen Zeitraum, z. B. `09:00–18:00`. Er ist ausdrücklich **keine zweite Outfit-Engine**. Die bestehende Engine erzeugt weiterhin unabhängige Empfehlungen; eine eigene Planungs-/Vergleichsschicht verdichtet diese.
+
+Normatives Ergebnis:
+
+1. **Start-Outfit:** konkrete Kleidung/Ausrüstung für den Beginn,
+2. **Mitnehmen:** möglichst wenige zusätzliche, später benötigte Teile,
+3. **Tagesverlauf:** nur praktisch relevante Wechselaktionen.
+
+Der Planer darf intern stündliche bzw. situationsbedingte Empfehlungen erzeugen, zeigt aber nicht standardmäßig für jede Stunde ein vollständiges Outfit. Praktisch gleiche Folgezustände werden zusammengeführt.
+
+### 16.1 Zeitraum und Situationen
+
+- `startTime` und `endTime` begrenzen den Plan eindeutig.
+- Optional können Situationen als lückenlose Segmente geplant werden.
+- Ohne Situationswechsel gilt eine Situation für den ganzen Zeitraum.
+- Schlaf im Kinderwagen bleibt `strollerState: asleep`.
+- Ein echtes `sleep`-Segment ist nur ausdrücklich geplant und verwendet ausschließlich `roomTempC`/TOG, niemals Außenwetter.
+- `car` behält seine getrennten Phasen und alle Gurtsicherheitsregeln.
+
+### 16.2 Wetter und Dauer
+
+Im Planer ist `plannedMinutes` kein zusätzlicher Dauer-Regler. Die Dauer jedes internen Engine-Requests wird aus dem aktuellen Planer-Intervall bis zum nächsten Wetter-/Situations-Checkpoint abgeleitet. Dadurch kann ein später benötigtes Teil in `Mitnehmen` erscheinen, statt bereits morgens dauerhaft getragen zu werden.
+
+Für Wetter-Checkpoints werden nur reale Punkte aus `WeatherSeries` verwendet. Wetterwerte werden weder interpoliert noch Zeitstempel umgeschrieben. Bei fehlender Prognoseabdeckung wird der Plan `partial` bzw. bei fehlender thermischer Startbasis `blocked`, statt den letzten bekannten Wert über Stunden fortzuschreiben.
+
+### 16.3 Minimale Wechsel und minimale Packliste
+
+Die Planung darf eine bereits getragene Variante beibehalten, wenn sie in der Folgeempfehlung als sichere `equivalent`-Alternative zulässig bleibt. Sie darf thermisch wärmere/kühlere Alternativen nicht aus Bequemlichkeit als gleichwertig behandeln.
+
+Optimierungsreihenfolge:
+
+1. Safety,
+2. thermische und funktionale Schutzanforderungen,
+3. möglichst wenige zusätzliche unterschiedliche Packteile,
+4. möglichst wenige reale Wechselaktionen,
+5. bei Gleichstand Engine-Hauptauswahl bzw. nächstliegende gleichwertige Variante.
+
+Startteile werden nicht zusätzlich in `Mitnehmen` dupliziert. Ein später ausgezogenes Startteil gilt weiterhin als mitgeführt und kann später wieder angezogen werden.
+
+### 16.4 Persistenz und Abgrenzung
+
+Der erste Planer-Scope hält Entwurf und Ergebnis flüchtig. `TripResult`, abgeleitete Wetter-Slices und Einzel-Empfehlungen werden nicht als autoritative Daten persistiert oder exportiert. Eine spätere Funktion „Ausflug speichern“ darf nur Planinputs speichern und muss beim Öffnen mit aktuellem Wetter neu rechnen.
+
+Die normale stündliche Zeitwahl bleibt davon getrennt: eine Zeit + eine Situation + eine Einzel-Empfehlung, ohne Packliste und Wechselaktionssequenz. Details und Datenformen stehen in `docs/DAY_TRIP_PLANNER.md` und `docs/DATA_CONTRACT.md`.
