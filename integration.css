@@ -48,6 +48,13 @@
   display: none;
 }
 
+/* The shared circular icon button is 42px; planner controls keep the app's 44px minimum touch target. */
+.trip-sheet .icon-button {
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+}
+
 @media (max-width: 520px) {
   .weather-fact:first-child {
     grid-column: auto;
