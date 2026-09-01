@@ -98,3 +98,68 @@ test('Tagesausflug verändert die normale Einzelzeit-Auswahl nicht', async ({ pa
   await expect(page.locator(`#hourlyForecast [data-hourly-start-time="${selectedTime}"]`)).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('#outfitTimeLabel')).toHaveText(beforeLabel ?? '');
 });
+
+test('Fehlende Schlaf-Raumtemperatur bleibt fehlend und blockiert den Plan sichtbar', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('babyweather.v1.uiState', JSON.stringify({
+      mode: 'stroller',
+      contexts: {
+        sleep: { mode: 'sleep', roomTempC: null }
+      }
+    }));
+  });
+  await openDemo(page);
+  await openPlanner(page);
+
+  const firstSegment = page.locator('.trip-segment-card').first();
+  await firstSegment.locator('[data-trip-segment-mode="sleep"]').click();
+  await firstSegment.locator('summary').click();
+  await expect(firstSegment.locator('[data-trip-context-field="roomTempC"]')).toHaveValue('');
+
+  await page.locator('#tripGenerateButton').click();
+  await expect(page.locator('#tripResultView')).toBeVisible();
+  await expect(page.locator('#tripResultStatus')).toHaveText('Plan nicht möglich');
+  await expect(page.locator('#tripCoverageNotice')).toContainText('fehlt die Raumtemperatur');
+  await expect(page.getByTestId('trip-start-outfit')).toContainText('Es wird kein Outfit erfunden');
+});
+
+test('Schlaf-Caution unter 16 Grad und Raumtemperatur-Hard-Rule bleiben verständlich sichtbar', async ({ page }) => {
+  await openDemo(page);
+  await openPlanner(page);
+
+  const firstSegment = page.locator('.trip-segment-card').first();
+  await firstSegment.locator('[data-trip-segment-mode="sleep"]').click();
+  await firstSegment.locator('summary').click();
+  const roomTemp = firstSegment.locator('[data-trip-context-field="roomTempC"]');
+  await roomTemp.fill('15');
+  await roomTemp.press('Tab');
+
+  await page.locator('#tripGenerateButton').click();
+  await expect(page.locator('#tripResultView')).toBeVisible();
+  await expect(page.locator('[data-trip-notice-code="SLEEP_ROOM_BELOW_ORIENTATION_RANGE"]')).toContainText('unter 16 °C');
+  await expect(page.locator('[data-trip-notice-code="SLEEP_USE_ROOM_TEMPERATURE"]')).toContainText('Raumtemperatur ist maßgeblich');
+});
+
+test('Reiner Drinnen-Plan bleibt auch ohne Wetterdaten planbar', async ({ page }) => {
+  await page.route('https://api.open-meteo.com/**', (route) => route.abort());
+  await page.goto('/');
+  await expect(page.locator('#confidencePill')).not.toHaveText('Lädt …');
+  await expect(page.locator('#dayTripPlannerButton')).toBeVisible();
+  await openPlanner(page);
+
+  const startValues = await page.locator('#tripStartTime option').evaluateAll((options) => options.map((option) => option.value));
+  const endValues = await page.locator('#tripEndTime option').evaluateAll((options) => options.map((option) => option.value));
+  expect(startValues.length).toBeGreaterThan(1);
+  expect(endValues.length).toBeGreaterThan(1);
+
+  const firstSegment = page.locator('.trip-segment-card').first();
+  await firstSegment.locator('[data-trip-segment-mode="indoor"]').click();
+  await firstSegment.locator('summary').click();
+  await expect(firstSegment.locator('[data-trip-context-field="roomTempC"]')).toHaveValue('20');
+
+  await page.locator('#tripGenerateButton').click();
+  await expect(page.locator('#tripResultView')).toBeVisible();
+  await expect(page.locator('#tripResultStatus')).toHaveText('Plan bereit');
+  await expect(page.getByTestId('trip-start-outfit').locator('[data-trip-item-id]').first()).toBeVisible();
+  await expect(page.locator('#tripCoverageNotice')).toBeHidden();
+});
