@@ -25,6 +25,9 @@ const NOTICE_COPY = Object.freeze({
   SLEEP_NO_HAT: ['Beim Schlafen keine Mütze', 'Beim Schlafen in Innenräumen bleibt der Kopf frei.'],
   SLEEP_NO_LOOSE_BEDDING: ['Keine lose Bettware', 'Im Schlafbereich keine lose Decke oder andere lose Bettware verwenden.'],
   SLEEP_NO_WEIGHTED_PRODUCTS: ['Keine gewichteten Schlafprodukte', 'Keine beschwerten Schlafsäcke oder Decken verwenden.'],
+  SLEEP_USE_ROOM_TEMPERATURE: ['Raumtemperatur ist maßgeblich', 'Schlafempfehlungen werden ausschließlich aus der angegebenen Raumtemperatur und der TOG-Logik abgeleitet, nicht aus dem Außenwetter.'],
+  SLEEP_GENERIC_TOG_ORIENTATION: ['TOG als Orientierung', 'Die TOG-Auswahl ist eine allgemeine Orientierung und ersetzt nicht den Nackentest.'],
+  SLEEP_ROOM_BELOW_ORIENTATION_RANGE: ['Raumtemperatur unter 16 °C', 'Die Raumtemperatur liegt unter dem üblichen Orientierungsbereich. Nacken regelmäßig kontrollieren und die Schlafumgebung prüfen.'],
   WEATHER_DATA_STALE: ['Wetterdaten nicht aktuell', 'Der Plan verwendet sichtbar gekennzeichnete ältere Wetterdaten.'],
   WEATHER_DATA_INCOMPLETE: ['Prognose unvollständig', 'Fehlende Wetterwerte werden nicht als null Risiko interpretiert.'],
   EXTREME_COLD_CAUTION: ['Sehr kalt', 'Exposition begrenzen und den Nacken häufiger kontrollieren.'],
@@ -82,6 +85,18 @@ function weatherPoints(weather) {
   return [...byTime.values()].sort((left, right) => parseTime(left.time) - parseTime(right.time));
 }
 
+function planningTimePoints(weather) {
+  const points = weatherPoints(weather);
+  if (points.length >= 2) return points;
+  const anchorMs = parseTime(points[0]?.time) ?? Date.now();
+  const byTime = new Map(points.map((point) => [point.time, point]));
+  for (let index = 0; index <= 12; index += 1) {
+    const time = new Date(anchorMs + index * 60 * 60 * 1000).toISOString();
+    if (!byTime.has(time)) byTime.set(time, { time });
+  }
+  return [...byTime.values()].sort((left, right) => parseTime(left.time) - parseTime(right.time));
+}
+
 function contextForMode(snapshot, mode) {
   const stored = snapshot?.contexts?.[mode] ? clone(snapshot.contexts[mode]) : { mode };
   stored.mode = mode;
@@ -113,16 +128,16 @@ function contextForMode(snapshot, mode) {
     if (!finiteNumber(stored.outsideTransitionMinutes) && stored.outsideTransitionMinutes !== null) stored.outsideTransitionMinutes = 5;
   }
   if (mode === 'indoor') {
-    stored.roomTempC = finiteNumber(stored.roomTempC) ? stored.roomTempC : 20;
+    stored.roomTempC = finiteNumber(stored.roomTempC) ? stored.roomTempC : null;
     stored.activity = stored.activity === 'active' ? 'active' : 'normal';
     stored.activitySource = 'user';
   }
-  if (mode === 'sleep') stored.roomTempC = finiteNumber(stored.roomTempC) ? stored.roomTempC : 18.5;
+  if (mode === 'sleep') stored.roomTempC = finiteNumber(stored.roomTempC) ? stored.roomTempC : null;
   return stored;
 }
 
 function initialDraft(snapshot) {
-  const points = weatherPoints(snapshot.weather);
+  const points = planningTimePoints(snapshot.weather);
   const startTime = points[0]?.time ?? null;
   const endTime = points[Math.min(points.length - 1, 5)]?.time ?? null;
   const mode = MODE_COPY[snapshot.mode] ? snapshot.mode : 'stroller';
@@ -457,7 +472,7 @@ function weatherAt(snapshot, at) {
 function renderNotices(result) {
   const host = document.querySelector('#tripSafetyNotices');
   host.replaceChildren();
-  const notices = (result.notices ?? []).filter((notice) => notice.severity === 'hard_rule' || notice.severity === 'warning' || NOTICE_COPY[notice.code]);
+  const notices = (result.notices ?? []).filter((notice) => notice.severity === 'hard_rule' || notice.severity === 'caution' || NOTICE_COPY[notice.code]);
   for (const notice of notices) {
     const mapped = NOTICE_COPY[notice.code] ?? [notice.code.replaceAll('_', ' '), ''];
     const row = document.createElement('div');
@@ -648,7 +663,7 @@ function renderBuilder(draft) {
   renderSegments(draft);
   const error = document.querySelector('#tripPlannerError');
   if (draft.points.length < 2) {
-    error.textContent = 'Für einen Tagesausflug werden mindestens zwei nutzbare Prognosezeitpunkte benötigt.';
+    error.textContent = 'Für einen Tagesausflug werden mindestens zwei nutzbare Planzeitpunkte benötigt.';
     setHidden(error, false);
     document.querySelector('#tripGenerateButton').disabled = true;
   } else {
