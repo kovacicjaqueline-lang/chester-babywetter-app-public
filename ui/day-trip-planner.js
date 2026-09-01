@@ -85,13 +85,16 @@ function weatherPoints(weather) {
   return [...byTime.values()].sort((left, right) => parseTime(left.time) - parseTime(right.time));
 }
 
-function planningTimePoints(weather) {
-  const points = weatherPoints(weather);
-  if (points.length >= 2) return points;
-  const anchorMs = parseTime(points[0]?.time) ?? Date.now();
-  const byTime = new Map(points.map((point) => [point.time, point]));
-  for (let index = 0; index <= 12; index += 1) {
-    const time = new Date(anchorMs + index * 60 * 60 * 1000).toISOString();
+function planningTimePoints(weather, requestedAt) {
+  const requestedMs = parseTime(requestedAt) ?? Date.now();
+  const nowTime = new Date(requestedMs).toISOString();
+  const byTime = new Map([[nowTime, { time: nowTime, kind: 'now' }]]);
+  for (const point of weatherPoints(weather)) {
+    if (parseTime(point.time) > requestedMs) byTime.set(point.time, point);
+  }
+  if (byTime.size >= 2) return [...byTime.values()].sort((left, right) => parseTime(left.time) - parseTime(right.time));
+  for (let index = 1; index <= 12; index += 1) {
+    const time = new Date(requestedMs + index * 60 * 60 * 1000).toISOString();
     if (!byTime.has(time)) byTime.set(time, { time });
   }
   return [...byTime.values()].sort((left, right) => parseTime(left.time) - parseTime(right.time));
@@ -137,11 +140,13 @@ function contextForMode(snapshot, mode) {
 }
 
 function initialDraft(snapshot) {
-  const points = planningTimePoints(snapshot.weather);
+  const requestedAt = new Date().toISOString();
+  const points = planningTimePoints(snapshot.weather, requestedAt);
   const startTime = points[0]?.time ?? null;
   const endTime = points[Math.min(points.length - 1, 5)]?.time ?? null;
   const mode = MODE_COPY[snapshot.mode] ? snapshot.mode : 'stroller';
   return {
+    requestedAt,
     points,
     startTime,
     endTime,
@@ -319,7 +324,7 @@ function ensureStyles() {
     .trip-safety-list{display:grid;gap:8px;margin:0 0 16px}.trip-safety-notice{border-left:4px solid #c77f4c;border-radius:12px;background:#fff6e9;padding:10px 12px}.trip-safety-notice strong{display:block;font-size:.84rem}.trip-safety-notice p{margin:3px 0 0;color:#6b574a;font-size:.76rem;line-height:1.4}.trip-safety-notice[data-severity="hard_rule"]{border-left-color:#b24b3d;background:#fff0ed}
     .trip-result-section{margin:0 0 18px}.trip-result-section h4{margin:0 0 9px;font-size:.98rem}.trip-outfit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(94px,1fr));gap:8px}.trip-item-card{min-width:0;border:1px solid var(--line);border-radius:15px;background:#fff;padding:8px;text-align:center}.trip-item-image{height:78px;display:grid;place-items:center;overflow:hidden}.trip-item-image img{max-width:100%;max-height:100%;object-fit:contain}.trip-item-card strong{display:block;margin-top:5px;font-size:.72rem;line-height:1.2}.trip-item-card small{display:block;margin-top:2px;color:var(--muted);font-size:.64rem}
     .trip-pack-list{display:grid;gap:7px}.trip-pack-item{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:10px;min-height:58px;border:1px solid var(--line);border-radius:14px;background:#fff;padding:7px 10px}.trip-pack-thumb{width:44px;height:44px;display:grid;place-items:center;overflow:hidden}.trip-pack-thumb img{max-width:100%;max-height:100%;object-fit:contain}.trip-pack-item strong{font-size:.82rem}.trip-pack-item small{color:var(--muted);font-size:.7rem}.trip-empty{margin:0;border:1px dashed var(--line);border-radius:14px;padding:12px;color:var(--muted);font-size:.82rem}
-    .trip-timeline{display:grid;gap:0;margin-left:8px}.trip-action{position:relative;border-left:2px solid var(--line);padding:0 0 14px 17px}.trip-action:last-child{padding-bottom:0}.trip-action::before{content:"";position:absolute;left:-6px;top:5px;width:10px;height:10px;border-radius:50%;background:#b58b72;border:2px solid #fff}.trip-action[data-safety-critical="true"]::before{background:#b24b3d}.trip-action-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;color:var(--muted);font-size:.7rem}.trip-action strong{display:block;margin-top:3px;font-size:.84rem}.trip-action[data-safety-critical="true"] strong{color:#8a3d32}.trip-weather-chip{border-radius:999px;background:#f4eee9;padding:2px 7px}.trip-coverage{border-radius:13px;background:#fff4df;color:#74531e;padding:10px 12px;margin-bottom:14px;font-size:.8rem;font-weight:700}.trip-result-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}.trip-result-actions button{min-height:48px}
+    .trip-timeline{display:grid;gap:0;margin-left:8px}.trip-action,.trip-segment-marker{position:relative;border-left:2px solid var(--line);padding:0 0 14px 17px}.trip-action:last-child,.trip-segment-marker:last-child{padding-bottom:0}.trip-action::before,.trip-segment-marker::before{content:"";position:absolute;left:-6px;top:5px;width:10px;height:10px;border-radius:50%;background:#b58b72;border:2px solid #fff}.trip-segment-marker::before{background:#d5c2b6}.trip-segment-marker{color:var(--muted)}.trip-segment-marker strong{display:block;margin-top:3px;font-size:.82rem;color:var(--ink)}.trip-action[data-safety-critical="true"]::before{background:#b24b3d}.trip-action-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;color:var(--muted);font-size:.7rem}.trip-action strong{display:block;margin-top:3px;font-size:.84rem}.trip-action[data-safety-critical="true"] strong{color:#8a3d32}.trip-weather-chip{border-radius:999px;background:#f4eee9;padding:2px 7px}.trip-coverage{border-radius:13px;background:#fff4df;color:#74531e;padding:10px 12px;margin-bottom:14px;font-size:.8rem;font-weight:700}.trip-result-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}.trip-result-actions button{min-height:48px}
     @media(max-width:430px){.trip-sheet{max-height:96dvh}.trip-time-grid{grid-template-columns:1fr 1fr}.trip-mode-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.trip-outfit-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.trip-result-actions{grid-template-columns:1fr}.trip-entry-row{justify-content:stretch}.trip-entry-button{width:100%}}
   `;
   document.head.append(style);
@@ -505,6 +510,49 @@ function renderCoverage(result) {
   setHidden(host, false);
 }
 
+function appendTimelineWeather(meta, snapshot, at) {
+  const point = weatherAt(snapshot, at);
+  if (!point) return;
+  const weather = document.createElement('span');
+  weather.className = 'trip-weather-chip';
+  const rain = point.precipProbabilityPct == null ? '' : ` · Regen ${Math.round(point.precipProbabilityPct)}%`;
+  weather.textContent = `${Math.round(point.airTempC)}°${rain}`;
+  meta.append(weather);
+}
+
+function timelineActionRow(action, snapshot, assetStore, segmentModes) {
+  const row = document.createElement('article');
+  row.className = 'trip-action';
+  row.dataset.tripAction = action.actionId;
+  row.dataset.safetyCritical = String(Boolean(action.safetyCritical));
+  const meta = document.createElement('div');
+  meta.className = 'trip-action-meta';
+  const time = document.createElement('span');
+  time.textContent = formatDateTime(action.at);
+  meta.append(time);
+  appendTimelineWeather(meta, snapshot, action.at);
+  const text = document.createElement('strong');
+  text.textContent = actionText(action, assetStore, segmentModes.get(action.segmentId));
+  row.append(meta, text);
+  return row;
+}
+
+function timelineSegmentRow(segment, snapshot) {
+  const row = document.createElement('article');
+  row.className = 'trip-segment-marker';
+  row.dataset.tripSegmentMarker = segment.segmentId;
+  const meta = document.createElement('div');
+  meta.className = 'trip-action-meta';
+  const time = document.createElement('span');
+  time.textContent = formatDateTime(segment.startTime);
+  meta.append(time);
+  appendTimelineWeather(meta, snapshot, segment.startTime);
+  const text = document.createElement('strong');
+  text.textContent = `Situation: ${MODE_COPY[segment.mode]?.label ?? segment.mode}`;
+  row.append(meta, text);
+  return row;
+}
+
 function renderResult(result, draft, snapshot, assetStore) {
   const status = document.querySelector('#tripResultStatus');
   const statusCopy = { ready: 'Plan bereit', ready_with_estimate: 'Mit Schätzung', partial: 'Teilweise geplant', blocked: 'Plan nicht möglich' };
@@ -539,29 +587,15 @@ function renderResult(result, draft, snapshot, assetStore) {
   const segmentModes = new Map(draft.segments.map((segment) => [segment.segmentId, segment.mode]));
   const timeline = document.querySelector('#tripTimeline');
   timeline.replaceChildren();
-  if (result.actions?.length) {
-    for (const action of result.actions) {
-      const row = document.createElement('article');
-      row.className = 'trip-action';
-      row.dataset.tripAction = action.actionId;
-      row.dataset.safetyCritical = String(Boolean(action.safetyCritical));
-      const meta = document.createElement('div');
-      meta.className = 'trip-action-meta';
-      const time = document.createElement('span');
-      time.textContent = formatDateTime(action.at);
-      meta.append(time);
-      const point = weatherAt(snapshot, action.at);
-      if (point) {
-        const weather = document.createElement('span');
-        weather.className = 'trip-weather-chip';
-        const rain = point.precipProbabilityPct == null ? '' : ` · Regen ${Math.round(point.precipProbabilityPct)}%`;
-        weather.textContent = `${Math.round(point.airTempC)}°${rain}`;
-        meta.append(weather);
-      }
-      const text = document.createElement('strong');
-      text.textContent = actionText(action, assetStore, segmentModes.get(action.segmentId));
-      row.append(meta, text);
-      timeline.append(row);
+  const timelineEntries = [
+    ...draft.segments.slice(1).map((segment) => ({ kind: 'segment', at: segment.startTime, segment })),
+    ...(result.actions ?? []).map((action) => ({ kind: 'action', at: action.at, action }))
+  ].sort((left, right) => parseTime(left.at) - parseTime(right.at) || (left.kind === 'segment' ? -1 : 1));
+  if (timelineEntries.length) {
+    for (const entry of timelineEntries) {
+      timeline.append(entry.kind === 'segment'
+        ? timelineSegmentRow(entry.segment, snapshot)
+        : timelineActionRow(entry.action, snapshot, assetStore, segmentModes));
     }
   } else {
     const empty = document.createElement('p');
@@ -820,7 +854,7 @@ export function bindDayTripPlanner({ getSnapshot, assetStore, showToast = () => 
     try {
       const request = {
         requestId: `trip-ui:${Date.now()}`,
-        requestedAt: new Date().toISOString(),
+        requestedAt: draft.requestedAt,
         profile: clone(snapshot.profile),
         plan: {
           tripId: `trip-ui-plan:${Date.now()}`,
