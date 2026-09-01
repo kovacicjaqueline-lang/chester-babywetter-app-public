@@ -96,6 +96,17 @@ function pointAt(points, time) {
   return points.find((point) => point.time === time) ?? null;
 }
 
+function requestedNowPoint(request, time) {
+  const current = request.weather?.current;
+  if (time !== request.requestedAt || !current || typeof current !== 'object') return null;
+  if (parseTripTime(current.time) === null || !finiteNumber(current.airTempC)) return null;
+  return current;
+}
+
+function weatherPointAt(request, points, time) {
+  return requestedNowPoint(request, time) ?? pointAt(points, time);
+}
+
 function firstForecastGap(points, startTime, endTime) {
   const startMs = parseTripTime(startTime);
   const endMs = parseTripTime(endTime);
@@ -119,8 +130,8 @@ function firstForecastGap(points, startTime, endTime) {
   return null;
 }
 
-function weatherSlice(weather, currentPoint, checkpointEndTime) {
-  const startMs = parseTripTime(currentPoint.time);
+function weatherSlice(weather, currentPoint, checkpointStartTime, checkpointEndTime) {
+  const startMs = parseTripTime(checkpointStartTime);
   const endMs = parseTripTime(checkpointEndTime);
   const hourly = (Array.isArray(weather.hourly) ? weather.hourly : [])
     .filter((point) => point && parseTripTime(point.time) !== null && finiteNumber(point.airTempC))
@@ -148,7 +159,7 @@ function normalizedContext(context, startTime, endTime) {
 
 function buildCheckpoint({ request, segment, startTime, endTime, weatherPoint }) {
   const context = normalizedContext(segment.context, startTime, endTime);
-  const derivedWeather = weatherPoint ? weatherSlice(request.weather, weatherPoint, endTime) : null;
+  const derivedWeather = weatherPoint ? weatherSlice(request.weather, weatherPoint, startTime, endTime) : null;
   const checkpointId = `trip-checkpoint:${segment.segmentId}:${startTime}`;
   return {
     checkpointId,
@@ -193,7 +204,7 @@ export function prepareTripCheckpoints(request) {
       break;
     }
 
-    const startPoint = needsWeather ? pointAt(points, segment.startTime) : null;
+    const startPoint = needsWeather ? weatherPointAt(request, points, segment.startTime) : null;
     if (needsWeather && !startPoint) {
       issues.push(coverageIssue(segment.startTime, segment.endTime, 'missing_thermal_forecast', segment.segmentId));
       break;
@@ -210,7 +221,7 @@ export function prepareTripCheckpoints(request) {
     for (let index = 0; index < checkpointTimes.length; index += 1) {
       const startTime = checkpointTimes[index];
       const endTime = checkpointTimes[index + 1] ?? segment.endTime;
-      const weatherPoint = needsWeather ? pointAt(points, startTime) : null;
+      const weatherPoint = needsWeather ? weatherPointAt(request, points, startTime) : null;
       if (needsWeather && !weatherPoint) {
         issues.push(coverageIssue(startTime, endTime, 'missing_thermal_forecast', segment.segmentId));
         break;
