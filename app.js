@@ -8,6 +8,7 @@ import { APP_VERSION } from './src/version.js';
 import { ClothingAssetStore } from './ui/asset-store.js';
 import { renderAlternatives, renderCatalog, renderHourly, renderOutfit, renderWeather } from './ui/render.js';
 import { renderSituation, renderSituationContext, renderSituationOptions } from './ui/render-situations.js';
+import { bindDayTripPlanner } from './ui/day-trip-planner.js';
 
 const PROFILE_KEY = 'babyweather.v1.profile';
 const SETTINGS_KEY = 'babyweather.v1.settings';
@@ -138,6 +139,15 @@ function renderRecommendation() {
   updateConnectionBanner();
   lastRecommendation = computeRecommendation();
   renderCurrentRecommendation();
+}
+function tripPlannerSnapshot() {
+  syncActiveWeatherFreshness();
+  return {
+    profile: structuredClone(state.profile),
+    mode: state.mode,
+    contexts: structuredClone(state.contexts),
+    weather: state.weather ? structuredClone(state.weather) : null
+  };
 }
 function cacheAgeLabel() {
   const age = state.runtime.weatherCacheAgeMinutes;
@@ -393,7 +403,7 @@ async function refreshWeatherIfNeeded() {
   }
 }
 async function init() {
-  bindGlobalActions(); bindSituationContext(); bindProfile(); bindLocation(); bindWeatherOverride(); bindStyleSettings(); bindImportExport(); bindDialogs();
+  bindGlobalActions(); bindSituationContext(); bindProfile(); bindLocation(); bindWeatherOverride(); bindStyleSettings(); bindImportExport(); bindDayTripPlanner({ getSnapshot: tripPlannerSnapshot, assetStore, showToast }); bindDialogs();
   window.addEventListener('online', () => refreshWeather(state.location ?? DEFAULT_LOCATION));
   window.addEventListener('offline', () => { state.weather = cachedWeather(state.location ?? DEFAULT_LOCATION); state.runtime.weatherError = 'offline'; resetSession(); renderAll(); });
   window.setInterval(() => { refreshWeatherIfNeeded(); }, 60000);
