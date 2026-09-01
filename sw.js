@@ -1,4 +1,4 @@
-const CACHE_NAME = 'babywetter-shell-v0.2.0-assets14';
+const CACHE_NAME = 'babywetter-shell-v0.2.0-assets15';
 const ASSET_MANIFEST_PATH = '/assets/clothing/manifest.json';
 const VISUAL_MANIFEST_PATH = '/assets/clothing/visual-manifest.json';
 const SHELL = [
@@ -37,7 +37,8 @@ const SHELL = [
   '/ui/asset-store.js',
   '/ui/render.js',
   '/ui/render-situations.js',
-  '/ui/swipe-controller.js'
+  '/ui/swipe-controller.js',
+  '/ui/day-trip-planner.js'
 ];
 
 function normalizedClothingAssetPath(path) {
