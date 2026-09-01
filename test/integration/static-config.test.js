@@ -24,7 +24,15 @@ test('PWA manifest and service worker reference the app shell', () => {
   assert.equal(manifest.display, 'standalone');
   assert.equal(manifest.start_url, '/');
   const sw = read('sw.js');
-  for (const required of ['/index.html', '/app.js', '/src/outfit-engine.js', '/assets/clothing/manifest.json']) {
+  for (const required of [
+    '/index.html',
+    '/app.js',
+    '/src/outfit-engine.js',
+    '/src/day-trip-planner.js',
+    '/src/day-trip-planner-weather.js',
+    '/src/day-trip-planner-recommendations.js',
+    '/assets/clothing/manifest.json'
+  ]) {
     assert.match(sw, new RegExp(required.replaceAll('/', '\\/')));
   }
 });
