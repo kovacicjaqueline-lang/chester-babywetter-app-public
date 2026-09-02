@@ -1,3 +1,5 @@
+import './background-scene.js';
+
 const MODE_COPY = Object.freeze({
   outdoor: { label: 'Draußen', icon: '☀', short: 'Wetter + Aktivität' },
   stroller: { label: 'Kinderwagen', icon: '◌', short: 'Schläft, wach oder sehr aktiv' },
