@@ -42,7 +42,7 @@ body::before {
   background:
     radial-gradient(circle at var(--scene-celestial-x) var(--scene-celestial-y), var(--scene-celestial-core) 0 1.8rem, var(--scene-celestial-glow) 1.9rem 4.8rem, transparent 8.5rem),
     radial-gradient(ellipse at 5% 18%, rgba(var(--scene-cloud-rgb), var(--scene-cloud-opacity)) 0 5.2rem, transparent 5.5rem),
-    radial-gradient(ellipse at 95% 31%, rgba(var(--scene-cloud-rgb), calc(var(--scene-cloud-opacity) * .82)) 0 6.2rem, transparent 6.5rem),
+    radial-gradient(ellipse at 95% 31%, rgba(var(--scene-cloud-rgb), var(--scene-cloud-opacity)) 0 6.2rem, transparent 6.5rem),
     radial-gradient(ellipse at 22% 112%, var(--scene-land-a) 0 38%, transparent 39%),
     radial-gradient(ellipse at 84% 114%, var(--scene-land-b) 0 44%, transparent 45%);
 }
