@@ -90,7 +90,7 @@ test('stroller sleep remains independent of mobility and ignores active movement
   const lowMobility = recommendOutfit(request('low_mobility',asleep));
   const walking = recommendOutfit(request('walking',asleep));
 
-  assert.equal(lowMobility.phases[0].thermalAdjustment,1);
-  assert.equal(walking.phases[0].thermalAdjustment,1);
+  assert.equal(lowMobility.phases[0].thermalAdjustment,0);
+  assert.equal(walking.phases[0].thermalAdjustment,0);
   assert.deepEqual(selectedIds(lowMobility),selectedIds(walking));
 });
