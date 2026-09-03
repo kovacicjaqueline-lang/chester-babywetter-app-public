@@ -15,8 +15,9 @@ test('new stroller context defaults sun exposure and wind protection to unknown'
 });
 
 test('legacy implicit shade and partial wind defaults migrate once while later explicit choices persist', async ({ page }) => {
-  await page.addInitScript(({ key }) => {
-    localStorage.clear();
+  await page.goto('/?demo=1');
+  await expect(page.locator('#confidencePill')).not.toHaveText('Lädt …');
+  await page.evaluate(({ key }) => {
     localStorage.setItem(key, JSON.stringify({
       mode:'stroller',
       visualSeed:0,
@@ -27,8 +28,7 @@ test('legacy implicit shade and partial wind defaults migrate once while later e
       }
     }));
   }, { key:UI_STATE_KEY });
-
-  await page.goto('/?demo=1');
+  await page.reload();
   await expect(page.locator('#confidencePill')).not.toHaveText('Lädt …');
   await page.locator('[data-open-dialog="situationDialog"]').first().click();
 
