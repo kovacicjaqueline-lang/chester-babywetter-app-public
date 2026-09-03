@@ -54,7 +54,7 @@ function stroller(overrides={}) {
     activity:'normal',
     activitySource:'user',
     sunExposure:'shade',
-    windProtection:'none',
+    windProtection:'unknown',
     ...overrides
   };
 }
@@ -131,7 +131,7 @@ test('sleeping stroller at 18 to below 20 C uses a removable light blanket witho
   assert.equal(item(asleep,'stroller_thermal_accessory'),'stroller_light_blanket');
 });
 
-test('partial stroller wind shelter does not reuse a colder wind-including apparent temperature', () => {
+test('trusted apparent temperature remains authoritative for stroller wind shelter', () => {
   const w = weather(26, {
     apparentTempC:23,
     apparentTempTrusted:true,
@@ -143,17 +143,13 @@ test('partial stroller wind shelter does not reuse a colder wind-including appar
   const sheltered = recommend(stroller({ windProtection:'partial' }), w);
   const exposed = recommend(stroller({ windProtection:'none' }), w);
 
-  assert.equal(sheltered.phases[0].thermalReferenceC,26);
-  assert.equal(sheltered.phases[0].thermalReferenceSource,'air_temp');
-  assert.ok(sheltered.ruleTrace.some((entry) => entry.reasonCode === 'STROLLER_WIND_SHELTER_AIR_REFERENCE'));
-  assert.equal(item(sheltered,'base_torso'),'short_sleeve_bodysuit');
-  assert.equal(item(sheltered,'legs'),'light_trousers');
-  assert.equal(item(sheltered,'feet'),null);
-
-  assert.equal(exposed.phases[0].thermalReferenceC,23);
-  assert.equal(exposed.phases[0].thermalReferenceSource,'apparent_temp');
-  assert.equal(item(exposed,'base_torso'),'long_sleeve_bodysuit');
-  assert.equal(item(exposed,'feet'),'socks');
+  for (const result of [sheltered, exposed]) {
+    assert.equal(result.phases[0].thermalReferenceC,23);
+    assert.equal(result.phases[0].thermalReferenceSource,'apparent_temp');
+    assert.equal(item(result,'base_torso'),'long_sleeve_bodysuit');
+    assert.equal(item(result,'feet'),'socks');
+    assert.ok(!result.ruleTrace.some((entry) => entry.reasonCode === 'STROLLER_WIND_SHELTER_AIR_REFERENCE'));
+  }
 });
 
 test('26 C air / 23 C apparent / UV 4.5 stroller case keeps UV protection without thermal over-insulation', () => {
@@ -165,13 +161,14 @@ test('26 C air / 23 C apparent / UV 4.5 stroller case keeps UV protection withou
     windGustKmh:24,
     uvIndex:4.5
   });
-  const result = recommend(stroller({ windProtection:'partial', sunExposure:'unknown' }), w);
+  const result = recommend(stroller({ windProtection:'unknown', sunExposure:'unknown' }), w);
 
-  assert.equal(result.phases[0].thermalReferenceC,26);
+  assert.equal(result.phases[0].thermalReferenceC,23);
+  assert.equal(result.phases[0].thermalReferenceSource,'apparent_temp');
   assert.equal(result.phases[0].thermalAdjustment,0);
-  assert.equal(item(result,'base_torso'),'light_long_sleeve_shirt');
+  assert.equal(item(result,'base_torso'),'long_sleeve_bodysuit');
   assert.equal(item(result,'legs'),'light_trousers');
-  assert.equal(item(result,'feet'),null);
+  assert.equal(item(result,'feet'),'socks');
   assert.equal(item(result,'mid'),null);
   assert.equal(item(result,'outer'),null);
   assert.equal(item(result,'stroller_thermal_accessory'),'stroller_thermal_none');
@@ -191,7 +188,7 @@ test('stroller keeps a warmer trusted apparent temperature even with wind shelte
   assert.equal(result.phases[0].thermalReferenceSource,'apparent_temp');
 });
 
-test('warm stroller wind protection stays functional without an insulating mid layer', () => {
+test('trusted apparent temperature still keeps functional stroller wind protection', () => {
   const w = weather(26, {
     apparentTempC:22,
     apparentTempTrusted:true,
@@ -200,7 +197,8 @@ test('warm stroller wind protection stays functional without an insulating mid l
     windGustKmh:42
   });
   const result = recommend(stroller({ windProtection:'partial' }), w);
-  assert.equal(result.phases[0].thermalReferenceC,26);
+  assert.equal(result.phases[0].thermalReferenceC,22);
+  assert.equal(result.phases[0].thermalReferenceSource,'apparent_temp');
   assert.equal(item(result,'mid'),null);
   assert.notEqual(item(result,'outer'),null);
 });

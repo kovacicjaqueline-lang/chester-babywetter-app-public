@@ -182,24 +182,9 @@ export function neckFeedbackAdjustment(feedback) {
   return 0;
 }
 
-export function thermalEnvironment(point,context=null,mode=null) {
-  const apparentTrusted = point.apparentTempTrusted === true && isFiniteNumber(point.apparentTempC);
-  if (apparentTrusted) {
-    const included = new Set(point.apparentTempIncludes ?? []);
-    const strollerWindShelterAdjusted = mode === 'stroller'
-      && ['partial','good'].includes(context?.windProtection)
-      && included.has('wind')
-      && isFiniteNumber(point.airTempC)
-      && point.apparentTempC < point.airTempC;
-    if (strollerWindShelterAdjusted) {
-      return {
-        thermalReferenceC:point.airTempC,
-        referenceSource:'air_temp',
-        included:new Set(),
-        strollerWindShelterAdjusted:true
-      };
-    }
-    return { thermalReferenceC:point.apparentTempC, referenceSource:'apparent_temp', included };
+export function thermalEnvironment(point) {
+  if (point.apparentTempTrusted === true && isFiniteNumber(point.apparentTempC)) {
+    return { thermalReferenceC:point.apparentTempC, referenceSource:'apparent_temp', included:new Set(point.apparentTempIncludes ?? []) };
   }
   return { thermalReferenceC:point.airTempC, referenceSource:'air_temp', included:new Set() };
 }

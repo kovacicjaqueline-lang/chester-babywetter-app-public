@@ -100,10 +100,7 @@ function evaluateOutdoorLike(result, request, phase, effectiveMode) {
     return result;
   }
 
-  const thermal = thermalEnvironment(point, context, effectiveMode);
-  if (thermal.strollerWindShelterAdjusted) {
-    addTrace(result,'situation.stroller.wind_shelter_reference',phase,'replace','thermalReferenceC',null,'STROLLER_WIND_SHELTER_AIR_REFERENCE');
-  }
+  const thermal = thermalEnvironment(point);
   const band = temperatureBandFor(thermal.thermalReferenceC);
   const weatherWindow = summarizeWeatherWindow(weather, context.plannedMinutes);
   const state = createPhaseState(result, phase, effectiveMode);

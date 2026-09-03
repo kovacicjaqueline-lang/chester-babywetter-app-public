@@ -35,9 +35,7 @@ Für Outdoor-relevante Modi wird eine thermische Referenz bestimmt:
 
 Für `indoor` wird ausschließlich `roomTempC` verwendet. Außenwetter, Wind, Regen und UV fließen dort nicht in die thermische Empfehlung ein. Für `sleep` gilt ebenfalls `roomTempC`, jedoch mit eigener TOG-/Schlaflogik.
 
-Für Open-Meteo kann `apparent_temperature` als bekannter Adapterwert mit `wind`, `humidity` und `sun` markiert werden, weil Open-Meteo diese Bestandteile dokumentiert.
-
-**Spezialfall windgeschützter Kinderwagen:** Eine vertrauenswürdige scheinbare Temperatur beschreibt die exponierte Außenumgebung. Wenn sie `wind` enthält, niedriger als `airTempC` ist und der Kinderwagen mit `windProtection: partial | good` angegeben ist, darf dieser windbedingte Kälteeffekt nicht unverändert auf das geschützte Baby übertragen werden. V1 verwendet dann `airTempC` als thermische Basis und berechnet den Windmodifikator separat; der Kinderwagen-Windschutz reduziert diesen anschließend gemäß Abschnitt 5.3. Ist `apparentTempC` gleich oder höher als `airTempC`, bleibt die scheinbare Temperatur maßgeblich, damit Wärme nicht unterschätzt wird.
+Für Open-Meteo kann `apparent_temperature` als bekannter Adapterwert mit `wind`, `humidity` und `sun` markiert werden, weil Open-Meteo diese Bestandteile dokumentiert. Die Engine zerlegt einen solchen kombinierten Wert nicht nachträglich in einzelne Celsius-Anteile; ein Kinderwagen-Windschutz darf daher nicht die gesamte Differenz zwischen `apparentTempC` und `airTempC` als reinen Windeffekt behandeln.
 
 ### 2.2 `thermalStep`
 
@@ -263,12 +261,11 @@ Böen:
 
 Wenn `apparentTempIncludes` bereits `wind` enthält:
 
-- normalerweise **kein** zusätzlicher thermischer Wind-Step,
-- Windschutz-Anforderung bleibt bestehen.
+- **kein** zusätzlicher thermischer Wind-Step,
+- Windschutz-Anforderung bleibt bestehen,
+- die vertrauenswürdige `apparentTempC` bleibt die thermische Referenz; V1 versucht nicht, den Windanteil aus einem kombinierten Feels-like-Wert herauszurechnen.
 
-Ausnahme ist der in Abschnitt 2.1 definierte windgeschützte Kinderwagen: Wird wegen `partial | good` von einer kälteren windhaltigen `apparentTempC` auf `airTempC` als Basis gewechselt, gilt Wind thermisch wieder als noch nicht enthalten und wird einmal explizit berechnet. Dadurch kann der Wagen-Windschutz den Windmodifikator anschließend reduzieren, ohne ihn doppelt zu zählen.
-
-Wenn keine vertrauenswürdige scheinbare Temperatur vorliegt bzw. Wind nach der Kinderwagen-Spezialregel separat zu bewerten ist und das Baby exponiert ist:
+Wenn keine vertrauenswürdige scheinbare Temperatur vorliegt oder Wind dort nicht als enthalten markiert ist und das Baby exponiert ist:
 
 - `20–28 km/h`: `+0.5 thermalStep`,
 - `29–38 km/h`: `+1`,
@@ -280,10 +277,13 @@ Die Engine rechnet Wind nicht in erfundene zusätzliche Celsiusgrade um.
 ### 5.3 Windschutz des Kinderwagens
 
 - `none`: keine Reduktion,
-- `partial`: thermischen Windmodifikator um maximal `0.5` reduzieren,
-- `good`: um maximal `1` reduzieren.
+- `partial`: einen **separat berechneten** thermischen Windmodifikator um maximal `0.5` reduzieren,
+- `good`: einen **separat berechneten** thermischen Windmodifikator um maximal `1` reduzieren,
+- `unknown`: keine thermische Schutzreduktion annehmen.
 
-Bei einer kälteren, Wind bereits enthaltenden scheinbaren Temperatur wird für `partial | good` die Kinderwagen-Spezialregel aus Abschnitt 2.1 verwendet, damit der Schutz des Wagens thermisch überhaupt wirksam werden kann. Eine wärmere scheinbare Temperatur wird dadurch nie nach unten korrigiert.
+Ist Wind bereits Bestandteil einer vertrauenswürdigen `apparentTempC`, verändert `windProtection` diese Referenz nicht. Der kombinierte Wert enthält neben Wind ggf. auch Luftfeuchte und Sonne und kann mit dem V1-Datenvertrag nicht sauber in einzelne Temperaturanteile zerlegt werden. Funktionale Windschutzanforderungen bleiben unabhängig davon aktiv.
+
+Neue Kinderwagen-Kontexte starten mit `windProtection: unknown`. Alte unversionierte UI-Zustände aus der früheren Default-Semantik (`partial`) werden einmalig konservativ auf `unknown` migriert. Danach bleibt eine vom Nutzer ausdrücklich gewählte versionierte Einstellung `none | partial | good | unknown` erhalten.
 
 Windschutz darf nicht als luftdichtes Verschließen umgesetzt werden.
 
@@ -347,7 +347,7 @@ Unbekanntes Alter + direkte Sonne:
 - `UV >=3`: Schutz aktiv einplanen,
 - hohe UV-Anforderung wird bei Wärme durch leichte bedeckende Kleidung bzw. Austausch gelöst, nicht durch zusätzlichen schweren Layer.
 
-Für neue Outdoor-, Kinderwagen- und Trage-Kontexte ist `sunExposure: unknown` der sichere UI-Ausgangswert. `shade` wird nur verwendet, wenn der Nutzer diesen Zustand tatsächlich auswählt oder ein vorhandener gespeicherter Kontext ihn ausdrücklich enthält. Damit unterdrückt die App relevanten UV-Schutz nicht allein aufgrund eines optimistischen Defaults.
+Für neue Outdoor-, Kinderwagen- und Trage-Kontexte ist `sunExposure: unknown` der sichere UI-Ausgangswert. Alte unversionierte UI-Zustände mit dem früher automatisch gesetzten `shade` werden einmalig konservativ auf `unknown` migriert, weil die App bei diesen Legacy-Daten nicht unterscheiden kann, ob `shade` bewusst gewählt oder nur der frühere Default war. Nach der Migration/versionierten Speicherung bleibt ein ausdrücklich gewähltes `shade | partial | direct | unknown` erhalten.
 
 ### 7.3 Kinderwagen
 
@@ -757,7 +757,7 @@ Mindestens:
 37. `mobilityStage: walking` setzt weder `activity: active` noch `groundContact: walking` automatisch.
 38. Ab `20 °C` erzeugt `strollerState: asleep` allein keine zusätzliche Körperisolation und keinen thermischen Fußsack.
 39. `awake + active` darf im warmen Kinderwagen gegenüber `awake + normal` leichter ausfallen; bei `>=20 °C` beträgt die Zustandskorrektur `-0.5 thermalStep`, soweit eine leichtere Kombination existiert.
-40. Bei `partial | good` Kinderwagen-Windschutz darf eine kältere `apparentTempC`, die Wind bereits enthält, nicht unverändert als exponierte Referenz verwendet werden; V1 nutzt `airTempC` als Basis und berechnet den reduzierbaren Windmodifikator einmal separat.
-41. Eine wärmere vertrauenswürdige `apparentTempC` bleibt auch im windgeschützten Kinderwagen maßgeblich.
+40. Eine vertrauenswürdige `apparentTempC` bleibt auch bei `windProtection: partial | good` thermische Referenz; V1 behandelt die gesamte Differenz zu `airTempC` nicht als Windanteil.
+41. Kinderwagen-Windschutz reduziert nur einen separat berechneten thermischen Windmodifikator, wenn Wind nicht bereits in der vertrauenswürdigen `apparentTempC` enthalten ist.
 42. Ab `24 °C` erzeugt eine automatische thermische Kinderwagen-Rebalance keine isolierende Mid-/Outer-Schicht; funktionale Wind-/Regenschutz-Shells bleiben zulässig.
-43. Neue Outdoor-, Kinderwagen- und Trage-Kontexte starten mit `sunExposure: unknown`; ein gespeichertes oder bewusst gewähltes `shade` bleibt erhalten.
+43. Neue Outdoor-, Kinderwagen- und Trage-Kontexte starten mit `sunExposure: unknown`; neue Kinderwagen-Kontexte zusätzlich mit `windProtection: unknown`. Alte unversionierte `shade`-/`partial`-Defaults werden einmalig auf `unknown` migriert; danach bleiben ausdrücklich gewählte versionierte Werte erhalten.
