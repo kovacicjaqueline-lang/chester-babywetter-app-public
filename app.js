@@ -13,6 +13,7 @@ import { bindDayTripPlanner } from './ui/day-trip-planner.js';
 const PROFILE_KEY = 'babyweather.v1.profile';
 const SETTINGS_KEY = 'babyweather.v1.settings';
 const UI_STATE_KEY = 'babyweather.v1.uiState';
+const UI_STATE_VERSION = 2;
 const WEATHER_CACHE_KEY = 'babyweather.v1.weatherCache';
 const DEMO_MODE = new URLSearchParams(location.search).get('demo') === '1';
 const MODES = new Set(['outdoor', 'stroller', 'carrier', 'car', 'indoor', 'sleep']);
@@ -34,9 +35,9 @@ function defaultProfile() {
   return { profileId: 'baby_local', displayName: 'Baby', birthDate: null, mobilityStage: 'low_mobility', warmthBias: 'neutral', styleTheme: 'neutral', defaultMode: 'stroller', createdAt: now, updatedAt: now };
 }
 const DEFAULT_CONTEXTS = Object.freeze({
-  outdoor: { mode: 'outdoor', plannedMinutes: 60, activity: 'normal', activitySource: 'user', sunExposure: 'shade', groundContact: 'none' },
-  stroller: { mode: 'stroller', plannedMinutes: 60, strollerState: 'awake', activity: 'normal', activitySource: 'user', sunExposure: 'shade', windProtection: 'partial' },
-  carrier: { mode: 'carrier', plannedMinutes: 60, sunExposure: 'shade', placement: 'over_wearer_outerwear' },
+  outdoor: { mode: 'outdoor', plannedMinutes: 60, activity: 'normal', activitySource: 'user', sunExposure: 'unknown', groundContact: 'none' },
+  stroller: { mode: 'stroller', plannedMinutes: 60, strollerState: 'awake', activity: 'normal', activitySource: 'user', sunExposure: 'unknown', windProtection: 'unknown' },
+  carrier: { mode: 'carrier', plannedMinutes: 60, sunExposure: 'unknown', placement: 'over_wearer_outerwear' },
   car: { mode: 'car', plannedMinutes: 30, includeOutdoorTransition: true, outsideTransitionMinutes: 5, ...estimateCabinTemperature() },
   indoor: { mode: 'indoor', roomTempC: 20, activity: 'normal', activitySource: 'user' },
   sleep: { mode: 'sleep', roomTempC: 18.5 }
@@ -55,13 +56,13 @@ function loadSettings(profile) {
   const fallback = defaultSettings(); const stored = safeParse(SETTINGS_KEY); if (!stored || typeof stored !== 'object') return { ...fallback, defaultMode: profile.defaultMode };
   return { ...fallback, defaultMode: MODES.has(stored.defaultMode) ? stored.defaultMode : profile.defaultMode, allowLocation: typeof stored.allowLocation === 'boolean' ? stored.allowLocation : null, weatherCacheMaxAgeMinutes: sanitizeWeatherCacheMaxAgeMinutes(stored.weatherCacheMaxAgeMinutes) };
 }
-function sanitizeContexts(candidate) {
+function sanitizeContexts(candidate, { migrateLegacyDefaults = false } = {}) {
   const contexts = structuredClone(DEFAULT_CONTEXTS); if (!candidate || typeof candidate !== 'object') return contexts;
   for (const mode of MODES) {
     if (!candidate[mode] || typeof candidate[mode] !== 'object') continue; const source = candidate[mode];
-    if (mode === 'outdoor') { contexts.outdoor.activity = source.activity === 'active' ? 'active' : 'normal'; if (['shade','partial','direct','unknown'].includes(source.sunExposure)) contexts.outdoor.sunExposure = source.sunExposure; if (['none','standing','walking'].includes(source.groundContact)) contexts.outdoor.groundContact = source.groundContact; }
-    if (mode === 'stroller') { contexts.stroller.strollerState = source.strollerState === 'asleep' ? 'asleep' : 'awake'; contexts.stroller.activity = source.strollerState === 'asleep' ? 'normal' : source.activity === 'active' ? 'active' : 'normal'; if (['shade','partial','direct','unknown'].includes(source.sunExposure)) contexts.stroller.sunExposure = source.sunExposure; if (['none','partial','good','unknown'].includes(source.windProtection)) contexts.stroller.windProtection = source.windProtection; }
-    if (mode === 'carrier') { if (['shade','partial','direct','unknown'].includes(source.sunExposure)) contexts.carrier.sunExposure = source.sunExposure; if (['under_wearer_outerwear','over_wearer_outerwear'].includes(source.placement)) contexts.carrier.placement = source.placement; }
+    if (mode === 'outdoor') { contexts.outdoor.activity = source.activity === 'active' ? 'active' : 'normal'; if (['shade','partial','direct','unknown'].includes(source.sunExposure)) contexts.outdoor.sunExposure = migrateLegacyDefaults && source.sunExposure === 'shade' ? 'unknown' : source.sunExposure; if (['none','standing','walking'].includes(source.groundContact)) contexts.outdoor.groundContact = source.groundContact; }
+    if (mode === 'stroller') { contexts.stroller.strollerState = source.strollerState === 'asleep' ? 'asleep' : 'awake'; contexts.stroller.activity = source.strollerState === 'asleep' ? 'normal' : source.activity === 'active' ? 'active' : 'normal'; if (['shade','partial','direct','unknown'].includes(source.sunExposure)) contexts.stroller.sunExposure = migrateLegacyDefaults && source.sunExposure === 'shade' ? 'unknown' : source.sunExposure; if (['none','partial','good','unknown'].includes(source.windProtection)) contexts.stroller.windProtection = migrateLegacyDefaults && source.windProtection === 'partial' ? 'unknown' : source.windProtection; }
+    if (mode === 'carrier') { if (['shade','partial','direct','unknown'].includes(source.sunExposure)) contexts.carrier.sunExposure = migrateLegacyDefaults && source.sunExposure === 'shade' ? 'unknown' : source.sunExposure; if (['under_wearer_outerwear','over_wearer_outerwear'].includes(source.placement)) contexts.carrier.placement = source.placement; }
     if (mode === 'car') {
       if (source.cabinTempSource === 'estimated') Object.assign(contexts.car, estimateCabinTemperature());
       else if (['manual','measured'].includes(source.cabinTempSource) && Number.isFinite(source.cabinTempC)) { contexts.car.cabinTempC = source.cabinTempC; contexts.car.cabinTempSource = source.cabinTempSource; }
@@ -75,11 +76,13 @@ function sanitizeContexts(candidate) {
   return contexts;
 }
 const profile = loadProfile(); const settings = loadSettings(profile); const storedUi = safeParse(UI_STATE_KEY);
-const state = { profile, settings, mode: MODES.has(storedUi?.mode) ? storedUi.mode : settings.defaultMode, contexts: sanitizeContexts(storedUi?.contexts), visualSeed: Number.isSafeInteger(storedUi?.visualSeed) ? storedUi.visualSeed : 0, location: null, weather: null, runtime: { weatherLoading: true, weatherError: null, weatherCacheStatus: null, weatherCacheAgeMinutes: null, weatherCacheOrigin: null }, warmthDirection: 'balanced', neckFeedback: null };
+const storedUiVersion = Number.isInteger(storedUi?.uiStateVersion) ? storedUi.uiStateVersion : 1;
+const migrateLegacyUiDefaults = Boolean(storedUi && typeof storedUi === 'object' && storedUiVersion < UI_STATE_VERSION);
+const state = { profile, settings, mode: MODES.has(storedUi?.mode) ? storedUi.mode : settings.defaultMode, contexts: sanitizeContexts(storedUi?.contexts, { migrateLegacyDefaults:migrateLegacyUiDefaults }), visualSeed: Number.isSafeInteger(storedUi?.visualSeed) ? storedUi.visualSeed : 0, location: null, weather: null, runtime: { weatherLoading: true, weatherError: null, weatherCacheStatus: null, weatherCacheAgeMinutes: null, weatherCacheOrigin: null }, warmthDirection: 'balanced', neckFeedback: null };
 let session = createSession(`ui:${Date.now()}`); let lastRecommendation = null; let alternativeSlot = null; let toastTimer = null; let weatherRefreshInFlight = false;
 const assetStore = new ClothingAssetStore(); const weatherService = createWeatherService({ onStorageError: () => showToast('Standort konnte lokal nicht gespeichert werden.') });
 function persistProfile() { state.profile.defaultMode = state.settings.defaultMode; state.profile.updatedAt = nowIso(); localStorage.setItem(PROFILE_KEY, JSON.stringify(state.profile)); }
-function persistSettings() { localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings)); localStorage.setItem(UI_STATE_KEY, JSON.stringify({ mode: state.mode, contexts: state.contexts, visualSeed: state.visualSeed })); }
+function persistSettings() { localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings)); localStorage.setItem(UI_STATE_KEY, JSON.stringify({ uiStateVersion:UI_STATE_VERSION, mode: state.mode, contexts: state.contexts, visualSeed: state.visualSeed })); }
 function cacheWeather(series) { try { localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify(series)); } catch { showToast('Wetterdaten konnten nicht lokal gespeichert werden.'); } }
 function isManualWeatherOrigin(origin) { return origin === 'manual' || origin === 'api_with_manual_override'; }
 function weatherAssessmentOptions(location) { return { location, maxAgeMinutes: state.settings.weatherCacheMaxAgeMinutes }; }
@@ -403,6 +406,7 @@ async function refreshWeatherIfNeeded() {
   }
 }
 async function init() {
+  if (migrateLegacyUiDefaults) persistSettings();
   bindGlobalActions(); bindSituationContext(); bindProfile(); bindLocation(); bindWeatherOverride(); bindStyleSettings(); bindImportExport(); bindDayTripPlanner({ getSnapshot: tripPlannerSnapshot, assetStore, showToast }); bindDialogs();
   window.addEventListener('online', () => refreshWeather(state.location ?? DEFAULT_LOCATION));
   window.addEventListener('offline', () => { state.weather = cachedWeather(state.location ?? DEFAULT_LOCATION); state.runtime.weatherError = 'offline'; resetSession(); renderAll(); });

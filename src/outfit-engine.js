@@ -112,7 +112,7 @@ function evaluateOutdoorLike(result, request, phase, effectiveMode) {
   if (activityAdjustment) traceThermal(result,'activity.level',phase,activityAdjustment,activityAdjustment > 0 ? 'ACTIVITY_WARMER' : 'ACTIVITY_COOLER');
 
   if (effectiveMode === 'stroller') {
-    const strollerAdjustment = strollerStateAdjustment(context);
+    const strollerAdjustment = strollerStateAdjustment(context, thermal.thermalReferenceC);
     adjustment += strollerAdjustment;
     traceThermal(result,'situation.stroller.state',phase,strollerAdjustment,'STROLLER_STATE_THERMAL_ADJUSTMENT');
   }
@@ -149,6 +149,7 @@ function evaluateOutdoorLike(result, request, phase, effectiveMode) {
 
   const bodyAdjustment = adjustment - accessoryCredit;
   applyThermalDelta(state, bodyAdjustment, new Set(), effectiveMode);
+  if (effectiveMode === 'stroller') enforceAutomaticStrollerWarmWeatherLimits(state,result,phase,thermal.thermalReferenceC);
 
   if (effectiveMode === 'carrier') {
     applyCarrierTorsoReduction(state, carrierTorsoCredit, effectiveMode);
@@ -403,6 +404,16 @@ function bodyThermalWeight(state) {
     total += CLOTHING_CATALOG[selection.itemId]?.thermalWeight ?? 0;
   }
   return total;
+}
+
+function enforceAutomaticStrollerWarmWeatherLimits(state,result,phase,temp) {
+  if (temp < 24) return;
+  for (const slot of ['mid','outer']) {
+    const selection = state.map.get(slot);
+    if (!selection || selection.selectionSource !== 'engine' || !selection.reasonCodes.includes('THERMAL_REBALANCE')) continue;
+    state.map.delete(slot);
+    addTrace(result,'situation.stroller.warm_weather_limit',phase,'remove',selection.itemId,null,'STROLLER_WARM_WEATHER_LIMIT');
+  }
 }
 
 function preferLightWindShellInWarmWeather(state, temp, rain, wind, mode) {
