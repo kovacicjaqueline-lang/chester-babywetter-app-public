@@ -115,7 +115,8 @@ export function selectStrollerThermalAccessory(request,temp,phase) {
   if (lock && CLOTHING_CATALOG[lock.itemId]?.slot === 'stroller_thermal_accessory') return { itemId:lock.itemId, source:'manual_lock', reasons:['MANUAL_ITEM_LOCK'] };
   const { strollerState, activity } = request.context;
   let itemId = 'stroller_thermal_none';
-  if (temp >= 18) itemId = 'stroller_thermal_none';
+  if (temp >= 20) itemId = 'stroller_thermal_none';
+  else if (temp >= 18) itemId = strollerState === 'asleep' ? 'stroller_light_blanket' : 'stroller_thermal_none';
   else if (temp >= 14) itemId = strollerState === 'asleep' || activity !== 'active' ? 'stroller_light_blanket' : 'stroller_thermal_none';
   else if (temp >= 10) itemId = strollerState === 'awake' && activity === 'active' ? 'stroller_light_blanket' : 'stroller_light_footmuff';
   else if (temp >= 5) itemId = strollerState === 'awake' && activity === 'active' ? 'stroller_light_footmuff' : 'stroller_warm_footmuff';
@@ -153,7 +154,17 @@ export function activityAdjustmentFor(context,mode) {
   return 0;
 }
 
-export function strollerStateAdjustment(context) {
+export function strollerStateAdjustment(context,temp) {
+  if (isFiniteNumber(temp) && temp >= 20) {
+    if (context.strollerState === 'asleep') return 0;
+    if (context.activity === 'active') return -0.5;
+    return 0;
+  }
+  if (isFiniteNumber(temp) && temp >= 18) {
+    if (context.strollerState === 'asleep') return 0.5;
+    if (context.activity === 'active') return -0.5;
+    return 0;
+  }
   if (context.strollerState === 'asleep') return 1;
   if (context.activity === 'active') return 0;
   return 0.5;
@@ -171,9 +182,24 @@ export function neckFeedbackAdjustment(feedback) {
   return 0;
 }
 
-export function thermalEnvironment(point) {
-  if (point.apparentTempTrusted === true && isFiniteNumber(point.apparentTempC)) {
-    return { thermalReferenceC:point.apparentTempC, referenceSource:'apparent_temp', included:new Set(point.apparentTempIncludes ?? []) };
+export function thermalEnvironment(point,context=null,mode=null) {
+  const apparentTrusted = point.apparentTempTrusted === true && isFiniteNumber(point.apparentTempC);
+  if (apparentTrusted) {
+    const included = new Set(point.apparentTempIncludes ?? []);
+    const strollerWindShelterAdjusted = mode === 'stroller'
+      && ['partial','good'].includes(context?.windProtection)
+      && included.has('wind')
+      && isFiniteNumber(point.airTempC)
+      && point.apparentTempC < point.airTempC;
+    if (strollerWindShelterAdjusted) {
+      return {
+        thermalReferenceC:point.airTempC,
+        referenceSource:'air_temp',
+        included:new Set(),
+        strollerWindShelterAdjusted:true
+      };
+    }
+    return { thermalReferenceC:point.apparentTempC, referenceSource:'apparent_temp', included };
   }
   return { thermalReferenceC:point.airTempC, referenceSource:'air_temp', included:new Set() };
 }

@@ -34,9 +34,9 @@ function defaultProfile() {
   return { profileId: 'baby_local', displayName: 'Baby', birthDate: null, mobilityStage: 'low_mobility', warmthBias: 'neutral', styleTheme: 'neutral', defaultMode: 'stroller', createdAt: now, updatedAt: now };
 }
 const DEFAULT_CONTEXTS = Object.freeze({
-  outdoor: { mode: 'outdoor', plannedMinutes: 60, activity: 'normal', activitySource: 'user', sunExposure: 'shade', groundContact: 'none' },
-  stroller: { mode: 'stroller', plannedMinutes: 60, strollerState: 'awake', activity: 'normal', activitySource: 'user', sunExposure: 'shade', windProtection: 'partial' },
-  carrier: { mode: 'carrier', plannedMinutes: 60, sunExposure: 'shade', placement: 'over_wearer_outerwear' },
+  outdoor: { mode: 'outdoor', plannedMinutes: 60, activity: 'normal', activitySource: 'user', sunExposure: 'unknown', groundContact: 'none' },
+  stroller: { mode: 'stroller', plannedMinutes: 60, strollerState: 'awake', activity: 'normal', activitySource: 'user', sunExposure: 'unknown', windProtection: 'partial' },
+  carrier: { mode: 'carrier', plannedMinutes: 60, sunExposure: 'unknown', placement: 'over_wearer_outerwear' },
   car: { mode: 'car', plannedMinutes: 30, includeOutdoorTransition: true, outsideTransitionMinutes: 5, ...estimateCabinTemperature() },
   indoor: { mode: 'indoor', roomTempC: 20, activity: 'normal', activitySource: 'user' },
   sleep: { mode: 'sleep', roomTempC: 18.5 }

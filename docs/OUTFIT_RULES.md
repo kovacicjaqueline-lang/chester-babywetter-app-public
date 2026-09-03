@@ -37,6 +37,8 @@ Für `indoor` wird ausschließlich `roomTempC` verwendet. Außenwetter, Wind, Re
 
 Für Open-Meteo kann `apparent_temperature` als bekannter Adapterwert mit `wind`, `humidity` und `sun` markiert werden, weil Open-Meteo diese Bestandteile dokumentiert.
 
+**Spezialfall windgeschützter Kinderwagen:** Eine vertrauenswürdige scheinbare Temperatur beschreibt die exponierte Außenumgebung. Wenn sie `wind` enthält, niedriger als `airTempC` ist und der Kinderwagen mit `windProtection: partial | good` angegeben ist, darf dieser windbedingte Kälteeffekt nicht unverändert auf das geschützte Baby übertragen werden. V1 verwendet dann `airTempC` als thermische Basis und berechnet den Windmodifikator separat; der Kinderwagen-Windschutz reduziert diesen anschließend gemäß Abschnitt 5.3. Ist `apparentTempC` gleich oder höher als `airTempC`, bleibt die scheinbare Temperatur maßgeblich, damit Wärme nicht unterschätzt wird.
+
 ### 2.2 `thermalStep`
 
 Ein `thermalStep` ist eine relative Produktheuristik. Halbe Schritte sind erlaubt.
@@ -163,13 +165,31 @@ Die sichtbare V1-Auswahl unterscheidet nur:
 
 ### Kinderwagen
 
-Kinderwagen ist **nicht automatisch passiv**. Die UI bietet genau `Schläft`, `Wach`, `Sehr aktiv` und mappt dies intern auf die bestehenden Achsen:
+Kinderwagen ist **nicht automatisch passiv**. Die UI bietet genau `Schläft`, `Wach`, `Sehr aktiv` und mappt dies intern auf die bestehenden Achsen. Die thermische Zustandskorrektur ist bewusst temperaturabhängig, damit ein Zustand bei warmem Wetter keine unnötige Isolationsschicht erzeugt:
 
-- `Schläft` → `asleep`: `+1`; Aktivitätswert wird thermisch ignoriert,
-- `Wach` → `awake + normal`: `+0.5` relativ zur Outdoor-Normalbaseline,
-- `Sehr aktiv` → `awake + active`: `0` relativ zur Outdoor-Normalbaseline.
+#### `>=20 °C`
 
-Damit kann ein Baby, das im Kinderwagen stark strampelt/rockt, deutlich leichter angezogen werden als ein schlafendes Baby bei gleichem Wetter.
+- `Schläft` → `asleep`: `0`; Aktivitätswert wird thermisch ignoriert,
+- `Wach` → `awake + normal`: `0`,
+- `Sehr aktiv` → `awake + active`: `-0.5 thermalStep`, soweit noch eine sinnvolle leichtere Kombination existiert.
+
+Ab 20 °C wird also nicht allein wegen des Kinderwagen-Zustands zusätzliche Körperisolation ergänzt. Ein sehr aktives Baby kann weiterhin leichter angezogen werden.
+
+#### `18 bis <20 °C`
+
+- `Schläft`: `+0.5 thermalStep`, kombiniert mit einer bevorzugten leichten Decke als entfernbarer externer Isolation,
+- `Wach`: `0`,
+- `Sehr aktiv`: `-0.5 thermalStep`.
+
+Der Wärmekredit der leichten Decke wird beim Körperoutfit gegengerechnet; Schlafen soll hier nicht automatisch einen zusätzlichen Pullover oder warme Booties erzeugen.
+
+#### `<18 °C`
+
+- `Schläft`: `+1 thermalStep`; Aktivitätswert wird thermisch ignoriert,
+- `Wach`: `+0.5 thermalStep` relativ zur Outdoor-Normalbaseline,
+- `Sehr aktiv`: `0` relativ zur Outdoor-Normalbaseline.
+
+Damit kann ein Baby, das im Kinderwagen stark strampelt/rockt, leichter angezogen werden als ein schlafendes Baby bei gleichem Wetter, ohne dass warme Temperaturen pauschal aufgeschichtet werden.
 
 ### Drinnen
 
@@ -243,10 +263,12 @@ Böen:
 
 Wenn `apparentTempIncludes` bereits `wind` enthält:
 
-- **kein** zusätzlicher thermischer Wind-Step,
+- normalerweise **kein** zusätzlicher thermischer Wind-Step,
 - Windschutz-Anforderung bleibt bestehen.
 
-Wenn keine vertrauenswürdige scheinbare Temperatur vorliegt und das Baby exponiert ist:
+Ausnahme ist der in Abschnitt 2.1 definierte windgeschützte Kinderwagen: Wird wegen `partial | good` von einer kälteren windhaltigen `apparentTempC` auf `airTempC` als Basis gewechselt, gilt Wind thermisch wieder als noch nicht enthalten und wird einmal explizit berechnet. Dadurch kann der Wagen-Windschutz den Windmodifikator anschließend reduzieren, ohne ihn doppelt zu zählen.
+
+Wenn keine vertrauenswürdige scheinbare Temperatur vorliegt bzw. Wind nach der Kinderwagen-Spezialregel separat zu bewerten ist und das Baby exponiert ist:
 
 - `20–28 km/h`: `+0.5 thermalStep`,
 - `29–38 km/h`: `+1`,
@@ -260,6 +282,8 @@ Die Engine rechnet Wind nicht in erfundene zusätzliche Celsiusgrade um.
 - `none`: keine Reduktion,
 - `partial`: thermischen Windmodifikator um maximal `0.5` reduzieren,
 - `good`: um maximal `1` reduzieren.
+
+Bei einer kälteren, Wind bereits enthaltenden scheinbaren Temperatur wird für `partial | good` die Kinderwagen-Spezialregel aus Abschnitt 2.1 verwendet, damit der Schutz des Wagens thermisch überhaupt wirksam werden kann. Eine wärmere scheinbare Temperatur wird dadurch nie nach unten korrigiert.
 
 Windschutz darf nicht als luftdichtes Verschließen umgesetzt werden.
 
@@ -323,6 +347,8 @@ Unbekanntes Alter + direkte Sonne:
 - `UV >=3`: Schutz aktiv einplanen,
 - hohe UV-Anforderung wird bei Wärme durch leichte bedeckende Kleidung bzw. Austausch gelöst, nicht durch zusätzlichen schweren Layer.
 
+Für neue Outdoor-, Kinderwagen- und Trage-Kontexte ist `sunExposure: unknown` der sichere UI-Ausgangswert. `shade` wird nur verwendet, wenn der Nutzer diesen Zustand tatsächlich auswählt oder ein vorhandener gespeicherter Kontext ihn ausdrücklich enthält. Damit unterdrückt die App relevanten UV-Schutz nicht allein aufgrund eines optimistischen Defaults.
+
 ### 7.3 Kinderwagen
 
 Bei `direct sun` oder relevantem UV wird **Sonnensegel/Sonnenschirm** als bevorzugtes Zubehör empfohlen. Keine Decke/Mulltuch-Abdeckung über dem Wagen.
@@ -342,10 +368,21 @@ Der Wärmekredit ersetzt bei Bedarf Kleidung am Körper. Er darf nie funktionale
 
 ### 8.2 Standardempfehlung nach Temperatur und Zustand
 
-#### `>=18 °C`
+#### `>=20 °C`
 
 - keine thermische externe Isolation standardmäßig,
+- `Schläft` erhält keine zusätzliche Körperisolation allein wegen des Schlafzustands,
+- `Wach` bleibt auf der Outdoor-Normalbaseline,
+- `Sehr aktiv` darf um `-0.5 thermalStep` leichter werden, soweit noch eine sinnvolle leichtere Kombination existiert,
+- ab `24 °C` darf eine automatische thermische Zustands-/Rebalance-Korrektur keine isolierende `mid`- oder thermische `outer`-Schicht erzeugen,
+- funktionale Wind-/Regen-Shells bleiben davon ausdrücklich ausgenommen,
 - bei direkter Sonne keine Decke/Fußsack nur wegen Kinderwagenmodus.
+
+#### `18 bis <20 °C`
+
+- `Sehr aktiv`: keine externe Isolation und `-0.5 thermalStep`,
+- `Wach`: keine externe Isolation, keine zusätzliche Zustandswärme,
+- `Schläft`: leichte Decke bevorzugt; ihr `+0.5` Wärmekredit gleicht den `+0.5` Schlafzustand am Körper wieder aus.
 
 #### `14 bis <18 °C`
 
@@ -377,7 +414,8 @@ Der Wärmekredit ersetzt bei Bedarf Kleidung am Körper. Er darf nie funktionale
 
 - keine TOG-Logik,
 - Outdoor-Wetter bleibt relevant,
-- Schlafzustand erhöht den thermischen Bedarf,
+- unter 20 °C kann der Schlafzustand den thermischen Bedarf erhöhen,
+- ab 20 °C wird nicht allein wegen `asleep` zusätzliche Körperisolation oder ein Fußsack erzeugt,
 - Hersteller-/Sicherheitsbedingungen des konkreten Kinderwagens bleiben außerhalb der Outfitengine zu beachten.
 
 ## 9. Modus `carrier`
@@ -681,7 +719,7 @@ Mindestens:
 ## 19. Kalibrierungs-Invarianten für Tests
 
 1. Kinderwagen setzt Aktivität nicht automatisch auf passiv.
-2. `strollerState: asleep` ist thermisch wärmer als `awake + active` bei identischem Wetter.
+2. Unter `20 °C` ist `strollerState: asleep` thermisch wärmer als `awake + active` bei identischem Wetter; ab `20 °C` erzeugt Schlafen allein keine zusätzliche Körperisolation.
 3. Die UI bildet Kinderwagen genau auf `Schläft | Wach | Sehr aktiv` ab; `Ruhig` ist kein eigener Zustand.
 4. Warmer Fußsack kann Körperkleidung ersetzen.
 5. Austausch warmer Fußsack → leichte Decke muss Rebalancing auslösen.
@@ -717,3 +755,9 @@ Mindestens:
 35. `mobilityStage` allein verändert keine thermische Stufe und keine fachliche Item-Auswahl bei identischen übrigen Inputs.
 36. `walking + activity: normal` ist thermisch identisch zu `low_mobility + activity: normal`; eine leichtere Empfehlung entsteht erst durch `activity: active`.
 37. `mobilityStage: walking` setzt weder `activity: active` noch `groundContact: walking` automatisch.
+38. Ab `20 °C` erzeugt `strollerState: asleep` allein keine zusätzliche Körperisolation und keinen thermischen Fußsack.
+39. `awake + active` darf im warmen Kinderwagen gegenüber `awake + normal` leichter ausfallen; bei `>=20 °C` beträgt die Zustandskorrektur `-0.5 thermalStep`, soweit eine leichtere Kombination existiert.
+40. Bei `partial | good` Kinderwagen-Windschutz darf eine kältere `apparentTempC`, die Wind bereits enthält, nicht unverändert als exponierte Referenz verwendet werden; V1 nutzt `airTempC` als Basis und berechnet den reduzierbaren Windmodifikator einmal separat.
+41. Eine wärmere vertrauenswürdige `apparentTempC` bleibt auch im windgeschützten Kinderwagen maßgeblich.
+42. Ab `24 °C` erzeugt eine automatische thermische Kinderwagen-Rebalance keine isolierende Mid-/Outer-Schicht; funktionale Wind-/Regenschutz-Shells bleiben zulässig.
+43. Neue Outdoor-, Kinderwagen- und Trage-Kontexte starten mit `sunExposure: unknown`; ein gespeichertes oder bewusst gewähltes `shade` bleibt erhalten.
