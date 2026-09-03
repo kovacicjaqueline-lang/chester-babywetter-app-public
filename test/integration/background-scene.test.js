@@ -44,8 +44,9 @@ test('covers cloudy, rain, storm and snow weather classes', () => {
   assert.equal(sceneWeatherCondition(point('2026-09-02T11:00:00.000Z', 75)), 'snow');
 });
 
-test('covers evening, clear night and rainy night', () => {
+test('covers evening, winter nightfall, clear night and rainy night', () => {
   assert.equal(scene(point('2026-09-02T17:30:00.000Z', 0)).timeOfDay, 'evening');
+  assert.equal(scene(point('2026-01-02T18:00:00+01:00', 0, { isDay: false })).timeOfDay, 'night');
   const clearNight = scene(point('2026-09-02T20:30:00.000Z', 0, { isDay: false }));
   assert.equal(clearNight.timeOfDay, 'night');
   assert.equal(clearNight.weather, 'clear');
