@@ -135,14 +135,14 @@ test('all referenced paths exist and no WebP is accidentally unreferenced', () =
   assert.deepEqual([...physical].sort(), [...referenced].sort());
 });
 
-test('physical images are valid square WebP files in the 512px runtime standard or approved 1024px exception', () => {
+test('physical images are valid square WebP files in supported legacy and high-resolution runtime sizes', () => {
   const files = allWebpFiles(clothingRoot);
-  const allowedSizes = new Set([512, 1024]);
+  const allowedSizes = new Set([128, 256, 512, 1024]);
   for (const filename of files) {
     const buffer = readFileSync(filename);
     const { width, height } = webpDimensions(buffer);
     assert.equal(width, height, `${filename} must be square`);
-    assert.ok(allowedSizes.has(width), `${filename} has unexpected ${width}x${height}; expected 512x512 or 1024x1024`);
+    assert.ok(allowedSizes.has(width), `${filename} has unexpected ${width}x${height}; expected 128, 256, 512 or 1024 square runtime asset`);
   }
 });
 
