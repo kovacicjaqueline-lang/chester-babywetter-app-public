@@ -27,10 +27,13 @@ test('PWA manifest and service worker reference the app shell', () => {
   for (const required of [
     '/index.html',
     '/app.js',
+    '/scene.css',
     '/src/outfit-engine.js',
     '/src/day-trip-planner.js',
     '/src/day-trip-planner-weather.js',
     '/src/day-trip-planner-recommendations.js',
+    '/src/integration/background-scene.js',
+    '/ui/background-scene.js',
     '/assets/clothing/manifest.json'
   ]) {
     assert.match(sw, new RegExp(required.replaceAll('/', '\\/')));
