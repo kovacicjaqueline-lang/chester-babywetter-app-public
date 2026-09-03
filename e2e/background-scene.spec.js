@@ -10,6 +10,7 @@ async function openDemo(page) {
 }
 
 async function captureEvidence(page, testInfo, name) {
+  await page.evaluate(() => window.scrollTo(0, 0));
   const path = testInfo.outputPath(`${name}.png`);
   await page.screenshot({ path, fullPage: true, animations: 'disabled' });
   await testInfo.attach(name, { path, contentType: 'image/png' });
