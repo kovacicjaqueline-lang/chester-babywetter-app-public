@@ -156,6 +156,29 @@ test('partial stroller wind shelter does not reuse a colder wind-including appar
   assert.equal(item(exposed,'feet'),'socks');
 });
 
+test('26 C air / 23 C apparent / UV 4.5 stroller case keeps UV protection without thermal over-insulation', () => {
+  const w = weather(26, {
+    apparentTempC:23,
+    apparentTempTrusted:true,
+    apparentTempIncludes:['wind','humidity','sun'],
+    windSpeedKmh:17,
+    windGustKmh:24,
+    uvIndex:4.5
+  });
+  const result = recommend(stroller({ windProtection:'partial', sunExposure:'unknown' }), w);
+
+  assert.equal(result.phases[0].thermalReferenceC,26);
+  assert.equal(result.phases[0].thermalAdjustment,0);
+  assert.equal(item(result,'base_torso'),'light_long_sleeve_shirt');
+  assert.equal(item(result,'legs'),'light_trousers');
+  assert.equal(item(result,'feet'),null);
+  assert.equal(item(result,'mid'),null);
+  assert.equal(item(result,'outer'),null);
+  assert.equal(item(result,'stroller_thermal_accessory'),'stroller_thermal_none');
+  assert.equal(item(result,'stroller_weather_accessory'),'stroller_sunshade');
+  assert.equal(item(result,'head'),'sun_hat');
+});
+
 test('stroller keeps a warmer trusted apparent temperature even with wind shelter', () => {
   const w = weather(26, {
     apparentTempC:29,
