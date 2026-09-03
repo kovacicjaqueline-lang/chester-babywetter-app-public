@@ -49,7 +49,7 @@ export function sceneTimeOfDay(point, location = null) {
   if (hour < 10) return point.isDay === false ? 'night' : 'morning';
   if (hour < 16) return point.isDay === false ? 'night' : 'day';
   if (hour < 18) return point.isDay === false ? 'evening' : 'day';
-  return 'evening';
+  return point.isDay === false ? 'night' : 'evening';
 }
 
 export function sceneWeatherCondition(point) {
