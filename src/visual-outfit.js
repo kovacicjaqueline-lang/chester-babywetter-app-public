@@ -172,13 +172,20 @@ export function buildVisualCatalog(assetManifest, visualManifest) {
   });
 }
 
-function chooseTheme(catalog, sessionKey, styleTheme, themeId) {
+function chooseTheme(catalog, visualManifest, sessionKey, styleTheme, themeId) {
   if (themeId != null) {
     const explicit = catalog.themes.find((theme) => theme.id === themeId);
     if (!explicit) throw new Error(`Unknown theme: ${themeId}`);
     return explicit;
   }
-  return pickStable(catalog.themes, `${sessionKey}|theme|${styleTheme}`);
+
+  const configuredThemeIds = visualManifest.sourceStyleProfiles?.[styleTheme]?.themeIds;
+  const preferredThemeIds = new Set(Array.isArray(configuredThemeIds) ? configuredThemeIds : []);
+  const preferredThemes = preferredThemeIds.size
+    ? catalog.themes.filter((theme) => preferredThemeIds.has(theme.id))
+    : catalog.themes;
+  const availableThemes = preferredThemes.length ? preferredThemes : catalog.themes;
+  return pickStable(availableThemes, `${sessionKey}|theme|${styleTheme}`);
 }
 
 export function selectVisualVariant({ catalog, assetGroupId, themeId, styleTheme = 'neutral', seedKey }) {
@@ -257,7 +264,7 @@ export function selectVisualLook({
   const catalog = buildVisualCatalog(assetManifest, visualManifest);
   const sessionAnchor = recommendation.sessionId || recommendation.recommendationId || recommendation.requestId || 'visual-session';
   const sessionKey = `${sessionAnchor}|${String(visualSeed)}`;
-  const theme = chooseTheme(catalog, sessionKey, styleTheme, themeId);
+  const theme = chooseTheme(catalog, visualManifest, sessionKey, styleTheme, themeId);
 
   const items = recommendation.slots.map((slotResult) => {
     const itemId = slotResult?.selected?.itemId || null;
