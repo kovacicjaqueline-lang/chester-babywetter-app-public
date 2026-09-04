@@ -12,13 +12,21 @@ async function openDemo(page) {
 async function captureEvidence(page, testInfo, name) {
   await page.evaluate(() => window.scrollTo(0, 0));
   const path = testInfo.outputPath(`${name}.png`);
-  await page.screenshot({ path, fullPage: true, animations: 'disabled' });
+  await page.screenshot({ path, fullPage: false, animations: 'disabled' });
   await testInfo.attach(name, { path, contentType: 'image/png' });
 }
 
 async function expectNoHorizontalOverflow(page) {
   const noHorizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
   expect(noHorizontalOverflow).toBe(true);
+}
+
+async function expectSceneIsNotBackdropBlurred(page) {
+  const filters = await page.locator('.outfit-card, .hourly-card').evaluateAll((elements) => elements.map((element) => {
+    const style = getComputedStyle(element);
+    return style.backdropFilter || style.webkitBackdropFilter || 'none';
+  }));
+  expect(filters.every((value) => value === 'none')).toBe(true);
 }
 
 test('dynamic background follows the selected displayed weather hour and captures visual evidence', async ({ page }, testInfo) => {
@@ -71,6 +79,7 @@ test('representative weather and day-phase scenes remain visually inspectable', 
     await expect(body).toHaveAttribute('data-scene-time', scene.time);
     await expect(body).toHaveAttribute('data-scene-weather', scene.weather);
     await expectNoHorizontalOverflow(page);
+    await expectSceneIsNotBackdropBlurred(page);
     await captureEvidence(page, testInfo, scene.name);
   }
 });
