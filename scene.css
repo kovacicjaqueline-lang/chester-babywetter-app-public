@@ -4,14 +4,14 @@
   --scene-sky-bottom: #f8fbfc;
   --scene-weather-wash: rgba(255,255,255,0);
   --scene-cloud-rgb: 255, 255, 255;
-  --scene-cloud-opacity: .22;
-  --scene-land-a: rgba(176, 211, 195, .30);
-  --scene-land-b: rgba(166, 199, 215, .28);
-  --scene-celestial-core: rgba(255, 231, 158, .76);
-  --scene-celestial-glow: rgba(255, 231, 158, .24);
+  --scene-cloud-opacity: .24;
+  --scene-land-a: rgba(176, 211, 195, .38);
+  --scene-land-b: rgba(166, 199, 215, .34);
+  --scene-celestial-core: rgba(255, 231, 158, .90);
+  --scene-celestial-glow: rgba(255, 231, 158, .18);
   --scene-celestial-x: 82%;
   --scene-celestial-y: 10%;
-  --scene-topbar-start: rgba(210, 232, 249, .94);
+  --scene-topbar-start: rgba(210, 232, 249, .84);
   --scene-topbar-end: rgba(224, 240, 251, 0);
 }
 
@@ -40,11 +40,17 @@ body::after {
 
 body::before {
   background:
-    radial-gradient(circle at var(--scene-celestial-x) var(--scene-celestial-y), var(--scene-celestial-core) 0 1.8rem, var(--scene-celestial-glow) 1.9rem 4.8rem, transparent 8.5rem),
-    radial-gradient(ellipse at 5% 18%, rgba(var(--scene-cloud-rgb), var(--scene-cloud-opacity)) 0 5.2rem, transparent 5.5rem),
-    radial-gradient(ellipse at 95% 31%, rgba(var(--scene-cloud-rgb), var(--scene-cloud-opacity)) 0 6.2rem, transparent 6.5rem),
-    radial-gradient(ellipse at 22% 112%, var(--scene-land-a) 0 38%, transparent 39%),
-    radial-gradient(ellipse at 84% 114%, var(--scene-land-b) 0 44%, transparent 45%);
+    radial-gradient(ellipse 2.9rem 1.05rem at 18% 24%, rgba(var(--scene-cloud-rgb), var(--scene-cloud-opacity)) 0 96%, transparent 100%),
+    radial-gradient(circle 1.15rem at 12% 23%, rgba(var(--scene-cloud-rgb), var(--scene-cloud-opacity)) 0 96%, transparent 100%),
+    radial-gradient(circle 1.5rem at 18% 21%, rgba(var(--scene-cloud-rgb), var(--scene-cloud-opacity)) 0 96%, transparent 100%),
+    radial-gradient(circle 1.05rem at 24% 23%, rgba(var(--scene-cloud-rgb), var(--scene-cloud-opacity)) 0 96%, transparent 100%),
+    radial-gradient(ellipse 3rem 1.08rem at 82% 16%, rgba(var(--scene-cloud-rgb), var(--scene-cloud-opacity)) 0 96%, transparent 100%),
+    radial-gradient(circle 1.15rem at 76% 15%, rgba(var(--scene-cloud-rgb), var(--scene-cloud-opacity)) 0 96%, transparent 100%),
+    radial-gradient(circle 1.55rem at 82% 13%, rgba(var(--scene-cloud-rgb), var(--scene-cloud-opacity)) 0 96%, transparent 100%),
+    radial-gradient(circle 1.08rem at 88% 15%, rgba(var(--scene-cloud-rgb), var(--scene-cloud-opacity)) 0 96%, transparent 100%),
+    radial-gradient(circle at var(--scene-celestial-x) var(--scene-celestial-y), var(--scene-celestial-core) 0 1.42rem, var(--scene-celestial-glow) 1.46rem 1.92rem, transparent 2rem),
+    radial-gradient(ellipse 52% 16% at 18% 102%, var(--scene-land-a) 0 97%, transparent 100%),
+    radial-gradient(ellipse 58% 18% at 82% 104%, var(--scene-land-b) 0 97%, transparent 100%);
 }
 
 body::after {
@@ -64,13 +70,13 @@ body[data-scene-time="morning"] {
   --scene-sky-top: #ffe3c3;
   --scene-sky-mid: #f8ebdd;
   --scene-sky-bottom: #eef7f5;
-  --scene-land-a: rgba(180, 214, 183, .34);
-  --scene-land-b: rgba(187, 214, 218, .28);
-  --scene-celestial-core: rgba(255, 211, 123, .82);
-  --scene-celestial-glow: rgba(255, 204, 116, .29);
+  --scene-land-a: rgba(180, 214, 183, .40);
+  --scene-land-b: rgba(187, 214, 218, .34);
+  --scene-celestial-core: rgba(255, 211, 123, .94);
+  --scene-celestial-glow: rgba(255, 204, 116, .20);
   --scene-celestial-x: 78%;
   --scene-celestial-y: 15%;
-  --scene-topbar-start: rgba(255, 229, 201, .92);
+  --scene-topbar-start: rgba(255, 229, 201, .82);
   --scene-topbar-end: rgba(250, 235, 222, 0);
 }
 
@@ -78,13 +84,13 @@ body[data-scene-time="day"] {
   --scene-sky-top: #c8e5f8;
   --scene-sky-mid: #e2f0fa;
   --scene-sky-bottom: #f8fbfc;
-  --scene-land-a: rgba(167, 211, 188, .30);
-  --scene-land-b: rgba(162, 203, 218, .28);
-  --scene-celestial-core: rgba(255, 231, 158, .76);
-  --scene-celestial-glow: rgba(255, 231, 158, .24);
+  --scene-land-a: rgba(167, 211, 188, .36);
+  --scene-land-b: rgba(162, 203, 218, .34);
+  --scene-celestial-core: rgba(255, 231, 158, .92);
+  --scene-celestial-glow: rgba(255, 231, 158, .16);
   --scene-celestial-x: 83%;
   --scene-celestial-y: 10%;
-  --scene-topbar-start: rgba(201, 228, 248, .92);
+  --scene-topbar-start: rgba(201, 228, 248, .82);
   --scene-topbar-end: rgba(219, 237, 250, 0);
 }
 
@@ -92,13 +98,13 @@ body[data-scene-time="evening"] {
   --scene-sky-top: #e9bdd2;
   --scene-sky-mid: #f4d3c5;
   --scene-sky-bottom: #e5edf1;
-  --scene-land-a: rgba(159, 194, 181, .31);
-  --scene-land-b: rgba(155, 184, 205, .30);
-  --scene-celestial-core: rgba(255, 198, 118, .72);
-  --scene-celestial-glow: rgba(255, 179, 117, .28);
+  --scene-land-a: rgba(159, 194, 181, .38);
+  --scene-land-b: rgba(155, 184, 205, .36);
+  --scene-celestial-core: rgba(255, 198, 118, .92);
+  --scene-celestial-glow: rgba(255, 179, 117, .18);
   --scene-celestial-x: 18%;
   --scene-celestial-y: 28%;
-  --scene-topbar-start: rgba(234, 190, 211, .90);
+  --scene-topbar-start: rgba(234, 190, 211, .80);
   --scene-topbar-end: rgba(241, 207, 202, 0);
 }
 
@@ -106,104 +112,120 @@ body[data-scene-time="night"] {
   --scene-sky-top: #183955;
   --scene-sky-mid: #365873;
   --scene-sky-bottom: #8194a6;
-  --scene-land-a: rgba(48, 84, 83, .42);
-  --scene-land-b: rgba(59, 82, 106, .44);
-  --scene-celestial-core: rgba(255, 246, 211, .86);
-  --scene-celestial-glow: rgba(231, 241, 255, .19);
+  --scene-land-a: rgba(48, 84, 83, .48);
+  --scene-land-b: rgba(59, 82, 106, .50);
+  --scene-celestial-core: rgba(255, 246, 211, .96);
+  --scene-celestial-glow: rgba(231, 241, 255, .12);
   --scene-celestial-x: 80%;
   --scene-celestial-y: 13%;
-  --scene-topbar-start: rgba(24, 57, 85, .94);
+  --scene-topbar-start: rgba(24, 57, 85, .84);
   --scene-topbar-end: rgba(35, 72, 99, 0);
 }
 
 body[data-scene-weather="neutral"] {
-  --scene-cloud-opacity: .22;
+  --scene-cloud-opacity: .24;
   --scene-weather-wash: rgba(255,255,255,.02);
 }
 
 body[data-scene-weather="clear"] {
-  --scene-cloud-opacity: .12;
+  --scene-cloud-opacity: 0;
   --scene-weather-wash: rgba(255,255,255,0);
 }
 
 body[data-scene-weather="partlyCloudy"] {
-  --scene-cloud-opacity: .40;
+  --scene-cloud-opacity: .62;
   --scene-weather-wash: rgba(235,244,250,.03);
 }
 
 body[data-scene-weather="cloudy"] {
-  --scene-cloud-rgb: 239, 244, 248;
-  --scene-cloud-opacity: .66;
-  --scene-weather-wash: rgba(139,159,178,.10);
+  --scene-cloud-rgb: 232, 239, 244;
+  --scene-cloud-opacity: .94;
+  --scene-weather-wash: rgba(119,142,162,.12);
 }
 
 body[data-scene-weather="rain"] {
-  --scene-cloud-rgb: 214, 226, 235;
-  --scene-cloud-opacity: .68;
-  --scene-weather-wash: rgba(99,127,151,.15);
+  --scene-cloud-rgb: 196, 211, 222;
+  --scene-cloud-opacity: .96;
+  --scene-weather-wash: rgba(80,111,138,.19);
 }
 
 body[data-scene-weather="storm"] {
-  --scene-cloud-rgb: 170, 186, 201;
-  --scene-cloud-opacity: .78;
-  --scene-weather-wash: rgba(63,82,107,.24);
+  --scene-cloud-rgb: 122, 143, 162;
+  --scene-cloud-opacity: .98;
+  --scene-weather-wash: rgba(43,63,88,.33);
+  --scene-celestial-core: rgba(255,255,255,0);
+  --scene-celestial-glow: rgba(255,255,255,0);
 }
 
 body[data-scene-weather="snow"] {
-  --scene-cloud-rgb: 249, 252, 255;
-  --scene-cloud-opacity: .50;
-  --scene-weather-wash: rgba(240,247,252,.35);
-  --scene-land-a: rgba(226, 239, 240, .56);
-  --scene-land-b: rgba(219, 233, 241, .54);
+  --scene-cloud-rgb: 246, 250, 253;
+  --scene-cloud-opacity: .78;
+  --scene-weather-wash: rgba(240,247,252,.34);
+  --scene-land-a: rgba(226, 239, 240, .66);
+  --scene-land-b: rgba(219, 233, 241, .64);
 }
 
 body[data-scene-weather="fog"] {
   --scene-cloud-rgb: 242, 246, 248;
-  --scene-cloud-opacity: .60;
-  --scene-weather-wash: rgba(220,229,235,.18);
+  --scene-cloud-opacity: .52;
+  --scene-weather-wash: rgba(220,229,235,.20);
 }
 
 body[data-scene-time="night"][data-scene-weather="clear"]::after,
 body[data-scene-time="night"][data-scene-weather="partlyCloudy"]::after {
-  opacity: .76;
+  opacity: .82;
   background:
-    radial-gradient(circle at 12% 11%, rgba(255,255,255,.75) 0 1px, transparent 1.6px),
-    radial-gradient(circle at 28% 21%, rgba(255,255,255,.58) 0 1px, transparent 1.5px),
-    radial-gradient(circle at 47% 9%, rgba(255,255,255,.66) 0 1px, transparent 1.6px),
-    radial-gradient(circle at 67% 25%, rgba(255,255,255,.45) 0 1px, transparent 1.5px),
-    radial-gradient(circle at 91% 17%, rgba(255,255,255,.64) 0 1px, transparent 1.6px);
+    radial-gradient(circle at 12% 11%, rgba(255,255,255,.82) 0 1px, transparent 1.4px),
+    radial-gradient(circle at 28% 21%, rgba(255,255,255,.65) 0 1px, transparent 1.4px),
+    radial-gradient(circle at 47% 9%, rgba(255,255,255,.75) 0 1px, transparent 1.4px),
+    radial-gradient(circle at 67% 25%, rgba(255,255,255,.56) 0 1px, transparent 1.4px),
+    radial-gradient(circle at 91% 17%, rgba(255,255,255,.72) 0 1px, transparent 1.4px);
 }
 
-body[data-scene-weather="rain"]::after,
+body[data-scene-weather="rain"]::after {
+  opacity: .64;
+  background-image: repeating-linear-gradient(112deg, transparent 0 14px, rgba(70,111,145,.34) 14px 16px, transparent 16px 29px);
+  background-size: 28px 28px;
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.94), rgba(0,0,0,.68) 70%, transparent 97%);
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,.94), rgba(0,0,0,.68) 70%, transparent 97%);
+}
+
 body[data-scene-weather="storm"]::after {
-  opacity: .48;
-  background-image: repeating-linear-gradient(112deg, transparent 0 16px, rgba(111,145,171,.18) 16px 17px, transparent 17px 32px);
-  background-size: 30px 30px;
-  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.85), rgba(0,0,0,.50) 64%, transparent 96%);
-  mask-image: linear-gradient(to bottom, rgba(0,0,0,.85), rgba(0,0,0,.50) 64%, transparent 96%);
+  opacity: .78;
+  background-image:
+    linear-gradient(118deg, transparent 0 43%, rgba(255,238,153,.96) 44% 53%, transparent 54%),
+    linear-gradient(62deg, transparent 0 43%, rgba(255,238,153,.92) 44% 53%, transparent 54%),
+    repeating-linear-gradient(112deg, transparent 0 12px, rgba(59,94,124,.42) 12px 15px, transparent 15px 26px);
+  background-size: 18px 34px, 16px 30px, 26px 26px;
+  background-position: 73% 12%, 75% 16%, 0 0;
+  background-repeat: no-repeat, no-repeat, repeat;
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.98), rgba(0,0,0,.76) 72%, transparent 97%);
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,.98), rgba(0,0,0,.76) 72%, transparent 97%);
 }
 
-body[data-scene-time="night"][data-scene-weather="rain"]::after,
+body[data-scene-time="night"][data-scene-weather="rain"]::after {
+  opacity: .52;
+}
+
 body[data-scene-time="night"][data-scene-weather="storm"]::after {
-  opacity: .34;
+  opacity: .72;
 }
 
 body[data-scene-weather="snow"]::after {
-  opacity: .72;
+  opacity: .82;
   background-image:
-    radial-gradient(circle, rgba(255,255,255,.78) 0 1.8px, transparent 2.2px),
-    radial-gradient(circle, rgba(255,255,255,.56) 0 1.2px, transparent 1.8px);
+    radial-gradient(circle, rgba(255,255,255,.92) 0 2px, transparent 2.4px),
+    radial-gradient(circle, rgba(255,255,255,.70) 0 1.4px, transparent 1.9px);
   background-size: 34px 34px, 51px 51px;
   background-position: 5px 9px, 23px 26px;
-  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.92), rgba(0,0,0,.40) 76%, transparent 98%);
-  mask-image: linear-gradient(to bottom, rgba(0,0,0,.92), rgba(0,0,0,.40) 76%, transparent 98%);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.96), rgba(0,0,0,.52) 76%, transparent 98%);
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,.96), rgba(0,0,0,.52) 76%, transparent 98%);
 }
 
 body[data-scene-weather="fog"]::after {
-  opacity: .58;
+  opacity: .66;
   background:
-    linear-gradient(180deg, transparent 13%, rgba(255,255,255,.24) 24%, transparent 35%),
-    linear-gradient(180deg, transparent 38%, rgba(255,255,255,.20) 49%, transparent 61%);
+    linear-gradient(180deg, transparent 15%, rgba(255,255,255,.30) 15% 24%, transparent 24% 37%, rgba(255,255,255,.24) 37% 46%, transparent 46% 100%);
 }
 
 body[data-scene-time="night"] .location-line,
@@ -228,7 +250,7 @@ body[data-scene-time="night"] .weather-hero::before {
 }
 
 body[data-scene-time="night"] .situation-button {
-  background: rgba(250,252,255,.82);
+  background: rgba(250,252,255,.88);
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.44), 0 8px 24px rgba(23,46,67,.10);
 }
 
@@ -239,10 +261,8 @@ body[data-scene-weather="storm"] .outfit-card,
 body[data-scene-weather="storm"] .hourly-card {
   border: 1px solid rgba(255,255,255,.34);
   border-radius: 28px;
-  background: rgba(250,252,255,.84);
+  background: rgba(250,252,255,.90);
   box-shadow: 0 12px 32px rgba(31,56,79,.10);
-  backdrop-filter: blur(7px);
-  -webkit-backdrop-filter: blur(7px);
 }
 
 body[data-scene-time="night"] .outfit-card,
