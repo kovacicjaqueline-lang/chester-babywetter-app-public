@@ -274,6 +274,7 @@ test('composer prefers a theme with complete outfit coverage and keeps fachliche
 
 test('composer falls back to the neutral visual variant without replacing the fachliche item', () => {
   const restrictiveVisualManifest = structuredClone(visualManifest);
+  delete restrictiveVisualManifest.assetOverrides.trousers;
   for (const profile of Object.values(restrictiveVisualManifest.sourceStyleProfiles)) {
     profile.themeIds = ['sage_oat'];
   }
