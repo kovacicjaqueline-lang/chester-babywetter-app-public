@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
   buildVisualCatalog,
+  composeOutfitVisuals,
   nextVisualSeed,
   selectVisualLook,
   selectVisualVariant
@@ -222,4 +223,95 @@ test('derived visual variant ids are unique and all themes referenced by variant
       assert.equal(variant.themeIds.every((themeId) => themeIds.has(themeId)), true);
     }
   }
+});
+
+test('composer prefers a theme with complete outfit coverage and keeps fachliche item ids', () => {
+  const assetManifest = {
+    assetGroups: [
+      {
+        id: 'warm_trousers', category: 'warm_trousers', slot: 'legs',
+        variantPaths: { neutral: 'assets/clothing/warm_trousers/neutral.webp' }
+      },
+      {
+        id: 'light_transition_jacket', category: 'jacket', slot: 'outer_layer',
+        variantPaths: { neutral: 'assets/clothing/light_transition_jacket/neutral.webp' }
+      }
+    ]
+  };
+  const visualManifest = {
+    schemaVersion: 1,
+    fallbackSourceStyle: 'neutral',
+    themes: [
+      { id: 'fragmented', palette: ['mauve'] },
+      { id: 'covered', palette: ['sage'] }
+    ],
+    sourceStyleProfiles: {
+      neutral: {
+        themeIds: ['fragmented', 'covered'],
+        paletteTags: ['light_neutral'],
+        stylePreferenceRank: { neutral: 0, boy: 1, girl: 1 }
+      }
+    },
+    assetOverrides: {
+      warm_trousers: { neutral: { themeIds: ['covered'], paletteTags: ['sage'], pattern: 'solid' } },
+      light_transition_jacket: { neutral: { themeIds: ['covered'], paletteTags: ['sage'], pattern: 'solid' } }
+    }
+  };
+  const result = composeOutfitVisuals({
+    items: ['warm_trousers', 'light_transition_jacket'],
+    assetManifest,
+    visualManifest,
+    visualSeed: 3
+  });
+
+  assert.equal(result.themeId, 'covered');
+  assert.deepEqual(result.items.map((item) => item.itemId), ['warm_trousers', 'light_transition_jacket']);
+  assert.deepEqual(result.items.map((item) => item.assetPath), [
+    'assets/clothing/warm_trousers/neutral.webp',
+    'assets/clothing/light_transition_jacket/neutral.webp'
+  ]);
+});
+
+test('composer falls back to the neutral visual variant without replacing the fachliche item', () => {
+  const restrictiveVisualManifest = structuredClone(visualManifest);
+  for (const profile of Object.values(restrictiveVisualManifest.sourceStyleProfiles)) {
+    profile.themeIds = ['sage_oat'];
+  }
+  const result = composeOutfitVisuals({
+    items: ['trousers'],
+    assetManifest,
+    visualManifest: restrictiveVisualManifest,
+    styleTheme: 'boy',
+    themeId: 'mauve_cream'
+  });
+
+  assert.equal(result.items[0].itemId, 'trousers');
+  assert.equal(result.items[0].variantId, 'trousers::neutral');
+  assert.equal(result.items[0].usedFallback, true);
+});
+
+test('composer weights visible outer layers above small accessories', () => {
+  const assetManifest = {
+    assetGroups: [
+      { id: 'jacket', category: 'jacket', slot: 'outer_layer', variantPaths: { neutral: 'jacket.webp' } },
+      { id: 'socks', category: 'socks', slot: 'feet', variantPaths: { neutral: 'socks.webp' } }
+    ]
+  };
+  const visualManifest = {
+    fallbackSourceStyle: 'neutral',
+    themes: [{ id: 'jacket_theme', palette: ['sage'] }, { id: 'sock_theme', palette: ['mauve'] }],
+    sourceStyleProfiles: {
+      neutral: { themeIds: ['jacket_theme', 'sock_theme'], stylePreferenceRank: { neutral: 0 } }
+    },
+    assetOverrides: {
+      jacket: { neutral: { themeIds: ['jacket_theme'], paletteTags: ['sage'], pattern: 'solid' } },
+      socks: { neutral: { themeIds: ['sock_theme'], paletteTags: ['mauve'], pattern: 'solid' } }
+    }
+  };
+  const result = composeOutfitVisuals({
+    items: ['jacket', 'socks'],
+    assetManifest,
+    visualManifest
+  });
+  assert.equal(result.themeId, 'jacket_theme');
 });

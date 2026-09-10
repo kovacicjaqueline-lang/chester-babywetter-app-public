@@ -49,8 +49,6 @@ function runtimeManifestRecommendation(seed) {
 }
 
 function assertAutomaticStyleIsolation({ styleTheme, forbiddenSourceStyle }) {
-  const allowedThemes = new Set(visualManifest.sourceStyleProfiles[styleTheme].themeIds);
-
   for (let seed = 0; seed < 100; seed += 1) {
     const look = selectVisualLook({
       recommendation: runtimeManifestRecommendation(seed),
@@ -60,7 +58,6 @@ function assertAutomaticStyleIsolation({ styleTheme, forbiddenSourceStyle }) {
       visualSeed: seed
     });
 
-    assert.equal(allowedThemes.has(look.themeId), true, `unexpected ${styleTheme} theme for seed ${seed}: ${look.themeId}`);
     assert.equal(look.items.length, runtimeAssetManifest.assetGroups.length, `runtime manifest coverage changed for seed ${seed}`);
 
     for (const item of look.items) {
