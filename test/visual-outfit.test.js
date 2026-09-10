@@ -122,6 +122,9 @@ test('missing theme variant falls back cleanly to the original neutral fallback'
   restrictiveVisualManifest.sourceStyleProfiles.neutral.themeIds = ['sage_oat'];
   restrictiveVisualManifest.sourceStyleProfiles.boy.themeIds = ['dusty_blue_sand'];
   restrictiveVisualManifest.sourceStyleProfiles.girl.themeIds = ['clay_cream'];
+  restrictiveVisualManifest.assetOverrides.long_sleeve_bodysuit.neutral.themeIds = ['sage_oat'];
+  restrictiveVisualManifest.assetOverrides.long_sleeve_bodysuit.boy.themeIds = ['dusty_blue_sand'];
+  restrictiveVisualManifest.assetOverrides.long_sleeve_bodysuit.girl.themeIds = ['clay_cream'];
   const catalog = buildVisualCatalog(assetManifest, restrictiveVisualManifest);
 
   const result = selectVisualVariant({
