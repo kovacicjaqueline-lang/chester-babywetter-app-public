@@ -125,6 +125,64 @@ test('visual metadata only targets existing groups, source styles and themes', (
   }
 });
 
+test('every selectable legacy variant has explicit visual metadata', () => {
+  const themeIds = new Set(visualManifest.themes.map((theme) => theme.id));
+  const paletteTags = new Set(visualManifest.paletteTags);
+  const visualOnlyFields = new Set(['themeIds', 'paletteTags', 'pattern']);
+  const prohibitedFields = new Set([
+    'thermalWeight',
+    'sleepWarmthWeight',
+    'category',
+    'slot',
+    'situations',
+    'allowedSituations',
+    'alternatives',
+    'alternativeItemIds'
+  ]);
+
+  for (const group of assetManifest.assetGroups) {
+    const sourceStyles = group.variantPaths ? Object.keys(group.variantPaths) : group.assetPath ? ['neutral'] : [];
+    if (!sourceStyles.length) continue;
+
+    const overrides = visualManifest.assetOverrides?.[group.id];
+    assert.ok(overrides, `${group.id} needs visual metadata`);
+    for (const sourceStyle of sourceStyles) {
+      const metadata = overrides[sourceStyle];
+      assert.ok(metadata, `${group.id}::${sourceStyle} needs visual metadata`);
+      assert.deepEqual(Object.keys(metadata).sort(), [...visualOnlyFields].sort(), `${group.id}::${sourceStyle} visual fields`);
+      assert.ok(metadata.themeIds.length > 0, `${group.id}::${sourceStyle} needs themeIds`);
+      assert.ok(metadata.paletteTags.length > 0, `${group.id}::${sourceStyle} needs paletteTags`);
+      assert.notEqual(metadata.pattern, 'unspecified', `${group.id}::${sourceStyle} needs an observed pattern`);
+      for (const themeId of metadata.themeIds) assert.ok(themeIds.has(themeId), `unknown theme ${themeId}`);
+      for (const paletteTag of metadata.paletteTags) assert.ok(paletteTags.has(paletteTag), `unknown palette tag ${paletteTag}`);
+      for (const field of prohibitedFields) assert.equal(Object.hasOwn(metadata, field), false, `${group.id}::${sourceStyle} must not define ${field}`);
+    }
+  }
+
+  for (const [groupId, variants] of Object.entries(visualManifest.additionalVariants || {})) {
+    for (const variant of variants) {
+      assert.ok(Array.isArray(variant.themeIds) && variant.themeIds.length, `${groupId}::${variant.id} needs themeIds`);
+      assert.ok(Array.isArray(variant.paletteTags) && variant.paletteTags.length, `${groupId}::${variant.id} needs paletteTags`);
+      assert.equal(typeof variant.pattern, 'string');
+      assert.notEqual(variant.pattern, 'unspecified', `${groupId}::${variant.id} needs an observed pattern`);
+      for (const paletteTag of variant.paletteTags) assert.ok(paletteTags.has(paletteTag), `unknown palette tag ${paletteTag}`);
+    }
+  }
+});
+
+test('theme color roles preserve the existing palette and partition it cleanly', () => {
+  const paletteTags = new Set(visualManifest.paletteTags);
+  for (const theme of visualManifest.themes) {
+    assert.ok(theme.colors, `${theme.id} needs color roles`);
+    const roleValues = Object.values(theme.colors).flat();
+    assert.deepEqual([...new Set(roleValues)].sort(), [...new Set(theme.palette)].sort(), `${theme.id} role values must preserve palette`);
+    for (const role of ['primary', 'secondary', 'neutral']) {
+      assert.ok(Array.isArray(theme.colors[role]) && theme.colors[role].length, `${theme.id} needs ${role} colors`);
+      for (const color of theme.colors[role]) assert.ok(paletteTags.has(color), `unknown theme color ${color}`);
+    }
+  }
+});
+
 test('all referenced paths exist and no WebP is accidentally unreferenced', () => {
   const referenced = new Set(allReferencedPaths());
   for (const relativePath of referenced) {
