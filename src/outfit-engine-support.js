@@ -19,7 +19,7 @@ export const BASELINE = Object.freeze({
   '0_to_3': Object.freeze({ base_torso:'long_sleeve_bodysuit', legs:'warm_trousers', mid:'fleece_jacket', outer:'winter_overall', feet:'warm_socks_booties', head:'warm_hat', hands:'gloves' }),
   '3_to_8': Object.freeze({ base_torso:'long_sleeve_bodysuit', legs:'warm_trousers', mid:'fleece_jacket', outer:'transition_overall', feet:'warm_socks_booties', head:'warm_hat', hands:'gloves' }),
   '8_to_12': Object.freeze({ base_torso:'long_sleeve_bodysuit', legs:'warm_trousers', mid:'fleece_jacket', outer:'softshell_jacket', feet:'warm_socks_booties', head:'warm_hat', hands:'gloves' }),
-  '12_to_16': Object.freeze({ base_torso:'long_sleeve_bodysuit', legs:'trousers', mid:'thin_sweater', outer:'softshell_jacket', feet:'socks', head:'thin_hat' }),
+  '12_to_16': Object.freeze({ base_torso:'long_sleeve_bodysuit', legs:'trousers', mid:'thin_sweater', feet:'socks', head:'thin_hat' }),
   '16_to_20': Object.freeze({ base_torso:'long_sleeve_bodysuit', legs:'trousers', mid:'thin_sweater', feet:'socks' }),
   '20_to_24': Object.freeze({ base_torso:'long_sleeve_bodysuit', legs:'light_trousers', feet:'socks' }),
   '24_to_28': Object.freeze({ base_torso:'short_sleeve_bodysuit', legs:'light_trousers' }),

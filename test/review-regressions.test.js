@@ -96,14 +96,14 @@ test('manual sleep underlayer lock rebalances the unlocked sleep bag', () => {
   assert.equal(slot(result,'sleep_bag').selected.itemId,'sleep_bag_1_5');
 });
 
-test('projected swap changes identify the locked slot separately from rebalanced slots', () => {
+test('projected swap changes identify the locked slot without inventing an outer layer', () => {
   const result = recommendOutfit(request({
     mode:'outdoor', plannedMinutes:60, activity:'normal', activitySource:'user', sunExposure:'shade', groundContact:'none'
   }, { w:weather(14) }));
   const fleece = slot(result,'mid').alternatives.find((option) => option.itemId === 'fleece_jacket');
   assert.ok(fleece);
   assert.equal(fleece.projectedChanges.find((change) => change.slot === 'mid')?.reasonCode,'MANUAL_ITEM_LOCK');
-  assert.equal(fleece.projectedChanges.find((change) => change.slot === 'outer')?.reasonCode,'OUTFIT_REBALANCED_AFTER_SWAP');
+  assert.equal(fleece.projectedChanges.find((change) => change.slot === 'outer'),undefined);
 });
 
 test('half thermal step is a smaller distinct outfit change than a full step', () => {

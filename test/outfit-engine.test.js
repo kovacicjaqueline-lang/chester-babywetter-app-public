@@ -126,15 +126,15 @@ test('manual stroller accessory lock remains in same session',()=>{
   assert.equal(slot(b,'stroller_thermal_accessory').selected.selectionSource,'manual_lock');
 });
 
-test('thin sweater to fleece lock rebalances outer layer',()=>{
+test('thin sweater to fleece lock keeps dry calm weather free of an automatic outer layer',()=>{
   const w=weather(14);
   const base=recommendOutfit(request(outdoor(),{w}));
   const session=lockItem(createSession('s'),{slot:'mid',itemId:'fleece_jacket'});
   const swapped=recommendOutfit(request(outdoor(),{w,session}));
   assert.equal(id(base,'mid'),'thin_sweater');
   assert.equal(id(swapped,'mid'),'fleece_jacket');
-  assert.equal(id(base,'outer'),'softshell_jacket');
-  assert.equal(id(swapped,'outer'),'light_transition_jacket');
+  assert.equal(id(base,'outer'),null);
+  assert.equal(id(swapped,'outer'),null);
 });
 
 test('alternatives are ordered equivalent then warmer then cooler',()=>{
@@ -148,7 +148,7 @@ test('alternative projectedChanges contains whole-outfit rebalancing',()=>{
   const r=recommendOutfit(request(outdoor(),{w:weather(14)}));
   const fleece=slot(r,'mid').alternatives.find(a=>a.itemId==='fleece_jacket');
   assert.ok(fleece.projectedChanges.some(change=>change.slot==='mid'));
-  assert.ok(fleece.projectedChanges.some(change=>change.slot==='outer'));
+  assert.ok(!fleece.projectedChanges.some(change=>change.slot==='outer'));
 });
 
 test('precip probability below 40 alone adds no rain element',()=>{

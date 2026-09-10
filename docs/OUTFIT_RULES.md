@@ -118,9 +118,9 @@ UV-/Sonnenregeln bleiben aktiv; Sonnenschutz wird durch leichte Bedeckung statt 
 - Langarmbody,
 - Hose/wärmere Leggings,
 - dünner Pullover oder Fleece,
-- Übergangs-/Softshelljacke,
 - Socken,
-- dünne/warme Mütze je nach Wind und Exposition.
+- dünne/warme Mütze je nach Wind und Exposition,
+- funktionale Übergangs-/Softshelljacke nur bei relevantem Wind oder Regen.
 
 ### `8 bis <12 °C` – kalt
 
