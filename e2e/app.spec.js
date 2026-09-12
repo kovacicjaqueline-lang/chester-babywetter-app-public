@@ -85,6 +85,28 @@ test('Kleidung besitzt echte Bilder und sinnvolle Alt-Texte', async ({ page }) =
   for (const item of checks) { expect(item.complete).toBe(true); expect(item.naturalWidth).toBeGreaterThan(0); expect(item.alt.trim().length).toBeGreaterThan(3); expect(item.src).toContain('/assets/clothing/'); }
 });
 
+test('Alternativen sind mobil groß und lesbar dargestellt', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await openDemo(page);
+  const trigger = page.locator('#outfitGrid [data-open-alternatives="true"]').first();
+  await expect(trigger).toBeVisible();
+  await trigger.click();
+
+  const options = page.locator('#alternativeOptions .alternative-option');
+  await expect(options.first()).toBeVisible();
+  const optionBox = await options.first().boundingBox();
+  expect(optionBox).not.toBeNull();
+  expect(optionBox.height).toBeGreaterThanOrEqual(104);
+  const typography = await options.first().evaluate((option) => ({
+    title: getComputedStyle(option.querySelector('strong')).fontSize,
+    detail: getComputedStyle(option.querySelector('small')).fontSize,
+    image: option.querySelector('.alternative-image').getBoundingClientRect().width
+  }));
+  expect(Number.parseFloat(typography.title)).toBeGreaterThanOrEqual(15);
+  expect(Number.parseFloat(typography.detail)).toBeGreaterThanOrEqual(12);
+  expect(typography.image).toBeGreaterThanOrEqual(88);
+});
+
 test('Anderer Look ändert nur den Visual-Seed und nicht die fachlichen Items', async ({ page }) => {
   await openDemo(page);
   const beforeItems = await selectedIds(page);
