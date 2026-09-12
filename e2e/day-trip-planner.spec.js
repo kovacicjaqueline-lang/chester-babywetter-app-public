@@ -15,6 +15,30 @@ async function openPlanner(page) {
   await expect(page.locator('#tripEndTime')).toBeVisible();
 }
 
+test('Tagesausflug-Eingabe ist auf Mobile eindeutig und kompakt verständlich', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await openDemo(page);
+  await openPlanner(page);
+
+  await expect(page.locator('.trip-intro')).toHaveText('Start und Ende festlegen. Eine weitere Situation brauchst du nur, wenn ihr später wechselt.');
+  await expect(page.locator('#tripSegmentsHeading')).toHaveText('Situationen');
+  await expect(page.locator('#tripSegmentsNote')).toContainText('Pro Abschnitt eine Situation wählen');
+  await expect(page.locator('#tripAddSegmentButton')).toHaveText('+ Wechsel hinzufügen');
+  await expect(page.locator('#tripGenerateButton')).toHaveText('Ausflug planen');
+  expect(await page.locator('.trip-sheet').evaluate((node) => node.scrollTop)).toBe(0);
+
+  const firstSegment = page.locator('.trip-segment-card').first();
+  const selectedMode = firstSegment.locator('.trip-mode-button[aria-pressed="true"]');
+  await expect(selectedMode).toHaveCount(1);
+  await expect(selectedMode.locator('.trip-mode-icon')).toBeVisible();
+  const selectedLabel = await selectedMode.locator('strong').textContent();
+  await expect(firstSegment.locator('summary')).toHaveAttribute('aria-label', `Details für ${selectedLabel} anpassen`);
+
+  await firstSegment.locator('[data-trip-segment-mode="carrier"]').click();
+  await expect(firstSegment.locator('[data-trip-segment-mode="carrier"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(firstSegment.locator('.trip-mode-button[aria-pressed="true"]')).toHaveCount(1);
+});
+
 async function chooseFullForecastWindow(page, { moveStartForward = false } = {}) {
   const startValues = await page.locator('#tripStartTime option').evaluateAll((options) => options.map((option) => option.value));
   const endValues = await page.locator('#tripEndTime option').evaluateAll((options) => options.map((option) => option.value));
