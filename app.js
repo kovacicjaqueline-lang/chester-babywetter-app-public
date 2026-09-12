@@ -267,11 +267,56 @@ function showToast(message) { const toast = document.querySelector('#toast'); to
 function openDialog(id) { const dialog = document.getElementById(id); if (!(dialog instanceof HTMLDialogElement)) return; for (const open of document.querySelectorAll('dialog[open]')) if (open !== dialog) open.close(); if (!dialog.open) dialog.showModal(); }
 function closeDialog(id) { const dialog = document.getElementById(id); if (dialog instanceof HTMLDialogElement && dialog.open) dialog.close(); }
 async function refreshWeather(location, { persistLocation = true } = {}) {
+  if (weatherRefreshInFlight) return false;
+  weatherRefreshInFlight = true;
   state.runtime.weatherLoading = true; state.runtime.weatherError = null; state.location = location; syncActiveWeatherFreshness(location); renderWeather(state.weather, state.location, state.runtime); updateConnectionBanner();
-  if (!navigator.onLine) { state.weather = cachedWeather(location); state.runtime.weatherLoading = false; state.runtime.weatherError = 'offline'; resetSession(); renderAll(); return; }
-  try { const bundle = persistLocation ? await weatherService.useLocation(location, { demoMode: DEMO_MODE }) : await weatherService.loadWeather(location, { demoMode: DEMO_MODE }); state.weather = normalizeWeatherBundle(bundle, location); state.location = state.weather.location; cacheWeather(state.weather); clearCacheRuntime(); }
-  catch (error) { state.weather = cachedWeather(location); state.runtime.weatherError = error?.code ?? error?.message ?? 'weather_error'; }
-  finally { state.runtime.weatherLoading = false; resetSession(); renderAll(); }
+  if (!navigator.onLine) { state.weather = cachedWeather(location); state.runtime.weatherLoading = false; state.runtime.weatherError = 'offline'; resetSession(); renderAll(); weatherRefreshInFlight = false; return false; }
+  try { const bundle = persistLocation ? await weatherService.useLocation(location, { demoMode: DEMO_MODE }) : await weatherService.loadWeather(location, { demoMode: DEMO_MODE }); state.weather = normalizeWeatherBundle(bundle, location); state.location = state.weather.location; cacheWeather(state.weather); clearCacheRuntime(); return true; }
+  catch (error) { state.weather = cachedWeather(location); state.runtime.weatherError = error?.code ?? error?.message ?? 'weather_error'; return false; }
+  finally { state.runtime.weatherLoading = false; resetSession(); renderAll(); weatherRefreshInFlight = false; }
+}
+async function refreshCurrentLocation({ successMessage = 'Aktuelles Wetter und Standort geladen.' } = {}) {
+  if (weatherRefreshInFlight) return false;
+  weatherRefreshInFlight = true;
+  const fallbackLocation = state.location ?? DEFAULT_LOCATION;
+  state.runtime.weatherLoading = true;
+  state.runtime.weatherError = null;
+  renderWeather(state.weather, fallbackLocation, state.runtime);
+  updateConnectionBanner();
+  let success = false;
+  try {
+    if (!navigator.onLine) throw new Error('offline');
+    if (!DEMO_MODE) {
+      state.settings.allowLocation = true;
+      persistSettings();
+    }
+    const bundle = DEMO_MODE
+      ? await weatherService.loadWeather(DEFAULT_LOCATION, { demoMode: true })
+      : await weatherService.useBrowserLocation();
+    state.weather = normalizeWeatherBundle(bundle);
+    state.location = state.weather.location;
+    cacheWeather(state.weather);
+    clearCacheRuntime();
+    state.runtime.weatherError = null;
+    success = true;
+    return true;
+  } catch (error) {
+    if (error?.code === 'geolocation_denied') {
+      state.settings.allowLocation = false;
+      persistSettings();
+    }
+    state.weather = cachedWeather(fallbackLocation);
+    state.runtime.weatherError = error?.code ?? error?.message ?? 'weather_error';
+    return false;
+  } finally {
+    state.runtime.weatherLoading = false;
+    resetSession();
+    renderAll();
+    weatherRefreshInFlight = false;
+    if (success) showToast(successMessage);
+    else if (state.runtime.weatherError === 'geolocation_denied') showToast('Standortfreigabe abgelehnt – Ortssuche und manuelles Wetter bleiben verfügbar.');
+    else showToast('Aktueller Standort oder Wetter konnte nicht geladen werden.');
+  }
 }
 async function changeLocation(query) {
   const normalized = String(query ?? '').trim(); if (normalized.length < 2) { showToast('Bitte mindestens zwei Zeichen für den Ort eingeben.'); return false; }
@@ -319,7 +364,7 @@ function bindSituationContext() {
 function bindProfile() { const dialog = document.querySelector('#profileDialog'); dialog.addEventListener('close', () => { if (dialog.returnValue !== 'save') return; const name = document.querySelector('#profileName').value.trim(); const birthDate = document.querySelector('#profileBirthDate').value; const mobilityStage = document.querySelector('input[name="mobilityStage"]:checked')?.value ?? 'low_mobility'; const bias = document.querySelector('input[name="warmthBias"]:checked')?.value ?? 'neutral'; state.profile.displayName = name ? name.slice(0,40) : null; state.profile.birthDate = birthDate || null; state.profile.mobilityStage = MOBILITY_STAGES.has(mobilityStage) ? mobilityStage : 'low_mobility'; state.profile.warmthBias = BIASES.has(bias) ? bias : 'neutral'; persistProfile(); resetSession(); renderRecommendation(); syncNeckFeedbackStatus(); showToast('Babyprofil lokal gespeichert.'); }); }
 function bindLocation() {
   const form = document.querySelector('#locationForm'); form.addEventListener('submit', async (event) => { event.preventDefault(); const query = document.querySelector('#locationInput').value; const success = await changeLocation(query); if (success) closeDialog('locationDialog'); });
-  document.querySelector('#useBrowserLocationButton').addEventListener('click', async () => { if (DEMO_MODE) { await refreshWeather(DEFAULT_LOCATION); closeDialog('locationDialog'); return; } try { state.settings.allowLocation = true; persistSettings(); const bundle = await weatherService.useBrowserLocation(); state.weather = normalizeWeatherBundle(bundle); state.location = state.weather.location; cacheWeather(state.weather); clearCacheRuntime(); resetSession(); renderAll(); closeDialog('locationDialog'); showToast('Aktueller Standort übernommen.'); } catch (error) { state.settings.allowLocation = error?.code === 'geolocation_denied' ? false : state.settings.allowLocation; persistSettings(); showToast(error?.code === 'geolocation_denied' ? 'Standortfreigabe abgelehnt – Ortssuche und manuelles Wetter bleiben verfügbar.' : 'Aktueller Standort konnte nicht ermittelt werden.'); } });
+  document.querySelector('#useBrowserLocationButton').addEventListener('click', async () => { const success = await refreshCurrentLocation({ successMessage: 'Aktueller Standort übernommen.' }); if (success) closeDialog('locationDialog'); });
 }
 function numberFromField(id, { required = false } = {}) {
   const raw = document.querySelector(`#${id}`)?.value?.trim() ?? '';
@@ -398,16 +443,12 @@ function shouldAutoRefreshWeather() {
 async function refreshWeatherIfNeeded() {
   renderRecommendation();
   if (!shouldAutoRefreshWeather()) return;
-  weatherRefreshInFlight = true;
-  try {
-    await refreshWeather(state.location, { persistLocation: true });
-  } finally {
-    weatherRefreshInFlight = false;
-  }
+  await refreshWeather(state.location, { persistLocation: true });
 }
 async function init() {
   if (migrateLegacyUiDefaults) persistSettings();
   bindGlobalActions(); bindSituationContext(); bindProfile(); bindLocation(); bindWeatherOverride(); bindStyleSettings(); bindImportExport(); bindDayTripPlanner({ getSnapshot: tripPlannerSnapshot, assetStore, showToast }); bindDialogs();
+  window.addEventListener('babyweather:pull-to-refresh', () => { if (weatherRefreshInFlight) return; showToast('Aktuelles Wetter und Standort werden geladen …'); void refreshCurrentLocation(); });
   window.addEventListener('online', () => refreshWeather(state.location ?? DEFAULT_LOCATION));
   window.addEventListener('offline', () => { state.weather = cachedWeather(state.location ?? DEFAULT_LOCATION); state.runtime.weatherError = 'offline'; resetSession(); renderAll(); });
   window.setInterval(() => { refreshWeatherIfNeeded(); }, 60000);
