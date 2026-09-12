@@ -80,7 +80,7 @@
       "boy": {"themeIds": ["dusty_blue_sand", "slate_blue_greige"], "paletteTags": ["dusty_blue"], "pattern": "solid"},
       "girl": {"themeIds": ["clay_cream", "terracotta_greige", "mauve_cream", "apricot_oat", "soft_lavender_sand"], "paletteTags": ["soft_rose"], "pattern": "solid"}
     },
-    "transition_overall": {"neutral": {"themeIds": ["dusty_blue_sand", "slate_blue_greige"], "paletteTags": ["dusty_blue"], "pattern": "solid"}},
+    "transition_overall": {"neutral": {"themeIds": ["sage_oat"], "paletteTags": ["sage"], "pattern": "solid"}},
     "winter_overall": {
       "neutral": {"themeIds": ["sage_oat", "dusty_blue_sand", "clay_cream", "terracotta_greige", "ocher_taupe", "petrol_warm_beige", "mauve_cream", "apricot_oat", "slate_blue_greige", "soft_lavender_sand"], "paletteTags": ["cream"], "pattern": "solid"},
       "boy": {"themeIds": ["dusty_blue_sand", "slate_blue_greige"], "paletteTags": ["dusty_blue"], "pattern": "solid"},
@@ -104,26 +104,26 @@
       "boy": {"themeIds": ["dusty_blue_sand", "slate_blue_greige"], "paletteTags": ["dusty_blue"], "pattern": "solid"},
       "girl": {"themeIds": ["clay_cream", "terracotta_greige", "mauve_cream", "apricot_oat", "soft_lavender_sand"], "paletteTags": ["soft_rose"], "pattern": "solid"}
     },
-    "light_shoes": {"neutral": {"themeIds": ["sage_oat", "dusty_blue_sand", "clay_cream", "terracotta_greige", "ocher_taupe", "petrol_warm_beige", "mauve_cream", "apricot_oat", "slate_blue_greige", "soft_lavender_sand"], "paletteTags": ["cream", "greige"], "pattern": "solid"}},
-    "weatherproof_shoes": {"neutral": {"themeIds": ["sage_oat", "dusty_blue_sand", "clay_cream", "terracotta_greige", "ocher_taupe", "petrol_warm_beige", "mauve_cream", "apricot_oat", "slate_blue_greige", "soft_lavender_sand"], "paletteTags": ["cream"], "pattern": "solid"}},
+    "light_shoes": {"neutral": {"themeIds": ["sage_oat"], "paletteTags": ["sage", "cream"], "pattern": "solid"}},
+    "weatherproof_shoes": {"neutral": {"themeIds": ["sage_oat"], "paletteTags": ["sage", "cream", "terracotta"], "pattern": "solid"}},
     "warm_shoes": {
       "neutral": {"themeIds": ["sage_oat", "dusty_blue_sand", "clay_cream", "terracotta_greige", "ocher_taupe", "petrol_warm_beige", "mauve_cream", "apricot_oat", "slate_blue_greige", "soft_lavender_sand"], "paletteTags": ["cream", "warm_beige"], "pattern": "solid"},
       "boy": {"themeIds": ["dusty_blue_sand", "slate_blue_greige"], "paletteTags": ["dusty_blue"], "pattern": "solid"},
       "girl": {"themeIds": ["clay_cream", "mauve_cream", "apricot_oat", "soft_lavender_sand"], "paletteTags": ["soft_rose"], "pattern": "solid"}
     },
-    "stroller_light_blanket": {"neutral": {"themeIds": ["terracotta_greige", "mauve_cream", "slate_blue_greige"], "paletteTags": ["greige"], "pattern": "solid"}},
-    "stroller_warm_blanket": {"neutral": {"themeIds": ["sage_oat", "dusty_blue_sand", "clay_cream", "terracotta_greige", "ocher_taupe", "petrol_warm_beige", "mauve_cream", "apricot_oat", "slate_blue_greige", "soft_lavender_sand"], "paletteTags": ["cream", "oat"], "pattern": "fine_texture"}},
-    "stroller_light_footmuff": {"neutral": {"themeIds": ["sage_oat", "dusty_blue_sand", "clay_cream", "terracotta_greige", "ocher_taupe", "petrol_warm_beige", "mauve_cream", "apricot_oat", "slate_blue_greige", "soft_lavender_sand"], "paletteTags": ["cream"], "pattern": "solid"}},
-    "stroller_warm_footmuff": {"neutral": {"themeIds": ["terracotta_greige", "ocher_taupe", "mauve_cream", "slate_blue_greige"], "paletteTags": ["greige", "taupe"], "pattern": "solid"}},
+    "stroller_light_blanket": {"neutral": {"themeIds": ["sage_oat", "terracotta_greige"], "paletteTags": ["cream", "sage", "terracotta"], "pattern": "mini_motif"}},
+    "stroller_warm_blanket": {"neutral": {"themeIds": ["sage_oat", "terracotta_greige"], "paletteTags": ["sage", "cream", "terracotta"], "pattern": "fine_texture"}},
+    "stroller_light_footmuff": {"neutral": {"themeIds": ["sage_oat"], "paletteTags": ["sage", "cream", "terracotta"], "pattern": "solid"}},
+    "stroller_warm_footmuff": {"neutral": {"themeIds": ["sage_oat"], "paletteTags": ["sage", "cream", "terracotta"], "pattern": "solid"}},
     "stroller_rain_cover": {"neutral": {"themeIds": ["sage_oat", "dusty_blue_sand", "clay_cream", "terracotta_greige", "ocher_taupe", "petrol_warm_beige", "mauve_cream", "apricot_oat", "slate_blue_greige", "soft_lavender_sand"], "paletteTags": ["transparent"], "pattern": "solid"}},
     "stroller_sunshade": {"neutral": {"themeIds": ["sage_oat", "dusty_blue_sand", "clay_cream", "terracotta_greige", "ocher_taupe", "petrol_warm_beige", "mauve_cream", "apricot_oat", "slate_blue_greige", "soft_lavender_sand"], "paletteTags": ["warm_beige", "cream"], "pattern": "solid"}},
-    "carrier_cover_light": {"neutral": {"themeIds": ["sage_oat", "dusty_blue_sand", "clay_cream", "terracotta_greige", "ocher_taupe", "petrol_warm_beige", "mauve_cream", "apricot_oat", "slate_blue_greige", "soft_lavender_sand"], "paletteTags": ["cream"], "pattern": "solid"}},
-    "carrier_cover_warm": {"neutral": {"themeIds": ["terracotta_greige", "ocher_taupe", "mauve_cream", "slate_blue_greige"], "paletteTags": ["greige", "taupe"], "pattern": "solid"}},
-    "car_blanket_over_harness": {"neutral": {"themeIds": ["terracotta_greige", "ocher_taupe", "mauve_cream", "slate_blue_greige"], "paletteTags": ["greige"], "pattern": "solid"}},
+    "carrier_cover_light": {"neutral": {"themeIds": ["sage_oat"], "paletteTags": ["sage", "cream", "terracotta"], "pattern": "solid"}},
+    "carrier_cover_warm": {"neutral": {"themeIds": ["sage_oat"], "paletteTags": ["sage", "cream", "terracotta"], "pattern": "solid"}},
+    "car_blanket_over_harness": {"neutral": {"themeIds": ["dusty_blue_sand"], "paletteTags": ["dusty_blue", "cream", "terracotta"], "pattern": "solid"}},
     "sleep_bag_0_5": {"neutral": {"themeIds": ["sage_oat", "petrol_warm_beige"], "paletteTags": ["sage"], "pattern": "mini_motif"}},
-    "sleep_bag_1_0": {"neutral": {"themeIds": ["sage_oat", "petrol_warm_beige"], "paletteTags": ["sage"], "pattern": "mini_motif"}},
-    "sleep_bag_1_5": {"neutral": {"themeIds": ["sage_oat", "dusty_blue_sand", "clay_cream", "terracotta_greige", "ocher_taupe", "petrol_warm_beige", "mauve_cream", "apricot_oat", "slate_blue_greige", "soft_lavender_sand"], "paletteTags": ["cream", "soft_rose"], "pattern": "mini_motif"}},
-    "sleep_bag_2_5": {"neutral": {"themeIds": ["dusty_blue_sand", "slate_blue_greige"], "paletteTags": ["dusty_blue"], "pattern": "micro_quilt"}},
+    "sleep_bag_1_0": {"neutral": {"themeIds": ["dusty_blue_sand"], "paletteTags": ["dusty_blue", "cream"], "pattern": "solid"}},
+    "sleep_bag_1_5": {"neutral": {"themeIds": ["sage_oat"], "paletteTags": ["sage", "cream"], "pattern": "solid"}},
+    "sleep_bag_2_5": {"neutral": {"themeIds": ["sage_oat"], "paletteTags": ["cream", "sage"], "pattern": "micro_quilt"}},
     "sleep_bag_3_5": {"neutral": {"themeIds": ["dusty_blue_sand", "slate_blue_greige"], "paletteTags": ["slate_blue"], "pattern": "micro_quilt"}},
     "sleep_under_short_sleeve_bodysuit": {
       "neutral": {"themeIds": ["sage_oat", "dusty_blue_sand", "clay_cream", "terracotta_greige", "ocher_taupe", "petrol_warm_beige", "mauve_cream", "apricot_oat", "slate_blue_greige", "soft_lavender_sand"], "paletteTags": ["cream", "oat"], "pattern": "solid"},
@@ -136,12 +136,12 @@
       "girl": {"themeIds": ["clay_cream", "mauve_cream", "apricot_oat", "soft_lavender_sand"], "paletteTags": ["soft_rose"], "pattern": "mini_motif"}
     },
     "sleep_under_light_pajamas": {
-      "neutral": {"themeIds": ["sage_oat", "dusty_blue_sand", "clay_cream", "terracotta_greige", "ocher_taupe", "petrol_warm_beige", "mauve_cream", "apricot_oat", "slate_blue_greige", "soft_lavender_sand"], "paletteTags": ["cream"], "pattern": "solid"},
+      "neutral": {"themeIds": ["dusty_blue_sand"], "paletteTags": ["dusty_blue", "cream", "terracotta"], "pattern": "mini_motif"},
       "boy": {"themeIds": ["dusty_blue_sand", "slate_blue_greige"], "paletteTags": ["dusty_blue"], "pattern": "mini_motif"},
       "girl": {"themeIds": ["clay_cream", "mauve_cream", "apricot_oat", "soft_lavender_sand"], "paletteTags": ["soft_rose"], "pattern": "mini_motif"}
     },
-    "sleep_under_short_body_plus_light_pajamas": {"neutral": {"themeIds": ["sage_oat", "dusty_blue_sand", "clay_cream", "terracotta_greige", "ocher_taupe", "petrol_warm_beige", "mauve_cream", "apricot_oat", "slate_blue_greige", "soft_lavender_sand"], "paletteTags": ["cream", "soft_rose"], "pattern": "mini_motif"}},
-    "sleep_under_long_body_plus_light_pajamas": {"neutral": {"themeIds": ["sage_oat", "dusty_blue_sand", "clay_cream", "terracotta_greige", "ocher_taupe", "petrol_warm_beige", "mauve_cream", "apricot_oat", "slate_blue_greige", "soft_lavender_sand"], "paletteTags": ["cream", "greige"], "pattern": "fine_stripe"}}
+    "sleep_under_short_body_plus_light_pajamas": {"neutral": {"themeIds": ["sage_oat"], "paletteTags": ["sage", "cream"], "pattern": "mini_motif"}},
+    "sleep_under_long_body_plus_light_pajamas": {"neutral": {"themeIds": ["sage_oat"], "paletteTags": ["sage", "cream"], "pattern": "fine_stripe"}}
   },
   "additionalVariants": {
     "leggings": [
