@@ -20,13 +20,21 @@ test('Wetter kann manuell überschrieben und wieder automatisch geladen werden',
   await openDemo(page);
   const before = await selectedIds(page);
   await page.locator('[data-open-dialog="weatherOverrideDialog"]').click();
+  const dialog = page.locator('#weatherOverrideDialog');
+  await expect(dialog.getByRole('heading', { name:'Wetter anpassen' })).toBeVisible();
+  await expect(dialog).not.toContainText('Die aktuellen Wetterwerte werden geladen');
+  await expect(dialog).not.toContainText('Weitere Wetterdetails');
+  await expect(dialog.getByRole('button', { name:'Übernehmen' })).toBeVisible();
+  await expect(dialog.getByRole('button', { name:'Zurücksetzen' })).toBeVisible();
+  const initialTemperature = await page.locator('#manualAirTempC').inputValue();
+  await dialog.getByRole('button', { name:'Temperatur um ein Grad erhöhen' }).click();
+  await expect(page.locator('#manualAirTempC')).toHaveValue(String(Number(initialTemperature) + 1));
+  await dialog.getByRole('button', { name:'Temperatur um ein Grad senken' }).click();
+  await expect(page.locator('#manualAirTempC')).toHaveValue(initialTemperature);
   await page.locator('#manualAirTempC').fill('5');
-  await page.locator('#manualWindSpeedKmh').fill('35');
-  await page.locator('#manualWindGustKmh').fill('45');
-  await page.locator('#manualPrecipProbabilityPct').fill('70');
-  await page.locator('#manualPrecipMm').fill('1');
-  await page.locator('#manualPrecipitationType').selectOption('rain');
-  await page.locator('#manualUvIndex').fill('1');
+  await page.locator('input[name="manualWindPreset"][value="windy"]').check();
+  await page.locator('input[name="manualPrecipitationPreset"][value="rain"]').check();
+  await page.locator('input[name="manualSunPreset"][value="cloudy"]').check();
   await page.locator('#applyWeatherOverrideButton').click();
   await expect(page.locator('#temperatureValue')).toHaveText('5°');
   await expect(page.locator('#weatherOverrideStatus')).toHaveText('Manuell angepasst');
@@ -47,9 +55,10 @@ test('Manuelles Wetter funktioniert ohne API- oder Cache-Wetter', async ({ page 
 
   await page.locator('[data-open-dialog="weatherOverrideDialog"]').click();
   await expect(page.locator('#applyWeatherOverrideButton')).toBeEnabled();
-  await expect(page.locator('#weatherOverrideSource')).toContainText('Keine automatischen Wetterdaten');
   await page.locator('#manualAirTempC').fill('9');
-  await page.locator('#manualPrecipitationType').selectOption('none');
+  await page.locator('input[name="manualWindPreset"][value="unknown"]').check();
+  await page.locator('input[name="manualPrecipitationPreset"][value="dry"]').check();
+  await page.locator('input[name="manualSunPreset"][value="unknown"]').check();
   await page.locator('#applyWeatherOverrideButton').click();
 
   await expect(page.locator('#temperatureValue')).toHaveText('9°');
@@ -80,12 +89,9 @@ test('Nackentest behauptet keine Änderung wenn keine sichere Wärmestufe mehr m
   await chooseSituation(page, 'outdoor');
   await page.locator('[data-open-dialog="weatherOverrideDialog"]').click();
   await page.locator('#manualAirTempC').fill('-20');
-  await page.locator('#manualWindSpeedKmh').fill('0');
-  await page.locator('#manualWindGustKmh').fill('0');
-  await page.locator('#manualPrecipProbabilityPct').fill('0');
-  await page.locator('#manualPrecipMm').fill('0');
-  await page.locator('#manualPrecipitationType').selectOption('none');
-  await page.locator('#manualUvIndex').fill('0');
+  await page.locator('input[name="manualWindPreset"][value="calm"]').check();
+  await page.locator('input[name="manualPrecipitationPreset"][value="dry"]').check();
+  await page.locator('input[name="manualSunPreset"][value="cloudy"]').check();
   await page.locator('#applyWeatherOverrideButton').click();
   const before = await selectedIds(page);
   await expect(page.locator('[data-notice-code="EXTREME_COLD_CAUTION"]')).toContainText('Exposition begrenzen');

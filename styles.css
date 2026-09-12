@@ -205,10 +205,103 @@ code { font-size: .84em; }
   font-size: .6rem;
   font-weight: 760;
 }
-.weather-override-grid {
+.weather-temperature-field {
+  display: grid;
+  gap: 7px;
+  margin: 0 0 14px;
+  font-size: .79rem;
+  font-weight: 800;
+}
+.temperature-stepper {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) auto 46px;
+  align-items: center;
+  min-height: 54px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: #fff;
+}
+.temperature-stepper button {
+  align-self: stretch;
+  border: 0;
+  background: #f6f1ed;
+  color: var(--ink);
+  font-size: 1.35rem;
+  font-weight: 500;
+}
+.temperature-stepper button:first-child { border-right: 1px solid var(--line); }
+.temperature-stepper button:last-child { border-left: 1px solid var(--line); }
+.temperature-stepper input {
+  width: 100%;
+  min-height: 52px;
+  padding: 8px 10px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 1.1rem;
+  font-weight: 800;
+  text-align: center;
+}
+.temperature-stepper > span { color: var(--muted); font-size: .75rem; font-weight: 750; }
+.weather-choice-fieldset {
+  margin: 0 0 13px;
+  padding: 0;
+  border: 0;
+}
+.weather-choice-fieldset legend {
+  margin-bottom: 7px;
+  padding: 0;
+  font-size: .79rem;
+  font-weight: 800;
+}
+.weather-choice-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 10px;
+  gap: 7px;
+}
+.weather-choice-grid--wind { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.weather-choice-option {
+  position: relative;
+  min-height: 42px;
+  display: grid;
+  place-items: center;
+  padding: 7px 6px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--muted);
+  font-size: .73rem;
+  font-weight: 730;
+  text-align: center;
+}
+.weather-choice-option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.weather-choice-option input:checked + span {
+  color: var(--ink);
+}
+.weather-choice-option:has(input:checked) {
+  border-color: var(--ink);
+  background: #f1ece7;
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+.weather-choice-option:focus-within {
+  outline: 3px solid rgba(91, 125, 156, .32);
+  outline-offset: 2px;
+}
+.weather-override-actions {
+  position: sticky;
+  bottom: -17px;
+  z-index: 3;
+  margin: 17px -17px -17px;
+  padding: 12px 17px calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  background: rgba(255,255,255,.97);
+  backdrop-filter: blur(12px);
 }
 
 .situation-strip { margin: 0; }
@@ -1004,7 +1097,6 @@ body[data-style-theme="mixed"] { --sage: #dfe7df; }
     min-width: 0;
     gap: 5px 6px;
   }
-  .weather-override-grid { grid-template-columns: 1fr; }
   .card { padding-inline: 11px; }
   .outfit-card { padding: 14px; }
   .outfit-grid {

@@ -3,6 +3,7 @@ import { createWeatherService } from './src/weather/index.js';
 import { estimateCabinTemperature } from './src/integration/cabin-temperature.js';
 import { WEATHER_CACHE_MAX_AGE_MINUTES, WEATHER_FRESH_MAX_AGE_MINUTES, assessCachedWeatherSeries, compensateWeatherRiskHorizon, normalizeWeatherBundle } from './src/integration/weather-series.js';
 import { applyManualWeatherOverride } from './src/integration/manual-weather.js';
+import { manualWeatherValuesFromPresets, precipitationPresetForWeather, sunPresetForWeather, windPresetForWeather } from './src/integration/manual-weather-presets.js';
 import { validateImportEnvelopeV1 } from './src/integration/settings-import.js';
 import { APP_VERSION } from './src/version.js';
 import { ClothingAssetStore } from './ui/asset-store.js';
@@ -222,28 +223,18 @@ function updateConnectionBanner() {
 }
 function syncWeatherOverrideForm() {
   const current = state.weather?.current ?? null;
-  const fields = {
-    manualAirTempC: current?.airTempC,
-    manualWindSpeedKmh: current?.windSpeedKmh,
-    manualWindGustKmh: current?.windGustKmh,
-    manualPrecipProbabilityPct: current?.precipProbabilityPct,
-    manualPrecipMm: current?.precipMm,
-    manualUvIndex: current?.uvIndex
+  const temperature = document.querySelector('#manualAirTempC');
+  if (temperature) temperature.value = current?.airTempC == null ? '' : String(current.airTempC);
+  const presetSelections = {
+    manualWindPreset: windPresetForWeather(current),
+    manualPrecipitationPreset: precipitationPresetForWeather(current),
+    manualSunPreset: sunPresetForWeather(current)
   };
-  for (const [id, value] of Object.entries(fields)) {
-    const input = document.querySelector(`#${id}`);
-    if (input) input.value = value == null ? '' : String(value);
+  for (const [name, value] of Object.entries(presetSelections)) {
+    for (const input of document.querySelectorAll(`input[name="${name}"]`)) input.checked = input.value === value;
   }
-  const type = document.querySelector('#manualPrecipitationType');
-  if (type) type.value = ['none','rain','snow','sleet','unknown'].includes(current?.precipitationType) ? current.precipitationType : 'unknown';
   const submit = document.querySelector('#applyWeatherOverrideButton');
   if (submit) submit.disabled = false;
-  const source = document.querySelector('#weatherOverrideSource');
-  if (source) {
-    if (!current) source.textContent = 'Keine automatischen Wetterdaten verfügbar. Trage mindestens die Lufttemperatur ein; weitere Werte sind optional.';
-    else if (state.weather?.freshness === 'stale' || state.weather?.origin === 'cache') source.textContent = 'Gespeicherte Werte sind vorbelegt. Beim Übernehmen gelten die eingetragenen aktuellen Werte als manuell; alte stündliche Prognosen werden nicht weiterverwendet.';
-    else source.textContent = 'Die Werte sind mit dem aktuellen Wetter vorbelegt. Änderungen gelten nur für die aktuelle Wettersituation.';
-  }
   const badge = document.querySelector('#weatherOverrideStatus');
   if (badge) {
     const isManual = isManualWeatherOrigin(state.weather?.origin);
@@ -378,17 +369,27 @@ function numberFromField(id, { required = false } = {}) {
 }
 function bindWeatherOverride() {
   const form = document.querySelector('#weatherOverrideForm');
+  form.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-weather-temp-step]');
+    if (!button) return;
+    const input = document.querySelector('#manualAirTempC');
+    const current = Number(input?.value);
+    if (!input || !Number.isFinite(current)) return;
+    const next = Math.min(60, Math.max(-60, current + Number(button.dataset.weatherTempStep)));
+    input.value = String(Number(next.toFixed(1)));
+  });
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     try {
+      const selected = (name) => document.querySelector(`input[name="${name}"]:checked`)?.value ?? 'unknown';
+      const values = manualWeatherValuesFromPresets({
+        temperatureC: numberFromField('manualAirTempC', { required:true }),
+        wind: selected('manualWindPreset'),
+        precipitation: selected('manualPrecipitationPreset'),
+        sun: selected('manualSunPreset')
+      });
       state.weather = applyManualWeatherOverride(state.weather, {
-        airTempC: numberFromField('manualAirTempC', { required:true }),
-        windSpeedKmh: numberFromField('manualWindSpeedKmh'),
-        windGustKmh: numberFromField('manualWindGustKmh'),
-        precipProbabilityPct: numberFromField('manualPrecipProbabilityPct'),
-        precipMm: numberFromField('manualPrecipMm'),
-        precipitationType: document.querySelector('#manualPrecipitationType').value,
-        uvIndex: numberFromField('manualUvIndex')
+        ...values
       }, { location: state.location ?? DEFAULT_LOCATION });
       state.location = state.weather.location;
       state.runtime.weatherError = null;
