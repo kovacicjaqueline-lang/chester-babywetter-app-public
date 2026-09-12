@@ -42,7 +42,9 @@ export function precipitationPresetForWeather(current = null) {
   if (type === 'rain') return 'rain';
   if (type === 'snow') return 'snow';
   if (type === 'sleet') return 'sleet';
+  if (type === 'none' && (current?.precipMm > 0 || current?.precipProbabilityPct >= 60)) return 'rain';
   if (type === 'none') return 'dry';
+  if (current?.precipMm > 0 || current?.precipProbabilityPct >= 60) return 'rain';
   return 'unknown';
 }
 

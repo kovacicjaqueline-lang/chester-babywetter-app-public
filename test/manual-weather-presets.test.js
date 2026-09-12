@@ -18,6 +18,8 @@ test('current weather is reduced to understandable states without dropping safet
   assert.equal(windPresetForWeather({ windSpeedKmh:50, windGustKmh:60 }), 'very_strong');
   assert.equal(windPresetForWeather({ windSpeedKmh:null, windGustKmh:null }), 'unknown');
   assert.equal(precipitationPresetForWeather({ precipitationType:'sleet' }), 'sleet');
+  assert.equal(precipitationPresetForWeather({ precipitationType:'none', precipProbabilityPct:70, precipMm:0 }), 'rain');
+  assert.equal(precipitationPresetForWeather({ precipitationType:'none', precipProbabilityPct:0, precipMm:2 }), 'rain');
   assert.equal(precipitationPresetForWeather({ precipitationType:'unknown' }), 'unknown');
   assert.equal(sunPresetForWeather({ uvIndex:2.9 }), 'cloudy');
   assert.equal(sunPresetForWeather({ uvIndex:3 }), 'bright');
