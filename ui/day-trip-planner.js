@@ -380,14 +380,14 @@ function ensureUi() {
           <p class="trip-intro">Start und Ende festlegen. Eine weitere Situation brauchst du nur, wenn ihr später wechselt.</p>
           <div id="tripPlannerError" class="trip-error" role="status" hidden></div>
           <section class="trip-builder-section" aria-labelledby="tripTimeHeading">
-            <h3 id="tripTimeHeading">1. Zeitraum</h3>
+            <h3 id="tripTimeHeading">Zeitraum</h3>
             <div class="trip-time-grid">
               <label class="trip-field"><span>Start</span><select id="tripStartTime" aria-label="Startzeit"></select></label>
               <label class="trip-field"><span>Ende</span><select id="tripEndTime" aria-label="Endzeit"></select></label>
             </div>
           </section>
           <section class="trip-builder-section" aria-labelledby="tripSegmentsHeading">
-            <div class="trip-section-heading"><h3 id="tripSegmentsHeading">2. Situationen</h3><button id="tripAddSegmentButton" class="trip-add-button" type="button">+ Wechsel hinzufügen</button></div>
+            <div class="trip-section-heading"><h3 id="tripSegmentsHeading">Situationen</h3><button id="tripAddSegmentButton" class="trip-add-button" type="button">+ Wechsel hinzufügen</button></div>
             <p id="tripSegmentsNote" class="trip-section-note">Pro Abschnitt eine Situation wählen. Weitere Abschnitte nur hinzufügen, wenn ihr später wechselt.</p>
             <div id="tripSegments" class="trip-segments"></div>
           </section>

@@ -21,7 +21,7 @@ test('Tagesausflug-Eingabe ist auf Mobile eindeutig und kompakt verständlich', 
   await openPlanner(page);
 
   await expect(page.locator('.trip-intro')).toHaveText('Start und Ende festlegen. Eine weitere Situation brauchst du nur, wenn ihr später wechselt.');
-  await expect(page.locator('#tripSegmentsHeading')).toHaveText('2. Situationen');
+  await expect(page.locator('#tripSegmentsHeading')).toHaveText('Situationen');
   await expect(page.locator('#tripSegmentsNote')).toContainText('Pro Abschnitt eine Situation wählen');
   await expect(page.locator('#tripAddSegmentButton')).toHaveText('+ Wechsel hinzufügen');
   await expect(page.locator('#tripGenerateButton')).toHaveText('Ausflug planen');
