@@ -223,8 +223,8 @@ function variantCandidates(group, theme, styleTheme) {
     themed: themed.includes(variant),
     score: (themed.includes(variant) ? 100 : 0)
       + themeOverlap(variant, theme) * 4
-      + stylePreferenceScore(variant, styleTheme)
-      + (variant.isFallback ? 10 : 0)
+      + stylePreferenceScore(variant, styleTheme) * 4
+      + (!themed.includes(variant) && variant.isFallback ? 10 : 0)
   }));
 }
 
@@ -258,7 +258,7 @@ function chooseVariantsForTheme(catalog, itemIds, theme, styleTheme) {
       const newPrimaryCount = primaries.filter((tag) => !state.primaryTags.has(tag)).length;
       const patternPenalty = visiblePattern && state.patterns.size > 0 ? 8 : 0;
       const primaryPenalty = newPrimaryCount > 1 ? 4 : newPrimaryCount === 1 && state.primaryTags.size > 0 ? 1 : 0;
-      const neutralBonus = primaries.length === 0 ? 2 : 0;
+      const neutralBonus = styleTheme === 'neutral' && primaries.length === 0 ? 2 : 0;
       const repeatedAccentBonus = primaries.some((tag) => state.primaryTags.has(tag)) ? 2 : 0;
       const score = candidate.score + neutralBonus + repeatedAccentBonus - patternPenalty - primaryPenalty;
       const scored = { ...candidate, score };
@@ -313,7 +313,12 @@ function chooseTheme(catalog, visualManifest, sessionKey, styleTheme, themeId, i
     return explicit;
   }
 
-  const scored = catalog.themes
+  const configuredThemeIds = visualManifest.sourceStyleProfiles?.[styleTheme]?.themeIds;
+  const preferredThemes = Array.isArray(configuredThemeIds) && configuredThemeIds.length
+    ? catalog.themes.filter((theme) => configuredThemeIds.includes(theme.id))
+    : [];
+  const themesToScore = preferredThemes.length > 0 ? preferredThemes : catalog.themes;
+  const scored = themesToScore
     .map((theme) => scoreTheme(catalog, visualManifest, itemIds, theme, styleTheme))
     .sort((left, right) => right.score - left.score || left.theme.id.localeCompare(right.theme.id));
   const bestScore = scored[0]?.score;

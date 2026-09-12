@@ -150,6 +150,31 @@ test('boy/girl visual style never changes fachliche itemIds', () => {
   assert.deepEqual(girl.items.map((item) => item.itemId), expected);
 });
 
+test('composer prefers a compatible profile variant over a compatible neutral fallback', () => {
+  const rec = recommendation(['long_sleeve_bodysuit']);
+  const boy = selectVisualLook({
+    recommendation: rec,
+    assetManifest,
+    visualManifest,
+    styleTheme: 'boy',
+    visualSeed: 3,
+    themeId: 'dusty_blue_sand'
+  });
+  const girl = selectVisualLook({
+    recommendation: rec,
+    assetManifest,
+    visualManifest,
+    styleTheme: 'girl',
+    visualSeed: 3,
+    themeId: 'clay_cream'
+  });
+
+  assert.deepEqual(boy.items.map((item) => item.sourceStyle), ['boy']);
+  assert.deepEqual(girl.items.map((item) => item.sourceStyle), ['girl']);
+  assert.deepEqual(boy.items.map((item) => item.itemId), rec.slots.map((slot) => slot.selected.itemId));
+  assert.deepEqual(girl.items.map((item) => item.itemId), rec.slots.map((slot) => slot.selected.itemId));
+});
+
 test('Anderer Look changes only visual output, not the engine recommendation', () => {
   const rec = recommendation(['long_sleeve_bodysuit', 'trousers', 'thin_sweater']);
   const before = JSON.stringify(rec);
