@@ -4,6 +4,7 @@ const MODE_ORDER = ['outdoor', 'stroller', 'carrier', 'car', 'indoor', 'sleep'];
 const WEATHER_SELECTION_MODES = new Set(['outdoor', 'stroller', 'carrier', 'car']);
 const HORIZONTAL_THRESHOLD = 54;
 const SHEET_CLOSE_THRESHOLD = 86;
+const PULL_REFRESH_THRESHOLD = 72;
 
 function selectedSituationMode() {
   return document.querySelector('#situationOptions [data-situation][aria-pressed="true"]')?.dataset.situation ?? null;
@@ -68,6 +69,29 @@ function bindSheetDismiss(dialog) {
   });
 
   header.addEventListener('pointercancel', () => { start = null; });
+}
+
+function bindPullToRefresh() {
+  let start = null;
+
+  document.addEventListener('pointerdown', (event) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    if (window.scrollY > 0 || document.querySelector('dialog[open]')) return;
+    if (event.target.closest?.('button, input, select, textarea, a')) return;
+    start = { x: event.clientX, y: event.clientY, pointerId: event.pointerId };
+  }, { passive: true });
+
+  document.addEventListener('pointerup', (event) => {
+    if (!start || start.pointerId !== event.pointerId) return;
+    const dx = event.clientX - start.x;
+    const dy = event.clientY - start.y;
+    start = null;
+    if (dy < PULL_REFRESH_THRESHOLD || dy <= Math.abs(dx) * 1.15) return;
+    window.dispatchEvent(new CustomEvent('babyweather:pull-to-refresh'));
+    announce('Aktuelles Wetter und Standort werden geladen');
+  }, { passive: true });
+
+  document.addEventListener('pointercancel', () => { start = null; }, { passive: true });
 }
 
 function createBottomNav() {
@@ -224,6 +248,7 @@ function initSwipeControls() {
   createGestureStatus();
   createBottomNav();
   bindHourlySelection();
+  bindPullToRefresh();
 
   const situationStrip = document.querySelector('.situation-strip');
   bindHorizontalSwipe(situationStrip, (direction) => {
