@@ -103,20 +103,41 @@
   </dialog>
   <dialog id="weatherOverrideDialog" class="sheet-dialog" aria-labelledby="weatherOverrideTitle">
     <form class="sheet" id="weatherOverrideForm">
-      <header class="sheet-header"><h2 id="weatherOverrideTitle">Wetter manuell anpassen</h2><button class="icon-button" type="button" data-close-dialog="weatherOverrideDialog" aria-label="Wetteranpassung schließen">×</button></header>
-      <p id="weatherOverrideSource" class="dialog-note">Die aktuellen Wetterwerte werden geladen.</p>
-      <label class="field">Lufttemperatur<input id="manualAirTempC" type="number" inputmode="decimal" min="-60" max="60" step="0.5" required></label>
-      <div class="weather-override-grid">
-        <label class="field">Wind km/h<input id="manualWindSpeedKmh" type="number" inputmode="decimal" min="0" max="250" step="0.5"></label>
-        <label class="field">Böen km/h<input id="manualWindGustKmh" type="number" inputmode="decimal" min="0" max="300" step="0.5"></label>
-        <label class="field">Regenwahrscheinlichkeit %<input id="manualPrecipProbabilityPct" type="number" inputmode="decimal" min="0" max="100" step="1"></label>
-        <label class="field">Niederschlag mm<input id="manualPrecipMm" type="number" inputmode="decimal" min="0" max="500" step="0.1"></label>
-        <label class="field">Niederschlagsart<select id="manualPrecipitationType"><option value="none">Keiner</option><option value="rain">Regen</option><option value="snow">Schnee</option><option value="sleet">Schneeregen</option><option value="unknown">Unbekannt</option></select></label>
-        <label class="field">UV-Index<input id="manualUvIndex" type="number" inputmode="decimal" min="0" max="20" step="0.1"></label>
-      </div>
-      <div class="settings-actions">
-        <button class="primary-button" type="submit" id="applyWeatherOverrideButton">Manuelle Werte verwenden</button>
-        <button class="secondary-button" type="button" id="resetWeatherOverrideButton">Automatisches Wetter neu laden</button>
+      <header class="sheet-header"><h2 id="weatherOverrideTitle">Wetter anpassen</h2><button class="icon-button" type="button" data-close-dialog="weatherOverrideDialog" aria-label="Wetteranpassung schließen">×</button></header>
+      <label class="weather-temperature-field" for="manualAirTempC"><span>Temperatur</span><span class="temperature-stepper"><button type="button" data-weather-temp-step="-1" aria-label="Temperatur um ein Grad senken">−</button><input id="manualAirTempC" type="number" inputmode="decimal" min="-60" max="60" step="0.5" required aria-label="Temperatur in Grad Celsius"><span aria-hidden="true">°C</span><button type="button" data-weather-temp-step="1" aria-label="Temperatur um ein Grad erhöhen">+</button></span></label>
+      <fieldset class="weather-choice-fieldset">
+        <legend>Wind</legend>
+        <div class="weather-choice-grid weather-choice-grid--wind">
+          <label class="weather-choice-option"><input type="radio" name="manualWindPreset" value="calm"><span>Windstill</span></label>
+          <label class="weather-choice-option"><input type="radio" name="manualWindPreset" value="light"><span>Leicht</span></label>
+          <label class="weather-choice-option"><input type="radio" name="manualWindPreset" value="windy"><span>Windig</span></label>
+          <label class="weather-choice-option"><input type="radio" name="manualWindPreset" value="strong"><span>Stark</span></label>
+          <label class="weather-choice-option"><input type="radio" name="manualWindPreset" value="very_strong"><span>Sehr stark</span></label>
+          <label class="weather-choice-option"><input type="radio" name="manualWindPreset" value="unknown"><span>Nicht sicher</span></label>
+        </div>
+      </fieldset>
+      <fieldset class="weather-choice-fieldset">
+        <legend>Niederschlag</legend>
+        <div class="weather-choice-grid">
+          <label class="weather-choice-option"><input type="radio" name="manualPrecipitationPreset" value="dry"><span>Trocken</span></label>
+          <label class="weather-choice-option"><input type="radio" name="manualPrecipitationPreset" value="rain"><span>Regen</span></label>
+          <label class="weather-choice-option"><input type="radio" name="manualPrecipitationPreset" value="snow"><span>Schnee</span></label>
+          <label class="weather-choice-option"><input type="radio" name="manualPrecipitationPreset" value="sleet"><span>Schneeregen</span></label>
+          <label class="weather-choice-option"><input type="radio" name="manualPrecipitationPreset" value="unknown"><span>Nicht sicher</span></label>
+        </div>
+      </fieldset>
+      <fieldset class="weather-choice-fieldset">
+        <legend>Sonne</legend>
+        <div class="weather-choice-grid">
+          <label class="weather-choice-option"><input type="radio" name="manualSunPreset" value="cloudy"><span>Bewölkt</span></label>
+          <label class="weather-choice-option"><input type="radio" name="manualSunPreset" value="bright"><span>Hell</span></label>
+          <label class="weather-choice-option"><input type="radio" name="manualSunPreset" value="sunny"><span>Sonnig</span></label>
+          <label class="weather-choice-option"><input type="radio" name="manualSunPreset" value="unknown"><span>Nicht sicher</span></label>
+        </div>
+      </fieldset>
+      <div class="settings-actions weather-override-actions">
+        <button class="primary-button" type="submit" id="applyWeatherOverrideButton">Übernehmen</button>
+        <button class="secondary-button" type="button" id="resetWeatherOverrideButton">Zurücksetzen</button>
       </div>
     </form>
   </dialog>
