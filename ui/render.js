@@ -130,7 +130,7 @@ export function renderWeather(weather, location, runtime = {}) {
   document.querySelector('#temperatureValue').textContent = current ? `${Math.round(current.airTempC)}°` : '–';
   document.querySelector('#weatherSymbol').textContent = current ? weatherIcon(current.weatherCode, current.isDay) : '◌';
   document.querySelector('#weatherDescription').textContent = current
-    ? weatherDescription(current.weatherCode)
+    ? (runtime.weatherLoading ? 'Wetter und Standort werden aktualisiert …' : weatherDescription(current.weatherCode))
     : unavailableWeatherLabel(runtime);
 
   const facts = document.querySelector('#weatherFacts');
