@@ -448,6 +448,7 @@ function packItemRow(assetStore, styleTheme, item) {
   row.className = 'trip-pack-item';
   row.dataset.tripPackItem = item.itemId;
   const copy = document.createElement('div');
+  copy.className = 'trip-pack-copy';
   const label = document.createElement('strong');
   label.textContent = itemLabel(assetStore, item.itemId);
   const meta = document.createElement('small');

@@ -117,6 +117,12 @@ test('Autositz-Segment hält Gurt-Safety und geschätzte Innenraumtemperatur sic
   await expect(page.locator('#tripResultView')).toBeVisible();
   await expect(page.locator('[data-trip-notice-code="CAR_SEAT_NO_BULKY_LAYERS"]')).toBeVisible();
   await expect(page.locator('[data-trip-notice-code="CAR_SEAT_NO_BULKY_LAYERS"]')).toContainText('keine dicken Schichten');
+  const hintSummary = page.locator('#tripHintSummary');
+  await expect(hintSummary).toBeVisible();
+  const hintToggle = hintSummary.locator('button');
+  await expect(hintToggle).toHaveAttribute('aria-expanded', 'false');
+  await hintToggle.click();
+  await expect(hintToggle).toHaveAttribute('aria-expanded', 'true');
   await expect(page.locator('[data-trip-notice-code="CAR_CABIN_TEMPERATURE_ESTIMATED"]')).toBeVisible();
   expect(await page.locator('[data-trip-action][data-safety-critical="true"]').count()).toBeGreaterThan(0);
 
@@ -126,13 +132,7 @@ test('Autositz-Segment hält Gurt-Safety und geschätzte Innenraumtemperatur sic
   await expect(safety.locator('[data-severity="hard_rule"]')).not.toHaveCount(0);
   await expect(safety.locator('[data-severity]:not([data-severity="hard_rule"])')).toHaveCount(0);
 
-  const hintSummary = page.locator('#tripHintSummary');
-  await expect(hintSummary).toBeVisible();
-  const hintToggle = hintSummary.locator('button');
-  await expect(hintToggle).toHaveAttribute('aria-expanded', 'false');
   await expect(hintToggle).toHaveAttribute('aria-controls', 'tripHintDetails');
-  await hintToggle.click();
-  await expect(hintToggle).toHaveAttribute('aria-expanded', 'true');
   await expect(page.locator('#tripHintDetails')).toBeVisible();
 });
 
