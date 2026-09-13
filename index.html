@@ -30,23 +30,28 @@
           <p class="eyebrow" id="weatherHeading">Jetzt</p>
           <div class="temperature-line"><strong class="temperature" id="temperatureValue">–</strong><span class="weather-symbol" id="weatherSymbol" aria-hidden="true">◌</span></div>
           <p class="weather-description" id="weatherDescription">Wetter wird geladen …</p>
-          <div class="weather-adjust-row">
+          <div class="weather-adjust-row" id="weatherAdjustRow">
             <button class="text-button" type="button" data-open-dialog="weatherOverrideDialog">Wetter anpassen</button>
             <span id="weatherOverrideStatus" class="weather-override-status" role="status" hidden></span>
           </div>
         </div>
         <div class="weather-facts" id="weatherFacts" aria-label="Wetterdetails"></div>
       </section>
-      <section class="situation-strip" aria-label="Aktuelle Situation">
-        <button class="situation-button" type="button" data-open-dialog="situationDialog">
-          <span class="situation-icon" id="situationIcon" aria-hidden="true">◌</span>
-          <strong id="situationLabel">Kinderwagen</strong>
-          <span class="chevron" aria-hidden="true">›</span>
-        </button>
-      </section>
-      <section class="card outfit-card" id="outfitCard" aria-label="Outfit-Empfehlung">
+      <section class="card outfit-card" id="outfitCard" aria-labelledby="outfitHeading">
         <div class="section-heading">
+          <div class="outfit-heading-copy">
+            <h1 id="outfitHeading">Jetzt anziehen</h1>
+            <p id="outfitContextLabel" class="outfit-context-label"></p>
+            <p id="outfitStatusText" class="outfit-status-text" role="status" aria-live="polite" hidden></p>
+          </div>
           <span class="confidence-pill" id="confidencePill" data-status="partial">Lädt …</span>
+        </div>
+        <div class="situation-strip outfit-situation-strip" aria-label="Aktuelle Situation">
+          <button class="situation-button" type="button" data-open-dialog="situationDialog">
+            <span class="situation-icon" id="situationIcon" aria-hidden="true">◌</span>
+            <strong id="situationLabel">Kinderwagen</strong>
+            <span class="chevron" aria-hidden="true">›</span>
+          </button>
         </div>
         <div class="warmth-control" role="group" aria-label="Outfit anpassen">
           <button type="button" data-warmth="cooler">Dünner</button>

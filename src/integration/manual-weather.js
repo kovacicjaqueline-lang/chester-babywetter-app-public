@@ -12,11 +12,24 @@ function optionalNumber(value, field, min, max) {
   return requiredNumber(value, field, min, max);
 }
 
-function weatherCodeFor(type, previousCode) {
-  if (type === 'rain' || type === 'sleet') return 61;
-  if (type === 'snow') return 71;
-  if (type === 'none') return 2;
-  return Number.isInteger(previousCode) ? previousCode : null;
+export function normalizeTemperatureToHalfDegree(value) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return value;
+  return Number((Math.round(value * 2) / 2).toFixed(1));
+}
+
+export function manualWeatherCodeFor({
+  precipitationType = 'unknown',
+  precipMm = null,
+  precipProbabilityPct = null,
+  uvIndex = null
+} = {}) {
+  if (precipitationType === 'rain' || precipitationType === 'sleet') return 61;
+  if (precipitationType === 'snow') return 71;
+  if (precipMm > 0 || precipProbabilityPct >= 60) return 61;
+  if (typeof uvIndex !== 'number' || !Number.isFinite(uvIndex)) return null;
+  if (uvIndex >= 6) return 0;
+  if (uvIndex >= 3) return 1;
+  return 3;
 }
 
 function isLocation(value) {
@@ -79,9 +92,9 @@ export function applyManualWeatherOverride(weather, overrides, { now = () => new
       precipMm,
       precipitationType,
       uvIndex,
-      cloudCoverPct: Number.isFinite(retainedCurrent?.cloudCoverPct) ? retainedCurrent.cloudCoverPct : null,
+      cloudCoverPct: null,
       isDay: typeof retainedCurrent?.isDay === 'boolean' ? retainedCurrent.isDay : null,
-      weatherCode: weatherCodeFor(precipitationType, retainedCurrent?.weatherCode)
+      weatherCode: manualWeatherCodeFor({ precipitationType, precipMm, precipProbabilityPct, uvIndex })
     },
     hourly: reuseApiForecast && Array.isArray(weather.hourly)
       ? weather.hourly.map((point) => ({ ...point }))

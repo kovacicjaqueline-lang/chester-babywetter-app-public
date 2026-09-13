@@ -137,6 +137,8 @@ code { font-size: .84em; }
   border-bottom: 1px solid var(--line);
 }
 .weather-hero .eyebrow { font-size: .61rem; }
+.weather-hero--room .temperature { font-size: clamp(3.2rem, 15vw, 4.4rem); }
+.weather-hero--room .weather-description { color: var(--ink); font-weight: 700; }
 .temperature-line { display: flex; align-items: center; gap: 8px; }
 .temperature {
   font-size: clamp(3.6rem, 17vw, 4.9rem);
@@ -160,6 +162,7 @@ code { font-size: .84em; }
   min-height: 24px;
   margin-top: 4px;
 }
+.weather-adjust-row[hidden] { display: none; }
 .weather-adjust-row .text-button {
   min-height: 28px;
   font-size: .66rem;
@@ -179,7 +182,15 @@ code { font-size: .84em; }
   justify-items: end;
   gap: 1px;
 }
-.weather-fact:first-child {
+.weather-facts-label {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: .58rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.weather-fact--apparent {
   grid-column: 1 / -1;
   display: flex;
   justify-content: flex-end;
@@ -385,7 +396,22 @@ code { font-size: .84em; }
   border-radius: 20px;
   background: var(--surface-strong);
 }
-.outfit-card .section-heading .eyebrow { display: none; }
+.outfit-heading-copy { min-width: 0; }
+.outfit-heading-copy h1 { margin: 0; font-size: 1.32rem; }
+.outfit-context-label {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: .68rem;
+  font-weight: 700;
+}
+.outfit-status-text {
+  margin: 7px 0 0;
+  color: #6a5637;
+  font-size: .68rem;
+  font-weight: 760;
+  line-height: 1.3;
+}
+.confidence-pill[data-status="ready_with_estimate"] { background: var(--warning); color: #6a5637; }
 
 .warmth-control {
   display: flex;
@@ -444,12 +470,9 @@ code { font-size: .84em; }
 }
 
 .outfit-grid {
-  display: grid;
-  grid-auto-flow: row;
-  grid-auto-columns: initial;
-  grid-template-columns: repeat(auto-fit, minmax(92px, 108px));
-  justify-content: start;
-  gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
   overflow: visible;
   overscroll-behavior-x: contain;
   scroll-snap-type: none;
@@ -457,6 +480,50 @@ code { font-size: .84em; }
   scrollbar-width: none;
 }
 .outfit-grid::-webkit-scrollbar { display: none; }
+.outfit-phase {
+  display: grid;
+  gap: 11px;
+  min-width: 0;
+}
+.outfit-phase + .outfit-phase { padding-top: 4px; border-top: 1px solid var(--line); }
+.outfit-phase-heading {
+  margin: 0;
+  font-size: .9rem;
+  letter-spacing: -.02em;
+}
+.outfit-group {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+.outfit-group-heading {
+  margin: 0;
+  color: var(--muted);
+  font-size: .64rem;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+.outfit-group-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(82px, 1fr));
+  justify-content: start;
+  gap: 11px;
+  min-width: 0;
+}
+.outfit-safety-bridge {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 9px;
+  align-items: start;
+  padding: 11px 12px;
+  border: 1px solid rgba(137, 101, 45, .28);
+  border-radius: 14px;
+  background: var(--warning);
+}
+.outfit-safety-bridge .notice-marker { background: rgba(255,255,255,.72); }
+.outfit-safety-bridge strong { display: block; font-size: .74rem; }
+.outfit-safety-bridge p { margin: 3px 0 0; font-size: .68rem; line-height: 1.35; }
 .clothing-card {
   min-width: 0;
   text-align: center;
@@ -510,8 +577,9 @@ code { font-size: .84em; }
   margin: 1px 0 0;
   color: var(--muted);
   font-size: .57rem;
+  line-height: 1.15;
 }
-.outfit-grid .clothing-role { display: none; }
+.outfit-group-grid .clothing-role { display: block; }
 .outfit-empty {
   grid-column: 1 / -1;
   width: calc(100vw - 50px);
@@ -1085,7 +1153,7 @@ body[data-style-theme="mixed"] { --sage: #dfe7df; }
     gap: 6px 8px;
   }
   .weather-fact { justify-items: start; }
-  .weather-fact:first-child {
+  .weather-fact--apparent {
     grid-column: 1 / -1;
     order: 2;
     justify-content: flex-start;
@@ -1102,8 +1170,7 @@ body[data-style-theme="mixed"] { --sage: #dfe7df; }
   }
   .card { padding-inline: 11px; }
   .outfit-card { padding: 14px; }
-  .outfit-grid {
-    grid-auto-columns: initial;
+  .outfit-group-grid {
     grid-template-columns: repeat(auto-fit, minmax(84px, 96px));
     gap: 10px;
   }
@@ -1115,8 +1182,7 @@ body[data-style-theme="mixed"] { --sage: #dfe7df; }
 
 @media (min-width: 600px) {
   .app-shell { padding-inline: 22px; }
-  .outfit-grid {
-    grid-auto-flow: initial;
+  .outfit-group-grid {
     grid-template-columns: repeat(auto-fit, minmax(108px, 128px));
     overflow: visible;
   }

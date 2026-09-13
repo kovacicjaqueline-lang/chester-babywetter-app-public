@@ -4,7 +4,7 @@
 /* Compatibility stylesheet retained for the V1 shell cache. UI styles are consolidated in styles.css. */
 
 /* Weather freshness is shown by the connection banner, so all remaining facts use one compact layout. */
-.weather-fact:first-child {
+.weather-fact--apparent {
   grid-column: auto;
   display: grid;
   justify-content: space-between;
@@ -13,7 +13,7 @@
   color: inherit;
   font-size: inherit;
 }
-.weather-fact:first-child span {
+.weather-fact--apparent span {
   font-size: .55rem;
   letter-spacing: .04em;
   text-transform: uppercase;
@@ -33,7 +33,7 @@
 
 /* Outfit copy cleanup: keep the current multi-row outfit grid from modern.css and move the swipe affordance to the visible controls. */
 .outfit-card > .section-heading {
-  justify-content: flex-end;
+  justify-content: space-between;
   touch-action: auto;
 }
 .warmth-control {
@@ -90,7 +90,7 @@
 }
 
 @media (max-width: 520px) {
-  .weather-fact:first-child {
+  .weather-fact--apparent {
     grid-column: auto;
     order: initial;
     justify-content: space-between;

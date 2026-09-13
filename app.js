@@ -2,7 +2,7 @@ import { createSession, lockItem, nextVisualSeed, recommendOutfit, setWarmthOffs
 import { createWeatherService } from './src/weather/index.js';
 import { estimateCabinTemperature } from './src/integration/cabin-temperature.js';
 import { WEATHER_CACHE_MAX_AGE_MINUTES, WEATHER_FRESH_MAX_AGE_MINUTES, assessCachedWeatherSeries, compensateWeatherRiskHorizon, normalizeWeatherBundle } from './src/integration/weather-series.js';
-import { applyManualWeatherOverride } from './src/integration/manual-weather.js';
+import { applyManualWeatherOverride, normalizeTemperatureToHalfDegree } from './src/integration/manual-weather.js';
 import { manualWeatherValuesFromPresets, precipitationPresetForWeather, sunPresetForWeather, windPresetForWeather } from './src/integration/manual-weather-presets.js';
 import { validateImportEnvelopeV1 } from './src/integration/settings-import.js';
 import { APP_VERSION } from './src/version.js';
@@ -139,7 +139,7 @@ function renderCurrentRecommendation() {
 }
 function renderRecommendation() {
   syncActiveWeatherFreshness();
-  renderWeather(state.weather, state.location, state.runtime);
+  renderWeather(state.weather, state.location, state.runtime, state.contexts[state.mode]);
   renderHourly(state.weather);
   updateConnectionBanner();
   lastRecommendation = computeRecommendation();
@@ -225,7 +225,7 @@ function updateConnectionBanner() {
 function syncWeatherOverrideForm() {
   const current = state.weather?.current ?? null;
   const temperature = document.querySelector('#manualAirTempC');
-  if (temperature) temperature.value = current?.airTempC == null ? '' : String(current.airTempC);
+  if (temperature) temperature.value = current?.airTempC == null ? '' : String(normalizeTemperatureToHalfDegree(current.airTempC));
   const presetSelections = {
     manualWindPreset: windPresetForWeather(current),
     manualPrecipitationPreset: precipitationPresetForWeather(current),
@@ -254,7 +254,7 @@ function syncNeckFeedbackStatus() {
   else status.textContent = changed ? 'Heiß/schwitzig – dünner angepasst' : 'Heiß/schwitzig – keine weitere sinnvolle oder sichere Schichtänderung möglich';
 }
 function renderSituationSheet() { const mode = situationDraft?.mode ?? state.mode; const contexts = situationDraft?.contexts ?? state.contexts; renderSituationOptions(mode); renderSituationContext(mode, contexts[mode]); }
-function renderAll() { document.body.dataset.styleTheme = state.profile.styleTheme; renderWeather(state.weather, state.location, state.runtime); renderHourly(state.weather); renderSituation(state.mode); renderSituationSheet(); renderRecommendation(); renderCatalog(assetStore, state.profile.styleTheme); syncForms(); syncNeckFeedbackStatus(); updateConnectionBanner(); }
+function renderAll() { document.body.dataset.styleTheme = state.profile.styleTheme; renderWeather(state.weather, state.location, state.runtime, state.contexts[state.mode]); renderHourly(state.weather); renderSituation(state.mode); renderSituationSheet(); renderRecommendation(); renderCatalog(assetStore, state.profile.styleTheme); syncForms(); syncNeckFeedbackStatus(); updateConnectionBanner(); }
 function syncForms() { document.querySelector('#profileName').value = state.profile.displayName ?? ''; document.querySelector('#profileBirthDate').value = state.profile.birthDate ?? ''; for (const input of document.querySelectorAll('input[name="mobilityStage"]')) input.checked = input.value === state.profile.mobilityStage; document.querySelector('#locationInput').value = state.location?.label ?? ''; for (const input of document.querySelectorAll('input[name="warmthBias"]')) input.checked = input.value === state.profile.warmthBias; for (const input of document.querySelectorAll('input[name="styleTheme"]')) input.checked = input.value === state.profile.styleTheme; document.querySelector('#appVersion').textContent = APP_VERSION; syncWeatherOverrideForm(); }
 function showToast(message) { const toast = document.querySelector('#toast'); toast.textContent = message; toast.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { toast.hidden = true; }, 3200); }
 function openDialog(id) { const dialog = document.getElementById(id); if (!(dialog instanceof HTMLDialogElement)) return; for (const open of document.querySelectorAll('dialog[open]')) if (open !== dialog) open.close(); if (dialog.open) return; if (id === 'situationDialog') { const active = document.activeElement; if (active instanceof HTMLElement) situationDialogReturnFocus.set(dialog, active); situationDraft = { mode: state.mode, contexts: structuredClone(state.contexts) }; renderSituationSheet(); } dialog.showModal(); if (id === 'situationDialog') requestAnimationFrame(() => dialog.querySelector('.sheet-header .icon-button')?.focus()); }
@@ -263,7 +263,7 @@ function commitSituationDraft() { if (!situationDraft) return; const committed =
 async function refreshWeather(location, { persistLocation = true } = {}) {
   if (weatherRefreshInFlight) return false;
   weatherRefreshInFlight = true;
-  state.runtime.weatherLoading = true; state.runtime.weatherError = null; state.location = location; syncActiveWeatherFreshness(location); renderWeather(state.weather, state.location, state.runtime); updateConnectionBanner();
+  state.runtime.weatherLoading = true; state.runtime.weatherError = null; state.location = location; syncActiveWeatherFreshness(location); renderWeather(state.weather, state.location, state.runtime, state.contexts[state.mode]); updateConnectionBanner();
   if (!navigator.onLine) { state.weather = cachedWeather(location); state.runtime.weatherLoading = false; state.runtime.weatherError = 'offline'; resetSession(); renderAll(); weatherRefreshInFlight = false; return false; }
   try { const bundle = persistLocation ? await weatherService.useLocation(location, { demoMode: DEMO_MODE }) : await weatherService.loadWeather(location, { demoMode: DEMO_MODE }); state.weather = normalizeWeatherBundle(bundle, location); state.location = state.weather.location; cacheWeather(state.weather); clearCacheRuntime(); return true; }
   catch (error) { state.weather = cachedWeather(location); state.runtime.weatherError = error?.code ?? error?.message ?? 'weather_error'; return false; }
@@ -275,7 +275,7 @@ async function refreshCurrentLocation({ successMessage = 'Aktuelles Wetter und S
   const fallbackLocation = state.location ?? DEFAULT_LOCATION;
   state.runtime.weatherLoading = true;
   state.runtime.weatherError = null;
-  renderWeather(state.weather, fallbackLocation, state.runtime);
+  renderWeather(state.weather, fallbackLocation, state.runtime, state.contexts[state.mode]);
   updateConnectionBanner();
   let success = false;
   try {
@@ -386,7 +386,7 @@ function bindWeatherOverride() {
     try {
       const selected = (name) => document.querySelector(`input[name="${name}"]:checked`)?.value ?? 'unknown';
       const values = manualWeatherValuesFromPresets({
-        temperatureC: numberFromField('manualAirTempC', { required:true }),
+        temperatureC: normalizeTemperatureToHalfDegree(numberFromField('manualAirTempC', { required:true })),
         wind: selected('manualWindPreset'),
         precipitation: selected('manualPrecipitationPreset'),
         sun: selected('manualSunPreset')

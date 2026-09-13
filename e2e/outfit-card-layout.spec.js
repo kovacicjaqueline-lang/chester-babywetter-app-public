@@ -49,11 +49,11 @@ test('Outfit zeigt alle Teile ohne horizontales Scrollen', async ({ page }) => {
   }
 });
 
-test('Outfit-Karte entfernt redundante Überschrift und blendet dauerhaften Kinderwagenhinweis aus', async ({ page }) => {
+test('Outfit-Karte zeigt die Kernaufgabe und blendet dauerhaften Kinderwagenhinweis aus', async ({ page }) => {
   await openDemo(page);
 
-  await expect(page.locator('#outfitHeading')).toHaveCount(0);
-  await expect(page.locator('#outfitCard')).toHaveAttribute('aria-label', 'Outfit-Empfehlung');
+  await expect(page.locator('#outfitHeading')).toHaveText('Jetzt anziehen');
+  await expect(page.locator('#outfitCard')).toHaveAttribute('aria-labelledby', 'outfitHeading');
 
   const airflowNotice = page.locator('[data-notice-code="STROLLER_DO_NOT_COVER_AIRFLOW"]');
   await expect(airflowNotice).toHaveCount(1);
