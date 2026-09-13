@@ -24,11 +24,16 @@ test('Kinderwagen bündelt Zustand und Aktivität in Schläft, Wach und Sehr akt
   await expect(page.locator('#situationDialog [data-context-field="activity"]')).toHaveCount(0);
 
   await behavior.selectOption('very_active');
+  await expect(page.locator('#situationLabel')).toHaveText('Kinderwagen');
+  await page.locator('#applySituationButton').click();
   await expect(page.locator('#outfitReason')).toContainText('sehr aktives Baby');
 
+  await openStrollerDialog(page);
   await behavior.selectOption('asleep');
+  await page.locator('#applySituationButton').click();
   await expect(page.locator('#outfitReason')).toContainText('Schlafen im Kinderwagen');
 
+  await openStrollerDialog(page);
   await behavior.selectOption('awake');
   await expect(page.locator('#outfitReason')).not.toContainText('sehr aktives Baby');
 });

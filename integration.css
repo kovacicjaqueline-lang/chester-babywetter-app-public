@@ -56,6 +56,39 @@
   min-height: 44px;
 }
 
+/* Situation changes are drafted in the sheet. Keep its action area reachable while details scroll. */
+.situation-sheet {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  max-height: inherit;
+  padding: 0;
+  overflow: hidden;
+}
+.situation-sheet .sheet-header {
+  position: sticky;
+  top: 0;
+  margin: 0;
+  padding: 17px;
+}
+.situation-sheet-scroll {
+  min-height: 0;
+  overflow: auto;
+  padding: 0 17px;
+  overscroll-behavior: contain;
+}
+.situation-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 10px 17px calc(10px + var(--safe-bottom));
+  border-top: 1px solid var(--line);
+  background: rgba(255,255,255,.97);
+}
+.situation-actions .apply-situation,
+.situation-actions .secondary-button {
+  margin: 0;
+}
+
 @media (max-width: 520px) {
   .weather-fact--apparent {
     grid-column: auto;

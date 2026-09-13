@@ -80,7 +80,8 @@ const profile = loadProfile(); const settings = loadSettings(profile); const sto
 const storedUiVersion = Number.isInteger(storedUi?.uiStateVersion) ? storedUi.uiStateVersion : 1;
 const migrateLegacyUiDefaults = Boolean(storedUi && typeof storedUi === 'object' && storedUiVersion < UI_STATE_VERSION);
 const state = { profile, settings, mode: MODES.has(storedUi?.mode) ? storedUi.mode : settings.defaultMode, contexts: sanitizeContexts(storedUi?.contexts, { migrateLegacyDefaults:migrateLegacyUiDefaults }), visualSeed: Number.isSafeInteger(storedUi?.visualSeed) ? storedUi.visualSeed : 0, location: null, weather: null, runtime: { weatherLoading: true, weatherError: null, weatherCacheStatus: null, weatherCacheAgeMinutes: null, weatherCacheOrigin: null }, warmthDirection: 'balanced', neckFeedback: null };
-let session = createSession(`ui:${Date.now()}`); let lastRecommendation = null; let alternativeSlot = null; let toastTimer = null; let weatherRefreshInFlight = false;
+let session = createSession(`ui:${Date.now()}`); let lastRecommendation = null; let alternativeSlot = null; let toastTimer = null; let weatherRefreshInFlight = false; let situationDraft = null;
+const situationDialogReturnFocus = new WeakMap();
 const assetStore = new ClothingAssetStore(); const weatherService = createWeatherService({ onStorageError: () => showToast('Standort konnte lokal nicht gespeichert werden.') });
 function persistProfile() { state.profile.defaultMode = state.settings.defaultMode; state.profile.updatedAt = nowIso(); localStorage.setItem(PROFILE_KEY, JSON.stringify(state.profile)); }
 function persistSettings() { localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings)); localStorage.setItem(UI_STATE_KEY, JSON.stringify({ uiStateVersion:UI_STATE_VERSION, mode: state.mode, contexts: state.contexts, visualSeed: state.visualSeed })); }
@@ -252,11 +253,13 @@ function syncNeckFeedbackStatus() {
   if (state.neckFeedback === 'cool') status.textContent = changed ? 'Kühl – wärmer angepasst' : 'Kühl – keine weitere sinnvolle oder sichere Schichtänderung möglich';
   else status.textContent = changed ? 'Heiß/schwitzig – dünner angepasst' : 'Heiß/schwitzig – keine weitere sinnvolle oder sichere Schichtänderung möglich';
 }
-function renderAll() { document.body.dataset.styleTheme = state.profile.styleTheme; renderWeather(state.weather, state.location, state.runtime, state.contexts[state.mode]); renderHourly(state.weather); renderSituation(state.mode); renderSituationOptions(state.mode); renderSituationContext(state.mode, state.contexts[state.mode]); renderRecommendation(); renderCatalog(assetStore, state.profile.styleTheme); syncForms(); syncNeckFeedbackStatus(); updateConnectionBanner(); }
+function renderSituationSheet() { const mode = situationDraft?.mode ?? state.mode; const contexts = situationDraft?.contexts ?? state.contexts; renderSituationOptions(mode); renderSituationContext(mode, contexts[mode]); }
+function renderAll() { document.body.dataset.styleTheme = state.profile.styleTheme; renderWeather(state.weather, state.location, state.runtime, state.contexts[state.mode]); renderHourly(state.weather); renderSituation(state.mode); renderSituationSheet(); renderRecommendation(); renderCatalog(assetStore, state.profile.styleTheme); syncForms(); syncNeckFeedbackStatus(); updateConnectionBanner(); }
 function syncForms() { document.querySelector('#profileName').value = state.profile.displayName ?? ''; document.querySelector('#profileBirthDate').value = state.profile.birthDate ?? ''; for (const input of document.querySelectorAll('input[name="mobilityStage"]')) input.checked = input.value === state.profile.mobilityStage; document.querySelector('#locationInput').value = state.location?.label ?? ''; for (const input of document.querySelectorAll('input[name="warmthBias"]')) input.checked = input.value === state.profile.warmthBias; for (const input of document.querySelectorAll('input[name="styleTheme"]')) input.checked = input.value === state.profile.styleTheme; document.querySelector('#appVersion').textContent = APP_VERSION; syncWeatherOverrideForm(); }
 function showToast(message) { const toast = document.querySelector('#toast'); toast.textContent = message; toast.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { toast.hidden = true; }, 3200); }
-function openDialog(id) { const dialog = document.getElementById(id); if (!(dialog instanceof HTMLDialogElement)) return; for (const open of document.querySelectorAll('dialog[open]')) if (open !== dialog) open.close(); if (!dialog.open) dialog.showModal(); }
+function openDialog(id) { const dialog = document.getElementById(id); if (!(dialog instanceof HTMLDialogElement)) return; for (const open of document.querySelectorAll('dialog[open]')) if (open !== dialog) open.close(); if (dialog.open) return; if (id === 'situationDialog') { const active = document.activeElement; if (active instanceof HTMLElement) situationDialogReturnFocus.set(dialog, active); situationDraft = { mode: state.mode, contexts: structuredClone(state.contexts) }; renderSituationSheet(); } dialog.showModal(); if (id === 'situationDialog') requestAnimationFrame(() => dialog.querySelector('.sheet-header .icon-button')?.focus()); }
 function closeDialog(id) { const dialog = document.getElementById(id); if (dialog instanceof HTMLDialogElement && dialog.open) dialog.close(); }
+function commitSituationDraft() { if (!situationDraft) return; const committed = situationDraft; state.mode = committed.mode; state.contexts = committed.contexts; state.settings.defaultMode = state.mode; persistSettings(); persistProfile(); resetSession(); situationDraft = null; closeDialog('situationDialog'); renderAll(); showToast(`Situation: ${document.querySelector('#situationLabel').textContent}`); }
 async function refreshWeather(location, { persistLocation = true } = {}) {
   if (weatherRefreshInFlight) return false;
   weatherRefreshInFlight = true;
@@ -319,18 +322,19 @@ function bindGlobalActions() {
     const open = event.target.closest('[data-open-dialog]'); if (open) { openDialog(open.dataset.openDialog); return; }
     const close = event.target.closest('[data-close-dialog]'); if (close) { closeDialog(close.dataset.closeDialog); return; }
     const warmth = event.target.closest('[data-warmth]'); if (warmth && !warmth.disabled) { state.warmthDirection = warmth.dataset.warmth; session = setWarmthOffset(session, state.warmthDirection); renderRecommendation(); return; }
-    const situation = event.target.closest('[data-situation]'); if (situation && MODES.has(situation.dataset.situation)) { state.mode = situation.dataset.situation; state.settings.defaultMode = state.mode; persistSettings(); persistProfile(); resetSession(); renderSituation(state.mode); renderSituationOptions(state.mode); renderSituationContext(state.mode, state.contexts[state.mode]); renderRecommendation(); syncNeckFeedbackStatus(); return; }
+    const situation = event.target.closest('[data-situation]'); if (situation && MODES.has(situation.dataset.situation)) { if (situation.closest('#situationDialog')) { if (!situationDraft) return; situationDraft.mode = situation.dataset.situation; renderSituationSheet(); document.querySelector(`#situationOptions [data-situation="${situationDraft.mode}"]`)?.focus(); return; } return; }
     const outfitCard = event.target.closest('[data-open-alternatives="true"]'); if (outfitCard && lastRecommendation) { alternativeSlot = lastRecommendation.slots.find((slot) => slot.phase === outfitCard.dataset.phase && slot.slot === outfitCard.dataset.slot) ?? null; if (alternativeSlot?.alternatives?.length) { renderAlternatives(alternativeSlot, assetStore, state.profile.styleTheme); openDialog('alternativeDialog'); } return; }
     const alternative = event.target.closest('[data-alternative-item-id]'); if (alternative) { session = lockItem(session, { phase: alternative.dataset.alternativePhase, slot: alternative.dataset.alternativeSlot, itemId: alternative.dataset.alternativeItemId, lockedAt: nowIso() }); closeDialog('alternativeDialog'); renderRecommendation(); showToast('Alternative gewählt – Outfit wurde neu bewertet.'); return; }
     const neck = event.target.closest('[data-neck-feedback]'); if (neck && NECK_FEEDBACKS.has(neck.dataset.neckFeedback)) { state.neckFeedback = neck.dataset.neckFeedback; closeDialog('neckFeedbackDialog'); renderRecommendation(); syncNeckFeedbackStatus(); showToast('Nackentest auf die aktuelle Empfehlung angewendet.'); return; }
     if (event.target.closest('#changeLookButton')) { state.visualSeed = nextVisualSeed(state.visualSeed); persistSettings(); renderCurrentRecommendation(); return; }
-    if (event.target.closest('#applySituationButton')) { closeDialog('situationDialog'); showToast(`Situation: ${document.querySelector('#situationLabel').textContent}`); }
+    if (event.target.closest('#applySituationButton')) { commitSituationDraft(); return; }
+    if (event.target.closest('#cancelSituationButton')) { closeDialog('situationDialog'); }
   });
 }
 function bindSituationContext() {
   document.querySelector('#situationContextFields').addEventListener('change', (event) => {
-    const target = event.target; const field = target.dataset?.contextField; if (!field) return; const context = state.contexts[state.mode];
-    if (state.mode === 'stroller' && field === 'strollerBehavior') {
+    const target = event.target; const field = target.dataset?.contextField; if (!field || !situationDraft) return; const mode = situationDraft.mode; const context = situationDraft.contexts[mode];
+    if (mode === 'stroller' && field === 'strollerBehavior') {
       context.strollerState = target.value === 'asleep' ? 'asleep' : 'awake';
       context.activity = target.value === 'very_active' ? 'active' : 'normal';
       context.activitySource = 'user';
@@ -340,16 +344,15 @@ function bindSituationContext() {
       else context[field] = target.value || null;
       if (field === 'activity') { context.activity = context.activity === 'active' ? 'active' : 'normal'; context.activitySource = 'user'; }
     }
-    if (state.mode === 'car' && field === 'cabinTempC') {
+    if (mode === 'car' && field === 'cabinTempC') {
       context.cabinTempSource = 'manual';
       const sourceField = document.querySelector('#situationContextFields [data-context-field="cabinTempSource"]');
       if (sourceField) sourceField.value = 'manual';
     }
-    if (state.mode === 'car' && field === 'cabinTempSource' && context.cabinTempSource === 'estimated') {
+    if (mode === 'car' && field === 'cabinTempSource' && context.cabinTempSource === 'estimated') {
       Object.assign(context, estimateCabinTemperature());
       renderSituationContext('car', context);
     }
-    persistSettings(); resetSession(); renderRecommendation(); syncNeckFeedbackStatus();
   });
 }
 function bindProfile() { const dialog = document.querySelector('#profileDialog'); dialog.addEventListener('close', () => { if (dialog.returnValue !== 'save') return; const name = document.querySelector('#profileName').value.trim(); const birthDate = document.querySelector('#profileBirthDate').value; const mobilityStage = document.querySelector('input[name="mobilityStage"]:checked')?.value ?? 'low_mobility'; const bias = document.querySelector('input[name="warmthBias"]:checked')?.value ?? 'neutral'; state.profile.displayName = name ? name.slice(0,40) : null; state.profile.birthDate = birthDate || null; state.profile.mobilityStage = MOBILITY_STAGES.has(mobilityStage) ? mobilityStage : 'low_mobility'; state.profile.warmthBias = BIASES.has(bias) ? bias : 'neutral'; persistProfile(); resetSession(); renderRecommendation(); syncNeckFeedbackStatus(); showToast('Babyprofil lokal gespeichert.'); }); }
@@ -433,7 +436,7 @@ async function importSettings(file) {
   }
 }
 function bindImportExport() { document.querySelector('#exportSettingsButton').addEventListener('click', exportSettings); document.querySelector('#importSettingsInput').addEventListener('change', (event) => importSettings(event.target.files?.[0])); }
-function bindDialogs() { for (const dialog of document.querySelectorAll('dialog')) dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); }); }
+function bindDialogs() { for (const dialog of document.querySelectorAll('dialog')) { dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); }); dialog.addEventListener('close', () => { if (dialog.id !== 'situationDialog') return; situationDraft = null; const returnFocus = situationDialogReturnFocus.get(dialog); situationDialogReturnFocus.delete(dialog); if (returnFocus?.isConnected) requestAnimationFrame(() => returnFocus.focus()); }); } }
 async function registerServiceWorker() { if (!('serviceWorker' in navigator)) return; try { await navigator.serviceWorker.register('./sw.js'); } catch { } }
 function shouldAutoRefreshWeather() {
   if (!navigator.onLine || state.runtime.weatherLoading || weatherRefreshInFlight || !state.location) return false;
@@ -449,6 +452,7 @@ async function refreshWeatherIfNeeded() {
 async function init() {
   if (migrateLegacyUiDefaults) persistSettings();
   bindGlobalActions(); bindSituationContext(); bindProfile(); bindLocation(); bindWeatherOverride(); bindStyleSettings(); bindImportExport(); bindDayTripPlanner({ getSnapshot: tripPlannerSnapshot, assetStore, showToast }); bindDialogs();
+  window.addEventListener('babyweather:recalculate-recommendation', () => { resetSession(); renderRecommendation(); syncNeckFeedbackStatus(); });
   window.addEventListener('babyweather:pull-to-refresh', () => { if (weatherRefreshInFlight) return; showToast('Aktuelles Wetter und Standort werden geladen …'); void refreshCurrentLocation(); });
   window.addEventListener('online', () => refreshWeather(state.location ?? DEFAULT_LOCATION));
   window.addEventListener('offline', () => { state.weather = cachedWeather(state.location ?? DEFAULT_LOCATION); state.runtime.weatherError = 'offline'; resetSession(); renderAll(); });

@@ -147,7 +147,17 @@
     </form>
   </dialog>
   <dialog id="situationDialog" class="sheet-dialog" aria-labelledby="situationTitle">
-    <div class="sheet"><header class="sheet-header"><h2 id="situationTitle">Situation wählen</h2><button class="icon-button" type="button" data-close-dialog="situationDialog" aria-label="Situation schließen">×</button></header><div class="situation-options" id="situationOptions"></div><div id="situationContextFields" class="situation-context" aria-live="polite"></div><button class="primary-button apply-situation" type="button" id="applySituationButton">Übernehmen</button></div>
+    <div class="sheet situation-sheet">
+      <header class="sheet-header"><h2 id="situationTitle">Situation wählen</h2><button class="icon-button" type="button" data-close-dialog="situationDialog" aria-label="Situation schließen">×</button></header>
+      <div class="situation-sheet-scroll" id="situationSheetScroll">
+        <div class="situation-options" id="situationOptions"></div>
+        <div id="situationContextFields" class="situation-context" aria-live="polite"></div>
+      </div>
+      <div class="situation-actions">
+        <button class="secondary-button" type="button" id="cancelSituationButton">Abbrechen</button>
+        <button class="primary-button apply-situation" type="button" id="applySituationButton">Übernehmen</button>
+      </div>
+    </div>
   </dialog>
   <dialog id="neckFeedbackDialog" class="sheet-dialog" aria-labelledby="neckFeedbackTitle">
     <div class="sheet">

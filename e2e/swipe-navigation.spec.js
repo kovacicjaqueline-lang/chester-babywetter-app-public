@@ -17,9 +17,17 @@ test('Situation lässt sich auf der Startseite nach links und rechts wischen', a
   await expect(page.locator('#situationLabel')).toHaveText('Kinderwagen');
 
   await swipe(page, '.situation-strip');
+  await expect(page.locator('#situationLabel')).toHaveText('Kinderwagen');
+  await expect(page.locator('#situationDialog')).toBeVisible();
+  await expect(page.locator('#situationOptions [data-situation="carrier"]')).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('#applySituationButton').click();
   await expect(page.locator('#situationLabel')).toHaveText('Trage');
 
   await swipe(page, '.situation-strip', { fromX: 80, toX: 280 });
+  await expect(page.locator('#situationLabel')).toHaveText('Trage');
+  await expect(page.locator('#situationDialog')).toBeVisible();
+  await expect(page.locator('#situationOptions [data-situation="stroller"]')).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('#applySituationButton').click();
   await expect(page.locator('#situationLabel')).toHaveText('Kinderwagen');
 });
 

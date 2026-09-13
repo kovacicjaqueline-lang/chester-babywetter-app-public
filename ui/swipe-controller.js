@@ -19,6 +19,7 @@ function cycleSituation(direction) {
   const current = selectedSituationMode();
   const index = Math.max(0, MODE_ORDER.indexOf(current));
   const nextIndex = (index + direction + MODE_ORDER.length) % MODE_ORDER.length;
+  document.querySelector('[data-open-dialog="situationDialog"]')?.click();
   const next = document.querySelector(`#situationOptions [data-situation="${MODE_ORDER[nextIndex]}"]`);
   next?.click();
 }
@@ -217,8 +218,7 @@ function renderHourlySelection(host) {
 }
 
 function triggerRecommendationRecalculation() {
-  const activeSituation = document.querySelector('#situationOptions [data-situation][aria-pressed="true"]');
-  activeSituation?.click();
+  window.dispatchEvent(new CustomEvent('babyweather:recalculate-recommendation'));
 }
 
 function bindHourlySelection() {
@@ -254,7 +254,7 @@ function initSwipeControls() {
   bindHorizontalSwipe(situationStrip, (direction) => {
     cycleSituation(direction);
     flash(situationStrip);
-    requestAnimationFrame(() => announce(`Situation: ${document.querySelector('#situationLabel')?.textContent ?? ''}`));
+    requestAnimationFrame(() => announce('Situation ausgewählt – zum Anwenden „Übernehmen“ tippen'));
   });
 
   const outfitCard = document.querySelector('.outfit-card');

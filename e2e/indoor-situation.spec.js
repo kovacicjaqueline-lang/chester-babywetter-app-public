@@ -14,7 +14,7 @@ test('Drinnen ist eine eigene Situation mit Raumtemperatur und Aktivität', asyn
   const indoor = page.locator('#situationDialog [data-situation="indoor"]');
   await expect(indoor).toContainText('Drinnen');
   await indoor.click();
-  await expect(page.locator('#situationLabel')).toHaveText('Drinnen');
+  await expect(page.locator('#situationLabel')).toHaveText('Kinderwagen');
 
   const roomTemp = page.locator('#situationDialog [data-context-field="roomTempC"]');
   const activity = page.locator('#situationDialog [data-context-field="activity"]');
@@ -24,6 +24,9 @@ test('Drinnen ist eine eigene Situation mit Raumtemperatur und Aktivität', asyn
   await expect(page.locator('#situationDialog [data-context-field="windProtection"]')).toHaveCount(0);
 
   await activity.selectOption('active');
+  await expect(page.locator('#situationLabel')).toHaveText('Kinderwagen');
+  await page.locator('#applySituationButton').click();
+  await expect(page.locator('#situationLabel')).toHaveText('Drinnen');
   await expect(page.locator('#confidencePill')).not.toHaveText('Lädt …');
   await expect(page.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
   await expect(page.locator('#outfitGrid [data-slot="outer"]')).toHaveCount(0);
