@@ -81,7 +81,7 @@ test('Sheets und Tagesausflug behalten Touchflächen und fokussierbare Aktionen'
   ]));
   await closeOpenDialog(page);
 
-  await page.locator('[data-open-dialog="situationDialog"]').click();
+  await page.locator('.situation-button[data-open-dialog="situationDialog"]').click();
   await expect(page.locator('#situationDialog')).toBeVisible();
   expectTouchTargets(await visibleMeasurements(page, [
     '#situationDialog .icon-button',
@@ -164,7 +164,7 @@ test('Tastaturfokus bleibt sichtbar und semantische Zustände bleiben erhalten',
   await expect(page.locator('#changeLookButton')).toBeFocused();
   await expect.poll(() => page.locator('#changeLookButton').evaluate((element) => getComputedStyle(element).outlineStyle)).not.toBe('none');
 
-  await page.locator('[data-open-dialog="situationDialog"]').click();
+  await page.locator('.situation-button[data-open-dialog="situationDialog"]').click();
   const selected = page.locator('#situationOptions [aria-pressed="true"]');
   await expect(selected).toHaveCount(1);
   await page.locator('#situationOptions [data-situation="carrier"]').click();
