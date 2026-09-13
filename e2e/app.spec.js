@@ -76,8 +76,9 @@ test('Trage berücksichtigt Körperwärme', async ({ page }) => {
 test('Autositz zeigt Warnung vor dicker Kleidung', async ({ page }) => {
   await openDemo(page);
   await chooseSituation(page, 'car');
-  await expect(page.locator('[data-notice-code="CAR_SEAT_NO_BULKY_LAYERS"]')).toBeVisible();
-  await expect(page.locator('#safetyNotice')).toContainText('keine dicke Kleidung');
+  const safetyBridge = page.locator('[data-safety-bridge="car-harness"]');
+  await expect(safetyBridge).toHaveAttribute('data-notice-code', 'CAR_SEAT_NO_BULKY_LAYERS');
+  await expect(safetyBridge).toContainText('dicken Overall');
 });
 
 test('Kleidung besitzt echte Bilder und sinnvolle Alt-Texte', async ({ page }) => {

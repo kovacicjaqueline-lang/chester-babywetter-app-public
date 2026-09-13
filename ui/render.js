@@ -42,6 +42,19 @@ const REDUNDANT_NOTICE_CODES = new Set([
   'WEATHER_DATA_STALE'
 ]);
 
+const BODY_LAYER_SLOTS = new Set(['base_torso', 'legs', 'mid', 'outer', 'sleep_underlayer']);
+const BODY_EXTREMITY_SLOTS = new Set(['feet', 'footwear', 'head', 'hands']);
+const SLOT_ORDER = Object.freeze([
+  'base_torso', 'legs', 'mid', 'outer', 'sleep_underlayer',
+  'feet', 'footwear', 'head', 'hands', 'sleep_bag',
+  'stroller_thermal_accessory', 'stroller_weather_accessory', 'carrier_accessory'
+]);
+const PHASE_COPY = Object.freeze({
+  main: 'Jetzt',
+  outdoor_transition: 'Zum/vom Auto',
+  in_car: 'Im Autositz'
+});
+
 function weatherIcon(code, isDay) {
   if (!Number.isFinite(code)) return '◌';
   if ([95, 96, 99].includes(code)) return '⛈';
@@ -72,7 +85,7 @@ function imageFallback(shell, label) {
   shell.append(fallback);
 }
 
-function clothingCard({ slotResult = null, itemId, asset, label, role = '', interactive = false }) {
+function clothingCard({ slotResult = null, itemId, asset, label, role = '', interactive = false, contextLabel = '' }) {
   const element = document.createElement(interactive ? 'button' : 'article');
   if (interactive) element.type = 'button';
   element.className = `clothing-card${interactive ? ' clothing-card-button' : ''}`;
@@ -80,8 +93,9 @@ function clothingCard({ slotResult = null, itemId, asset, label, role = '', inte
   if (slotResult) {
     element.dataset.slot = slotResult.slot;
     element.dataset.phase = slotResult.phase;
-    element.dataset.openAlternatives = 'true';
-    element.setAttribute('aria-label', `${label} – Alternativen anzeigen`);
+    const accessibleContext = [contextLabel, role].filter(Boolean).join(' · ');
+    element.setAttribute('aria-label', `${accessibleContext ? `${accessibleContext}: ` : ''}${label}${interactive ? ' – Alternativen anzeigen' : ''}`);
+    if (interactive) element.dataset.openAlternatives = 'true';
   }
 
   const shell = document.createElement('div');
@@ -118,6 +132,171 @@ function slotRole(slot) {
   return labels[slot] ?? 'Kleidungsstück';
 }
 
+function formatTemperature(value) {
+  if (!Number.isFinite(value)) return '–';
+  return `${Number.isInteger(value) ? value : value.toFixed(1)}°`;
+}
+
+function contextLabelFor(context) {
+  if (!context?.mode) return '';
+  if (context.mode === 'outdoor') return `Draußen · ${context.activity === 'active' ? 'aktiv' : 'normal'}`;
+  if (context.mode === 'stroller') return `Kinderwagen · ${context.strollerState === 'asleep' ? 'schlafend' : context.activity === 'active' ? 'sehr aktiv' : 'wach'}`;
+  if (context.mode === 'carrier') return 'Trage · Körperkontakt';
+  if (context.mode === 'car') return context.includeOutdoorTransition ? 'Autositz · Weg + Fahrt' : 'Autositz · Fahrt';
+  if (context.mode === 'indoor') return 'Drinnen · Raumtemperatur';
+  if (context.mode === 'sleep') return 'Schlafen · Raumtemperatur + TOG';
+  return '';
+}
+
+function statusDetail(recommendation) {
+  const fields = new Set(recommendation?.dataQuality?.missingFields ?? []);
+  const labels = [];
+  if ([...fields].some((field) => field.includes('uvIndex'))) labels.push('UV-Wert fehlt');
+  if ([...fields].some((field) => field.includes('windSpeedKmh'))) labels.push('Winddaten fehlen');
+  if ([...fields].some((field) => field.includes('precipProbabilityPct') || field === 'weather.precipitation')) labels.push('Regenangabe fehlt');
+  if ([...fields].some((field) => field.includes('hourly.coverage'))) labels.push('Wetterzeitraum unvollständig');
+  if (fields.has('context.roomTempC')) labels.push('Raumtemperatur fehlt');
+  if (fields.has('context.cabinTempC')) labels.push('Innenraumtemperatur fehlt');
+  if (fields.has('integration')) labels.push('Daten konnten nicht ausgewertet werden');
+  if (labels.length) return labels.slice(0, 2).join(' · ');
+  if (recommendation?.dataQuality?.usedEstimatedCabinTemperature) return 'Innenraumtemperatur geschätzt';
+  if (recommendation?.notices?.some((notice) => notice.code === 'MANUAL_LOCK_LIMITS_WEATHER_PROTECTION')) return 'Wetterschutz eingeschränkt';
+  if (recommendation?.notices?.some((notice) => notice.code === 'WEATHER_DATA_STALE')) return 'Wetterdaten nicht aktuell';
+  return recommendation?.status === 'blocked' ? 'Erforderliche Angaben fehlen' : 'Zusätzliche Angaben fehlen';
+}
+
+function statusTextFor(recommendation) {
+  if (!recommendation || recommendation.status === 'ready') return '';
+  const statusLabel = { ready_with_estimate: 'Mit Schätzung', partial: 'Teilweise', blocked: 'Angaben fehlen' }[recommendation.status] ?? 'Prüfen';
+  return `${statusLabel} – ${statusDetail(recommendation)}`;
+}
+
+function groupKeyForSlot(slot) {
+  if (BODY_LAYER_SLOTS.has(slot)) return 'body';
+  if (BODY_EXTREMITY_SLOTS.has(slot)) return 'extremities';
+  return 'situational';
+}
+
+function groupLabelFor(mode, groupKey) {
+  if (groupKey === 'body') return 'Am Körper';
+  if (groupKey === 'extremities') return 'Kopf, Hände & Füße';
+  if (mode === 'stroller') return 'Zusätzlich im Kinderwagen';
+  if (mode === 'carrier') return 'Zusätzlich in der Trage';
+  if (mode === 'sleep') return 'Zusätzlich im Schlafbereich';
+  return 'Situationsbezogen';
+}
+
+function phaseLabelFor(phase, context) {
+  if (phase === 'main') return context?.mode === 'car' ? 'Autositz' : contextLabelFor(context);
+  return PHASE_COPY[phase] ?? phase;
+}
+
+function renderGroup(slots, { mode, phase, context, assetStore, styleTheme, visual }) {
+  if (!slots.length) return null;
+  const groupKey = groupKeyForSlot(slots[0].slot);
+  const group = document.createElement('div');
+  group.className = 'outfit-group';
+  group.dataset.outfitGroup = groupKey;
+  const heading = document.createElement('h3');
+  heading.className = 'outfit-group-heading';
+  heading.textContent = groupLabelFor(mode, groupKey);
+  const grid = document.createElement('div');
+  grid.className = 'outfit-group-grid';
+  const phaseLabel = phaseLabelFor(phase, context);
+  let missingAssets = 0;
+  for (const slotResult of slots) {
+    const itemGroup = assetStore.group(slotResult.selected.itemId);
+    const asset = assetStore.resolveSlot(slotResult, visual.bySlot);
+    if (!asset && itemGroup?.assetPath !== null) missingAssets += 1;
+    grid.append(clothingCard({
+      slotResult,
+      itemId: slotResult.selected.itemId,
+      asset,
+      label: itemGroup?.label ?? slotResult.selected.itemId.replaceAll('_', ' '),
+      role: slotRole(slotResult.slot),
+      interactive: slotResult.alternatives?.length > 0,
+      contextLabel: phaseLabel
+    }));
+  }
+  group.append(heading, grid);
+  return { element: group, missingAssets };
+}
+
+function phaseSlots(recommendation, phase) {
+  return (recommendation?.slots ?? [])
+    .filter((slot) => slot.phase === phase && !slot.selected.itemId.endsWith('_none'))
+    .sort((left, right) => SLOT_ORDER.indexOf(left.slot) - SLOT_ORDER.indexOf(right.slot));
+}
+
+function renderPhase(recommendation, phaseEvaluation, context, assetStore, styleTheme, visual) {
+  const phase = phaseEvaluation.phase;
+  const section = document.createElement('section');
+  section.className = `outfit-phase${phase === 'in_car' ? ' outfit-phase--in-car' : ''}`;
+  section.dataset.outfitPhase = phase;
+  if (phase !== 'main' || context?.mode === 'car') {
+    const heading = document.createElement('h2');
+    heading.className = 'outfit-phase-heading';
+    heading.textContent = PHASE_COPY[phase] ?? contextLabelFor(context);
+    section.append(heading);
+  }
+
+  const slots = phaseSlots(recommendation, phase);
+  const grouped = new Map();
+  for (const slot of slots) {
+    const key = groupKeyForSlot(slot.slot);
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key).push(slot);
+  }
+  let missingAssets = 0;
+  for (const groupKey of ['body', 'extremities', 'situational']) {
+    const rendered = renderGroup(grouped.get(groupKey) ?? [], { mode: context?.mode, phase, context, assetStore, styleTheme, visual });
+    if (!rendered) continue;
+    missingAssets += rendered.missingAssets;
+    section.append(rendered.element);
+  }
+  if (!slots.length) {
+    const empty = document.createElement('div');
+    empty.className = 'outfit-empty outfit-phase-empty';
+    empty.innerHTML = phaseEvaluation.status === 'blocked'
+      ? '<strong>Noch keine sichere Empfehlung</strong><p>Für diese Phase fehlen noch Angaben. Die App erfindet keine Kombination.</p>'
+      : '<strong>Keine Kleidungsstücke vorgesehen</strong><p>Für diese Phase ist kein Kleidungsstück vorgesehen.</p>';
+    section.append(empty);
+  }
+  return { element: section, missingAssets };
+}
+
+function renderCarSafetyBridge(recommendation) {
+  const preferred = recommendation?.notices?.find((notice) => notice.code === 'CAR_SEAT_REMOVE_OUTER_BEFORE_HARNESS');
+  const fallback = recommendation?.notices?.find((notice) => notice.code === 'CAR_SEAT_NO_BULKY_LAYERS');
+  const notice = preferred ?? fallback;
+  if (!notice) return null;
+  const bridge = document.createElement('div');
+  bridge.className = 'outfit-safety-bridge';
+  bridge.dataset.safetyBridge = 'car-harness';
+  bridge.dataset.noticeCode = notice.code;
+  const marker = document.createElement('span');
+  marker.className = 'notice-marker';
+  marker.setAttribute('aria-hidden', 'true');
+  marker.textContent = '!';
+  const copy = document.createElement('div');
+  const title = document.createElement('strong');
+  const mapped = NOTICE_COPY[notice.code] ?? [notice.code, ''];
+  title.textContent = notice.code === 'CAR_SEAT_NO_BULKY_LAYERS' ? 'Vor dem Anschnallen: dicke Schichten ausziehen' : mapped[0];
+  const text = document.createElement('p');
+  text.textContent = notice.code === 'CAR_SEAT_NO_BULKY_LAYERS'
+    ? 'Voluminöse Jacke oder dicken Overall vor dem Anschnallen ausziehen.'
+    : mapped[1];
+  copy.append(title, text);
+  bridge.append(marker, copy);
+  return bridge;
+}
+
+function orderedPhasesForDisplay(phases, context) {
+  if (context?.mode !== 'car') return phases;
+  const order = { main: 0, outdoor_transition: 1, in_car: 2 };
+  return [...phases].sort((left, right) => (order[left.phase] ?? 99) - (order[right.phase] ?? 99));
+}
+
 function unavailableWeatherLabel(runtime) {
   if (runtime.weatherCacheStatus === 'expired') return 'Gespeichertes Wetter zu alt';
   if (runtime.weatherCacheStatus === 'location_mismatch') return 'Kein passender Wettercache';
@@ -125,26 +304,41 @@ function unavailableWeatherLabel(runtime) {
   return 'Wetter nicht verfügbar';
 }
 
-export function renderWeather(weather, location, runtime = {}) {
+export function renderWeather(weather, location, runtime = {}, context = null) {
   document.querySelector('#locationLabel').textContent = location?.label || weather?.location?.label || 'Standort wählen';
   const current = weather?.current ?? null;
-  document.querySelector('#temperatureValue').textContent = current ? `${Math.round(current.airTempC)}°` : '–';
-  document.querySelector('#weatherSymbol').textContent = current ? weatherIcon(current.weatherCode, current.isDay) : '◌';
-  document.querySelector('#weatherDescription').textContent = current
-    ? (runtime.weatherLoading ? 'Wetter und Standort werden aktualisiert …' : weatherDescription(current.weatherCode))
-    : unavailableWeatherLabel(runtime);
+  const roomMode = ['indoor', 'sleep'].includes(context?.mode);
+  const roomTemperature = Number.isFinite(context?.roomTempC) ? context.roomTempC : null;
+  const hero = document.querySelector('.weather-hero');
+  hero.classList.toggle('weather-hero--room', roomMode);
+  document.querySelector('#weatherHeading').textContent = roomMode ? (context.mode === 'sleep' ? 'Schlafraum' : 'Drinnen') : 'Jetzt';
+  document.querySelector('#temperatureValue').textContent = roomMode ? formatTemperature(roomTemperature) : (current ? `${Math.round(current.airTempC)}°` : '–');
+  document.querySelector('#weatherSymbol').textContent = roomMode ? (context.mode === 'sleep' ? '☾' : '⌂') : (current ? weatherIcon(current.weatherCode, current.isDay) : '◌');
+  document.querySelector('#weatherDescription').textContent = roomMode
+    ? (roomTemperature == null ? 'Raumtemperatur fehlt' : context.mode === 'sleep' ? 'Raumtemperatur für Schlafen' : 'Raumtemperatur für drinnen')
+    : current
+      ? (runtime.weatherLoading ? 'Wetter und Standort werden aktualisiert …' : weatherDescription(current.weatherCode))
+      : unavailableWeatherLabel(runtime);
+  document.querySelector('#weatherAdjustRow').hidden = roomMode;
 
   const facts = document.querySelector('#weatherFacts');
   facts.replaceChildren();
+  if (roomMode) {
+    const secondaryLabel = document.createElement('div');
+    secondaryLabel.id = 'weatherFactsLabel';
+    secondaryLabel.className = 'weather-facts-label';
+    secondaryLabel.textContent = 'Außenwetter · sekundär';
+    facts.append(secondaryLabel);
+  }
   const rows = current ? [
     ['Gefühlt', current.apparentTempC == null ? '–' : `${Math.round(current.apparentTempC)}°`],
     ['Wind', current.windSpeedKmh == null ? '–' : `${Math.round(current.windSpeedKmh)} km/h`],
     ['Regen', current.precipProbabilityPct == null ? '–' : `${Math.round(current.precipProbabilityPct)} %`],
     ['UV', current.uvIndex == null ? '–' : current.uvIndex.toFixed(1)]
   ] : [['Status', runtime.weatherCacheStatus === 'expired' ? 'Cache zu alt' : runtime.weatherCacheStatus === 'location_mismatch' ? 'Cache anderer Ort' : runtime.weatherError ? 'Fehler' : 'Keine Daten']];
-  for (const [nameText, valueText] of rows) {
+  for (const [index, [nameText, valueText]] of rows.entries()) {
     const row = document.createElement('div');
-    row.className = 'weather-fact';
+    row.className = `weather-fact${index === 0 ? ' weather-fact--apparent' : ''}`;
     const name = document.createElement('span');
     name.textContent = nameText;
     const strong = document.createElement('strong');
@@ -304,9 +498,9 @@ export function renderSituationContext(mode, context) {
   }
 }
 
-function renderNotices(recommendation) {
+function renderNotices(recommendation, excludedCodes = new Set()) {
   const host = document.querySelector('#safetyNotice');
-  const notices = recommendation?.notices?.filter((notice) => !REDUNDANT_NOTICE_CODES.has(notice.code)) ?? [];
+  const notices = recommendation?.notices?.filter((notice) => !REDUNDANT_NOTICE_CODES.has(notice.code) && !excludedCodes.has(notice.code)) ?? [];
   host.replaceChildren();
   host.hidden = notices.length === 0;
   for (const notice of notices) {
@@ -353,20 +547,19 @@ export function renderOutfit({ recommendation, context, warmthDirection, styleTh
   const visual = assetStore.resolveLook(recommendation, styleTheme, visualSeed);
   const visibleSlots = (recommendation?.slots ?? []).filter((slot) => !slot.selected.itemId.endsWith('_none'));
   let missingAssets = 0;
-  for (const slotResult of visibleSlots) {
-    const group = assetStore.group(slotResult.selected.itemId);
-    const asset = assetStore.resolveSlot(slotResult, visual.bySlot);
-    if (!asset && group?.assetPath !== null) missingAssets += 1;
-    grid.append(clothingCard({
-      slotResult,
-      itemId: slotResult.selected.itemId,
-      asset,
-      label: group?.label ?? slotResult.selected.itemId.replaceAll('_', ' '),
-      role: slotRole(slotResult.slot),
-      interactive: slotResult.alternatives?.length > 0
-    }));
+  const phaseEvaluations = recommendation?.phases ?? [];
+  const isCarWithTransition = context?.mode === 'car' && phaseEvaluations.some((phase) => phase.phase === 'outdoor_transition') && phaseEvaluations.some((phase) => phase.phase === 'in_car');
+  let safetyBridge = null;
+  for (const phaseEvaluation of orderedPhasesForDisplay(phaseEvaluations, context)) {
+    const rendered = renderPhase(recommendation, phaseEvaluation, context, assetStore, styleTheme, visual);
+    missingAssets += rendered.missingAssets;
+    grid.append(rendered.element);
+    if (isCarWithTransition && phaseEvaluation.phase === 'outdoor_transition') {
+      safetyBridge = renderCarSafetyBridge(recommendation);
+      if (safetyBridge) grid.append(safetyBridge);
+    }
   }
-  if (!visibleSlots.length) {
+  if (!phaseEvaluations.length || (!visibleSlots.length && !phaseEvaluations.length)) {
     const empty = document.createElement('div');
     empty.className = 'outfit-empty';
     empty.innerHTML = `<strong>${recommendation?.status === 'blocked' ? 'Noch keine sichere Empfehlung' : 'Empfehlung unvollständig'}</strong><p>Ergänze die fehlenden Angaben. Die App erfindet keine Kombination.</p>`;
@@ -385,6 +578,11 @@ export function renderOutfit({ recommendation, context, warmthDirection, styleTh
   const showStatus = recommendation?.status !== 'ready';
   pill.hidden = !showStatus;
   pill.style.display = showStatus ? '' : 'none';
+  const contextLabel = document.querySelector('#outfitContextLabel');
+  contextLabel.textContent = contextLabelFor(context);
+  const statusText = document.querySelector('#outfitStatusText');
+  statusText.textContent = statusTextFor(recommendation);
+  statusText.hidden = !statusText.textContent;
   for (const button of document.querySelectorAll('[data-warmth]')) {
     const active = button.dataset.warmth === warmthDirection;
     button.classList.toggle('is-active', active);
@@ -392,7 +590,8 @@ export function renderOutfit({ recommendation, context, warmthDirection, styleTh
     button.disabled = recommendation?.status === 'blocked';
   }
   document.querySelector('#changeLookButton').disabled = assetStore.status !== 'ready' || !visibleSlots.length;
-  renderNotices(recommendation);
+  const excludedNoticeCodes = safetyBridge ? new Set(['CAR_SEAT_REMOVE_OUTER_BEFORE_HARNESS', 'CAR_SEAT_NO_BULKY_LAYERS']) : new Set();
+  renderNotices(recommendation, excludedNoticeCodes);
   const assetNotice = document.querySelector('#assetNotice');
   assetNotice.hidden = assetStore.status === 'ready' && missingAssets === 0;
   if (!assetNotice.hidden) {
