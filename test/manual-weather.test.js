@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { applyManualWeatherOverride } from '../src/integration/manual-weather.js';
+import { applyManualWeatherOverride, manualWeatherCodeFor, normalizeTemperatureToHalfDegree } from '../src/integration/manual-weather.js';
 
 function sampleWeather() {
   return {
@@ -52,6 +52,7 @@ test('fresh API override is immutable, visible in origin and keeps only fresh AP
   assert.equal(result.current.precipProbabilityPct, 70);
   assert.equal(result.current.precipitationType, 'rain');
   assert.equal(result.current.weatherCode, 61);
+  assert.equal(result.current.cloudCoverPct, null);
   assert.deepEqual(result.hourly, original.hourly);
   assert.notEqual(result.hourly, original.hourly);
 });
@@ -109,4 +110,25 @@ test('manual override permits unknown optional values but validates ranges', () 
   assert.throws(() => applyManualWeatherOverride(sampleWeather(), { airTempC: 20, windSpeedKmh: -1, precipitationType:'none' }), RangeError);
   assert.throws(() => applyManualWeatherOverride(sampleWeather(), { airTempC: 20, precipProbabilityPct: 101, precipitationType:'none' }), RangeError);
   assert.throws(() => applyManualWeatherOverride({}, { airTempC: 20, precipitationType:'none' }), TypeError);
+});
+
+test('manual weather derives the displayed condition from the effective manual values', () => {
+  assert.equal(manualWeatherCodeFor({ precipitationType:'none', uvIndex:1 }), 3);
+  assert.equal(manualWeatherCodeFor({ precipitationType:'none', uvIndex:3 }), 1);
+  assert.equal(manualWeatherCodeFor({ precipitationType:'none', uvIndex:6 }), 0);
+  assert.equal(manualWeatherCodeFor({ precipitationType:'rain', uvIndex:6 }), 61);
+  assert.equal(manualWeatherCodeFor({ precipitationType:'snow', uvIndex:6 }), 71);
+  assert.equal(manualWeatherCodeFor({ precipitationType:'unknown', uvIndex:null }), null);
+  assert.equal(manualWeatherCodeFor({ precipitationType:'none', precipProbabilityPct:70, uvIndex:6 }), 61);
+});
+
+test('manual temperatures use the existing half-degree input precision', () => {
+  assert.equal(normalizeTemperatureToHalfDegree(18.4), 18.5);
+  assert.equal(normalizeTemperatureToHalfDegree(18.6), 18.5);
+  assert.equal(normalizeTemperatureToHalfDegree(-2.24), -2);
+  assert.equal(applyManualWeatherOverride(null, {
+    airTempC: 18.4,
+    precipitationType: 'none',
+    uvIndex: 6
+  }).current.airTempC, 18.4);
 });

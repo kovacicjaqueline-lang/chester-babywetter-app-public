@@ -2,7 +2,7 @@ import { createSession, lockItem, nextVisualSeed, recommendOutfit, setWarmthOffs
 import { createWeatherService } from './src/weather/index.js';
 import { estimateCabinTemperature } from './src/integration/cabin-temperature.js';
 import { WEATHER_CACHE_MAX_AGE_MINUTES, WEATHER_FRESH_MAX_AGE_MINUTES, assessCachedWeatherSeries, compensateWeatherRiskHorizon, normalizeWeatherBundle } from './src/integration/weather-series.js';
-import { applyManualWeatherOverride } from './src/integration/manual-weather.js';
+import { applyManualWeatherOverride, normalizeTemperatureToHalfDegree } from './src/integration/manual-weather.js';
 import { manualWeatherValuesFromPresets, precipitationPresetForWeather, sunPresetForWeather, windPresetForWeather } from './src/integration/manual-weather-presets.js';
 import { validateImportEnvelopeV1 } from './src/integration/settings-import.js';
 import { APP_VERSION } from './src/version.js';
@@ -224,7 +224,7 @@ function updateConnectionBanner() {
 function syncWeatherOverrideForm() {
   const current = state.weather?.current ?? null;
   const temperature = document.querySelector('#manualAirTempC');
-  if (temperature) temperature.value = current?.airTempC == null ? '' : String(current.airTempC);
+  if (temperature) temperature.value = current?.airTempC == null ? '' : String(normalizeTemperatureToHalfDegree(current.airTempC));
   const presetSelections = {
     manualWindPreset: windPresetForWeather(current),
     manualPrecipitationPreset: precipitationPresetForWeather(current),
@@ -383,7 +383,7 @@ function bindWeatherOverride() {
     try {
       const selected = (name) => document.querySelector(`input[name="${name}"]:checked`)?.value ?? 'unknown';
       const values = manualWeatherValuesFromPresets({
-        temperatureC: numberFromField('manualAirTempC', { required:true }),
+        temperatureC: normalizeTemperatureToHalfDegree(numberFromField('manualAirTempC', { required:true })),
         wind: selected('manualWindPreset'),
         precipitation: selected('manualPrecipitationPreset'),
         sun: selected('manualSunPreset')

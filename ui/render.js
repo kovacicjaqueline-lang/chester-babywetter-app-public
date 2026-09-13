@@ -43,6 +43,7 @@ const REDUNDANT_NOTICE_CODES = new Set([
 ]);
 
 function weatherIcon(code, isDay) {
+  if (!Number.isFinite(code)) return '◌';
   if ([95, 96, 99].includes(code)) return '⛈';
   if ([71, 73, 75, 77, 85, 86].includes(code)) return '❄';
   if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return '🌧';
