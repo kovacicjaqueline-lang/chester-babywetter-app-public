@@ -133,6 +133,10 @@ input:disabled {
   height: 44px;
 }
 
+.sheet-header .icon-button {
+  flex: 0 0 44px;
+}
+
 .weather-adjust-row .text-button,
 #changeLookButton,
 .text-button {
