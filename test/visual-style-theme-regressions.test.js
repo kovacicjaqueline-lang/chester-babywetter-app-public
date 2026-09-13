@@ -49,6 +49,7 @@ function runtimeManifestRecommendation(seed) {
 }
 
 function assertAutomaticStyleIsolation({ styleTheme }) {
+  const allowedThemes = new Set(visualManifest.sourceStyleProfiles[styleTheme].themeIds);
   for (let seed = 0; seed < 100; seed += 1) {
     const look = selectVisualLook({
       recommendation: runtimeManifestRecommendation(seed),
@@ -58,8 +59,13 @@ function assertAutomaticStyleIsolation({ styleTheme }) {
       visualSeed: seed
     });
 
+    assert.equal(allowedThemes.has(look.themeId), true, `unexpected ${styleTheme} theme for seed ${seed}: ${look.themeId}`);
     assert.equal(look.items.length, runtimeAssetManifest.assetGroups.length, `runtime manifest coverage changed for seed ${seed}`);
 
+    const forbiddenSourceStyle = styleTheme === 'boy' ? 'girl' : 'boy';
+    for (const item of look.items) {
+      assert.notEqual(item.sourceStyle, forbiddenSourceStyle, `${item.itemId} selected ${forbiddenSourceStyle} for ${styleTheme} style with seed ${seed}`);
+    }
   }
 }
 
