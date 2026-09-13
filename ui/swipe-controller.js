@@ -218,8 +218,7 @@ function renderHourlySelection(host) {
 }
 
 function triggerRecommendationRecalculation() {
-  const activeSituation = document.querySelector('#situationOptions [data-situation][aria-pressed="true"]');
-  activeSituation?.click();
+  window.dispatchEvent(new CustomEvent('babyweather:recalculate-recommendation'));
 }
 
 function bindHourlySelection() {

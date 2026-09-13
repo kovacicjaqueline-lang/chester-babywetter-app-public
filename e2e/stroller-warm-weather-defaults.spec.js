@@ -46,6 +46,7 @@ test('legacy implicit shade and partial wind defaults migrate once while later e
 
   await sun.selectOption('shade');
   await wind.selectOption('partial');
+  await page.locator('#applySituationButton').click();
   await page.reload();
   await expect(page.locator('#confidencePill')).not.toHaveText('Lädt …');
   await page.locator('[data-open-dialog="situationDialog"]').first().click();

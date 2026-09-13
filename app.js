@@ -452,6 +452,7 @@ async function refreshWeatherIfNeeded() {
 async function init() {
   if (migrateLegacyUiDefaults) persistSettings();
   bindGlobalActions(); bindSituationContext(); bindProfile(); bindLocation(); bindWeatherOverride(); bindStyleSettings(); bindImportExport(); bindDayTripPlanner({ getSnapshot: tripPlannerSnapshot, assetStore, showToast }); bindDialogs();
+  window.addEventListener('babyweather:recalculate-recommendation', () => { resetSession(); renderRecommendation(); syncNeckFeedbackStatus(); });
   window.addEventListener('babyweather:pull-to-refresh', () => { if (weatherRefreshInFlight) return; showToast('Aktuelles Wetter und Standort werden geladen …'); void refreshCurrentLocation(); });
   window.addEventListener('online', () => refreshWeather(state.location ?? DEFAULT_LOCATION));
   window.addEventListener('offline', () => { state.weather = cachedWeather(state.location ?? DEFAULT_LOCATION); state.runtime.weatherError = 'offline'; resetSession(); renderAll(); });
