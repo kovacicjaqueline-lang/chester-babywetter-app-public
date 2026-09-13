@@ -49,7 +49,7 @@
   display: none;
 }
 
-/* The shared circular icon button is 42px; planner controls keep the app's 44px minimum touch target. */
+/* Planner controls use the same 44px minimum touch target as the shared icon buttons. */
 .trip-sheet .icon-button {
   width: 44px;
   height: 44px;
@@ -89,6 +89,204 @@
   margin: 0;
 }
 
+/* UX-05: preserve the compact visual language while giving frequent controls a reliable
+   touch/focus area and keeping informative secondary copy readable on mobile. */
+:root {
+  --muted: #5c6e82;
+}
+
+.app-shell {
+  /* Keep content clear of the dynamically injected sticky bottom navigation. */
+  padding-bottom: calc(104px + var(--safe-bottom));
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+label.file-button:focus-within {
+  outline: 3px solid #4d6591;
+  outline-offset: 3px;
+}
+
+button:disabled,
+select:disabled,
+input:disabled {
+  opacity: .66;
+}
+
+.location-button,
+.icon-button,
+.weather-adjust-row .text-button,
+.warmth-control button,
+#changeLookButton,
+.neck-action-button,
+.quick-actions button {
+  min-height: 44px;
+}
+
+.location-button {
+  padding-block: 4px;
+}
+
+.icon-button {
+  width: 44px;
+  height: 44px;
+}
+
+.sheet-header .icon-button {
+  flex: 0 0 44px;
+}
+
+.weather-adjust-row .text-button,
+#changeLookButton,
+.text-button {
+  padding-block: 10px;
+}
+
+.weather-adjust-row .text-button {
+  color: #426b91;
+  font-size: .875rem;
+}
+
+.weather-hero .eyebrow,
+.weather-facts,
+.weather-fact--apparent {
+  font-size: .75rem;
+}
+
+.weather-hero .eyebrow {
+  color: #50677f;
+}
+
+.weather-fact span,
+.weather-fact:not(:first-child) span {
+  color: #52677e;
+  font-size: .75rem;
+  letter-spacing: .02em;
+  line-height: 1.15;
+}
+
+.weather-facts-label,
+.weather-fact--apparent span,
+.weather-override-status {
+  font-size: .75rem;
+}
+
+.confidence-pill {
+  color: #3f6155;
+  font-size: .75rem;
+}
+
+.warmth-control {
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.warmth-control button {
+  min-height: 44px;
+  padding: 7px 10px;
+  color: #596b7f;
+  font-size: .875rem;
+}
+
+.warmth-control button.is-active {
+  color: #334a63;
+}
+
+#changeLookButton {
+  min-width: 92px;
+  padding-inline: 10px;
+  color: #456c91;
+  font-size: .875rem;
+}
+
+.outfit-context-label,
+.outfit-status-text,
+.outfit-group-heading,
+.clothing-role,
+.reason-box p,
+.neck-check > div:last-child > p:not(.fine-print),
+.neck-check .fine-print,
+.neck-feedback-status,
+.hour-card small,
+.quick-actions button,
+.catalog-grid .clothing-role,
+.version-line {
+  font-size: .75rem;
+}
+
+.outfit-group-heading {
+  letter-spacing: .035em;
+}
+
+.clothing-name,
+.catalog-grid .clothing-name {
+  font-size: .875rem;
+  line-height: 1.2;
+}
+
+.notice-row strong {
+  font-size: .8125rem;
+}
+
+.notice-row p {
+  font-size: .75rem;
+}
+
+.outfit-safety-bridge strong,
+.outfit-empty strong,
+.estimate-card strong,
+.feedback-option strong {
+  font-size: .875rem;
+}
+
+.outfit-safety-bridge p,
+.outfit-empty p,
+.estimate-card p,
+.feedback-option small {
+  font-size: .75rem;
+}
+
+.neck-check h2 {
+  font-size: .875rem;
+}
+
+.neck-action-button {
+  min-height: 44px;
+  padding: 7px 11px;
+  color: #426182;
+  font-size: .875rem;
+}
+
+.hour-card strong {
+  font-size: .75rem;
+}
+
+.quick-actions button {
+  color: #536a82;
+  font-size: .875rem;
+}
+
+.trip-item-card strong {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.bottom-nav a,
+.bottom-nav button {
+  min-height: 46px;
+  color: #536a82;
+  font-size: .75rem;
+}
+
+.weather-choice-option,
+.choice-fieldset label,
+.check-field,
+.trip-choice-buttons button,
+.trip-check-field {
+  min-height: 44px;
+}
+
 @media (max-width: 520px) {
   .weather-fact--apparent {
     grid-column: auto;
@@ -97,4 +295,18 @@
     justify-items: start;
     margin-top: 0;
   }
+
+  .weather-facts {
+    gap: 6px 8px;
+  }
+
+  .weather-fact span,
+  .weather-fact:not(:first-child) span {
+    overflow-wrap: anywhere;
+  }
+}
+
+body[data-scene-time="night"] .weather-facts-label,
+body[data-scene-time="night"] .weather-adjust-row .text-button {
+  color: #e2edf8;
 }
