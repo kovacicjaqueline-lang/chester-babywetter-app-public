@@ -1354,6 +1354,8 @@ Statusregeln:
 
 Der Comparator darf ausschließlich von der Engine bereits als `equivalent` angebotene Alternativen zur Kontinuitätsoptimierung verwenden. `warmer`/`cooler` werden nicht aus Bequemlichkeit gleichgesetzt.
 
+Die unterste Kleidungsschicht bleibt während des gesamten Ausflugs unverändert. Das gilt für das Oberteil (`base_torso`) und das Unterteil (`legs`). Sie wird aus allen relevanten Checkpoints als jeweils kühlste dort benötigte, durchgehend tragbare Variante bestimmt und nicht einfach vom ersten Zeitpunkt übernommen. Bei 10 °C am Morgen und 25 °C später kann z. B. ein Kurzarmbody durchgehend getragen werden; die morgendliche Wärme kommt über darüberliegende Schichten. Für diese Slots erzeugt der Planer keine Wechsel-, Austausch- oder Repositionierungsaktion. Anpassungen erfolgen über darüberliegende Schichten, Zubehör oder notwendige Safety-Aktionen.
+
 Lexikographische Priorität:
 
 1. harte Safety-Regeln,

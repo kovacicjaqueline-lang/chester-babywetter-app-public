@@ -34,7 +34,10 @@ async function restartFromPersistedCacheOffline(page, context, ageMinutes) {
   });
   await context.setOffline(true);
   const offlinePage = await context.newPage();
+  await expect.poll(() => offlinePage.evaluate(() => navigator.onLine)).toBe(false);
   await offlinePage.goto('/?demo=1');
+  await expect(offlinePage.locator('#confidencePill')).not.toHaveText('Lädt …');
+  await expect(offlinePage.locator('#weatherDescription')).not.toHaveText('Wetter wird geladen …');
   return offlinePage;
 }
 
@@ -183,7 +186,9 @@ test('Kleidungsbilder bleiben nach Offline-Reload verfügbar', async ({ page, co
   expect(await page.locator('#outfitGrid img[data-clothing-image="true"]').count()).toBeGreaterThan(1);
 
   await context.setOffline(true);
+  await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);
   await page.reload();
+  await expect(page.locator('#confidencePill')).not.toHaveText('Lädt …');
   await expect(page.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
 
   const images = page.locator('#outfitGrid img[data-clothing-image="true"]');

@@ -86,6 +86,8 @@ Die bereits bestehende Semantik der auswählbaren Stundenprognose bleibt unverä
 
 ## 7. Relevante Outfitwechsel
 
+Die unterste Kleidungsschicht bleibt während des gesamten Ausflugs unverändert. Das gilt für das Oberteil (`base_torso`) und das Unterteil (`legs`). Sie wird nicht blind vom ersten Zeitpunkt übernommen: Der Planer betrachtet alle relevanten Checkpoints und wählt je Slot die kühlste dort benötigte, durchgehend tragbare Variante. Bei 10 °C am Morgen und 25 °C später kann dadurch z. B. ein Kurzarmbody als Basisschicht durchgehend getragen werden; morgens kommen warme obere Schichten darüber, die später abgelegt werden. Für die Basisschicht erzeugt der Planer keine Wechsel-, Austausch- oder Repositionierungsaktion. Anpassungen erfolgen über darüberliegende Schichten, Zubehör oder notwendige Safety-Aktionen.
+
 Zwei aufeinanderfolgende Checkpoints erzeugen nur dann eine sichtbare Wechselaktion, wenn der Nutzer praktisch etwas ändern muss.
 
 Immer relevant sind:
