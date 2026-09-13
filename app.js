@@ -138,7 +138,7 @@ function renderCurrentRecommendation() {
 }
 function renderRecommendation() {
   syncActiveWeatherFreshness();
-  renderWeather(state.weather, state.location, state.runtime);
+  renderWeather(state.weather, state.location, state.runtime, state.contexts[state.mode]);
   renderHourly(state.weather);
   updateConnectionBanner();
   lastRecommendation = computeRecommendation();
@@ -252,7 +252,7 @@ function syncNeckFeedbackStatus() {
   if (state.neckFeedback === 'cool') status.textContent = changed ? 'Kühl – wärmer angepasst' : 'Kühl – keine weitere sinnvolle oder sichere Schichtänderung möglich';
   else status.textContent = changed ? 'Heiß/schwitzig – dünner angepasst' : 'Heiß/schwitzig – keine weitere sinnvolle oder sichere Schichtänderung möglich';
 }
-function renderAll() { document.body.dataset.styleTheme = state.profile.styleTheme; renderWeather(state.weather, state.location, state.runtime); renderHourly(state.weather); renderSituation(state.mode); renderSituationOptions(state.mode); renderSituationContext(state.mode, state.contexts[state.mode]); renderRecommendation(); renderCatalog(assetStore, state.profile.styleTheme); syncForms(); syncNeckFeedbackStatus(); updateConnectionBanner(); }
+function renderAll() { document.body.dataset.styleTheme = state.profile.styleTheme; renderWeather(state.weather, state.location, state.runtime, state.contexts[state.mode]); renderHourly(state.weather); renderSituation(state.mode); renderSituationOptions(state.mode); renderSituationContext(state.mode, state.contexts[state.mode]); renderRecommendation(); renderCatalog(assetStore, state.profile.styleTheme); syncForms(); syncNeckFeedbackStatus(); updateConnectionBanner(); }
 function syncForms() { document.querySelector('#profileName').value = state.profile.displayName ?? ''; document.querySelector('#profileBirthDate').value = state.profile.birthDate ?? ''; for (const input of document.querySelectorAll('input[name="mobilityStage"]')) input.checked = input.value === state.profile.mobilityStage; document.querySelector('#locationInput').value = state.location?.label ?? ''; for (const input of document.querySelectorAll('input[name="warmthBias"]')) input.checked = input.value === state.profile.warmthBias; for (const input of document.querySelectorAll('input[name="styleTheme"]')) input.checked = input.value === state.profile.styleTheme; document.querySelector('#appVersion').textContent = APP_VERSION; syncWeatherOverrideForm(); }
 function showToast(message) { const toast = document.querySelector('#toast'); toast.textContent = message; toast.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { toast.hidden = true; }, 3200); }
 function openDialog(id) { const dialog = document.getElementById(id); if (!(dialog instanceof HTMLDialogElement)) return; for (const open of document.querySelectorAll('dialog[open]')) if (open !== dialog) open.close(); if (!dialog.open) dialog.showModal(); }
@@ -260,7 +260,7 @@ function closeDialog(id) { const dialog = document.getElementById(id); if (dialo
 async function refreshWeather(location, { persistLocation = true } = {}) {
   if (weatherRefreshInFlight) return false;
   weatherRefreshInFlight = true;
-  state.runtime.weatherLoading = true; state.runtime.weatherError = null; state.location = location; syncActiveWeatherFreshness(location); renderWeather(state.weather, state.location, state.runtime); updateConnectionBanner();
+  state.runtime.weatherLoading = true; state.runtime.weatherError = null; state.location = location; syncActiveWeatherFreshness(location); renderWeather(state.weather, state.location, state.runtime, state.contexts[state.mode]); updateConnectionBanner();
   if (!navigator.onLine) { state.weather = cachedWeather(location); state.runtime.weatherLoading = false; state.runtime.weatherError = 'offline'; resetSession(); renderAll(); weatherRefreshInFlight = false; return false; }
   try { const bundle = persistLocation ? await weatherService.useLocation(location, { demoMode: DEMO_MODE }) : await weatherService.loadWeather(location, { demoMode: DEMO_MODE }); state.weather = normalizeWeatherBundle(bundle, location); state.location = state.weather.location; cacheWeather(state.weather); clearCacheRuntime(); return true; }
   catch (error) { state.weather = cachedWeather(location); state.runtime.weatherError = error?.code ?? error?.message ?? 'weather_error'; return false; }
@@ -272,7 +272,7 @@ async function refreshCurrentLocation({ successMessage = 'Aktuelles Wetter und S
   const fallbackLocation = state.location ?? DEFAULT_LOCATION;
   state.runtime.weatherLoading = true;
   state.runtime.weatherError = null;
-  renderWeather(state.weather, fallbackLocation, state.runtime);
+  renderWeather(state.weather, fallbackLocation, state.runtime, state.contexts[state.mode]);
   updateConnectionBanner();
   let success = false;
   try {
