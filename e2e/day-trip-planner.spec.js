@@ -49,6 +49,27 @@ async function chooseFullForecastWindow(page, { moveStartForward = false } = {})
   await page.locator('#tripEndTime').selectOption(refreshedEndValues.at(-1));
 }
 
+test('Tagesausflug-Ergebnis bleibt in den relevanten mobilen Breiten ohne Overflow', async ({ page }) => {
+  for (const width of [560, 520, 390, 375]) {
+    await page.setViewportSize({ width, height: 844 });
+    await openDemo(page);
+    await openPlanner(page);
+    await chooseFullForecastWindow(page, { moveStartForward: true });
+    await page.locator('#tripAddSegmentButton').click();
+    await page.locator('.trip-segment-card').nth(1).locator('[data-trip-segment-mode="carrier"]').click();
+    await page.locator('#tripGenerateButton').click();
+    await expect(page.locator('#tripResultView')).toBeVisible();
+
+    const sheetMetrics = await page.locator('.trip-sheet').evaluate((node) => ({
+      clientWidth: node.clientWidth,
+      scrollWidth: node.scrollWidth
+    }));
+    expect(sheetMetrics.scrollWidth).toBeLessThanOrEqual(sheetMetrics.clientWidth + 1);
+    await expect(page.getByTestId('trip-start-outfit')).toBeVisible();
+    await page.locator('#tripDoneButton').click();
+  }
+});
+
 test('Tagesausflug lässt Zeitraum und Segment wählen und zeigt Start-Outfit, Packliste und relevante Wechsel', async ({ page }) => {
   await openDemo(page);
   await openPlanner(page);
