@@ -174,6 +174,7 @@ input:disabled {
 
 .warmth-control {
   gap: 4px;
+  flex-wrap: wrap;
 }
 
 .warmth-control button {
@@ -292,4 +293,9 @@ input:disabled {
   .weather-fact:not(:first-child) span {
     overflow-wrap: anywhere;
   }
+}
+
+body[data-scene-time="night"] .weather-facts-label,
+body[data-scene-time="night"] .weather-adjust-row .text-button {
+  color: #e2edf8;
 }
