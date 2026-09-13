@@ -89,11 +89,6 @@ function formatTime(value) {
   return new Intl.DateTimeFormat('de-AT', { hour: '2-digit', minute: '2-digit' }).format(new Date(value));
 }
 
-function formatDateTime(value) {
-  if (!value) return '–';
-  return new Intl.DateTimeFormat('de-AT', { weekday: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
-}
-
 function weatherPoints(weather) {
   if (!weather || typeof weather !== 'object') return [];
   const byTime = new Map();
@@ -340,10 +335,10 @@ function ensureStyles() {
     .trip-segment-details{margin-top:10px;border-top:0;padding-top:0}.trip-segment-details summary{min-height:44px;display:flex;align-items:center;cursor:pointer;color:var(--accent);font-size:.82rem;font-weight:800;border:1px solid var(--line);border-radius:12px;background:#fff;padding:0 11px;list-style:none}.trip-segment-details summary::-webkit-details-marker{display:none}.trip-segment-details summary::after{content:'⌄';margin-left:auto;font-size:1rem;line-height:1}.trip-segment-details[open] summary::after{content:'⌃'}.trip-context-fields{display:grid;gap:10px;padding:10px 0 2px}.trip-choice-field{display:grid;gap:5px}.trip-choice-label{font-size:.76rem;color:var(--muted);font-weight:700}.trip-choice-buttons{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px}.trip-choice-buttons button{min-height:44px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);font-size:.78rem;font-weight:700}.trip-choice-buttons button.is-selected{border-color:rgba(155,109,85,.5);background:#fff7f1;color:var(--accent)}.trip-check-field{min-height:44px;display:flex;align-items:center;gap:9px;font-size:.82rem;font-weight:700}.trip-check-field input{width:20px;height:20px}.trip-inline-safety{border-radius:13px;background:#fff3e5;padding:10px 12px;color:#6c4d32;font-size:.78rem;font-weight:700;line-height:1.4}
     .trip-add-button{min-height:44px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--accent);padding:0 12px;font-weight:800}.trip-add-button:disabled{opacity:.45}.trip-generate{width:100%;min-height:52px}.trip-error{border-radius:14px;background:#fff0ed;color:#8a3d32;padding:11px 13px;margin-bottom:14px;font-size:.84rem;font-weight:700}.trip-error[hidden]{display:none!important}
     .trip-result-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:14px}.trip-result-head h3{margin:2px 0 0;font-size:1.1rem}.trip-status-pill{display:inline-flex;align-items:center;min-height:30px;border-radius:999px;background:#f3ece6;padding:0 10px;font-size:.72rem;font-weight:800}.trip-status-pill[data-status="partial"],.trip-status-pill[data-status="blocked"]{background:#fff0ed;color:#8a3d32}.trip-status-pill[data-status="ready_with_estimate"]{background:#fff4df;color:#74531e}
-    .trip-safety-list{display:grid;gap:8px;margin:0 0 16px}.trip-safety-notice{border-left:4px solid #c77f4c;border-radius:12px;background:#fff6e9;padding:10px 12px}.trip-safety-notice strong{display:block;font-size:.84rem}.trip-safety-notice p{margin:3px 0 0;color:#6b574a;font-size:.76rem;line-height:1.4}.trip-safety-notice[data-severity="hard_rule"]{border-left-color:#b24b3d;background:#fff0ed}
+    .trip-safety-list{display:grid;gap:8px;margin:0 0 16px}.trip-safety-notice{border-left:4px solid #c77f4c;border-radius:12px;background:#fff6e9;padding:10px 12px}.trip-safety-notice strong{display:block;font-size:.84rem}.trip-safety-notice p{margin:3px 0 0;color:#6b574a;font-size:.76rem;line-height:1.4}.trip-safety-notice[data-severity="hard_rule"]{border-left-color:#b24b3d;background:#fff0ed}.trip-notice-summary{margin:0 0 18px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.62);overflow:hidden}.trip-notice-toggle{width:100%;min-height:48px;display:flex;align-items:center;gap:8px;border:0;background:transparent;color:var(--accent);padding:0 13px;text-align:left;font:inherit;font-size:.82rem;font-weight:800}.trip-notice-toggle::after{content:'⌄';margin-left:auto;font-size:1rem}.trip-notice-toggle[aria-expanded="true"]::after{content:'⌃'}.trip-notice-details{padding:0 10px 10px}.trip-notice-details[hidden]{display:none!important}.trip-notice-details .trip-safety-list{margin:0}.trip-notice-details .trip-safety-notice{background:#fff;border-left-color:#c9ad99}.trip-notice-details .trip-safety-notice[data-severity="caution"]{background:#fff6e9}
     .trip-result-section{margin:0 0 18px}.trip-result-section h4{margin:0 0 9px;font-size:.98rem}.trip-outfit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(94px,1fr));gap:8px}.trip-item-card{min-width:0;border:1px solid var(--line);border-radius:15px;background:#fff;padding:8px;text-align:center}.trip-item-image{height:78px;display:grid;place-items:center;overflow:hidden}.trip-item-image img{max-width:100%;max-height:100%;object-fit:contain}.trip-item-card strong{display:block;margin-top:5px;font-size:.72rem;line-height:1.2}.trip-item-card small{display:block;margin-top:2px;color:var(--muted);font-size:.64rem}
-    .trip-pack-list{display:grid;gap:7px}.trip-pack-item{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:10px;min-height:58px;border:1px solid var(--line);border-radius:14px;background:#fff;padding:7px 10px}.trip-pack-thumb{width:44px;height:44px;display:grid;place-items:center;overflow:hidden}.trip-pack-thumb img{max-width:100%;max-height:100%;object-fit:contain}.trip-pack-item strong{font-size:.82rem}.trip-pack-item small{color:var(--muted);font-size:.7rem}.trip-empty{margin:0;border:1px dashed var(--line);border-radius:14px;padding:12px;color:var(--muted);font-size:.82rem}
-    .trip-timeline{display:grid;gap:0;margin-left:8px}.trip-action,.trip-segment-marker{position:relative;border-left:2px solid var(--line);padding:0 0 14px 17px}.trip-action:last-child,.trip-segment-marker:last-child{padding-bottom:0}.trip-action::before,.trip-segment-marker::before{content:"";position:absolute;left:-6px;top:5px;width:10px;height:10px;border-radius:50%;background:#b58b72;border:2px solid #fff}.trip-segment-marker::before{background:#d5c2b6}.trip-segment-marker{color:var(--muted)}.trip-segment-marker strong{display:block;margin-top:3px;font-size:.82rem;color:var(--ink)}.trip-action[data-safety-critical="true"]::before{background:#b24b3d}.trip-action-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;color:var(--muted);font-size:.7rem}.trip-action strong{display:block;margin-top:3px;font-size:.84rem}.trip-action[data-safety-critical="true"] strong{color:#8a3d32}.trip-weather-chip{border-radius:999px;background:#f4eee9;padding:2px 7px}.trip-coverage{border-radius:13px;background:#fff4df;color:#74531e;padding:10px 12px;margin-bottom:14px;font-size:.8rem;font-weight:700}.trip-result-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}.trip-result-actions button{min-height:48px}
+    .trip-pack-list{display:grid;gap:7px}.trip-pack-item{display:grid;grid-template-columns:44px minmax(0,1fr);align-items:start;gap:10px;min-height:58px;border:1px solid var(--line);border-radius:14px;background:#fff;padding:7px 10px}.trip-pack-thumb{width:44px;height:44px;display:grid;place-items:center;overflow:hidden}.trip-pack-thumb img{max-width:100%;max-height:100%;object-fit:contain}.trip-pack-copy{min-width:0;padding:2px 0}.trip-pack-item strong{display:block;font-size:.82rem;line-height:1.25;overflow-wrap:anywhere;word-break:break-word}.trip-pack-item small{display:block;margin-top:3px;color:var(--muted);font-size:.7rem;line-height:1.25}.trip-empty{margin:0;border:1px dashed var(--line);border-radius:14px;padding:12px;color:var(--muted);font-size:.82rem}
+    .trip-timeline{display:grid;gap:0;margin-left:8px}.trip-time-group{position:relative;border-left:2px solid var(--line);padding:0 0 14px 17px}.trip-time-group:last-child{padding-bottom:0}.trip-time-group::before{content:"";position:absolute;left:-6px;top:5px;width:10px;height:10px;border-radius:50%;background:#b58b72;border:2px solid #fff}.trip-time-group[data-has-safety="true"]::before{background:#b24b3d}.trip-time-group-head{display:flex;align-items:center;gap:7px;flex-wrap:wrap;min-height:24px}.trip-time-group-title{margin:0;color:var(--accent);font-size:.8rem;line-height:1.25}.trip-time-group-title time{font-weight:900}.trip-time-group-count{font-weight:700}.trip-time-group-list{display:grid;gap:7px;margin:8px 0 0;padding:0;list-style:none}.trip-action,.trip-segment-marker{position:relative;padding:0}.trip-segment-marker{color:var(--muted)}.trip-segment-marker strong{display:block;font-size:.82rem;color:var(--ink)}.trip-action-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;color:var(--muted);font-size:.7rem}.trip-action strong{display:block;font-size:.84rem;line-height:1.3}.trip-action[data-safety-critical="true"] strong{color:#8a3d32}.trip-action-priority{display:inline-flex;align-items:center;width:max-content;border-radius:999px;background:#fff0ed;color:#8a3d32;padding:2px 7px;font-size:.66rem;font-weight:800}.trip-weather-chip{border-radius:999px;background:#f4eee9;padding:2px 7px}.trip-coverage{border-radius:13px;background:#fff4df;color:#74531e;padding:10px 12px;margin-bottom:14px;font-size:.8rem;font-weight:700}.trip-result-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}.trip-result-actions button{min-height:48px}
     @media(max-width:430px){.trip-sheet{max-height:96dvh}.trip-time-grid{grid-template-columns:1fr 1fr}.trip-mode-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.trip-outfit-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.trip-result-actions{grid-template-columns:1fr}.trip-entry-row{justify-content:stretch}.trip-entry-button{width:100%}}
   `;
   document.head.append(style);
@@ -395,9 +390,10 @@ function ensureUi() {
         </div>
         <div id="tripResultView" hidden>
           <div class="trip-result-head"><div><span id="tripResultStatus" class="trip-status-pill"></span><h3 id="tripResultTitle" tabindex="-1">Dein Tagesplan</h3></div><span id="tripResultRange" class="trip-segment-time-label"></span></div>
-          <div id="tripCoverageNotice" class="trip-coverage" hidden></div>
           <div id="tripSafetyNotices" class="trip-safety-list" aria-label="Sicherheitshinweise"></div>
           <section class="trip-result-section" aria-labelledby="tripStartOutfitHeading"><h4 id="tripStartOutfitHeading">Start-Outfit</h4><div id="tripStartOutfit" class="trip-outfit-grid" data-testid="trip-start-outfit"></div></section>
+          <div id="tripCoverageNotice" class="trip-coverage" hidden></div>
+          <div id="tripHintSummary" class="trip-notice-summary" hidden></div>
           <section class="trip-result-section" aria-labelledby="tripPackHeading"><h4 id="tripPackHeading">Mitnehmen</h4><div id="tripPackList" class="trip-pack-list" data-testid="trip-pack-list"></div></section>
           <section class="trip-result-section" aria-labelledby="tripTimelineHeading"><h4 id="tripTimelineHeading">Tagesverlauf</h4><div id="tripTimeline" class="trip-timeline" data-testid="trip-timeline"></div></section>
           <div class="trip-result-actions"><button id="tripEditButton" class="secondary-button" type="button">Plan bearbeiten</button><button id="tripDoneButton" class="primary-button" type="button">Fertig</button></div>
@@ -457,9 +453,7 @@ function packItemRow(assetStore, styleTheme, item) {
   const meta = document.createElement('small');
   meta.textContent = `Ab ${formatTime(item.firstNeededAt)}`;
   copy.append(label, meta);
-  const time = document.createElement('small');
-  time.textContent = formatTime(item.firstNeededAt);
-  row.append(imageFor(assetStore, item.itemId, styleTheme, 'trip-pack-thumb'), copy, time);
+  row.append(imageFor(assetStore, item.itemId, styleTheme, 'trip-pack-thumb'), copy);
   return row;
 }
 
@@ -493,27 +487,72 @@ function weatherAt(snapshot, at) {
   return weatherPoints(snapshot.weather).find((point) => point.time === at) ?? null;
 }
 
-function renderNotices(result) {
-  const host = document.querySelector('#tripSafetyNotices');
-  host.replaceChildren();
-  const notices = (result.notices ?? []).filter((notice) => notice.severity === 'hard_rule' || notice.severity === 'caution' || NOTICE_COPY[notice.code]);
-  for (const notice of notices) {
-    const mapped = NOTICE_COPY[notice.code] ?? [notice.code.replaceAll('_', ' '), ''];
-    const row = document.createElement('div');
-    row.className = 'trip-safety-notice';
-    row.dataset.tripNoticeCode = notice.code;
-    row.dataset.severity = notice.severity;
-    const title = document.createElement('strong');
-    title.textContent = mapped[0];
-    row.append(title);
-    if (mapped[1]) {
-      const text = document.createElement('p');
-      text.textContent = mapped[1];
-      row.append(text);
-    }
-    host.append(row);
+function noticeRow(notice) {
+  const mapped = NOTICE_COPY[notice.code] ?? [notice.code.replaceAll('_', ' '), ''];
+  const row = document.createElement('div');
+  row.className = 'trip-safety-notice';
+  row.dataset.tripNoticeCode = notice.code;
+  row.dataset.severity = notice.severity ?? 'info';
+  const title = document.createElement('strong');
+  title.textContent = mapped[0];
+  row.append(title);
+  if (mapped[1]) {
+    const text = document.createElement('p');
+    text.textContent = mapped[1];
+    row.append(text);
   }
-  setHidden(host, host.children.length === 0);
+  return row;
+}
+
+function renderNotices(result) {
+  const hardHost = document.querySelector('#tripSafetyNotices');
+  hardHost.replaceChildren();
+  const notices = result.notices ?? [];
+  const hardNotices = notices.filter((notice) => notice.severity === 'hard_rule');
+  const otherNotices = notices.filter((notice) => notice.severity !== 'hard_rule');
+  for (const notice of hardNotices) hardHost.append(noticeRow(notice));
+  setHidden(hardHost, hardHost.children.length === 0);
+
+  const summary = document.querySelector('#tripHintSummary');
+  summary.replaceChildren();
+  if (!otherNotices.length) {
+    setHidden(summary, true);
+    return;
+  }
+
+  const detailsId = 'tripHintDetails';
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'trip-notice-toggle';
+  toggle.id = 'tripHintToggle';
+  toggle.setAttribute('aria-expanded', 'false');
+  toggle.setAttribute('aria-controls', detailsId);
+  toggle.textContent = `${otherNotices.length} ${otherNotices.length === 1 ? 'Hinweis' : 'Hinweise'}`;
+
+  const details = document.createElement('div');
+  details.id = detailsId;
+  details.className = 'trip-notice-details';
+  details.hidden = true;
+  details.setAttribute('role', 'region');
+  details.setAttribute('aria-labelledby', toggle.id);
+  const list = document.createElement('div');
+  list.className = 'trip-safety-list';
+  for (const notice of otherNotices) list.append(noticeRow(notice));
+  details.append(list);
+
+  const updateToggleLabel = (expanded) => {
+    const action = expanded ? 'ausblenden' : 'anzeigen';
+    toggle.setAttribute('aria-label', `${otherNotices.length} weitere ${otherNotices.length === 1 ? 'Hinweis' : 'Hinweise'} ${action}`);
+  };
+  updateToggleLabel(false);
+  toggle.addEventListener('click', () => {
+    const expanded = toggle.getAttribute('aria-expanded') !== 'true';
+    toggle.setAttribute('aria-expanded', String(expanded));
+    details.hidden = !expanded;
+    updateToggleLabel(expanded);
+  });
+  summary.append(toggle, details);
+  setHidden(summary, false);
 }
 
 function renderCoverage(result) {
@@ -539,36 +578,103 @@ function appendTimelineWeather(meta, snapshot, at) {
   meta.append(weather);
 }
 
-function timelineActionRow(action, snapshot, assetStore, segmentModes) {
-  const row = document.createElement('article');
+function timelineActionRow(action, assetStore, segmentModes) {
+  const row = document.createElement('li');
   row.className = 'trip-action';
   row.dataset.tripAction = action.actionId;
   row.dataset.safetyCritical = String(Boolean(action.safetyCritical));
-  const meta = document.createElement('div');
-  meta.className = 'trip-action-meta';
-  const time = document.createElement('span');
-  time.textContent = formatDateTime(action.at);
-  meta.append(time);
-  appendTimelineWeather(meta, snapshot, action.at);
+  if (action.safetyCritical) {
+    const priority = document.createElement('span');
+    priority.className = 'trip-action-priority';
+    priority.textContent = 'Sicherheitsaktion';
+    row.append(priority);
+  }
   const text = document.createElement('strong');
   text.textContent = actionText(action, assetStore, segmentModes.get(action.segmentId));
-  row.append(meta, text);
+  row.append(text);
   return row;
 }
 
-function timelineSegmentRow(segment, snapshot) {
-  const row = document.createElement('article');
+function timelineSegmentRow(segment) {
+  const row = document.createElement('li');
   row.className = 'trip-segment-marker';
   row.dataset.tripSegmentMarker = segment.segmentId;
   const meta = document.createElement('div');
   meta.className = 'trip-action-meta';
-  const time = document.createElement('span');
-  time.textContent = formatDateTime(segment.startTime);
-  meta.append(time);
-  appendTimelineWeather(meta, snapshot, segment.startTime);
+  meta.textContent = 'Situationswechsel';
   const text = document.createElement('strong');
   text.textContent = `Situation: ${MODE_COPY[segment.mode]?.label ?? segment.mode}`;
   row.append(meta, text);
+  return row;
+}
+
+function groupTimelineEntries(entries) {
+  const groups = [];
+  const byTime = new Map();
+  entries.forEach((entry, index) => {
+    const parsed = parseTime(entry.at);
+    const key = parsed ?? entry.at;
+    let group = byTime.get(key);
+    if (!group) {
+      group = { at: entry.at, entries: [] };
+      byTime.set(key, group);
+      groups.push(group);
+    }
+    group.entries.push({ ...entry, index });
+  });
+  return groups
+    .sort((left, right) => parseTime(left.at) - parseTime(right.at))
+    .map((group) => ({
+      ...group,
+      entries: group.entries.sort((left, right) => {
+        const leftPriority = left.kind === 'action' && left.action.safetyCritical ? 0 : left.kind === 'action' ? 1 : 2;
+        const rightPriority = right.kind === 'action' && right.action.safetyCritical ? 0 : right.kind === 'action' ? 1 : 2;
+        return leftPriority - rightPriority || left.index - right.index;
+      })
+    }));
+}
+
+function timelineGroupRow(group, snapshot, assetStore, segmentModes, groupIndex) {
+  const actions = group.entries.filter((entry) => entry.kind === 'action').map((entry) => entry.action);
+  const hasSafety = actions.some((action) => action.safetyCritical);
+  const row = document.createElement('section');
+  row.className = 'trip-time-group';
+  row.dataset.tripTimeGroup = group.at;
+  row.dataset.tripActionCount = String(actions.length);
+  row.dataset.hasSafety = String(hasSafety);
+  const headingId = `trip-time-group-${groupIndex + 1}`;
+  row.setAttribute('aria-labelledby', headingId);
+
+  const header = document.createElement('div');
+  header.className = 'trip-time-group-head';
+  const heading = document.createElement('h5');
+  heading.id = headingId;
+  heading.className = 'trip-time-group-title';
+  const time = document.createElement('time');
+  time.dateTime = group.at;
+  time.textContent = formatTime(group.at);
+  heading.append(time, document.createTextNode(' – '));
+  const count = document.createElement('span');
+  count.className = 'trip-time-group-count';
+  count.textContent = actions.length === 0
+    ? 'Situationswechsel'
+    : `${actions.length} ${actions.length === 1 ? 'Änderung' : 'Änderungen'}`;
+  heading.append(count);
+  header.append(heading);
+  appendTimelineWeather(header, snapshot, group.at);
+  row.append(header);
+
+  const list = document.createElement('ol');
+  list.className = 'trip-time-group-list';
+  list.setAttribute('aria-label', actions.length
+    ? `${actions.length} ${actions.length === 1 ? 'Änderung' : 'Änderungen'} um ${formatTime(group.at)}`
+    : `Situationswechsel um ${formatTime(group.at)}`);
+  for (const entry of group.entries) {
+    list.append(entry.kind === 'segment'
+      ? timelineSegmentRow(entry.segment)
+      : timelineActionRow(entry.action, assetStore, segmentModes));
+  }
+  row.append(list);
   return row;
 }
 
@@ -609,13 +715,11 @@ function renderResult(result, draft, snapshot, assetStore) {
   const timelineEntries = [
     ...draft.segments.slice(1).map((segment) => ({ kind: 'segment', at: segment.startTime, segment })),
     ...(result.actions ?? []).map((action) => ({ kind: 'action', at: action.at, action }))
-  ].sort((left, right) => parseTime(left.at) - parseTime(right.at) || (left.kind === 'segment' ? -1 : 1));
-  if (timelineEntries.length) {
-    for (const entry of timelineEntries) {
-      timeline.append(entry.kind === 'segment'
-        ? timelineSegmentRow(entry.segment, snapshot)
-        : timelineActionRow(entry.action, snapshot, assetStore, segmentModes));
-    }
+  ].sort((left, right) => parseTime(left.at) - parseTime(right.at)
+    || (left.kind === 'segment' ? 0 : 1) - (right.kind === 'segment' ? 0 : 1));
+  const timelineGroups = groupTimelineEntries(timelineEntries);
+  if (timelineGroups.length) {
+    timelineGroups.forEach((group, index) => timeline.append(timelineGroupRow(group, snapshot, assetStore, segmentModes, index)));
   } else {
     const empty = document.createElement('p');
     empty.className = 'trip-empty';

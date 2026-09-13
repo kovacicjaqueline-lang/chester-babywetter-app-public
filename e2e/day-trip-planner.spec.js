@@ -67,6 +67,21 @@ test('Tagesausflug lässt Zeitraum und Segment wählen und zeigt Start-Outfit, P
   expect(await page.getByTestId('trip-pack-list').locator('[data-trip-pack-item]').count()).toBeGreaterThan(0);
   expect(await page.getByTestId('trip-timeline').locator('[data-trip-action]').count()).toBeGreaterThan(0);
   await expect(page.getByTestId('trip-timeline')).toContainText('Regenverdeck');
+
+  const timeline = page.getByTestId('trip-timeline');
+  const groups = timeline.locator('[data-trip-time-group]');
+  expect(await groups.count()).toBeGreaterThan(0);
+  for (const group of await groups.all()) {
+    const actionCount = Number(await group.getAttribute('data-trip-action-count'));
+    expect(await group.locator('[data-trip-action]').count()).toBe(actionCount);
+    await expect(group.locator('time')).toHaveCount(1);
+  }
+
+  for (const item of await page.getByTestId('trip-pack-list').locator('[data-trip-pack-item]').all()) {
+    await expect(item.locator('.trip-pack-copy strong')).toBeVisible();
+    await expect(item.locator('.trip-pack-copy small')).toHaveText(/^Ab \d{2}:\d{2}$/);
+    await expect(item.locator(':scope > small')).toHaveCount(0);
+  }
 });
 
 test('Planner übernimmt Kinderwagen-Zustand vollständig und lässt Details touchfreundlich ändern', async ({ page }) => {
@@ -104,6 +119,21 @@ test('Autositz-Segment hält Gurt-Safety und geschätzte Innenraumtemperatur sic
   await expect(page.locator('[data-trip-notice-code="CAR_SEAT_NO_BULKY_LAYERS"]')).toContainText('keine dicken Schichten');
   await expect(page.locator('[data-trip-notice-code="CAR_CABIN_TEMPERATURE_ESTIMATED"]')).toBeVisible();
   expect(await page.locator('[data-trip-action][data-safety-critical="true"]').count()).toBeGreaterThan(0);
+
+  const safety = page.locator('#tripSafetyNotices');
+  const startOutfit = page.getByTestId('trip-start-outfit');
+  expect(await safety.evaluate((node, outfit) => Boolean(node.compareDocumentPosition(outfit) & Node.DOCUMENT_POSITION_FOLLOWING), await startOutfit.elementHandle())).toBe(true);
+  await expect(safety.locator('[data-severity="hard_rule"]')).not.toHaveCount(0);
+  await expect(safety.locator('[data-severity]:not([data-severity="hard_rule"])')).toHaveCount(0);
+
+  const hintSummary = page.locator('#tripHintSummary');
+  await expect(hintSummary).toBeVisible();
+  const hintToggle = hintSummary.locator('button');
+  await expect(hintToggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(hintToggle).toHaveAttribute('aria-controls', 'tripHintDetails');
+  await hintToggle.click();
+  await expect(hintToggle).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.locator('#tripHintDetails')).toBeVisible();
 });
 
 test('Tagesausflug verändert die normale Einzelzeit-Auswahl nicht', async ({ page }) => {
