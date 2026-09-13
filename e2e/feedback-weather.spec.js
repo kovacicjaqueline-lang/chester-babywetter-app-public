@@ -54,7 +54,7 @@ test('Manuelle Sonne, Bewölkung und Niederschlag bleiben in Zusammenfassung und
   const dialog = page.locator('#weatherOverrideDialog');
   await page.locator('[data-open-dialog="weatherOverrideDialog"]').click();
 
-  await page.locator('#manualAirTempC').fill('18.4');
+  await page.locator('#manualAirTempC').fill('18.5');
   await page.locator('input[name="manualWindPreset"][value="windy"]').check();
   await page.locator('input[name="manualPrecipitationPreset"][value="dry"]').check();
   await page.locator('input[name="manualSunPreset"][value="sunny"]').check();
