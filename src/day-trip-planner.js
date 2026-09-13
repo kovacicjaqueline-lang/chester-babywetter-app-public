@@ -11,6 +11,7 @@ import {
 } from './day-trip-planner-recommendations.js';
 
 const NON_PACKABLE_STATE_IDS = new Set(['sleep_under_nappy_only']);
+const FIXED_TRIP_UNDERLAYER_SLOTS = new Set(['base_torso', 'legs']);
 
 function unique(values) {
   return [...new Set(values)];
@@ -32,7 +33,10 @@ function practicalDiff(before, after) {
   for (const slot of slots) {
     const from = beforeMap.get(slot) ?? null;
     const to = afterMap.get(slot) ?? null;
-    if (from?.itemId === to?.itemId && from?.wearPosition === to?.wearPosition) continue;
+    if (from?.itemId === to?.itemId && (
+      from?.wearPosition === to?.wearPosition
+      || FIXED_TRIP_UNDERLAYER_SLOTS.has(slot)
+    )) continue;
     let kind = 'replace';
     if (!from) kind = 'add';
     else if (!to) kind = 'remove';

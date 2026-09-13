@@ -4,6 +4,11 @@ import { recommendOutfit } from './recommendation-mode-adapter.js';
 
 const FALSE_BOUNDED_COVERAGE_FIELD = 'weather.hourly.coverage';
 const CAR_SEAT_COMPATIBILITY_RANK = Object.freeze({ prohibited:0, conditional:1, allowed:2 });
+const FIXED_TRIP_UNDERLAYER_SLOTS = new Set(['base_torso', 'legs']);
+const FIXED_UNDERLAYER_PREFERENCE = Object.freeze({
+  base_torso: Object.freeze(['short_sleeve_bodysuit', 't_shirt', 'light_long_sleeve_shirt', 'long_sleeve_bodysuit']),
+  legs: Object.freeze(['light_trousers', 'trousers', 'leggings', 'tights', 'warm_trousers'])
+});
 
 function phaseOrderFor(context, recommendation) {
   if (context.mode === 'car') {
@@ -182,6 +187,87 @@ function acceptableEquivalentProjection(before, after, phase, slot, itemId) {
     ['MANUAL_LOCK_LIMITS_WEATHER_PROTECTION', 'MANUAL_LOCK_OVERRIDDEN_FOR_SAFETY'].includes(notice.code));
 }
 
+function sessionWithFixedUnderlayers(checkpoint, recommendation, fixedUnderlayers, lockedAt) {
+  let session = createSession(`trip:${recommendation.recommendationId}:underlayers`);
+  for (const phase of phaseOrderFor(checkpoint.engineRequest.context, recommendation)) {
+    for (const [slot, itemId] of fixedUnderlayers) {
+      if (!itemId || !FIXED_TRIP_UNDERLAYER_SLOTS.has(slot)) continue;
+      session = lockItem(session, { phase, slot, itemId, lockedAt });
+    }
+  }
+  return session;
+}
+
+function fixedUnderlayerCandidates(recommendations, slot) {
+  const candidates = new Map();
+  for (const recommendation of recommendations) {
+    for (const entry of recommendation.slots) {
+      if (entry.slot !== slot) continue;
+      const itemId = entry.selected.itemId;
+      const thermalWeight = CLOTHING_CATALOG[itemId]?.thermalWeight ?? Infinity;
+      const preference = FIXED_UNDERLAYER_PREFERENCE[slot]?.indexOf(itemId) ?? Infinity;
+      const current = candidates.get(entry.slot);
+      if (!current || thermalWeight < current.thermalWeight
+        || (thermalWeight === current.thermalWeight && preference < current.preference)) {
+        candidates.set(entry.slot, { itemId, thermalWeight, preference });
+      }
+    }
+  }
+  return [...candidates.values()]
+    .sort((left, right) => left.thermalWeight - right.thermalWeight || left.preference - right.preference)
+    .map((candidate) => candidate.itemId);
+}
+
+function legThermalSupport(recommendation, phase) {
+  return recommendation.slots
+    .filter((entry) => entry.phase === phase)
+    .reduce((support, entry) => {
+      const definition = CLOTHING_CATALOG[entry.selected.itemId];
+      if (!definition?.bodyZones.includes('legs')) return support;
+      if (entry.slot === 'legs') return support + (definition.thermalWeight ?? 0);
+      const isExternalAccessory = ['stroller_thermal_accessory', 'carrier_accessory'].includes(entry.slot);
+      return support + (isExternalAccessory
+        ? (definition.thermalStepCredit ?? 0)
+        : (definition.thermalWeight ?? 0));
+    }, 0);
+}
+
+function primaryLegThermalWeight(recommendation, phase) {
+  const entry = recommendation.slots.find((slot) => slot.phase === phase && slot.slot === 'legs');
+  return entry ? (CLOTHING_CATALOG[entry.selected.itemId]?.thermalWeight ?? 0) : 0;
+}
+
+function fixedUnderlayersFrom(checkpoints, recommendations) {
+  const fixedUnderlayers = new Map();
+  const baseTorso = fixedUnderlayerCandidates(recommendations, 'base_torso')[0];
+  if (baseTorso) fixedUnderlayers.set('base_torso', baseTorso);
+
+  const legCandidates = fixedUnderlayerCandidates(recommendations, 'legs');
+  for (const legCandidate of legCandidates) {
+    const candidateUnderlayers = new Map([...fixedUnderlayers, ['legs', legCandidate]]);
+    const supportsEveryColdCheckpoint = checkpoints.every((checkpoint, index) => {
+      const primary = recommendations[index];
+      const session = sessionWithFixedUnderlayers(
+        checkpoint,
+        primary,
+        candidateUnderlayers,
+        checkpoint.startTime
+      );
+      const projected = recommendOutfit({ ...checkpoint.engineRequest, session });
+      return phaseOrderFor(checkpoint.engineRequest.context, primary).every((phase) =>
+        legThermalSupport(projected, phase) >= primaryLegThermalWeight(primary, phase));
+    });
+    if (supportsEveryColdCheckpoint) {
+      fixedUnderlayers.set('legs', legCandidate);
+      break;
+    }
+  }
+  if (!fixedUnderlayers.has('legs') && legCandidates.length) {
+    fixedUnderlayers.set('legs', legCandidates.at(-1));
+  }
+  return fixedUnderlayers;
+}
+
 function addStateToCarried(state, carriedBySlot) {
   for (const item of state.items) {
     if (!carriedBySlot.has(item.slot)) carriedBySlot.set(item.slot, []);
@@ -190,16 +276,21 @@ function addStateToCarried(state, carriedBySlot) {
   }
 }
 
-function optimizeRecommendation(checkpoint, recommendation, currentState, carriedBySlot) {
-  if (!currentState) return recommendation;
-  let working = recommendation;
-  let session = createSession(`trip:${checkpoint.checkpointId}`);
+function optimizeRecommendation(checkpoint, recommendation, currentState, carriedBySlot, fixedUnderlayers) {
+  let session = fixedUnderlayers.size
+    ? sessionWithFixedUnderlayers(checkpoint, recommendation, fixedUnderlayers, checkpoint.startTime)
+    : createSession(`trip:${checkpoint.checkpointId}`);
+  let working = fixedUnderlayers.size
+    ? recommendOutfit({ ...checkpoint.engineRequest, session })
+    : recommendation;
+  if (!currentState) return working;
   let simulatedState = currentState;
   const simulatedCarried = new Map([...carriedBySlot].map(([slot, ids]) => [slot, [...ids]]));
 
   for (const phase of phaseOrderFor(checkpoint.engineRequest.context, working)) {
     const slots = working.slots.filter((entry) => entry.phase === phase).map((entry) => entry.slot);
     for (const slot of slots) {
+      if (FIXED_TRIP_UNDERLAYER_SLOTS.has(slot) && fixedUnderlayers.has(slot)) continue;
       const candidates = candidateIdsForSlot(working, phase, slot, simulatedState, simulatedCarried);
       for (const itemId of candidates) {
         const nextSession = lockItem(session, { phase, slot, itemId, lockedAt:checkpoint.startTime });
@@ -213,17 +304,27 @@ function optimizeRecommendation(checkpoint, recommendation, currentState, carrie
     simulatedState = stateFromRecommendation(working, phase, checkpoint);
     addStateToCarried(simulatedState, simulatedCarried);
   }
-  return working;
+  return fixedUnderlayers.size
+    ? recommendOutfit({ ...checkpoint.engineRequest, session })
+    : working;
 }
 
 export function buildTripTimeline(checkpoints) {
   const timeline = [];
   const carriedBySlot = new Map();
   let currentState = null;
+  const primaryRecommendations = checkpoints.map((checkpoint) => recommendOutfit(checkpoint.engineRequest));
+  const fixedUnderlayers = fixedUnderlayersFrom(checkpoints, primaryRecommendations);
 
-  for (const checkpoint of checkpoints) {
-    const primary = recommendOutfit(checkpoint.engineRequest);
-    const optimized = optimizeRecommendation(checkpoint, primary, currentState, carriedBySlot);
+  for (const [index, checkpoint] of checkpoints.entries()) {
+    const optimized = optimizeRecommendation(
+      checkpoint,
+      primaryRecommendations[index],
+      currentState,
+      carriedBySlot,
+      fixedUnderlayers
+    );
+
     checkpoint.recommendation = optimized;
 
     for (const phase of phaseOrderFor(checkpoint.engineRequest.context, optimized)) {

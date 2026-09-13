@@ -48,7 +48,7 @@ function weather() {
   };
 }
 
-test('equivalent continuity cannot keep short sleeves when UV requires the engine-selected long-sleeve coverage', () => {
+test('trip continuity keeps the chosen underlayer when later UV coverage would otherwise select a different top', () => {
   const result = planDayTrip({
     requestId:'trip_uv_protection_request',
     requestedAt:'2026-08-31T08:00:00.000Z',
@@ -75,13 +75,8 @@ test('equivalent continuity cannot keep short sleeves when UV requires the engin
 
   assert.equal(result.status,'ready');
   assert.ok(result.startOutfit.items.some((item) => item.slot === 'base_torso' && item.itemId === 'short_sleeve_bodysuit'));
-  assert.ok(result.packList.some((item) => item.itemId === 'light_long_sleeve_shirt' && item.firstNeededAt === '2026-08-31T11:00:00.000Z'));
-  assert.ok(result.actions.some((action) =>
-    action.at === '2026-08-31T11:00:00.000Z'
-    && action.slot === 'base_torso'
-    && action.kind === 'replace'
-    && action.fromItemId === 'short_sleeve_bodysuit'
-    && action.toItemId === 'light_long_sleeve_shirt'));
+  assert.ok(!result.packList.some((item) => item.itemId === 'light_long_sleeve_shirt'));
+  assert.ok(!result.actions.some((action) => ['base_torso','legs'].includes(action.slot)));
   assert.ok(result.actions.some((action) =>
     action.at === '2026-08-31T11:00:00.000Z'
     && action.slot === 'head'

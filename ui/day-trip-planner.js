@@ -2,13 +2,32 @@ import { planDayTrip } from '../src/day-trip-planner.js';
 import { estimateCabinTemperature } from '../src/integration/cabin-temperature.js';
 
 const MODE_COPY = Object.freeze({
-  outdoor: { label: 'Draußen', icon: '☀' },
-  stroller: { label: 'Kinderwagen', icon: '◌' },
-  carrier: { label: 'Trage', icon: '♡' },
-  car: { label: 'Autositz', icon: '◇' },
-  indoor: { label: 'Drinnen', icon: '⌂' },
-  sleep: { label: 'Schlafen', icon: '☾' }
+  outdoor: { label: 'Draußen' },
+  stroller: { label: 'Kinderwagen' },
+  carrier: { label: 'Trage' },
+  car: { label: 'Autositz' },
+  indoor: { label: 'Drinnen' },
+  sleep: { label: 'Schlafen' }
 });
+
+const MODE_ICON_MARKUP = Object.freeze({
+  outdoor: '<circle cx="12" cy="12" r="4"></circle><path d="M12 2v3M12 19v3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M2 12h3M19 12h3M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"></path>',
+  stroller: '<path d="M5 5h2l2.3 10.5h8.9l2-7H8.1"></path><circle cx="10.5" cy="19" r="1.4"></circle><circle cx="17.5" cy="19" r="1.4"></circle>',
+  carrier: '<path d="M7 8a5 5 0 0 1 10 0"></path><path d="M5 21c0-4.4 3.1-7.5 7-7.5s7 3.1 7 7.5"></path><path d="M9 9.5h6"></path>',
+  car: '<path d="M5 16l1.7-5h10.6l1.7 5"></path><path d="M4 16h16v4H4z"></path><path d="M7 16v2M17 16v2"></path><circle cx="7" cy="20" r="1"></circle><circle cx="17" cy="20" r="1"></circle>',
+  indoor: '<path d="M4 10.5L12 4l8 6.5V20H4z"></path><path d="M9 20v-5h6v5"></path>',
+  sleep: '<path d="M19.5 14.5A7.5 7.5 0 0 1 9.5 4.5a7.8 7.8 0 1 0 10 10z"></path>'
+});
+
+function createModeIcon(mode) {
+  const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  icon.classList.add('trip-mode-icon');
+  icon.setAttribute('viewBox', '0 0 24 24');
+  icon.setAttribute('aria-hidden', 'true');
+  icon.setAttribute('focusable', 'false');
+  icon.innerHTML = MODE_ICON_MARKUP[mode] ?? '';
+  return icon;
+}
 
 const NOTICE_COPY = Object.freeze({
   CAR_SEAT_NO_BULKY_LAYERS: ['Autositz: keine dicken Schichten unter dem Gurt', 'Keine voluminöse Jacke und keinen Winteroverall unter dem Autositzgurt verwenden.'],
@@ -314,11 +333,11 @@ function ensureStyles() {
   style.id = 'dayTripPlannerStyles';
   style.textContent = `
     .trip-entry-row{display:flex;justify-content:flex-end;margin:8px 0 2px}.trip-entry-button{min-height:44px;border:1px solid rgba(155,109,85,.24);border-radius:999px;background:#fff8f2;color:var(--accent);padding:0 16px;font-weight:800;box-shadow:0 3px 14px rgba(85,57,43,.06)}
-    .trip-sheet{max-width:680px;max-height:min(92dvh,860px);overflow:auto}.trip-sheet-header{position:sticky;top:0;z-index:3;background:rgba(255,250,246,.96);backdrop-filter:blur(10px)}.trip-sheet-header .eyebrow{margin:0 0 2px}.trip-sheet-header h2{margin:0}
-    .trip-intro{margin:0 0 16px;color:var(--muted);line-height:1.45}.trip-builder-section{margin:0 0 18px}.trip-builder-section>h3,.trip-section-heading h3{margin:0;font-size:1rem}.trip-section-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}.trip-section-note{margin:4px 0 10px;color:var(--muted);font-size:.82rem}
+    .trip-sheet{max-width:680px;max-height:min(92dvh,860px);overflow:auto;scroll-behavior:auto}.trip-sheet-header{position:sticky;top:0;z-index:3;background:rgba(255,250,246,.96);backdrop-filter:blur(10px)}.trip-sheet-header .eyebrow{margin:0 0 2px}.trip-sheet-header h2{margin:0}
+    .trip-intro{margin:0 0 15px;color:var(--muted);line-height:1.4;max-width:42rem}.trip-builder-section{margin:0 0 16px}.trip-builder-section>h3,.trip-section-heading h3{margin:0;font-size:1rem}.trip-section-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px}.trip-section-note{margin:4px 0 10px;color:var(--muted);font-size:.82rem;line-height:1.4}
     .trip-time-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.trip-field{display:grid;gap:5px;color:var(--muted);font-size:.76rem;font-weight:700}.trip-field select,.trip-field input,.trip-segment-time{width:100%;min-height:44px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);padding:0 11px;font:inherit;font-size:.9rem}.trip-number-row{display:grid;grid-template-columns:1fr auto;align-items:center;border:1px solid var(--line);border-radius:12px;background:#fff;padding-right:10px}.trip-number-row input{border:0;min-width:0}.trip-number-row>span{font-size:.78rem;color:var(--muted)}
-    .trip-segments{display:grid;gap:10px}.trip-segment-card{border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.72);padding:12px}.trip-segment-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}.trip-segment-time-label{font-size:.8rem;font-weight:800;color:var(--accent)}.trip-segment-time{max-width:126px}.trip-remove-segment{min-height:44px;min-width:44px;border:0;background:transparent;color:var(--muted);font-size:1.2rem;border-radius:12px}.trip-mode-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.trip-mode-button{min-height:48px;border:1px solid transparent;border-radius:13px;background:var(--surface-soft,#f6f0eb);color:var(--ink);padding:5px;font-size:.72rem;font-weight:750;display:grid;place-items:center;gap:1px}.trip-mode-button span{font-size:1rem}.trip-mode-button.is-selected{border-color:rgba(155,109,85,.5);background:#fff7f1;color:var(--accent)}
-    .trip-segment-details{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}.trip-segment-details summary{min-height:44px;display:flex;align-items:center;cursor:pointer;color:var(--accent);font-size:.82rem;font-weight:800}.trip-context-fields{display:grid;gap:10px;padding:4px 0 2px}.trip-choice-field{display:grid;gap:5px}.trip-choice-label{font-size:.76rem;color:var(--muted);font-weight:700}.trip-choice-buttons{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px}.trip-choice-buttons button{min-height:44px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);font-size:.78rem;font-weight:700}.trip-choice-buttons button.is-selected{border-color:rgba(155,109,85,.5);background:#fff7f1;color:var(--accent)}.trip-check-field{min-height:44px;display:flex;align-items:center;gap:9px;font-size:.82rem;font-weight:700}.trip-check-field input{width:20px;height:20px}.trip-inline-safety{border-radius:13px;background:#fff3e5;padding:10px 12px;color:#6c4d32;font-size:.78rem;font-weight:700;line-height:1.4}
+    .trip-segments{display:grid;gap:10px}.trip-segment-card{border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.72);padding:12px}.trip-segment-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}.trip-segment-time-label{font-size:.8rem;font-weight:800;color:var(--accent)}.trip-segment-time{max-width:126px}.trip-remove-segment{min-height:44px;min-width:44px;border:0;background:transparent;color:var(--muted);font-size:1.2rem;border-radius:12px}.trip-mode-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.trip-mode-button{position:relative;min-height:52px;border:1px solid transparent;border-radius:13px;background:var(--surface-soft,#f6f0eb);color:var(--ink);padding:7px 5px;font-size:.72rem;font-weight:750;display:grid;place-items:center;gap:2px}.trip-mode-icon{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.trip-mode-button.is-selected{border-color:rgba(155,109,85,.65);background:#fff7f1;color:var(--accent);box-shadow:0 0 0 2px rgba(155,109,85,.12)}.trip-mode-button.is-selected::after{content:'✓';position:absolute;top:5px;right:7px;font-size:.7rem;font-weight:900;line-height:1;color:var(--accent)}
+    .trip-segment-details{margin-top:10px;border-top:0;padding-top:0}.trip-segment-details summary{min-height:44px;display:flex;align-items:center;cursor:pointer;color:var(--accent);font-size:.82rem;font-weight:800;border:1px solid var(--line);border-radius:12px;background:#fff;padding:0 11px;list-style:none}.trip-segment-details summary::-webkit-details-marker{display:none}.trip-segment-details summary::after{content:'⌄';margin-left:auto;font-size:1rem;line-height:1}.trip-segment-details[open] summary::after{content:'⌃'}.trip-context-fields{display:grid;gap:10px;padding:10px 0 2px}.trip-choice-field{display:grid;gap:5px}.trip-choice-label{font-size:.76rem;color:var(--muted);font-weight:700}.trip-choice-buttons{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px}.trip-choice-buttons button{min-height:44px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);font-size:.78rem;font-weight:700}.trip-choice-buttons button.is-selected{border-color:rgba(155,109,85,.5);background:#fff7f1;color:var(--accent)}.trip-check-field{min-height:44px;display:flex;align-items:center;gap:9px;font-size:.82rem;font-weight:700}.trip-check-field input{width:20px;height:20px}.trip-inline-safety{border-radius:13px;background:#fff3e5;padding:10px 12px;color:#6c4d32;font-size:.78rem;font-weight:700;line-height:1.4}
     .trip-add-button{min-height:44px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--accent);padding:0 12px;font-weight:800}.trip-add-button:disabled{opacity:.45}.trip-generate{width:100%;min-height:52px}.trip-error{border-radius:14px;background:#fff0ed;color:#8a3d32;padding:11px 13px;margin-bottom:14px;font-size:.84rem;font-weight:700}.trip-error[hidden]{display:none!important}
     .trip-result-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:14px}.trip-result-head h3{margin:2px 0 0;font-size:1.1rem}.trip-status-pill{display:inline-flex;align-items:center;min-height:30px;border-radius:999px;background:#f3ece6;padding:0 10px;font-size:.72rem;font-weight:800}.trip-status-pill[data-status="partial"],.trip-status-pill[data-status="blocked"]{background:#fff0ed;color:#8a3d32}.trip-status-pill[data-status="ready_with_estimate"]{background:#fff4df;color:#74531e}
     .trip-safety-list{display:grid;gap:8px;margin:0 0 16px}.trip-safety-notice{border-left:4px solid #c77f4c;border-radius:12px;background:#fff6e9;padding:10px 12px}.trip-safety-notice strong{display:block;font-size:.84rem}.trip-safety-notice p{margin:3px 0 0;color:#6b574a;font-size:.76rem;line-height:1.4}.trip-safety-notice[data-severity="hard_rule"]{border-left-color:#b24b3d;background:#fff0ed}
@@ -358,21 +377,21 @@ function ensureUi() {
           <button class="icon-button" id="dayTripCloseButton" type="button" aria-label="Tagesausflug schließen">×</button>
         </header>
         <div id="tripBuilderView">
-          <p class="trip-intro">Start und Ende festlegen. Situationen kannst du nur dort ergänzen, wo sie sich im Tagesverlauf ändern.</p>
+          <p class="trip-intro">Start und Ende festlegen. Eine weitere Situation brauchst du nur, wenn ihr später wechselt.</p>
           <div id="tripPlannerError" class="trip-error" role="status" hidden></div>
           <section class="trip-builder-section" aria-labelledby="tripTimeHeading">
-            <h3 id="tripTimeHeading">1. Zeitraum</h3>
+            <h3 id="tripTimeHeading">Zeitraum</h3>
             <div class="trip-time-grid">
               <label class="trip-field"><span>Start</span><select id="tripStartTime" aria-label="Startzeit"></select></label>
               <label class="trip-field"><span>Ende</span><select id="tripEndTime" aria-label="Endzeit"></select></label>
             </div>
           </section>
           <section class="trip-builder-section" aria-labelledby="tripSegmentsHeading">
-            <div class="trip-section-heading"><h3 id="tripSegmentsHeading">2. Situationen</h3><button id="tripAddSegmentButton" class="trip-add-button" type="button">+ Abschnitt</button></div>
-            <p class="trip-section-note">Optional. Kinderwagen, Draußen, Trage, Autositz, Drinnen oder Schlafen können sich über den Tag abwechseln.</p>
+            <div class="trip-section-heading"><h3 id="tripSegmentsHeading">Situationen</h3><button id="tripAddSegmentButton" class="trip-add-button" type="button">+ Wechsel hinzufügen</button></div>
+            <p id="tripSegmentsNote" class="trip-section-note">Pro Abschnitt eine Situation wählen. Weitere Abschnitte nur hinzufügen, wenn ihr später wechselt.</p>
             <div id="tripSegments" class="trip-segments"></div>
           </section>
-          <button id="tripGenerateButton" class="primary-button trip-generate" type="button">3. Plan erzeugen</button>
+          <button id="tripGenerateButton" class="primary-button trip-generate" type="button">Ausflug planen</button>
         </div>
         <div id="tripResultView" hidden>
           <div class="trip-result-head"><div><span id="tripResultStatus" class="trip-status-pill"></span><h3 id="tripResultTitle" tabindex="-1">Dein Tagesplan</h3></div><span id="tripResultRange" class="trip-segment-time-label"></span></div>
@@ -668,9 +687,7 @@ function renderSegments(draft) {
       button.dataset.tripSegmentMode = mode;
       button.dataset.tripSegmentId = segment.segmentId;
       button.setAttribute('aria-pressed', String(mode === segment.mode));
-      const icon = document.createElement('span');
-      icon.setAttribute('aria-hidden', 'true');
-      icon.textContent = copy.icon;
+      const icon = createModeIcon(mode);
       const label = document.createElement('strong');
       label.textContent = copy.label;
       button.append(icon, label);
@@ -682,6 +699,7 @@ function renderSegments(draft) {
     details.className = 'trip-segment-details';
     const summary = document.createElement('summary');
     summary.textContent = 'Details anpassen';
+    summary.setAttribute('aria-label', `Details für ${MODE_COPY[segment.mode].label} anpassen`);
     const fields = document.createElement('div');
     fields.className = 'trip-context-fields';
     appendContextFields(fields, segment);
@@ -732,6 +750,11 @@ export function bindDayTripPlanner({ getSnapshot, assetStore, showToast = () => 
   let draft = null;
   let segmentSequence = 1;
 
+  const resetTripScroll = () => {
+    const sheet = dialog.querySelector('.trip-sheet');
+    if (sheet) sheet.scrollTop = 0;
+  };
+
   entry.addEventListener('click', () => {
     snapshot = getSnapshot();
     draft = initialDraft(snapshot);
@@ -739,14 +762,16 @@ export function bindDayTripPlanner({ getSnapshot, assetStore, showToast = () => 
     showBuilder();
     renderBuilder(draft);
     if (!dialog.open) dialog.showModal();
-    requestAnimationFrame(() => document.querySelector('#tripStartTime')?.focus());
+    resetTripScroll();
+    requestAnimationFrame(() => document.querySelector('#dayTripCloseButton')?.focus({ preventScroll: true }));
   });
 
   document.querySelector('#dayTripCloseButton').addEventListener('click', () => dialog.close());
   document.querySelector('#tripDoneButton').addEventListener('click', () => dialog.close());
   document.querySelector('#tripEditButton').addEventListener('click', () => {
     showBuilder();
-    requestAnimationFrame(() => document.querySelector('#tripStartTime')?.focus());
+    resetTripScroll();
+    requestAnimationFrame(() => document.querySelector('#dayTripCloseButton')?.focus({ preventScroll: true }));
   });
 
   document.querySelector('#tripStartTime').addEventListener('change', (event) => {

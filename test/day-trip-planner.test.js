@@ -141,7 +141,7 @@ test('unchanged weather produces no artificial outfit change and does not mutate
   assert.deepEqual(input,before);
 });
 
-test('cool morning, warm midday, cool later removes and reuses layers instead of packing the start layer again', () => {
+test('cool morning, warm midday, cool later removes and reuses upper layers instead of changing the underlayer', () => {
   const w = weather([
     point('2026-08-31T10:00:00.000Z',18),
     point('2026-08-31T11:00:00.000Z',22),
@@ -152,11 +152,61 @@ test('cool morning, warm midday, cool later removes and reuses layers instead of
   const start = new Set(startIds(result));
 
   assert.equal(result.status,'ready');
-  assert.ok(actionAt(result,'2026-08-31T11:00:00.000Z').some((action) => action.kind === 'remove' && action.fromItemId === 'thin_sweater'));
-  assert.ok(actionAt(result,'2026-08-31T12:00:00.000Z').some((action) => action.kind === 'add' && action.toItemId === 'thin_sweater'));
-  assert.ok(!result.packList.some((item) => item.itemId === 'thin_sweater'));
+  assert.ok(actionAt(result,'2026-08-31T11:00:00.000Z').some((action) => action.kind === 'remove' && action.fromItemId === 'fleece_jacket'));
+  assert.ok(actionAt(result,'2026-08-31T12:00:00.000Z').some((action) => action.kind === 'add' && action.toItemId === 'fleece_jacket'));
+  assert.ok(!result.packList.some((item) => item.itemId === 'fleece_jacket'));
   assert.ok(result.packList.every((item) => !start.has(item.itemId)));
   assert.equal(new Set(result.packList.map((item) => item.itemId)).size,result.packList.length);
+});
+
+test('upper and lower underlayers remain unchanged throughout the outing', () => {
+  const w = weather([
+    point('2026-08-31T10:00:00.000Z',18),
+    point('2026-08-31T11:00:00.000Z',22),
+    point('2026-08-31T12:00:00.000Z',18)
+  ]);
+  const result = planDayTrip(request({ end:'2026-08-31T12:00:00.000Z', weatherValue:w }));
+
+  assert.equal(result.status,'ready');
+  assert.ok(result.startOutfit.items.some((item) => item.slot === 'base_torso' && item.itemId === 'long_sleeve_bodysuit'));
+  assert.ok(result.startOutfit.items.some((item) => item.slot === 'legs' && item.itemId === 'light_trousers'));
+  assert.ok(result.actions.every((action) => !['base_torso','legs'].includes(action.slot)));
+  assert.ok(result.packList.every((item) => !['short_sleeve_bodysuit','light_trousers','trousers','warm_trousers'].includes(item.itemId)));
+});
+
+test('coolest underlayers are selected from the whole outing and warm upper layers are changed later', () => {
+  const w = weather([
+    point('2026-08-31T10:00:00.000Z',10),
+    point('2026-08-31T11:00:00.000Z',25),
+    point('2026-08-31T12:00:00.000Z',25)
+  ]);
+  const result = planDayTrip(request({ end:'2026-08-31T12:00:00.000Z', weatherValue:w }));
+
+  assert.equal(result.status,'ready');
+  assert.ok(result.startOutfit.items.some((item) => item.slot === 'base_torso' && item.itemId === 'short_sleeve_bodysuit'));
+  assert.ok(result.startOutfit.items.some((item) => item.slot === 'legs' && item.itemId === 'light_trousers'));
+  assert.ok(result.startOutfit.items.some((item) => item.slot === 'outer' && item.itemId === 'winter_overall'));
+  assert.ok(result.actions.some((action) =>
+    action.at === '2026-08-31T11:00:00.000Z'
+    && action.kind === 'remove'
+    && action.slot === 'outer'
+    && action.fromItemId === 'winter_overall'));
+  assert.ok(result.actions.every((action) => !['base_torso','legs'].includes(action.slot)));
+});
+
+test('the same coolest underlayers are chosen when the outing starts warm and gets colder later', () => {
+  const w = weather([
+    point('2026-08-31T10:00:00.000Z',25),
+    point('2026-08-31T11:00:00.000Z',10),
+    point('2026-08-31T12:00:00.000Z',10)
+  ]);
+  const result = planDayTrip(request({ end:'2026-08-31T12:00:00.000Z', weatherValue:w }));
+
+  assert.equal(result.status,'ready');
+  assert.ok(result.startOutfit.items.some((item) => item.slot === 'base_torso' && item.itemId === 'short_sleeve_bodysuit'));
+  assert.ok(result.startOutfit.items.some((item) => item.slot === 'legs' && item.itemId === 'light_trousers'));
+  assert.ok(actionAt(result,'2026-08-31T11:00:00.000Z').some((action) => ['add','replace'].includes(action.kind) && ['mid','outer'].includes(action.slot)));
+  assert.ok(result.actions.every((action) => !['base_torso','legs'].includes(action.slot)));
 });
 
 test('rain beginning at the next checkpoint is packed and acted on at that checkpoint, not one interval early', () => {
@@ -249,6 +299,7 @@ test('entering a car segment keeps harness safety visible and prioritized over c
   assert.equal(result.status,'ready');
   assert.ok(carActions.some((action) => action.kind === 'safety_instruction' && action.safetyCritical));
   assert.ok(carActions.some((action) => action.phase === 'in_car' && ['remove','replace','reposition'].includes(action.kind)));
+  assert.ok(carActions.every((action) => !['base_torso','legs'].includes(action.slot)));
   assert.ok(result.notices.some((notice) => notice.code === 'CAR_SEAT_NO_BULKY_LAYERS'));
 });
 
