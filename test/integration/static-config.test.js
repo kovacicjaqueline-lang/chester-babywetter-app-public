@@ -33,6 +33,7 @@ test('PWA manifest and service worker reference the app shell', () => {
     '/src/day-trip-planner-weather.js',
     '/src/day-trip-planner-recommendations.js',
     '/src/integration/background-scene.js',
+    '/src/integration/manual-weather-presets.js',
     '/ui/background-scene.js',
     '/assets/clothing/manifest.json'
   ]) {
