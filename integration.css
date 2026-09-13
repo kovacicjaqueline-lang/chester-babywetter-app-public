@@ -96,7 +96,8 @@
 }
 
 .app-shell {
-  padding-bottom: calc(24px + var(--safe-bottom));
+  /* Keep content clear of the dynamically injected sticky bottom navigation. */
+  padding-bottom: calc(104px + var(--safe-bottom));
 }
 
 button:focus-visible,
