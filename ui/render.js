@@ -1,3 +1,5 @@
+import { formatPrecipitation, formatTemperature, precipitationLabelFor } from './weather-copy.js';
+
 const MODE_COPY = Object.freeze({
   outdoor: { label: 'Draußen', icon: '☀', short: 'Wetter + Aktivität' },
   stroller: { label: 'Kinderwagen', icon: '◌', short: 'Wach oder schlafend' },
@@ -132,10 +134,6 @@ function slotRole(slot) {
   return labels[slot] ?? 'Kleidungsstück';
 }
 
-function formatTemperature(value) {
-  if (!Number.isFinite(value)) return '–';
-  return `${Number.isInteger(value) ? value : value.toFixed(1)}°`;
-}
 
 function contextLabelFor(context) {
   if (!context?.mode) return '';
@@ -153,7 +151,7 @@ function statusDetail(recommendation) {
   const labels = [];
   if ([...fields].some((field) => field.includes('uvIndex'))) labels.push('UV-Wert fehlt');
   if ([...fields].some((field) => field.includes('windSpeedKmh'))) labels.push('Winddaten fehlen');
-  if ([...fields].some((field) => field.includes('precipProbabilityPct') || field === 'weather.precipitation')) labels.push('Regenangabe fehlt');
+  if ([...fields].some((field) => field.includes('precipProbabilityPct') || field === 'weather.precipitation')) labels.push('Niederschlagsangabe fehlt');
   if ([...fields].some((field) => field.includes('hourly.coverage'))) labels.push('Wetterzeitraum unvollständig');
   if (fields.has('context.roomTempC')) labels.push('Raumtemperatur fehlt');
   if (fields.has('context.cabinTempC')) labels.push('Innenraumtemperatur fehlt');
@@ -167,8 +165,7 @@ function statusDetail(recommendation) {
 
 function statusTextFor(recommendation) {
   if (!recommendation || recommendation.status === 'ready') return '';
-  const statusLabel = { ready_with_estimate: 'Mit Schätzung', partial: 'Teilweise', blocked: 'Angaben fehlen' }[recommendation.status] ?? 'Prüfen';
-  return `${statusLabel} – ${statusDetail(recommendation)}`;
+  return statusDetail(recommendation);
 }
 
 function groupKeyForSlot(slot) {
@@ -312,7 +309,7 @@ export function renderWeather(weather, location, runtime = {}, context = null) {
   const hero = document.querySelector('.weather-hero');
   hero.classList.toggle('weather-hero--room', roomMode);
   document.querySelector('#weatherHeading').textContent = roomMode ? (context.mode === 'sleep' ? 'Schlafraum' : 'Drinnen') : 'Jetzt';
-  document.querySelector('#temperatureValue').textContent = roomMode ? formatTemperature(roomTemperature) : (current ? `${Math.round(current.airTempC)}°` : '–');
+  document.querySelector('#temperatureValue').textContent = roomMode ? formatTemperature(roomTemperature) : formatTemperature(current?.airTempC);
   document.querySelector('#weatherSymbol').textContent = roomMode ? (context.mode === 'sleep' ? '☾' : '⌂') : (current ? weatherIcon(current.weatherCode, current.isDay) : '◌');
   document.querySelector('#weatherDescription').textContent = roomMode
     ? (roomTemperature == null ? 'Raumtemperatur fehlt' : context.mode === 'sleep' ? 'Raumtemperatur für Schlafen' : 'Raumtemperatur für drinnen')
@@ -333,7 +330,7 @@ export function renderWeather(weather, location, runtime = {}, context = null) {
   const rows = current ? [
     ['Gefühlt', current.apparentTempC == null ? '–' : `${Math.round(current.apparentTempC)}°`],
     ['Wind', current.windSpeedKmh == null ? '–' : `${Math.round(current.windSpeedKmh)} km/h`],
-    ['Regen', current.precipProbabilityPct == null ? '–' : `${Math.round(current.precipProbabilityPct)} %`],
+    [precipitationLabelFor(current), current.precipProbabilityPct == null ? '–' : `${Math.round(current.precipProbabilityPct)} %`],
     ['UV', current.uvIndex == null ? '–' : current.uvIndex.toFixed(1)]
   ] : [['Status', runtime.weatherCacheStatus === 'expired' ? 'Cache zu alt' : runtime.weatherCacheStatus === 'location_mismatch' ? 'Cache anderer Ort' : runtime.weatherError ? 'Fehler' : 'Keine Daten']];
   for (const [index, [nameText, valueText]] of rows.entries()) {
@@ -369,9 +366,9 @@ export function renderHourly(weather) {
     icon.setAttribute('aria-hidden', 'true');
     icon.textContent = weatherIcon(point.weatherCode, point.isDay);
     const temp = document.createElement('strong');
-    temp.textContent = `${Math.round(point.airTempC)}°`;
+    temp.textContent = formatTemperature(point.airTempC);
     const rain = document.createElement('small');
-    rain.textContent = point.precipProbabilityPct == null ? 'Regen –' : `Regen ${Math.round(point.precipProbabilityPct)}%`;
+    rain.textContent = formatPrecipitation(point);
     card.append(time, icon, temp, rain);
     host.append(card);
   }

@@ -1,4 +1,5 @@
 import { getHourlySelectionSnapshot, setHourlySelectionStart } from '../src/integration/hourly-selection.js';
+import { formatPrecipitation, formatTemperature } from './weather-copy.js';
 
 const MODE_ORDER = ['outdoor', 'stroller', 'carrier', 'car', 'indoor', 'sleep'];
 const WEATHER_SELECTION_MODES = new Set(['outdoor', 'stroller', 'carrier', 'car']);
@@ -195,10 +196,10 @@ function hourlyChoice(option, snapshot) {
   icon.setAttribute('aria-hidden', 'true');
   icon.textContent = weatherIcon(option.point.weatherCode, option.point.isDay);
   const temp = document.createElement('strong');
-  temp.textContent = `${Math.round(option.point.airTempC)}°`;
+  temp.textContent = formatTemperature(option.point.airTempC);
   const rain = document.createElement('small');
-  rain.textContent = option.point.precipProbabilityPct == null ? 'Regen –' : `Regen ${Math.round(option.point.precipProbabilityPct)}%`;
-  button.setAttribute('aria-label', `${formattedHour(option.time)}, ${Math.round(option.point.airTempC)} Grad, ${rain.textContent}`);
+  rain.textContent = formatPrecipitation(option.point);
+  button.setAttribute('aria-label', `${formattedHour(option.time)}, ${formatTemperature(option.point.airTempC).replace('°', ' Grad')}, ${rain.textContent}`);
   button.append(time, icon, temp, rain);
   return button;
 }

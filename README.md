@@ -36,6 +36,10 @@ Die App läuft dann standardmäßig unter `http://127.0.0.1:8788`.
 
 Für einen deterministischen Browser-/UI-Demomodus ohne externe Wetteranfrage kann `?demo=1` angehängt werden. Der normale App-Aufruf verwendet Open-Meteo für Ortssuche und Wetterdaten.
 
+## Öffentliche Deployment-URL
+
+[chester-babywetter-app-public.kovacicjaqueline.workers.dev](https://chester-babywetter-app-public.kovacicjaqueline.workers.dev)
+
 ## Tests
 
 Unit- und Regressionstests:

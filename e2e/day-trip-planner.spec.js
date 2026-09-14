@@ -174,6 +174,17 @@ test('Tagesausflug verändert die normale Einzelzeit-Auswahl nicht', async ({ pa
   await expect(page.locator('#outfitTimeLabel')).toHaveText(beforeLabel ?? '');
 });
 
+test('Tagesplan-Hinweise bleiben vollständig deutsch', async ({ page }) => {
+  await openDemo(page);
+  await openPlanner(page);
+  await page.locator('#tripGenerateButton').click();
+  const hintToggle = page.locator('#tripHintToggle');
+  await expect(hintToggle).toHaveCount(1);
+  await hintToggle.click();
+  await expect(page.locator('#tripHintDetails')).toContainText('Nackentest');
+  await expect(page.locator('#tripHintDetails')).not.toContainText('CHECK NECK');
+});
+
 test('Fehlende Schlaf-Raumtemperatur bleibt fehlend und blockiert den Plan sichtbar', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('babyweather.v1.uiState', JSON.stringify({

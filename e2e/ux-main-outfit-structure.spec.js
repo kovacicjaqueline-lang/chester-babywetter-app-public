@@ -20,10 +20,44 @@ test('Outfit-Hierarchie zeigt Aufgabe, Situation und Körperrollen', async ({ pa
   await openDemo(page);
 
   await expect(page.locator('#outfitHeading')).toHaveText('Jetzt anziehen');
+  await expect(page.locator('#outfitHeading')).toBeVisible();
   await expect(page.locator('#outfitContextLabel')).toHaveText('Kinderwagen · wach');
   await expect(page.locator('#outfitGrid [data-outfit-group="body"] .outfit-group-heading')).toHaveText('Am Körper');
   await expect(page.locator('#outfitGrid [data-outfit-group="body"] .clothing-role').first()).toBeVisible();
   await expect(page.locator('#outfitGrid [data-outfit-group="extremities"] .outfit-group-heading')).toHaveText('Kopf, Hände & Füße');
+});
+
+test('Manuelles Schnee-Wetter verwendet dieselbe Niederschlagsart in der UI', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openDemo(page);
+
+  await page.locator('[data-open-dialog="weatherOverrideDialog"]').click();
+  await page.locator('#manualAirTempC').fill('5');
+  await page.locator('input[name="manualWindPreset"][value="strong"]').check();
+  await page.locator('input[name="manualPrecipitationPreset"][value="snow"]').check();
+  await page.locator('input[name="manualSunPreset"][value="cloudy"]').check();
+  await page.locator('#applyWeatherOverrideButton').click();
+
+  await expect(page.locator('#weatherFacts .weather-fact').nth(2)).toContainText('Schnee');
+  await expect(page.getByRole('button', { name: /Schnee 70%/ }).first()).toBeVisible();
+  await expect(page.locator('#weatherFacts')).not.toContainText('Regen');
+});
+
+test('Toast-Feedback bleibt oberhalb der fixierten mobilen Navigation', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await openDemo(page);
+
+  await page.locator('#outfitGrid [data-open-alternatives="true"]').first().click();
+  await page.locator('#alternativeDialog [data-alternative-item-id]').first().click();
+
+  const positions = await page.evaluate(() => {
+    const toast = document.querySelector('.toast');
+    const nav = document.querySelector('.bottom-nav');
+    const toastBox = toast?.getBoundingClientRect();
+    const navBox = nav?.getBoundingClientRect();
+    return { toastBottom: toastBox?.bottom, navTop: navBox?.top };
+  });
+  expect(positions.toastBottom).toBeLessThanOrEqual(positions.navTop);
 });
 
 test('Autositz trennt Übergang und Fahrt mit Safety-Aktion dazwischen', async ({ page }) => {
@@ -71,7 +105,8 @@ test('Status steht im Kontext der Outfit-Überschrift', async ({ page }) => {
   await page.locator('#applyWeatherOverrideButton').click();
 
   await expect(page.locator('#confidencePill')).toHaveText('Teilweise');
-  await expect(page.locator('#outfitStatusText')).toContainText('Teilweise');
+  await expect(page.locator('#outfitStatusText')).toContainText('Wetterzeitraum unvollständig');
+  await expect(page.locator('#outfitStatusText')).not.toContainText('Teilweise');
   await expect(page.locator('#outfitStatusText')).toContainText('UV-Wert fehlt');
 });
 

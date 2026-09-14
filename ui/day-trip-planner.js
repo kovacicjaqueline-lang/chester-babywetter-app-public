@@ -1,5 +1,6 @@
 import { planDayTrip } from '../src/day-trip-planner.js';
 import { estimateCabinTemperature } from '../src/integration/cabin-temperature.js';
+import { formatPrecipitation, formatTemperature } from './weather-copy.js';
 
 const MODE_COPY = Object.freeze({
   outdoor: { label: 'Draußen' },
@@ -30,6 +31,7 @@ function createModeIcon(mode) {
 }
 
 const NOTICE_COPY = Object.freeze({
+  CHECK_NECK: ['Nackentest', 'Nacken warm und trocken: passend. Heiß/schwitzig: Schicht reduzieren. Kühl: Schicht ergänzen.'],
   CAR_SEAT_NO_BULKY_LAYERS: ['Autositz: keine dicken Schichten unter dem Gurt', 'Keine voluminöse Jacke und keinen Winteroverall unter dem Autositzgurt verwenden.'],
   CAR_SEAT_REMOVE_OUTER_BEFORE_HARNESS: ['Vor dem Anschnallen ausziehen', 'Voluminöse Außenschichten vor dem Anschnallen entfernen.'],
   CAR_SEAT_BLANKET_OVER_HARNESS_ONLY: ['Zusätzliche Wärme nur über dem Gurt', 'Decke oder Jacke nur über dem bereits korrekt geschlossenen Gurt verwenden.'],
@@ -574,8 +576,8 @@ function appendTimelineWeather(meta, snapshot, at) {
   if (!point) return;
   const weather = document.createElement('span');
   weather.className = 'trip-weather-chip';
-  const rain = point.precipProbabilityPct == null ? '' : ` · Regen ${Math.round(point.precipProbabilityPct)}%`;
-  weather.textContent = `${Math.round(point.airTempC)}°${rain}`;
+  const precipitation = Number.isFinite(point.precipProbabilityPct) ? ` · ${formatPrecipitation(point)}` : '';
+  weather.textContent = `${formatTemperature(point.airTempC)}${precipitation}`;
   meta.append(weather);
 }
 

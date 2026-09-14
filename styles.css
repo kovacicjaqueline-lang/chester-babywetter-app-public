@@ -798,7 +798,7 @@ code { font-size: .84em; }
   position: fixed;
   z-index: 90;
   left: 50%;
-  bottom: calc(18px + var(--safe-bottom));
+  bottom: calc(78px + var(--safe-bottom));
   transform: translateX(-50%);
   width: min(calc(100% - 28px), 420px);
   padding: 10px 13px;
