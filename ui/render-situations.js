@@ -29,9 +29,9 @@ export function renderSituationOptions(selectedMode) {
   }
 }
 
-function selectField(labelText, field, options, value) {
+function selectField(labelText, field, options, value, { secondary = false } = {}) {
   const label = document.createElement('label');
-  label.className = 'field compact-field';
+  label.className = `field compact-field${secondary ? ' secondary-context-field' : ''}`;
   label.append(document.createTextNode(labelText));
   const select = document.createElement('select');
   select.dataset.contextField = field;
@@ -78,6 +78,34 @@ function checkboxField(labelText, field, checked) {
   return label;
 }
 
+function carrierPlacementField(value) {
+  const fieldset = document.createElement('fieldset');
+  fieldset.className = 'choice-fieldset carrier-placement-fieldset';
+  const legend = document.createElement('legend');
+  legend.textContent = 'Baby wird getragen …';
+  fieldset.append(legend);
+
+  const options = [
+    ['under_wearer_outerwear', 'Unter meiner Jacke'],
+    ['over_wearer_outerwear', 'Über meiner Jacke']
+  ];
+  for (const [optionValue, optionLabel] of options) {
+    const label = document.createElement('label');
+    label.className = 'carrier-placement-option';
+    const input = document.createElement('input');
+    input.type = 'radio';
+    input.name = 'carrierPlacement';
+    input.value = optionValue;
+    input.dataset.contextField = 'placement';
+    input.checked = optionValue === value;
+    const text = document.createElement('span');
+    text.textContent = optionLabel;
+    label.append(input, text);
+    fieldset.append(label);
+  }
+  return fieldset;
+}
+
 export function renderSituationContext(mode, context) {
   const host = document.querySelector('#situationContextFields');
   host.replaceChildren();
@@ -88,8 +116,8 @@ export function renderSituationContext(mode, context) {
   if (mode === 'outdoor') {
     host.append(
       selectField('Aktivität', 'activity', [['normal', 'Normal'], ['active', 'Sehr aktiv']], context.activity === 'active' ? 'active' : 'normal'),
-      selectField('Sonne', 'sunExposure', [['shade', 'Schatten'], ['partial', 'Teilweise Sonne'], ['direct', 'Direkte Sonne'], ['unknown', 'Unbekannt']], context.sunExposure),
-      selectField('Bodenkontakt', 'groundContact', [['none', 'Keiner'], ['standing', 'Steht'], ['walking', 'Läuft']], context.groundContact)
+      selectField('Sonne', 'sunExposure', [['shade', 'Schatten'], ['partial', 'Teilweise Sonne'], ['direct', 'Direkte Sonne'], ['unknown', 'Unbekannt']], context.sunExposure, { secondary: true }),
+      selectField('Am Boden', 'groundContact', [['none', 'Keiner'], ['standing', 'Steht'], ['walking', 'Läuft']], context.groundContact, { secondary: true })
     );
   }
   if (mode === 'stroller') {
@@ -98,14 +126,14 @@ export function renderSituationContext(mode, context) {
       : context.activity === 'active' ? 'very_active' : 'awake';
     host.append(
       selectField('Baby gerade', 'strollerBehavior', [['asleep', 'Schläft'], ['awake', 'Wach'], ['very_active', 'Sehr aktiv']], behavior),
-      selectField('Sonne', 'sunExposure', [['shade', 'Schatten'], ['partial', 'Teilweise Sonne'], ['direct', 'Direkte Sonne'], ['unknown', 'Unbekannt']], context.sunExposure),
-      selectField('Windschutz', 'windProtection', [['none', 'Kein Windschutz'], ['partial', 'Teilweise'], ['good', 'Gut'], ['unknown', 'Unbekannt']], context.windProtection)
+      selectField('Sonne', 'sunExposure', [['shade', 'Schatten'], ['partial', 'Teilweise Sonne'], ['direct', 'Direkte Sonne'], ['unknown', 'Unbekannt']], context.sunExposure, { secondary: true }),
+      selectField('Windschutz am Wagen', 'windProtection', [['none', 'Kein Windschutz'], ['partial', 'Teilweise'], ['good', 'Gut'], ['unknown', 'Unbekannt']], context.windProtection, { secondary: true })
     );
   }
   if (mode === 'carrier') {
     host.append(
-      selectField('Sonne', 'sunExposure', [['shade', 'Schatten'], ['partial', 'Teilweise Sonne'], ['direct', 'Direkte Sonne'], ['unknown', 'Unbekannt']], context.sunExposure),
-      selectField('Position', 'placement', [['over_wearer_outerwear', 'Über der Jacke'], ['under_wearer_outerwear', 'Unter der Jacke']], context.placement)
+      carrierPlacementField(context.placement),
+      selectField('Sonne', 'sunExposure', [['shade', 'Schatten'], ['partial', 'Teilweise Sonne'], ['direct', 'Direkte Sonne'], ['unknown', 'Unbekannt']], context.sunExposure, { secondary: true })
     );
   }
   if (mode === 'car') {
