@@ -32,3 +32,20 @@ test('Sleep-Safety warnt allgemein vor loser Bettware auch ohne Schlafsack', asy
   await expect(page.locator('[data-notice-code="SLEEP_NO_LOOSE_BEDDING"]')).toBeVisible();
   await expect(page.locator('[data-notice-code="SLEEP_NO_LOOSE_BEDDING"]')).toContainText('auch wenn kein Schlafsack gewählt ist');
 });
+
+test('18 bis unter 20 Grad deckt die Arme ohne zusätzliches Wärmegewicht ab', async ({ page }) => {
+  await openDemo(page);
+  await chooseSleep(page);
+
+  await page.locator('[data-open-dialog="situationDialog"]').first().click();
+  const room = page.locator('#situationDialog [data-context-field="roomTempC"]');
+  await room.fill('19');
+  await room.blur();
+  await page.locator('#applySituationButton').click();
+
+  await expect(page.locator('#outfitGrid [data-item-id="sleep_bag_1_5"]')).toBeVisible();
+  await expect(page.locator('#outfitGrid [data-item-id="sleep_under_light_pajamas"]')).toBeVisible();
+  await expect(page.locator('#outfitGrid [data-item-id="sleep_bag_2_5"]')).toHaveCount(0);
+  await expect(page.locator('#outfitGrid [data-item-id="sleep_under_short_sleeve_bodysuit"]')).toHaveCount(0);
+  await expect(page.getByTestId('neck-check')).toBeVisible();
+});
