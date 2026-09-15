@@ -219,13 +219,20 @@ function renderGroup(slots, { mode, phase, context, assetStore, styleTheme, visu
   return { element: group, missingAssets };
 }
 
-function phaseSlots(recommendation, phase) {
-  return (recommendation?.slots ?? [])
+function phaseSlots(recommendation, phase, renderedItemIds = null) {
+  const slots = (recommendation?.slots ?? [])
     .filter((slot) => slot.phase === phase && !slot.selected.itemId.endsWith('_none'))
     .sort((left, right) => SLOT_ORDER.indexOf(left.slot) - SLOT_ORDER.indexOf(right.slot));
+  if (!renderedItemIds) return slots;
+  return slots.filter((slot) => {
+    const itemId = slot.selected.itemId;
+    if (renderedItemIds.has(itemId)) return false;
+    renderedItemIds.add(itemId);
+    return true;
+  });
 }
 
-function renderPhase(recommendation, phaseEvaluation, context, assetStore, styleTheme, visual) {
+function renderPhase(recommendation, phaseEvaluation, context, assetStore, styleTheme, visual, renderedItemIds = null) {
   const phase = phaseEvaluation.phase;
   const section = document.createElement('section');
   section.className = `outfit-phase${phase === 'in_car' ? ' outfit-phase--in-car' : ''}`;
@@ -237,7 +244,7 @@ function renderPhase(recommendation, phaseEvaluation, context, assetStore, style
     section.append(heading);
   }
 
-  const slots = phaseSlots(recommendation, phase);
+  const slots = phaseSlots(recommendation, phase, renderedItemIds);
   const grouped = new Map();
   for (const slot of slots) {
     const key = groupKeyForSlot(slot.slot);
@@ -546,9 +553,10 @@ export function renderOutfit({ recommendation, context, warmthDirection, styleTh
   let missingAssets = 0;
   const phaseEvaluations = recommendation?.phases ?? [];
   const isCarWithTransition = context?.mode === 'car' && phaseEvaluations.some((phase) => phase.phase === 'outdoor_transition') && phaseEvaluations.some((phase) => phase.phase === 'in_car');
+  const renderedItemIds = isCarWithTransition ? new Set() : null;
   let safetyBridge = null;
   for (const phaseEvaluation of orderedPhasesForDisplay(phaseEvaluations, context)) {
-    const rendered = renderPhase(recommendation, phaseEvaluation, context, assetStore, styleTheme, visual);
+    const rendered = renderPhase(recommendation, phaseEvaluation, context, assetStore, styleTheme, visual, renderedItemIds);
     missingAssets += rendered.missingAssets;
     grid.append(rendered.element);
     if (isCarWithTransition && phaseEvaluation.phase === 'outdoor_transition') {

@@ -83,6 +83,16 @@ test('Autositz trennt Übergang und Fahrt mit Safety-Aktion dazwischen', async (
   expect(inCarNames.every((name) => name?.includes('Im Autositz'))).toBe(true);
 });
 
+test('Autositz zeigt dasselbe Kleidungsstück über mehrere Phasen nicht doppelt', async ({ page }) => {
+  await openDemo(page);
+  await chooseSituation(page, 'car');
+
+  const itemIds = await page.locator('#outfitGrid [data-item-id]').evaluateAll((nodes) => nodes.map((node) => node.dataset.itemId));
+  expect(new Set(itemIds).size).toBe(itemIds.length);
+  await expect(page.locator('[data-outfit-phase="outdoor_transition"] [data-item-id="long_sleeve_bodysuit"]')).toHaveCount(1);
+  await expect(page.locator('[data-outfit-phase="in_car"] [data-item-id="long_sleeve_bodysuit"]')).toHaveCount(0);
+});
+
 test('Nur tatsächlich austauschbare Teile kündigen Alternativen an', async ({ page }) => {
   await openDemo(page);
   const cards = page.locator('#outfitGrid [data-item-id]');
