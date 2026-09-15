@@ -337,7 +337,7 @@ function evaluateSleep(result, request) {
   }
 
   const bagWeight = CLOTHING_CATALOG[bagId].sleepWarmthWeight ?? 0;
-  const underlayerId = lockedUnderlayerId ?? nearestSleepUnderlayer(targetWarmth - bagWeight);
+  const underlayerId = lockedUnderlayerId ?? nearestSleepUnderlayer(targetWarmth - bagWeight, guidance.underlayerId);
   const bagReason = bagSource === 'manual_lock'
     ? 'MANUAL_ITEM_LOCK'
     : lockedUnderlayerId

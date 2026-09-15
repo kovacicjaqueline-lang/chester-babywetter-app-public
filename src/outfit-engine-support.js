@@ -407,11 +407,15 @@ export function nextThermalItem(current,slot,direction,mode) {
   return undefined;
 }
 
-export function nearestSleepUnderlayer(target) {
+export function nearestSleepUnderlayer(target, preferredId = null) {
   return [...SLEEP_UNDERLAYER_IDS].sort((a,b) => {
     const aw = CLOTHING_CATALOG[a].sleepWarmthWeight;
     const bw = CLOTHING_CATALOG[b].sleepWarmthWeight;
-    return Math.abs(aw-target) - Math.abs(bw-target) || aw-bw;
+    const distance = Math.abs(aw-target) - Math.abs(bw-target);
+    if (distance) return distance;
+    if (a === preferredId) return -1;
+    if (b === preferredId) return 1;
+    return aw-bw;
   })[0];
 }
 
