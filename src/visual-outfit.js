@@ -213,10 +213,23 @@ function stylePreferenceScore(variant, styleTheme) {
 
 function variantCandidates(group, theme, styleTheme) {
   const themed = group.visualVariants.filter((variant) => variant.themeIds.includes(theme.id));
-  const candidates = themed.length > 0
-    ? themed
-    : group.visualVariants.filter((variant) => variant.isFallback)
-      .concat(group.visualVariants.filter((variant) => !variant.isFallback));
+  const rankedThemed = themed
+    .map((variant) => ({ variant, rank: normalizeStyleRank(variant, styleTheme) }))
+    .filter(({ rank }) => rank < 99);
+  const bestRank = rankedThemed.length > 0
+    ? Math.min(...rankedThemed.map(({ rank }) => rank))
+    : null;
+  const compatibleThemed = bestRank == null
+    ? []
+    : rankedThemed
+      .filter(({ rank }) => rank === bestRank || styleTheme === 'neutral' && rank <= bestRank + 1)
+      .map(({ variant }) => variant);
+  const fallbackPool = group.visualVariants.filter((variant) => variant.isFallback);
+  const candidates = compatibleThemed.length > 0
+    ? compatibleThemed
+    : fallbackPool.length > 0
+      ? fallbackPool
+      : group.visualVariants;
 
   return candidates.map((variant) => ({
     variant,
@@ -233,7 +246,7 @@ function compareCandidates(left, right) {
   return left.variant.id.localeCompare(right.variant.id);
 }
 
-function chooseVariantsForTheme(catalog, itemIds, theme, styleTheme) {
+function chooseVariantsForTheme(catalog, itemIds, theme, styleTheme, forcedVariantIds = new Map()) {
   const state = {
     primaryTags: new Set(),
     patterns: new Set(),
@@ -262,6 +275,10 @@ function chooseVariantsForTheme(catalog, itemIds, theme, styleTheme) {
       const repeatedAccentBonus = primaries.some((tag) => state.primaryTags.has(tag)) ? 2 : 0;
       const score = candidate.score + neutralBonus + repeatedAccentBonus - patternPenalty - primaryPenalty;
       const scored = { ...candidate, score };
+      if (forcedVariantIds.get(entry.index) === variant.id) {
+        best = scored;
+        break;
+      }
       if (!best || scored.score > best.score || (scored.score === best.score && variant.id.localeCompare(best.variant.id) < 0)) {
         best = scored;
       }
@@ -288,6 +305,10 @@ function chooseVariantsForTheme(catalog, itemIds, theme, styleTheme) {
 
 function scoreTheme(catalog, visualManifest, itemIds, theme, styleTheme) {
   const result = chooseVariantsForTheme(catalog, itemIds, theme, styleTheme);
+  return scoreComposition(catalog, visualManifest, itemIds, theme, styleTheme, result);
+}
+
+function scoreComposition(catalog, visualManifest, itemIds, theme, styleTheme, result) {
   const coverage = result.selections.reduce((sum, entry) => {
     const weight = entry.group ? itemWeight(entry.group) : 0;
     return sum + (entry.chosen.themed ? weight : 0);
@@ -306,11 +327,11 @@ function scoreTheme(catalog, visualManifest, itemIds, theme, styleTheme) {
   };
 }
 
-function chooseTheme(catalog, visualManifest, sessionKey, styleTheme, themeId, itemIds) {
+function scoredThemes(catalog, visualManifest, styleTheme, themeId, itemIds) {
   if (themeId != null) {
     const explicit = catalog.themes.find((theme) => theme.id === themeId);
     if (!explicit) throw new Error(`Unknown theme: ${themeId}`);
-    return explicit;
+    return [scoreTheme(catalog, visualManifest, itemIds, explicit, styleTheme)];
   }
 
   const configuredThemeIds = visualManifest.sourceStyleProfiles?.[styleTheme]?.themeIds;
@@ -319,11 +340,64 @@ function chooseTheme(catalog, visualManifest, sessionKey, styleTheme, themeId, i
     : [];
   const themesToScore = preferredThemes.length > 0 ? preferredThemes : catalog.themes;
   const scored = themesToScore
-    .map((theme) => scoreTheme(catalog, visualManifest, itemIds, theme, styleTheme))
-    .sort((left, right) => right.score - left.score || left.theme.id.localeCompare(right.theme.id));
-  const bestScore = scored[0]?.score;
-  const tied = scored.filter((candidate) => candidate.score === bestScore);
-  return pickStable(tied.map((candidate) => candidate.theme), `${sessionKey}|theme|${styleTheme}`);
+    .map((theme) => scoreTheme(catalog, visualManifest, itemIds, theme, styleTheme));
+  const bestCoverage = scored[0] ? Math.max(...scored.map((candidate) => candidate.coverage)) : 0;
+  return scored.filter((candidate) => candidate.coverage === bestCoverage);
+}
+
+function visibleCompositionSignature(result) {
+  return result.selections
+    .map((entry) => entry.chosen.variant?.assetPath || '')
+    .join('\u001f');
+}
+
+function buildLookCandidates(catalog, visualManifest, itemIds, styleTheme, themeId) {
+  const candidates = [];
+  const signatures = new Set();
+  const themes = scoredThemes(catalog, visualManifest, styleTheme, themeId, itemIds);
+
+  function addCandidate(theme, result) {
+    const signature = visibleCompositionSignature(result);
+    if (signatures.has(signature)) return;
+    signatures.add(signature);
+    const scored = scoreComposition(catalog, visualManifest, itemIds, theme, styleTheme, result);
+    candidates.push({ ...scored, signature });
+  }
+
+  for (const scoredTheme of themes) {
+    addCandidate(scoredTheme.theme, scoredTheme.result);
+  }
+
+  // Complete theme compositions are the most coherent look cycle. Only fan out
+  // individual item variants when the available themes render identically.
+  if (candidates.length > 1) return candidates;
+
+  for (const scoredTheme of themes) {
+    for (const selection of scoredTheme.result.selections) {
+      if (!selection.group) continue;
+      const alternatives = variantCandidates(selection.group, scoredTheme.theme, styleTheme)
+        .sort(compareCandidates);
+      for (const alternative of alternatives) {
+        if (alternative.variant.id === selection.chosen.variant?.id) continue;
+        const result = chooseVariantsForTheme(
+          catalog,
+          itemIds,
+          scoredTheme.theme,
+          styleTheme,
+          new Map([[selection.index, alternative.variant.id]])
+        );
+        addCandidate(scoredTheme.theme, result);
+      }
+    }
+  }
+  return candidates;
+}
+
+function normalizedSeedOffset(visualSeed, candidateCount) {
+  if (Number.isSafeInteger(visualSeed)) {
+    return ((visualSeed % candidateCount) + candidateCount) % candidateCount;
+  }
+  return stableHash(String(visualSeed)) % candidateCount;
 }
 
 export function selectVisualVariant({ catalog, assetGroupId, themeId, styleTheme = 'neutral', seedKey }) {
@@ -400,11 +474,12 @@ export function selectVisualLook({
   }
 
   const catalog = buildVisualCatalog(assetManifest, visualManifest);
-  const sessionAnchor = recommendation.sessionId || recommendation.recommendationId || recommendation.requestId || 'visual-session';
-  const sessionKey = `${sessionAnchor}|${String(visualSeed)}`;
   const itemIds = recommendation.slots.map((slotResult) => slotResult?.selected?.itemId || null);
-  const theme = chooseTheme(catalog, visualManifest, sessionKey, styleTheme, themeId, itemIds);
-  const composition = chooseVariantsForTheme(catalog, itemIds, theme, styleTheme);
+  const lookCandidates = buildLookCandidates(catalog, visualManifest, itemIds, styleTheme, themeId);
+  const lookIndex = normalizedSeedOffset(visualSeed, lookCandidates.length);
+  const selectedLook = lookCandidates[lookIndex];
+  const theme = selectedLook.theme;
+  const composition = selectedLook.result;
 
   const items = recommendation.slots.map((slotResult, index) => {
     const itemId = slotResult?.selected?.itemId || null;
@@ -439,6 +514,9 @@ export function selectVisualLook({
     themeId: theme.id,
     themeLabel: theme.label,
     themePalette: theme.palette,
+    lookIndex,
+    availableLookCount: lookCandidates.length,
+    hasAlternateLook: lookCandidates.length > 1,
     items: Object.freeze(items)
   });
 }
