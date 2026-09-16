@@ -74,10 +74,6 @@ const carrier = (overrides = {}) => ({
 
 const car = (overrides = {}) => ({
   mode:'car',
-  includeOutdoorTransition:false,
-  outsideTransitionMinutes:null,
-  cabinTempC:20,
-  cabinTempSource:'manual',
   ...overrides
 });
 
@@ -291,7 +287,7 @@ test('entering a car segment keeps harness safety visible and prioritized over c
     weatherValue:w,
     segments:[
       { segmentId:'outside', startTime:'2026-08-31T10:00:00.000Z', endTime:'2026-08-31T11:00:00.000Z', context:outdoor() },
-      { segmentId:'car', startTime:'2026-08-31T11:00:00.000Z', endTime:'2026-08-31T12:00:00.000Z', context:car({ includeOutdoorTransition:true, outsideTransitionMinutes:5 }) }
+      { segmentId:'car', startTime:'2026-08-31T11:00:00.000Z', endTime:'2026-08-31T12:00:00.000Z', context:car() }
     ]
   }));
   const carActions = actionAt(result,'2026-08-31T11:00:00.000Z');
@@ -357,18 +353,19 @@ test('style theme cannot affect thermal planner output', () => {
   assert.deepEqual(semanticResult(girl),semanticResult(neutral));
 });
 
-test('estimated car temperature lifts an otherwise complete trip to ready_with_estimate', () => {
+test('car trip uses outdoor weather at segment start without hourly cabin coverage', () => {
   const result = planDayTrip(request({
-    weatherValue:null,
+    weatherValue:weather([point('2026-08-31T10:00:00.000Z',7)]),
     end:'2026-08-31T11:00:00.000Z',
     segments:[{
       segmentId:'car_only',
       startTime:'2026-08-31T10:00:00.000Z',
       endTime:'2026-08-31T11:00:00.000Z',
-      context:car({ cabinTempC:20, cabinTempSource:'estimated' })
+      context:car()
     }]
   }));
 
-  assert.equal(result.status,'ready_with_estimate');
-  assert.ok(result.notices.some((notice) => notice.code === 'CAR_CABIN_TEMPERATURE_ESTIMATED'));
+  assert.equal(result.status,'ready');
+  assert.ok(result.startOutfit.items.every((item) => item.phase === 'in_car'));
+  assert.ok(startIds(result).includes('car_warm_blanket_over_harness'));
 });

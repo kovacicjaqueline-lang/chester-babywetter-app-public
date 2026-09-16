@@ -59,7 +59,9 @@ const items = [
   def({ itemId:'carrier_cover_light', kind:'carrier_accessory', slot:'carrier_accessory', category:'cover', bodyZones:['torso','legs'], thermalWeight:1, thermalStepCredit:0.5, windProtection:1, allowedSituations:['carrier'] }),
   def({ itemId:'carrier_cover_warm', kind:'carrier_accessory', slot:'carrier_accessory', category:'cover', bodyZones:['torso','legs'], thermalWeight:2, thermalStepCredit:1, windProtection:2, allowedSituations:['carrier'] }),
 
-  def({ itemId:'car_blanket_over_harness', kind:'clothing', slot:'outer', category:'blanket', bodyZones:['torso','legs'], thermalWeight:2, carSeatCompatibility:'prohibited', allowedSituations:['car'] }),
+  def({ itemId:'car_thermal_none', kind:'car_accessory', slot:'car_thermal_accessory', category:'none', thermalWeight:0, thermalStepCredit:0, carSeatCompatibility:'prohibited', allowedSituations:['car'] }),
+  def({ itemId:'car_blanket_over_harness', kind:'car_accessory', slot:'car_thermal_accessory', category:'blanket', bodyZones:['torso','legs'], thermalWeight:1, thermalStepCredit:0.5, carSeatCompatibility:'prohibited', allowedSituations:['car'] }),
+  def({ itemId:'car_warm_blanket_over_harness', kind:'car_accessory', slot:'car_thermal_accessory', category:'blanket', bodyZones:['torso','legs'], thermalWeight:2, thermalStepCredit:1, carSeatCompatibility:'prohibited', allowedSituations:['car'] }),
 
   def({ itemId:'sleep_bag_none', kind:'sleep_bag', slot:'sleep_bag', category:'sleep_bag', thermalWeight:0, sleepWarmthWeight:0, tog:null, carSeatCompatibility:'prohibited', sleepSafe:true, allowedSituations:['sleep'] }),
   def({ itemId:'sleep_bag_0_5', kind:'sleep_bag', slot:'sleep_bag', category:'sleep_bag', thermalWeight:1, sleepWarmthWeight:1, tog:0.5, carSeatCompatibility:'prohibited', sleepSafe:true, allowedSituations:['sleep'] }),

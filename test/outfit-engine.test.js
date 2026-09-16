@@ -23,7 +23,7 @@ function weather(temp, currentOverrides={}, hourly=[]) {
 const outdoor = (overrides={}) => ({ mode:'outdoor', plannedMinutes:60, activity:'normal', activitySource:'user', sunExposure:'shade', groundContact:'none', ...overrides });
 const stroller = (overrides={}) => ({ mode:'stroller', plannedMinutes:60, strollerState:'awake', activity:'normal', activitySource:'user', sunExposure:'shade', windProtection:'none', ...overrides });
 const carrier = (overrides={}) => ({ mode:'carrier', plannedMinutes:60, sunExposure:'shade', placement:'over_wearer_outerwear', ...overrides });
-const car = (overrides={}) => ({ mode:'car', plannedMinutes:30, includeOutdoorTransition:false, outsideTransitionMinutes:null, cabinTempC:20, cabinTempSource:'manual', ...overrides });
+const car = (overrides={}) => ({ mode:'car', ...overrides });
 const sleep = (overrides={}) => ({ mode:'sleep', roomTempC:18.5, ...overrides });
 function request(context,{ w=context.mode==='sleep'?null:weather(18), p=profile(), session=createSession('session_test'), neckFeedback=null }={}) {
   return { requestId:'req_test', requestedAt:'2026-08-25T12:00:00.000Z', profile:p, context, weather:w, session, neckFeedback };
@@ -251,36 +251,34 @@ test('carrier jacket plus warm cover credit is capped at two steps',()=>{
   assert.ok(r.ruleTrace.some(t=>t.ruleId==='situation.carrier.body_heat' && t.delta===-2));
 });
 
-test('estimated cabin temperature is consumed, not calculated, and marked',()=>{
-  const r=recommendOutfit(request(car({cabinTempC:21,cabinTempSource:'estimated'}),{w:null}));
-  assert.equal(r.status,'ready_with_estimate');
+test('car consumes current outdoor temperature without cabin estimate',()=>{
+  const r=recommendOutfit(request(car(),{w:weather(21)}));
+  assert.equal(r.status,'ready');
   assert.equal(r.phases[0].thermalReferenceC,21);
-  assert.ok(notices(r).includes('CAR_CABIN_TEMPERATURE_ESTIMATED'));
-  assert.equal(r.dataQuality.usedEstimatedCabinTemperature,true);
+  assert.equal(r.phases[0].thermalReferenceSource,'air_temp');
+  assert.equal(r.dataQuality.usedEstimatedCabinTemperature,false);
 });
 
-test('car blocks if cabin temperature is absent instead of estimating internally',()=>{
-  const r=recommendOutfit(request(car({cabinTempC:null}),{w:null}));
+test('car blocks if current outdoor temperature is absent',()=>{
+  const r=recommendOutfit(request(car(),{w:null}));
   assert.equal(r.status,'blocked');
-  assert.ok(r.dataQuality.missingFields.includes('context.cabinTempC'));
+  assert.ok(r.dataQuality.missingFields.includes('weather.current.airTempC'));
 });
 
-test('car can emit outdoor_transition and in_car phases',()=>{
-  const r=recommendOutfit(request(car({includeOutdoorTransition:true,cabinTempC:20}),{w:weather(5)}));
-  assert.ok(r.phases.some(p=>p.phase==='outdoor_transition'));
-  assert.ok(r.phases.some(p=>p.phase==='in_car'));
-  assert.ok(notices(r).includes('CAR_SEAT_REMOVE_OUTER_BEFORE_HARNESS'));
+test('car emits only the in_car phase',()=>{
+  const r=recommendOutfit(request(car(),{w:weather(5)}));
+  assert.deepEqual(r.phases.map(p=>p.phase),['in_car']);
 });
 
 test('winter overall is never under harness',()=>{
-  const r=recommendOutfit(request(car({cabinTempC:5}),{w:null}));
+  const r=recommendOutfit(request(car(),{w:weather(5)}));
   assert.ok(!r.slots.some(s=>s.phase==='in_car' && s.selected.itemId==='winter_overall'));
-  assert.ok(!r.slots.some(s=>s.phase==='in_car' && CLOTHING_CATALOG[s.selected.itemId]?.carSeatCompatibility==='prohibited'));
+  assert.ok(!r.slots.some(s=>s.phase==='in_car' && s.slot!=='car_thermal_accessory' && CLOTHING_CATALOG[s.selected.itemId]?.carSeatCompatibility==='prohibited'));
 });
 
 test('safety overrides a prohibited manual car lock with structured reason',()=>{
   const session=lockItem(createSession('s'),{phase:'in_car',slot:'outer',itemId:'winter_overall'});
-  const r=recommendOutfit(request(car({cabinTempC:8}),{w:null,session}));
+  const r=recommendOutfit(request(car(),{w:weather(8),session}));
   assert.ok(notices(r).includes('MANUAL_LOCK_OVERRIDDEN_FOR_SAFETY'));
   assert.ok(r.ruleTrace.some(t=>t.effect==='override_lock'));
   assert.notEqual(id(r,'outer','in_car'),'winter_overall');
@@ -288,7 +286,7 @@ test('safety overrides a prohibited manual car lock with structured reason',()=>
 
 test('conditional manual car layer remains with explicit fit warning',()=>{
   const session=lockItem(createSession('s'),{phase:'in_car',slot:'mid',itemId:'fleece_jacket'});
-  const r=recommendOutfit(request(car({cabinTempC:10}),{w:null,session}));
+  const r=recommendOutfit(request(car(),{w:weather(10),session}));
   assert.equal(id(r,'mid','in_car'),'fleece_jacket');
   assert.ok(notices(r).includes('CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT'));
 });
@@ -383,7 +381,7 @@ test('extreme cold, heat and strong wind produce caution codes',()=>{
 });
 
 test('all recommendation slots are unique per phase and use known catalog items',()=>{
-  const scenarios=[outdoor(),stroller(),carrier(),car({includeOutdoorTransition:true}),sleep()];
+  const scenarios=[outdoor(),stroller(),carrier(),car(),sleep()];
   for (const context of scenarios) {
     const r=recommendOutfit(request(context,{w:context.mode==='sleep'?null:weather(12)}));
     const keys=r.slots.map(s=>`${s.phase}|${s.slot}`);

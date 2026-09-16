@@ -56,7 +56,7 @@ Doppelte Zeitpunkte werden zusammengeführt. Der letzte Checkpoint endet bei `Tr
 
 Für wetterabhängige Segmente muss ein Checkpoint auf einen realen nutzbaren Wetterpunkt auflösbar sein. Es werden keine Temperaturen interpoliert und keine Wetterzeitstempel erfunden oder umgeschrieben. Kann ein Segmentstart nicht ausreichend durch vorhandene Prognosedaten abgedeckt werden, wird die Abdeckung als unvollständig markiert statt stillschweigend zu extrapolieren.
 
-`indoor` und `sleep` benötigen keinen Wetter-Checkpoint; ein Situationswechsel genügt, solange `roomTempC` vorhanden ist. `car/in_car` verwendet `cabinTempC`; nur eine optionale `outdoor_transition` ist wetterabhängig.
+`indoor` und `sleep` benötigen keinen Wetter-Checkpoint; ein Situationswechsel genügt, solange `roomTempC` vorhanden ist. `car/in_car` benötigt einen realen Außenwetterpunkt am Segmentstart, aber keine stündlichen Checkpoints innerhalb der Fahrt.
 
 ## 5. `plannedMinutes` im Planer
 
@@ -66,7 +66,7 @@ Für jeden internen Engine-Request gilt:
 
 - `plannedMinutes = Minuten vom aktuellen Checkpoint bis zum nächsten Checkpoint bzw. Segmentende`,
 - bei `outdoor`, `stroller` und `carrier` wird dieser Wert in den vorhandenen SituationContext eingesetzt,
-- bei `car` beschreibt er die Dauer des aktuellen Fahr-/Autosegments; `outsideTransitionMinutes` bleibt davon getrennt,
+- bei `car` wird kein `plannedMinutes`-Feld ergänzt, da die Autositzlogik nur den Wetterpunkt am Segmentstart verwendet,
 - `indoor` und `sleep` haben weiterhin kein `plannedMinutes`-Feld.
 
 Damit bleibt die Bedeutung der bestehenden Engine erhalten: Wetterrisiken werden innerhalb des lokalen Auswertungsintervalls betrachtet, während der Planer spätere Intervalle separat auswertet.

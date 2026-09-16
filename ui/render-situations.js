@@ -67,15 +67,17 @@ function numberField(labelText, field, value, min, max, suffix) {
   return label;
 }
 
-function checkboxField(labelText, field, checked) {
-  const label = document.createElement('label');
-  label.className = 'check-field';
-  const input = document.createElement('input');
-  input.type = 'checkbox';
-  input.dataset.contextField = field;
-  input.checked = Boolean(checked);
-  label.append(input, document.createTextNode(labelText));
-  return label;
+function carSafetySummary() {
+  const summary = document.createElement('div');
+  summary.className = 'car-context-summary';
+  const title = document.createElement('strong');
+  title.textContent = 'Keine zusätzlichen Angaben nötig';
+  const weather = document.createElement('p');
+  weather.textContent = 'Die Empfehlung startet mit dem aktuellen Außenwetter und bleibt unter dem Gurt schlank.';
+  const cover = document.createElement('p');
+  cover.textContent = 'Zusätzliche Wärme kommt erst über den korrekt geschlossenen Gurt. Sobald das Auto warm wird, Decke oder Überwurf entfernen.';
+  summary.append(title, weather, cover);
+  return summary;
 }
 
 export function renderSituationContext(mode, context) {
@@ -109,12 +111,7 @@ export function renderSituationContext(mode, context) {
     );
   }
   if (mode === 'car') {
-    host.append(
-      numberField('Innenraumtemperatur', 'cabinTempC', context.cabinTempC, -10, 45, '°C'),
-      selectField('Temperaturquelle', 'cabinTempSource', [['manual', 'Manuell'], ['measured', 'Gemessen'], ['estimated', 'Geschätzt']], context.cabinTempSource),
-      checkboxField('Weg zum/vom Auto berücksichtigen', 'includeOutdoorTransition', context.includeOutdoorTransition),
-      numberField('Dauer draußen', 'outsideTransitionMinutes', context.outsideTransitionMinutes, 0, 60, 'Min.')
-    );
+    host.append(carSafetySummary());
   }
   if (mode === 'indoor') {
     host.append(

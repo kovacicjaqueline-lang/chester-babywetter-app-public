@@ -43,7 +43,6 @@ type GroundContact = "none" | "standing" | "walking";
 type StrollerState = "awake" | "asleep";
 type StrollerWindProtection = "none" | "partial" | "good" | "unknown";
 type CarrierPlacement = "under_wearer_outerwear" | "over_wearer_outerwear";
-type CarTemperatureSource = "measured" | "manual" | "estimated";
 type DataOrigin = "api" | "cache" | "manual" | "api_with_manual_override";
 type WeatherFreshness = "fresh" | "stale" | "unknown";
 type ApparentTempFactor = "wind" | "humidity" | "sun";
@@ -52,7 +51,7 @@ type ProtectionLevel = 0 | 1 | 2 | 3;
 type CarSeatCompatibility = "allowed" | "conditional" | "prohibited";
 type RecommendationSeverity = "info" | "caution" | "hard_rule";
 type RecommendationStatus = "idle" | "ready" | "ready_with_estimate" | "partial" | "blocked";
-type RecommendationPhase = "main" | "outdoor_transition" | "in_car";
+type RecommendationPhase = "main" | "in_car";
 type AlternativeRelation = "equivalent" | "warmer" | "cooler";
 type WearPosition = "on_body" | "under_harness" | "over_harness" | "external";
 type ItemSelectionSource = "engine" | "manual_lock" | "safety_override";
@@ -61,6 +60,7 @@ type ItemKind =
   | "footwear"
   | "stroller_accessory"
   | "carrier_accessory"
+  | "car_accessory"
   | "sleep_bag";
 ```
 
@@ -249,7 +249,7 @@ Diese Strukturen müssen nicht persistent gespeichert werden.
 ```ts
 interface ThermalEnvironment {
   thermalReferenceC: number;
-  referenceSource: "air_temp" | "apparent_temp" | "room_temp" | "cabin_temp";
+  referenceSource: "air_temp" | "apparent_temp" | "room_temp";
   alreadyIncludedFactors: ApparentTempFactor[];
 }
 
@@ -325,40 +325,23 @@ Tragecover wird nicht als Besitz-Eingabe benötigt. Es kann als empfehlbares/aus
 ```ts
 interface CarContext {
   mode: "car";
-  plannedMinutes: number | null;
-  includeOutdoorTransition: boolean;
-  outsideTransitionMinutes: number | null;
-  cabinTempC: number;
-  cabinTempSource: CarTemperatureSource;
 }
 ```
 
-Ist die Innenraumtemperatur nicht bekannt, liefert die vorgelagerte Integrationslogik einen geschätzten Wert mit `cabinTempSource: "estimated"`. Die Outfitengine muss diesen Ursprung bis ins Ergebnis tragen.
-
-Normative V1-Schätzpolicy:
+Der aktive V1-Kontext enthält keine Innenraumtemperatur, Temperaturquelle, Übergangsoption oder Außendauer. Die Engine benötigt für `car` einen aktuellen Außenwetterpunkt und verwendet dessen vertrauenswürdige gefühlte Temperatur, sonst `airTempC`.
 
 ```ts
-const V1_ESTIMATED_CABIN_TEMP_C = 20;
-
-function estimateCabinTemperature(): Pick<CarContext, "cabinTempC" | "cabinTempSource"> {
-  return {
-    cabinTempC: V1_ESTIMATED_CABIN_TEMP_C,
-    cabinTempSource: "estimated"
-  };
+interface LegacyCarContextV2 {
+  mode: "car";
+  plannedMinutes?: number | null;
+  includeOutdoorTransition?: boolean;
+  outsideTransitionMinutes?: number | null;
+  cabinTempC?: number;
+  cabinTempSource?: "measured" | "manual" | "estimated";
 }
 ```
 
-Regeln:
-
-- die Funktion gehört zur Integrationslogik und nicht in die Outfitengine oder den DOM-Code,
-- sie nimmt in V1 bewusst **keine Wetterwerte** als Eingabe; insbesondere wird `airTempC` nicht in eine Innenraumtemperatur umgerechnet,
-- 20 °C ist eine grobe neutrale Annahme für einen klima-kontrollierten Fahrzeuginnenraum, keine Messung und keine Vorhersage,
-- mit den vorhandenen V1-Inputs fehlen HVAC-Status, Vorheizen/Vorkühlen, Parkdauer, solare Aufheizung und tatsächlicher Startzustand; eine dynamische Formel wäre deshalb scheinpräzise,
-- manuelle Änderung von `cabinTempC` setzt `cabinTempSource: "manual"`,
-- `cabinTempSource: "measured"` wird nur verwendet, wenn der Nutzer einen tatsächlich gemessenen Wert ausdrücklich so markiert,
-- Zurückschalten auf `estimated` setzt `cabinTempC` wieder auf 20 °C,
-- `outdoor_transition` verwendet weiterhin Außenwetter; `in_car` verwendet ausschließlich `cabinTempC`,
-- Gurtsicherheitsregeln sind unabhängig von `cabinTempSource` und vom geschätzten Temperaturwert.
+`LegacyCarContextV2` wird ausschließlich beim Lesen alter `babyweather.v1.uiState`-Daten toleriert. Die vier alten Fachfelder werden nicht in den aktiven V3-Kontext übernommen. Der Engine-Einstieg ignoriert zusätzliche Legacy-Felder ebenfalls. Profil-/Settings-Importe enthalten weiterhin keinen Situationskontext.
 
 ### 7.5 Drinnen
 
@@ -419,6 +402,7 @@ type OutfitSlot =
   | "stroller_thermal_accessory"
   | "stroller_weather_accessory"
   | "carrier_accessory"
+  | "car_thermal_accessory"
   | "sleep_bag"
   | "sleep_underlayer";
 ```
@@ -654,10 +638,9 @@ Validierung:
 
 - `sleep`: `weather` darf `null` sein; `roomTempC` wird für vollständige Empfehlung benötigt,
 - `indoor`: `weather` darf `null` sein; `roomTempC` wird für vollständige Empfehlung benötigt,
-- `outdoor/stroller/carrier`: aktuelle Außentemperatur erforderlich; weitere fehlende Wetterwerte erlauben `partial`/Unsicherheit,
+- `outdoor/stroller/carrier/car`: aktuelle Außentemperatur erforderlich; weitere fehlende Wetterwerte erlauben in den Außenmodi `partial`/Unsicherheit,
 - abgelaufener/ungültiger/standortfremder Wettercache gilt für den Engine-Request als fehlendes Wetter und wird nicht als `WeatherSeries` weitergereicht,
-- `car`: `cabinTempC` ist Pflicht, darf aber `estimated` sein,
-- `car` mit Outdoor-Transition braucht Wetter nur für die Transition-Phase.
+- `car`: benötigt `weather.current.airTempC`; optionale Wind-/Regen-/UV-Lücken blockieren die Autositz-Empfehlung nicht.
 
 `profile.mobilityStage` ist Teil des Profils, aber kein direkter thermischer Request-Parameter. Die Outfitengine darf allein aufgrund eines anderen Mobilitätsstands bei identischem Kontext keine andere thermische Entscheidung treffen.
 
@@ -719,7 +702,6 @@ interface RecommendationPhaseEvaluation {
     | "air_temp"
     | "apparent_temp"
     | "room_temp"
-    | "cabin_temp"
     | null;
   thermalBand: string | null;
   thermalAdjustment: number;
@@ -727,7 +709,7 @@ interface RecommendationPhaseEvaluation {
 }
 ```
 
-Nicht-Auto-Modi einschließlich `indoor` verwenden `main`. Auto verwendet `in_car` und optional `outdoor_transition`.
+Nicht-Auto-Modi einschließlich `indoor` verwenden `main`. Auto verwendet ausschließlich `in_car`.
 
 ## 17. Hinweise / Safety Codes
 
@@ -745,10 +727,9 @@ Normative Codes mindestens:
 
 - `CHECK_NECK`,
 - `CAR_SEAT_NO_BULKY_LAYERS`,
-- `CAR_SEAT_REMOVE_OUTER_BEFORE_HARNESS`,
 - `CAR_SEAT_BLANKET_OVER_HARNESS_ONLY`,
+- `CAR_SEAT_REMOVE_COVER_WHEN_WARM`,
 - `CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT`,
-- `CAR_CABIN_TEMPERATURE_ESTIMATED`,
 - `SLEEP_NO_HAT`,
 - `SLEEP_NO_LOOSE_BEDDING`,
 - `SLEEP_NO_WEIGHTED_PRODUCTS`,
@@ -810,6 +791,7 @@ interface OutfitRecommendation {
     weatherFreshness: WeatherFreshness | null;
     missingFields: string[];
     usedManualWeather: boolean;
+    /** @deprecated Kompatibilitätsfeld; im aktiven Modell immer false. */
     usedEstimatedCabinTemperature: boolean;
   };
 }
@@ -907,27 +889,21 @@ Wählt der Nutzer `sleep_bag_1_0`, wird gespeichert:
 
 Danach muss die Engine die Unterkleidung auf ein wärmeres Preset umstellen. Sie darf keine lose Bettware als thermischen Ausgleich erzeugen; dieselbe Regel gilt ausdrücklich auch bei `sleep_bag_none`.
 
-## 23. Auto-Beispiel mit Schätzung
+## 23. Auto-Beispiel
 
 ```json
 {
-  "mode": "car",
-  "plannedMinutes": 30,
-  "includeOutdoorTransition": true,
-  "outsideTransitionMinutes": 5,
-  "cabinTempC": 20,
-  "cabinTempSource": "estimated"
+  "mode": "car"
 }
 ```
 
-Die `20` ist in V1 die feste neutrale Integrationsannahme und keine aus dem Außenwetter errechnete Temperatur.
-
 Ergebnis muss enthalten:
 
-- eigene Phase `outdoor_transition`,
-- eigene Phase `in_car`,
-- `CAR_CABIN_TEMPERATURE_ESTIMATED`,
-- keine voluminöse Schicht `under_harness`.
+- genau die Phase `in_car`,
+- Außenwetter als `thermalReferenceC`,
+- keine voluminöse Schicht `under_harness`,
+- genau einen `car_thermal_accessory` mit `wearPosition: "over_harness"`,
+- bei einer Decke den Hinweis, sie im warmen Auto zu entfernen.
 
 ## 24. Drinnen-Beispiel
 
@@ -1045,7 +1021,7 @@ Vor Speicherung vollständig prüfen:
 9. V1-Altersbereich sauber behandeln,
 10. `apparentTempTrusted: true` nur mit `apparentTempC != null`,
 11. `SleepBagTog` nur aus `{0.5,1.0,1.5,2.5,3.5}`,
-12. `cabinTempSource: estimated` muss als Schätzung bis ins Ergebnis gelangen,
+12. Legacy-Auto-Felder aus UI-State V2 werden bei der Migration verworfen,
 13. `weatherCacheMaxAgeMinutes`: Legacy-`null` aus älteren Schema-V1-Exports wird auf den V1-Standard `120` migriert; andere Werte müssen endliche Zahlen sein und werden auf `30..120` begrenzt,
 14. fehlendes `profile.mobilityStage` aus älteren Schema-V1-Exports wird auf `low_mobility` migriert; ein vorhandener unbekannter Wert wird abgelehnt,
 15. unbekannte Safety-Enums ablehnen,
@@ -1113,10 +1089,10 @@ Für `mobilityStage` ist in V1 keine thermische Regel-ID vorgesehen, weil der Pr
 36. Schlaf und Drinnen bleiben auch bei abgelaufenem/fehlendem Wettercache ausschließlich von `roomTempC` abhängig.
 37. Wiederverwendete manuelle Wetterwerte behalten ihre manuelle Provenienz und werden nicht durch ältere automatische Stundenwerte als `current` ersetzt.
 38. Bei stale automatischem Wetter deckt das Risikozeitfenster weiterhin den ab Request-Zeit geplanten Zeitraum ab.
-39. `cabinTempSource: estimated` wird von der Integrationslogik mit exakt 20 °C erzeugt und nie aus Außenwetter berechnet.
-40. `manual | measured | estimated` verändern keine Autositz-Gurtsicherheitsregeln.
-41. manuelle Änderung von `cabinTempC` setzt `cabinTempSource: manual`; Zurückschalten auf `estimated` setzt wieder 20 °C.
-42. `outdoor_transition` verwendet Außenwetter, während `in_car` ausschließlich `cabinTempC` als Temperaturreferenz verwendet.
+39. `car/in_car` verwendet die aktuelle Außenwetter-Referenz; es wird keine Innenraumtemperatur geschätzt.
+40. Voluminöse oder `prohibited` Körperkleidung darf nie `under_harness` erscheinen.
+41. Auto-Zusatzwärme liegt ausschließlich im Slot `car_thermal_accessory` mit `wearPosition: over_harness`.
+42. `car` erzeugt keine `outdoor_transition`-Phase.
 43. `calm` wird von der aktuellen App-Integration bei geladenen Outdoor-/Kinderwagenkontexten auf `normal` normalisiert.
 44. Neu gespeicherte Profile enthalten genau einen bekannten `mobilityStage`; ältere V1-Profile ohne Feld werden auf `low_mobility` migriert.
 45. Unterschiedliche `mobilityStage`-Werte verändern bei identischem `activity`-Kontext keine thermische Empfehlung.
@@ -1125,7 +1101,7 @@ Für `mobilityStage` ist in V1 keine thermische Regel-ID vorgesehen, weil der Pr
 
 ## 33. Noch offene technische Datenentscheidungen
 
-Die V1-Entscheidung für `cabinTempSource: estimated` ist geschlossen: die Integrationslogik verwendet die neutrale, transparent gekennzeichnete 20-°C-Annahme ohne Außenwetter-Ableitung.
+Die Auto-Entscheidung ist geschlossen: aktuelles Außenwetter als Startreferenz, keine Innenraumschätzung und entfernbare Zusatzwärme ausschließlich über dem geschlossenen Gurt.
 
 Die V1-Profilentscheidung für Alter und Mobilität ist ebenfalls geschlossen: `birthDate` bleibt die einzige Altersquelle; `mobilityStage` wird separat gespeichert und ist kein thermischer Aktivitätsersatz.
 
@@ -1189,7 +1165,7 @@ Normative Validierung:
 - `segment.endTime > segment.startTime`,
 - ein UI-Modell mit reinen Wechselzeitpunkten muss vor Übergabe an den Planer in diese normalisierte Form umgewandelt werden,
 - `strollerState: asleep` bleibt `stroller` und wird nicht automatisch in `sleep` umgewandelt,
-- `sleep` benötigt `roomTempC`, `car` benötigt weiterhin `cabinTempC` und `cabinTempSource`.
+- `sleep` benötigt `roomTempC`; `car` hat keine zusätzlichen Pflichtfelder im Kontext.
 
 ### 34.3 Planer-Request
 
@@ -1203,7 +1179,7 @@ interface TripPlannerRequest {
 }
 ```
 
-Ein gemischter Plan darf `weather: null` nur dann vollständig auswertbar sein, wenn keine wetterabhängige Phase vorkommt. `indoor`, `sleep` und `car/in_car` bleiben von Außenwetter unabhängig; eine `car/outdoor_transition` benötigt Wetter.
+Ein gemischter Plan darf `weather: null` nur dann vollständig auswertbar sein, wenn keine wetterabhängige Phase vorkommt. `indoor` und `sleep` bleiben von Außenwetter unabhängig; `car/in_car` benötigt am Segmentstart einen aktuellen Außenwetterpunkt.
 
 ## 35. Trip-Checkpoints und Engine-Requests
 
@@ -1226,7 +1202,7 @@ Checkpoint-Regeln:
 - mindestens Trip-Start, jeder Segmentstart und jeder nutzbare stündliche Wetterpunkt innerhalb wetterabhängiger Segmente,
 - doppelte Zeitpunkte werden zusammengeführt,
 - für `indoor`/`sleep` genügt ohne Kontextänderung ein Segment-Checkpoint,
-- `car/in_car` benötigt keinen stündlichen Außenwetter-Checkpoint; `outdoor_transition` verwendet den passenden Außenwetterpunkt,
+- `car/in_car` benötigt den Außenwetterpunkt am Segmentstart, aber keine stündlichen Checkpoints innerhalb der Fahrt,
 - Wetterwerte werden nicht interpoliert und Wetterzeitstempel nicht umgeschrieben,
 - kann ein wetterabhängiger Checkpoint nicht auf reale nutzbare Prognosedaten gestützt werden, entsteht eine Coverage-Lücke statt einer Extrapolation.
 
@@ -1238,7 +1214,7 @@ Für einen Engine-Request an einem Checkpoint gilt:
 plannedMinutes = checkpoint.endTime - checkpoint.startTime in Minuten
 ```
 
-Der Wert wird nur in die bestehenden Kontexte `outdoor`, `stroller`, `carrier` und `car` eingesetzt. `outsideTransitionMinutes` im Auto bleibt ein eigener Parameter.
+Der Wert wird nur in die bestehenden Kontexte `outdoor`, `stroller` und `carrier` eingesetzt. Der aktive Auto-Kontext besitzt keine Dauerparameter.
 
 ### 35.2 Abgeleitete Wetterserie
 
@@ -1347,8 +1323,8 @@ Statusregeln:
 
 - `blocked`: Start-Outfit kann wegen fehlender erforderlicher Daten/ungültigem Plan nicht belastbar erzeugt werden,
 - `partial`: Start ist auswertbar, aber spätere Abdeckung oder einzelne Engine-Empfehlungen sind unvollständig,
-- `ready_with_estimate`: vollständig abgedeckt, aber mindestens eine relevante Auto-Auswertung nutzt die transparente `estimated`-Innenraumtemperatur,
-- `ready`: vollständig abgedeckt ohne solche Schätzung und ohne unvollständige Daten.
+- `ready_with_estimate`: veralteter Kompatibilitätsstatus; wird vom aktiven Modell nicht mehr erzeugt,
+- `ready`: vollständig abgedeckt ohne unvollständige Daten.
 
 ## 37. Vergleichs- und Optimierungsregeln
 

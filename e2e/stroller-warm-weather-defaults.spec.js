@@ -38,7 +38,7 @@ test('legacy implicit shade and partial wind defaults migrate once while later e
   await expect(wind).toHaveValue('unknown');
 
   const migrated = await page.evaluate((key) => JSON.parse(localStorage.getItem(key)), UI_STATE_KEY);
-  expect(migrated.uiStateVersion).toBe(2);
+  expect(migrated.uiStateVersion).toBe(3);
   expect(migrated.contexts.outdoor.sunExposure).toBe('unknown');
   expect(migrated.contexts.stroller.sunExposure).toBe('unknown');
   expect(migrated.contexts.stroller.windProtection).toBe('unknown');
@@ -54,5 +54,5 @@ test('legacy implicit shade and partial wind defaults migrate once while later e
   await expect(page.locator('#situationDialog [data-context-field="windProtection"]')).toHaveValue('partial');
 
   const persisted = await page.evaluate((key) => JSON.parse(localStorage.getItem(key)), UI_STATE_KEY);
-  expect(persisted.uiStateVersion).toBe(2);
+  expect(persisted.uiStateVersion).toBe(3);
 });

@@ -705,10 +705,22 @@
       }
     },
     {
+      "id": "car_thermal_none",
+      "label": "Keine zusätzliche Decke",
+      "category": "none",
+      "slot": "car_thermal_accessory",
+      "situations": [
+        "car"
+      ],
+      "styleVariants": [],
+      "altText": "Keine zusätzliche Decke.",
+      "assetPath": null
+    },
+    {
       "id": "car_blanket_over_harness",
-      "label": "Decke über dem Autositzgurt",
+      "label": "Leichte Decke über dem Autositzgurt",
       "category": "blanket",
-      "slot": "outer",
+      "slot": "car_thermal_accessory",
       "situations": [
         "car"
       ],
@@ -717,11 +729,31 @@
         "boy",
         "girl"
       ],
-      "altText": "Decke über dem Autositzgurt.",
+      "altText": "Leichte abnehmbare Decke für über dem korrekt geschlossenen Autositzgurt.",
       "variantPaths": {
         "neutral": "assets/clothing/car_blanket_over_harness/neutral.webp",
         "boy": "assets/clothing/car_blanket_over_harness/boy.webp",
         "girl": "assets/clothing/car_blanket_over_harness/girl.webp"
+      }
+    },
+    {
+      "id": "car_warm_blanket_over_harness",
+      "label": "Warme Decke über dem Autositzgurt",
+      "category": "blanket",
+      "slot": "car_thermal_accessory",
+      "situations": [
+        "car"
+      ],
+      "styleVariants": [
+        "neutral",
+        "boy",
+        "girl"
+      ],
+      "altText": "Warme abnehmbare Decke für über dem korrekt geschlossenen Autositzgurt.",
+      "variantPaths": {
+        "neutral": "assets/clothing/stroller_warm_blanket/neutral.webp",
+        "boy": "assets/clothing/stroller_warm_blanket/boy.webp",
+        "girl": "assets/clothing/stroller_warm_blanket/girl.webp"
       }
     },
     {

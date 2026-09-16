@@ -1,6 +1,5 @@
 import { createSession, lockItem, nextVisualSeed, recommendOutfit, setWarmthOffset } from './src/index.js';
 import { createWeatherService } from './src/weather/index.js';
-import { estimateCabinTemperature } from './src/integration/cabin-temperature.js';
 import { WEATHER_CACHE_MAX_AGE_MINUTES, WEATHER_FRESH_MAX_AGE_MINUTES, assessCachedWeatherSeries, compensateWeatherRiskHorizon, normalizeWeatherBundle } from './src/integration/weather-series.js';
 import { applyManualWeatherOverride, normalizeTemperatureToHalfDegree } from './src/integration/manual-weather.js';
 import { manualWeatherValuesFromPresets, precipitationPresetForWeather, sunPresetForWeather, windPresetForWeather } from './src/integration/manual-weather-presets.js';
@@ -14,7 +13,7 @@ import { bindDayTripPlanner } from './ui/day-trip-planner.js';
 const PROFILE_KEY = 'babyweather.v1.profile';
 const SETTINGS_KEY = 'babyweather.v1.settings';
 const UI_STATE_KEY = 'babyweather.v1.uiState';
-const UI_STATE_VERSION = 2;
+const UI_STATE_VERSION = 3;
 const WEATHER_CACHE_KEY = 'babyweather.v1.weatherCache';
 const DEMO_MODE = new URLSearchParams(location.search).get('demo') === '1';
 const MODES = new Set(['outdoor', 'stroller', 'carrier', 'car', 'indoor', 'sleep']);
@@ -39,7 +38,7 @@ const DEFAULT_CONTEXTS = Object.freeze({
   outdoor: { mode: 'outdoor', plannedMinutes: 60, activity: 'normal', activitySource: 'user', sunExposure: 'unknown', groundContact: 'none' },
   stroller: { mode: 'stroller', plannedMinutes: 60, strollerState: 'awake', activity: 'normal', activitySource: 'user', sunExposure: 'unknown', windProtection: 'unknown' },
   carrier: { mode: 'carrier', plannedMinutes: 60, sunExposure: 'unknown', placement: 'over_wearer_outerwear' },
-  car: { mode: 'car', plannedMinutes: 30, includeOutdoorTransition: true, outsideTransitionMinutes: 5, ...estimateCabinTemperature() },
+  car: { mode: 'car' },
   indoor: { mode: 'indoor', roomTempC: 20, activity: 'normal', activitySource: 'user' },
   sleep: { mode: 'sleep', roomTempC: 18.5 }
 });
@@ -64,13 +63,7 @@ function sanitizeContexts(candidate, { migrateLegacyDefaults = false } = {}) {
     if (mode === 'outdoor') { contexts.outdoor.activity = source.activity === 'active' ? 'active' : 'normal'; if (['shade','partial','direct','unknown'].includes(source.sunExposure)) contexts.outdoor.sunExposure = migrateLegacyDefaults && source.sunExposure === 'shade' ? 'unknown' : source.sunExposure; if (['none','standing','walking'].includes(source.groundContact)) contexts.outdoor.groundContact = source.groundContact; }
     if (mode === 'stroller') { contexts.stroller.strollerState = source.strollerState === 'asleep' ? 'asleep' : 'awake'; contexts.stroller.activity = source.strollerState === 'asleep' ? 'normal' : source.activity === 'active' ? 'active' : 'normal'; if (['shade','partial','direct','unknown'].includes(source.sunExposure)) contexts.stroller.sunExposure = migrateLegacyDefaults && source.sunExposure === 'shade' ? 'unknown' : source.sunExposure; if (['none','partial','good','unknown'].includes(source.windProtection)) contexts.stroller.windProtection = migrateLegacyDefaults && source.windProtection === 'partial' ? 'unknown' : source.windProtection; }
     if (mode === 'carrier') { if (['shade','partial','direct','unknown'].includes(source.sunExposure)) contexts.carrier.sunExposure = migrateLegacyDefaults && source.sunExposure === 'shade' ? 'unknown' : source.sunExposure; if (['under_wearer_outerwear','over_wearer_outerwear'].includes(source.placement)) contexts.carrier.placement = source.placement; }
-    if (mode === 'car') {
-      if (source.cabinTempSource === 'estimated') Object.assign(contexts.car, estimateCabinTemperature());
-      else if (['manual','measured'].includes(source.cabinTempSource) && Number.isFinite(source.cabinTempC)) { contexts.car.cabinTempC = source.cabinTempC; contexts.car.cabinTempSource = source.cabinTempSource; }
-      else if (Number.isFinite(source.cabinTempC)) { contexts.car.cabinTempC = source.cabinTempC; contexts.car.cabinTempSource = 'manual'; }
-      if (typeof source.includeOutdoorTransition === 'boolean') contexts.car.includeOutdoorTransition = source.includeOutdoorTransition;
-      if (source.outsideTransitionMinutes === null || Number.isFinite(source.outsideTransitionMinutes)) contexts.car.outsideTransitionMinutes = source.outsideTransitionMinutes;
-    }
+    // V3 car context intentionally ignores legacy cabin-temperature and transition fields.
     if (mode === 'indoor') { if (source.roomTempC === null || Number.isFinite(source.roomTempC)) contexts.indoor.roomTempC = source.roomTempC; contexts.indoor.activity = source.activity === 'active' ? 'active' : 'normal'; }
     if (mode === 'sleep' && (source.roomTempC === null || Number.isFinite(source.roomTempC))) contexts.sleep.roomTempC = source.roomTempC;
   }
@@ -343,15 +336,6 @@ function bindSituationContext() {
       else if (target.type === 'number') context[field] = target.value === '' ? null : Number(target.value);
       else context[field] = target.value || null;
       if (field === 'activity') { context.activity = context.activity === 'active' ? 'active' : 'normal'; context.activitySource = 'user'; }
-    }
-    if (mode === 'car' && field === 'cabinTempC') {
-      context.cabinTempSource = 'manual';
-      const sourceField = document.querySelector('#situationContextFields [data-context-field="cabinTempSource"]');
-      if (sourceField) sourceField.value = 'manual';
-    }
-    if (mode === 'car' && field === 'cabinTempSource' && context.cabinTempSource === 'estimated') {
-      Object.assign(context, estimateCabinTemperature());
-      renderSituationContext('car', context);
     }
   });
 }

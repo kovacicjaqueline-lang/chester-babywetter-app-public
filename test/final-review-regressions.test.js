@@ -76,22 +76,14 @@ test('gap inside a longer planned weather window is reported as incomplete cover
   assert.ok(result.dataQuality.missingFields.includes('weather.hourly.coverage'));
 });
 
-test('short car transition accepts the next hourly point as coverage anchor', () => {
+test('car uses current outdoor point without requiring hourly coverage', () => {
   const result = recommendOutfit(request({
-    context:{
-      mode:'car',
-      plannedMinutes:30,
-      includeOutdoorTransition:true,
-      outsideTransitionMinutes:5,
-      cabinTempC:22,
-      cabinTempSource:'measured'
-    },
-    w:weather({hourly:[point('2026-08-25T15:00:00+02:00',18)]})
+    context:{ mode:'car' },
+    w:weather({temp:18,hourly:[]})
   }));
-  const transition = result.phases.find((phase) => phase.phase === 'outdoor_transition');
-  assert.ok(transition);
-  assert.ok(!transition.missingFields.includes('weather.hourly.coverage'));
-  assert.ok(!result.notices.some((notice) => notice.code === 'WEATHER_DATA_INCOMPLETE' && notice.phase === 'outdoor_transition'));
+  assert.equal(result.status,'ready');
+  assert.deepEqual(result.phases.map((phase) => phase.phase),['in_car']);
+  assert.ok(!result.dataQuality.missingFields.includes('weather.hourly.coverage'));
 });
 
 test('missing hourly hazard value inside covered window remains partial', () => {

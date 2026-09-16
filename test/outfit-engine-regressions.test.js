@@ -36,14 +36,16 @@ test('direct sun at 28C or warmer emits extreme heat caution', () => {
   assert.ok(result.notices.some((notice) => notice.code === 'EXTREME_HEAT_CAUTION' && notice.phase === 'main'));
 });
 
-test('car stays partial when outdoor transition is blocked but in-car is ready', () => {
+test('car uses stale outdoor weather as partial in-car recommendation', () => {
+  const stale = weather(21);
+  stale.freshness = 'stale';
   const result = recommendOutfit(request({
-    mode:'car', plannedMinutes:30, includeOutdoorTransition:true, outsideTransitionMinutes:5,
-    cabinTempC:21, cabinTempSource:'manual'
-  }, null));
-  assert.equal(result.phases.find((phase) => phase.phase === 'outdoor_transition')?.status, 'blocked');
-  assert.equal(result.phases.find((phase) => phase.phase === 'in_car')?.status, 'ready');
+    mode:'car'
+  }, stale));
+  assert.deepEqual(result.phases.map((phase) => phase.phase), ['in_car']);
+  assert.equal(result.phases[0].status, 'partial');
   assert.equal(result.status, 'partial');
+  assert.ok(result.notices.some((notice) => notice.code === 'WEATHER_DATA_STALE'));
 });
 
 test('warm stroller wind protection keeps light leg coverage and avoids insulated softshell', () => {
