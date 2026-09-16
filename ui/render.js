@@ -109,6 +109,7 @@ function clothingCard({ slotResult = null, itemId, asset, label, role = '', inte
     image.loading = 'eager';
     image.decoding = 'async';
     image.dataset.clothingImage = 'true';
+    if (asset.visualVariantId) image.dataset.visualVariantId = asset.visualVariantId;
     image.addEventListener('error', () => imageFallback(shell, label), { once: true });
     shell.append(image);
   } else {
@@ -594,7 +595,7 @@ export function renderOutfit({ recommendation, context, warmthDirection, styleTh
     button.setAttribute('aria-pressed', String(active));
     button.disabled = recommendation?.status === 'blocked';
   }
-  document.querySelector('#changeLookButton').disabled = assetStore.status !== 'ready' || !visibleSlots.length;
+  document.querySelector('#changeLookButton').disabled = assetStore.status !== 'ready' || !visibleSlots.length || !visual.look?.hasAlternateLook;
   const excludedNoticeCodes = safetyBridge ? new Set(['CAR_SEAT_REMOVE_OUTER_BEFORE_HARNESS', 'CAR_SEAT_NO_BULKY_LAYERS']) : new Set();
   renderNotices(recommendation, excludedNoticeCodes);
   const assetNotice = document.querySelector('#assetNotice');
