@@ -36,14 +36,14 @@ test('Außentemperatur steuert entfernbare Zusatzwärme über dem Gurt', async (
 
   await expect(page.locator('[data-outfit-phase="in_car"]')).toBeVisible();
   await expect(page.locator('[data-outfit-phase="outdoor_transition"]')).toHaveCount(0);
-  await expect(page.locator('[data-item-id="car_blanket_over_harness"]')).toHaveCount(0);
-  await expect(page.locator('[data-item-id="car_warm_blanket_over_harness"]')).toHaveCount(0);
+  await expect(page.locator('#outfitGrid [data-item-id="car_blanket_over_harness"]')).toHaveCount(0);
+  await expect(page.locator('#outfitGrid [data-item-id="car_warm_blanket_over_harness"]')).toHaveCount(0);
 
   await page.locator('[data-open-dialog="weatherOverrideDialog"]').click();
   await page.locator('#manualAirTempC').fill('5');
   await page.locator('#applyWeatherOverrideButton').click();
 
-  const blanket = page.locator('[data-item-id="car_warm_blanket_over_harness"]');
+  const blanket = page.locator('#outfitGrid [data-item-id="car_warm_blanket_over_harness"]');
   await expect(blanket).toBeVisible();
   await expect(blanket).toHaveAttribute('data-phase','in_car');
   await expect(page.locator('[data-notice-code="CAR_SEAT_NO_BULKY_LAYERS"]')).toBeVisible();

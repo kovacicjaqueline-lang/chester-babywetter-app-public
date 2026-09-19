@@ -132,7 +132,7 @@ test('Autositz-Segment nutzt Außenwetter ohne technische Innenraumeingaben', as
   await page.locator('#tripAddSegmentButton').click();
   const carSegment = page.locator('.trip-segment-card').nth(1);
   await carSegment.locator('[data-trip-segment-mode="car"]').click();
-  await expect(page.locator('.trip-segment-card').nth(1).locator('.trip-inline-safety')).toContainText('keine voluminöse Jacke');
+  await expect(page.locator('.trip-segment-card').nth(1).locator('.trip-inline-safety')).toContainText('Keine voluminöse Jacke');
   await expect(page.locator('.trip-segment-card').nth(1).locator('.trip-inline-safety')).toContainText('Außenwetter');
   await expect(page.locator('.trip-segment-card').nth(1).locator('[data-trip-context-field="cabinTempC"]')).toHaveCount(0);
   await expect(page.locator('.trip-segment-card').nth(1).locator('[data-trip-context-field="cabinTempSource"]')).toHaveCount(0);
@@ -141,7 +141,7 @@ test('Autositz-Segment nutzt Außenwetter ohne technische Innenraumeingaben', as
   await page.locator('#tripGenerateButton').click();
   await expect(page.locator('#tripResultView')).toBeVisible();
   await expect(page.locator('[data-trip-notice-code="CAR_SEAT_NO_BULKY_LAYERS"]')).toBeVisible();
-  await expect(page.locator('[data-trip-notice-code="CAR_SEAT_NO_BULKY_LAYERS"]')).toContainText('keine dicken Schichten');
+  await expect(page.locator('[data-trip-notice-code="CAR_SEAT_NO_BULKY_LAYERS"]')).toContainText('Keine dicken Schichten');
   await expect(page.locator('[data-trip-notice-code="CAR_CABIN_TEMPERATURE_ESTIMATED"]')).toHaveCount(0);
   expect(await page.locator('[data-trip-action][data-safety-critical="true"]').count()).toBeGreaterThan(0);
 
