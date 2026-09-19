@@ -11,10 +11,9 @@ const MODE_COPY = Object.freeze({
 const NOTICE_COPY = Object.freeze({
   CHECK_NECK: ['Nackentest', 'Nacken warm und trocken: passend. Heiß/schwitzig: Schicht reduzieren. Kühl: Schicht ergänzen.'],
   CAR_SEAT_NO_BULKY_LAYERS: ['Autositz: keine dicke Kleidung unter dem Gurt', 'Keine voluminöse Jacke und keinen Winteroverall unter dem Gurt verwenden.'],
-  CAR_SEAT_REMOVE_OUTER_BEFORE_HARNESS: ['Vor dem Anschnallen ausziehen', 'Voluminöse Außenschichten für den Weg zum Auto vor dem Anschnallen entfernen.'],
-  CAR_SEAT_BLANKET_OVER_HARNESS_ONLY: ['Zusätzliche Wärme über dem Gurt', 'Eine Decke oder Jacke nur über dem bereits korrekt geschlossenen Gurt verwenden.'],
+  CAR_SEAT_BLANKET_OVER_HARNESS_ONLY: ['Zusätzliche Wärme über dem Gurt', 'Decke oder Überwurf nur über dem bereits korrekt geschlossenen Gurt verwenden.'],
+  CAR_SEAT_REMOVE_COVER_WHEN_WARM: ['Im warmen Auto wieder entfernen', 'Decke oder Überwurf entfernen, sobald der Innenraum warm wird.'],
   CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT: ['Gurtpassform prüfen', 'Bei dieser dünnen Schicht prüfen, ob der Gurt weiterhin korrekt eng anliegt.'],
-  CAR_CABIN_TEMPERATURE_ESTIMATED: ['Innenraumtemperatur geschätzt', 'Die Innenraumtemperatur ist eine Schätzung und kann manuell angepasst werden.'],
   SLEEP_NO_HAT: ['Beim Schlafen keine Mütze', 'In Innenräumen bleibt der Kopf beim Schlafen frei.'],
   SLEEP_NO_LOOSE_BEDDING: ['Keine lose Bettware im Schlafbereich', 'Keine lose Decke oder andere lose Bettware verwenden – auch wenn kein Schlafsack gewählt ist. Zusätzliche Wärme nur über körpernahe Schlafkleidung oder einen passenden Schlafsack ausgleichen.'],
   SLEEP_NO_WEIGHTED_PRODUCTS: ['Keine gewichteten Schlafprodukte', 'Keine beschwerten Schlafsäcke oder Decken verwenden.'],
@@ -38,7 +37,6 @@ const NOTICE_COPY = Object.freeze({
 
 const REDUNDANT_NOTICE_CODES = new Set([
   'CHECK_NECK',
-  'CAR_CABIN_TEMPERATURE_ESTIMATED',
   'SLEEP_USE_ROOM_TEMPERATURE',
   'SLEEP_GENERIC_TOG_ORIENTATION',
   'WEATHER_DATA_STALE'
@@ -49,11 +47,10 @@ const BODY_EXTREMITY_SLOTS = new Set(['feet', 'footwear', 'head', 'hands']);
 const SLOT_ORDER = Object.freeze([
   'base_torso', 'legs', 'mid', 'outer', 'sleep_underlayer',
   'feet', 'footwear', 'head', 'hands', 'sleep_bag',
-  'stroller_thermal_accessory', 'stroller_weather_accessory', 'carrier_accessory'
+  'stroller_thermal_accessory', 'stroller_weather_accessory', 'carrier_accessory', 'car_thermal_accessory'
 ]);
 const PHASE_COPY = Object.freeze({
   main: 'Jetzt',
-  outdoor_transition: 'Zum/vom Auto',
   in_car: 'Im Autositz'
 });
 
@@ -109,7 +106,6 @@ function clothingCard({ slotResult = null, itemId, asset, label, role = '', inte
     image.loading = 'eager';
     image.decoding = 'async';
     image.dataset.clothingImage = 'true';
-    if (asset.visualVariantId) image.dataset.visualVariantId = asset.visualVariantId;
     image.addEventListener('error', () => imageFallback(shell, label), { once: true });
     shell.append(image);
   } else {
@@ -130,7 +126,7 @@ function slotRole(slot) {
   const labels = {
     base_torso: 'Basisschicht', legs: 'Beine', mid: 'Zwischenschicht', outer: 'Außenschicht', feet: 'Füße',
     head: 'Kopf', hands: 'Hände', footwear: 'Schuhe', stroller_thermal_accessory: 'Kinderwagen',
-    stroller_weather_accessory: 'Wetterschutz', carrier_accessory: 'Trage', sleep_bag: 'Schlafsack', sleep_underlayer: 'Darunter'
+    stroller_weather_accessory: 'Wetterschutz', carrier_accessory: 'Trage', car_thermal_accessory: 'Über dem Gurt', sleep_bag: 'Schlafsack', sleep_underlayer: 'Darunter'
   };
   return labels[slot] ?? 'Kleidungsstück';
 }
@@ -141,7 +137,7 @@ function contextLabelFor(context) {
   if (context.mode === 'outdoor') return `Draußen · ${context.activity === 'active' ? 'aktiv' : 'normal'}`;
   if (context.mode === 'stroller') return `Kinderwagen · ${context.strollerState === 'asleep' ? 'schlafend' : context.activity === 'active' ? 'sehr aktiv' : 'wach'}`;
   if (context.mode === 'carrier') return 'Trage · Körperkontakt';
-  if (context.mode === 'car') return context.includeOutdoorTransition ? 'Autositz · Weg + Fahrt' : 'Autositz · Fahrt';
+  if (context.mode === 'car') return 'Autositz · Außenwetter + Gurtsicherheit';
   if (context.mode === 'indoor') return 'Drinnen · Raumtemperatur';
   if (context.mode === 'sleep') return 'Schlafen · Raumtemperatur + TOG';
   return '';
@@ -155,10 +151,8 @@ function statusDetail(recommendation) {
   if ([...fields].some((field) => field.includes('precipProbabilityPct') || field === 'weather.precipitation')) labels.push('Niederschlagsangabe fehlt');
   if ([...fields].some((field) => field.includes('hourly.coverage'))) labels.push('Wetterzeitraum unvollständig');
   if (fields.has('context.roomTempC')) labels.push('Raumtemperatur fehlt');
-  if (fields.has('context.cabinTempC')) labels.push('Innenraumtemperatur fehlt');
   if (fields.has('integration')) labels.push('Daten konnten nicht ausgewertet werden');
   if (labels.length) return labels.slice(0, 2).join(' · ');
-  if (recommendation?.dataQuality?.usedEstimatedCabinTemperature) return 'Innenraumtemperatur geschätzt';
   if (recommendation?.notices?.some((notice) => notice.code === 'MANUAL_LOCK_LIMITS_WEATHER_PROTECTION')) return 'Wetterschutz eingeschränkt';
   if (recommendation?.notices?.some((notice) => notice.code === 'WEATHER_DATA_STALE')) return 'Wetterdaten nicht aktuell';
   return recommendation?.status === 'blocked' ? 'Erforderliche Angaben fehlen' : 'Zusätzliche Angaben fehlen';
@@ -220,20 +214,13 @@ function renderGroup(slots, { mode, phase, context, assetStore, styleTheme, visu
   return { element: group, missingAssets };
 }
 
-function phaseSlots(recommendation, phase, renderedItemIds = null) {
-  const slots = (recommendation?.slots ?? [])
+function phaseSlots(recommendation, phase) {
+  return (recommendation?.slots ?? [])
     .filter((slot) => slot.phase === phase && !slot.selected.itemId.endsWith('_none'))
     .sort((left, right) => SLOT_ORDER.indexOf(left.slot) - SLOT_ORDER.indexOf(right.slot));
-  if (!renderedItemIds) return slots;
-  return slots.filter((slot) => {
-    const itemId = slot.selected.itemId;
-    if (renderedItemIds.has(itemId)) return false;
-    renderedItemIds.add(itemId);
-    return true;
-  });
 }
 
-function renderPhase(recommendation, phaseEvaluation, context, assetStore, styleTheme, visual, renderedItemIds = null) {
+function renderPhase(recommendation, phaseEvaluation, context, assetStore, styleTheme, visual) {
   const phase = phaseEvaluation.phase;
   const section = document.createElement('section');
   section.className = `outfit-phase${phase === 'in_car' ? ' outfit-phase--in-car' : ''}`;
@@ -245,7 +232,7 @@ function renderPhase(recommendation, phaseEvaluation, context, assetStore, style
     section.append(heading);
   }
 
-  const slots = phaseSlots(recommendation, phase, renderedItemIds);
+  const slots = phaseSlots(recommendation, phase);
   const grouped = new Map();
   for (const slot of slots) {
     const key = groupKeyForSlot(slot.slot);
@@ -270,36 +257,8 @@ function renderPhase(recommendation, phaseEvaluation, context, assetStore, style
   return { element: section, missingAssets };
 }
 
-function renderCarSafetyBridge(recommendation) {
-  const preferred = recommendation?.notices?.find((notice) => notice.code === 'CAR_SEAT_REMOVE_OUTER_BEFORE_HARNESS');
-  const fallback = recommendation?.notices?.find((notice) => notice.code === 'CAR_SEAT_NO_BULKY_LAYERS');
-  const notice = preferred ?? fallback;
-  if (!notice) return null;
-  const bridge = document.createElement('div');
-  bridge.className = 'outfit-safety-bridge';
-  bridge.dataset.safetyBridge = 'car-harness';
-  bridge.dataset.noticeCode = notice.code;
-  const marker = document.createElement('span');
-  marker.className = 'notice-marker';
-  marker.setAttribute('aria-hidden', 'true');
-  marker.textContent = '!';
-  const copy = document.createElement('div');
-  const title = document.createElement('strong');
-  const mapped = NOTICE_COPY[notice.code] ?? [notice.code, ''];
-  title.textContent = notice.code === 'CAR_SEAT_NO_BULKY_LAYERS' ? 'Vor dem Anschnallen: dicke Schichten ausziehen' : mapped[0];
-  const text = document.createElement('p');
-  text.textContent = notice.code === 'CAR_SEAT_NO_BULKY_LAYERS'
-    ? 'Voluminöse Jacke oder dicken Overall vor dem Anschnallen ausziehen.'
-    : mapped[1];
-  copy.append(title, text);
-  bridge.append(marker, copy);
-  return bridge;
-}
-
-function orderedPhasesForDisplay(phases, context) {
-  if (context?.mode !== 'car') return phases;
-  const order = { main: 0, outdoor_transition: 1, in_car: 2 };
-  return [...phases].sort((left, right) => (order[left.phase] ?? 99) - (order[right.phase] ?? 99));
+function orderedPhasesForDisplay(phases) {
+  return phases;
 }
 
 function unavailableWeatherLabel(runtime) {
@@ -440,17 +399,6 @@ function numberField(labelText, field, value, min, max, suffix) {
   return label;
 }
 
-function checkboxField(labelText, field, checked) {
-  const label = document.createElement('label');
-  label.className = 'check-field';
-  const input = document.createElement('input');
-  input.type = 'checkbox';
-  input.dataset.contextField = field;
-  input.checked = Boolean(checked);
-  label.append(input, document.createTextNode(labelText));
-  return label;
-}
-
 export function renderSituationContext(mode, context) {
   const host = document.querySelector('#situationContextFields');
   host.replaceChildren();
@@ -491,12 +439,10 @@ export function renderSituationContext(mode, context) {
     );
   }
   if (mode === 'car') {
-    host.append(
-      numberField('Innenraumtemperatur', 'cabinTempC', context.cabinTempC, -10, 45, '°C'),
-      selectField('Temperaturquelle', 'cabinTempSource', [['manual', 'Manuell'], ['measured', 'Gemessen'], ['estimated', 'Geschätzt']], context.cabinTempSource),
-      checkboxField('Weg zum/vom Auto berücksichtigen', 'includeOutdoorTransition', context.includeOutdoorTransition),
-      numberField('Dauer draußen', 'outsideTransitionMinutes', context.outsideTransitionMinutes, 0, 60, 'Min.')
-    );
+    const summary = document.createElement('div');
+    summary.className = 'car-context-summary';
+    summary.innerHTML = '<strong>Keine zusätzlichen Angaben nötig</strong><p>Die Empfehlung startet mit dem aktuellen Außenwetter und bleibt unter dem Gurt schlank.</p><p>Zusätzliche Wärme kommt erst über den korrekt geschlossenen Gurt. Sobald das Auto warm wird, Decke oder Überwurf entfernen.</p>';
+    host.append(summary);
   }
   if (mode === 'sleep') {
     host.append(numberField('Raumtemperatur', 'roomTempC', context.roomTempC, 5, 35, '°C'));
@@ -539,9 +485,7 @@ function reasonFor(context, recommendation) {
       ? 'Ein waches, sehr aktives Baby im Kinderwagen wird leichter bewertet als ein schlafendes Baby.'
       : null;
   if (context.mode === 'carrier') return 'Körperkontakt reduziert den Wärmebedarf am bedeckten Rumpf; exponierte Bereiche werden separat geschützt.';
-  if (context.mode === 'car') return context.cabinTempSource === 'estimated'
-    ? `Für die Fahrt werden vorläufig ${context.cabinTempC} °C Innenraumtemperatur angenommen.`
-    : `Für die Fahrt werden ${context.cabinTempC} °C Innenraumtemperatur verwendet.`;
+  if (context.mode === 'car') return 'Ausgangspunkt ist das aktuelle Außenwetter. Unter dem Gurt bleibt die Kleidung schlank; zusätzliche Wärme kommt nur darüber und wird im warmen Auto entfernt.';
   if (context.mode === 'sleep') return `Die Schlafempfehlung basiert auf ${context.roomTempC ?? 'der fehlenden'} °C Raumtemperatur, nicht auf dem Außenwetter.`;
   return null;
 }
@@ -553,17 +497,10 @@ export function renderOutfit({ recommendation, context, warmthDirection, styleTh
   const visibleSlots = (recommendation?.slots ?? []).filter((slot) => !slot.selected.itemId.endsWith('_none'));
   let missingAssets = 0;
   const phaseEvaluations = recommendation?.phases ?? [];
-  const isCarWithTransition = context?.mode === 'car' && phaseEvaluations.some((phase) => phase.phase === 'outdoor_transition') && phaseEvaluations.some((phase) => phase.phase === 'in_car');
-  const renderedItemIds = isCarWithTransition ? new Set() : null;
-  let safetyBridge = null;
-  for (const phaseEvaluation of orderedPhasesForDisplay(phaseEvaluations, context)) {
-    const rendered = renderPhase(recommendation, phaseEvaluation, context, assetStore, styleTheme, visual, renderedItemIds);
+  for (const phaseEvaluation of orderedPhasesForDisplay(phaseEvaluations)) {
+    const rendered = renderPhase(recommendation, phaseEvaluation, context, assetStore, styleTheme, visual);
     missingAssets += rendered.missingAssets;
     grid.append(rendered.element);
-    if (isCarWithTransition && phaseEvaluation.phase === 'outdoor_transition') {
-      safetyBridge = renderCarSafetyBridge(recommendation);
-      if (safetyBridge) grid.append(safetyBridge);
-    }
   }
   if (!phaseEvaluations.length || (!visibleSlots.length && !phaseEvaluations.length)) {
     const empty = document.createElement('div');
@@ -595,9 +532,8 @@ export function renderOutfit({ recommendation, context, warmthDirection, styleTh
     button.setAttribute('aria-pressed', String(active));
     button.disabled = recommendation?.status === 'blocked';
   }
-  document.querySelector('#changeLookButton').disabled = assetStore.status !== 'ready' || !visibleSlots.length || !visual.look?.hasAlternateLook;
-  const excludedNoticeCodes = safetyBridge ? new Set(['CAR_SEAT_REMOVE_OUTER_BEFORE_HARNESS', 'CAR_SEAT_NO_BULKY_LAYERS']) : new Set();
-  renderNotices(recommendation, excludedNoticeCodes);
+  document.querySelector('#changeLookButton').disabled = assetStore.status !== 'ready' || !visibleSlots.length;
+  renderNotices(recommendation);
   const assetNotice = document.querySelector('#assetNotice');
   assetNotice.hidden = assetStore.status === 'ready' && missingAssets === 0;
   if (!assetNotice.hidden) {

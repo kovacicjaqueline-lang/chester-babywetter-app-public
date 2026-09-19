@@ -33,12 +33,6 @@ function markManualWeatherProtectionConflicts(result,input) {
   const checks = [];
   if (['outdoor','stroller','carrier'].includes(context.mode)) {
     checks.push({ phase:'main', context, mode:context.mode });
-  } else if (context.mode === 'car' && context.includeOutdoorTransition) {
-    checks.push({
-      phase:'outdoor_transition',
-      context:{ plannedMinutes:context.outsideTransitionMinutes ?? context.plannedMinutes ?? null },
-      mode:'outdoor'
-    });
   }
 
   for (const check of checks) {
@@ -107,8 +101,6 @@ function markWeatherWindowCompleteness(result,input) {
   const checks = [];
   if (['outdoor','stroller','carrier'].includes(context.mode)) {
     checks.push({ phase:'main', plannedMinutes:context.plannedMinutes ?? null });
-  } else if (context.mode === 'car' && context.includeOutdoorTransition) {
-    checks.push({ phase:'outdoor_transition', plannedMinutes:context.outsideTransitionMinutes ?? context.plannedMinutes ?? null });
   }
 
   for (const check of checks) {

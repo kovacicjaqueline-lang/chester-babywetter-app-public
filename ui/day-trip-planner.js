@@ -1,5 +1,4 @@
 import { planDayTrip } from '../src/day-trip-planner.js';
-import { estimateCabinTemperature } from '../src/integration/cabin-temperature.js';
 import { formatPrecipitation, formatTemperature } from './weather-copy.js';
 
 const MODE_COPY = Object.freeze({
@@ -33,10 +32,9 @@ function createModeIcon(mode) {
 const NOTICE_COPY = Object.freeze({
   CHECK_NECK: ['Nackentest', 'Nacken warm und trocken: passend. Heiß/schwitzig: Schicht reduzieren. Kühl: Schicht ergänzen.'],
   CAR_SEAT_NO_BULKY_LAYERS: ['Autositz: keine dicken Schichten unter dem Gurt', 'Keine voluminöse Jacke und keinen Winteroverall unter dem Autositzgurt verwenden.'],
-  CAR_SEAT_REMOVE_OUTER_BEFORE_HARNESS: ['Vor dem Anschnallen ausziehen', 'Voluminöse Außenschichten vor dem Anschnallen entfernen.'],
-  CAR_SEAT_BLANKET_OVER_HARNESS_ONLY: ['Zusätzliche Wärme nur über dem Gurt', 'Decke oder Jacke nur über dem bereits korrekt geschlossenen Gurt verwenden.'],
+  CAR_SEAT_BLANKET_OVER_HARNESS_ONLY: ['Zusätzliche Wärme nur über dem Gurt', 'Decke oder Überwurf nur über dem bereits korrekt geschlossenen Gurt verwenden.'],
+  CAR_SEAT_REMOVE_COVER_WHEN_WARM: ['Im warmen Auto wieder entfernen', 'Decke oder Überwurf entfernen, sobald der Innenraum warm wird.'],
   CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT: ['Gurtpassform prüfen', 'Bei dieser dünnen Schicht prüfen, ob der Gurt weiterhin korrekt eng anliegt.'],
-  CAR_CABIN_TEMPERATURE_ESTIMATED: ['Innenraumtemperatur geschätzt', 'Für die Fahrt werden vorläufig 20 °C angenommen. Die normale Autositz-Sicherheitslogik bleibt davon unabhängig.'],
   STROLLER_DO_NOT_COVER_AIRFLOW: ['Kinderwagen nicht luftdicht abdecken', 'Sonnen- oder Regenschutz so verwenden, dass die Luftzirkulation erhalten bleibt.'],
   STROLLER_RAIN_COVER: ['Regenverdeck verwenden', 'Das Regenverdeck schützt im Kinderwagen vor Nässe; auf Luftzirkulation achten.'],
   STROLLER_SUNSHADE: ['Sonnenschutz am Kinderwagen', 'Sonnensegel oder Sonnenschirm verwenden, nicht mit einer Decke abdecken.'],
@@ -141,10 +139,10 @@ function contextForMode(snapshot, mode) {
       : 'over_wearer_outerwear';
   }
   if (mode === 'car') {
-    if (stored.cabinTempSource === 'estimated' || !finiteNumber(stored.cabinTempC)) Object.assign(stored, estimateCabinTemperature());
-    if (!['manual', 'measured', 'estimated'].includes(stored.cabinTempSource)) stored.cabinTempSource = 'manual';
-    stored.includeOutdoorTransition = stored.includeOutdoorTransition !== false;
-    if (!finiteNumber(stored.outsideTransitionMinutes) && stored.outsideTransitionMinutes !== null) stored.outsideTransitionMinutes = 5;
+    delete stored.cabinTempC;
+    delete stored.cabinTempSource;
+    delete stored.includeOutdoorTransition;
+    delete stored.outsideTransitionMinutes;
   }
   if (mode === 'indoor') {
     stored.roomTempC = finiteNumber(stored.roomTempC) ? stored.roomTempC : null;
@@ -239,17 +237,6 @@ function makeNumber(labelText, field, value, min, max, suffix) {
   return label;
 }
 
-function makeToggle(labelText, field, checked) {
-  const label = document.createElement('label');
-  label.className = 'trip-check-field';
-  const input = document.createElement('input');
-  input.type = 'checkbox';
-  input.checked = Boolean(checked);
-  input.dataset.tripContextField = field;
-  label.append(input, document.createTextNode(labelText));
-  return label;
-}
-
 function makeChoiceGroup(labelText, field, options, value) {
   const group = document.createElement('div');
   group.className = 'trip-choice-field';
@@ -301,14 +288,8 @@ function appendContextFields(host, segment) {
   if (mode === 'car') {
     const safety = document.createElement('div');
     safety.className = 'trip-inline-safety';
-    safety.textContent = 'Autositz: keine voluminöse Jacke und keinen dicken Overall unter dem Gurt. Zusätzliche Wärme nur über dem geschlossenen Gurt.';
-    host.append(
-      safety,
-      makeNumber('Innenraumtemperatur', 'cabinTempC', context.cabinTempC, -10, 45, '°C'),
-      makeSelect('Temperaturquelle', 'cabinTempSource', [['estimated', 'Geschätzt'], ['manual', 'Manuell'], ['measured', 'Gemessen']], context.cabinTempSource),
-      makeToggle('Weg zum/vom Auto berücksichtigen', 'includeOutdoorTransition', context.includeOutdoorTransition),
-      makeNumber('Dauer draußen', 'outsideTransitionMinutes', context.outsideTransitionMinutes, 0, 60, 'Min.')
-    );
+    safety.textContent = 'Autositz: aktuelles Außenwetter als Startpunkt. Keine voluminöse Jacke und keinen dicken Overall unter dem Gurt. Decke oder Überwurf nur über dem geschlossenen Gurt und entfernen, sobald das Auto warm wird.';
+    host.append(safety);
   }
   if (mode === 'indoor') {
     host.append(
@@ -414,7 +395,7 @@ function itemLabel(assetStore, itemId) {
 function itemRole(slot) {
   const copy = {
     base_torso: 'Basisschicht', legs: 'Beine', mid: 'Zwischenschicht', outer: 'Außenschicht', feet: 'Füße', head: 'Kopf', hands: 'Hände',
-    footwear: 'Schuhe', stroller_thermal_accessory: 'Kinderwagen', stroller_weather_accessory: 'Wetterschutz', carrier_accessory: 'Trage', sleep_bag: 'Schlafsack', sleep_underlayer: 'Darunter'
+    footwear: 'Schuhe', stroller_thermal_accessory: 'Kinderwagen', stroller_weather_accessory: 'Wetterschutz', carrier_accessory: 'Trage', car_thermal_accessory: 'Über dem Gurt', sleep_bag: 'Schlafsack', sleep_underlayer: 'Darunter'
   };
   return copy[slot] ?? 'Kleidungsstück';
 }
@@ -470,7 +451,7 @@ function actionText(action, assetStore, segmentMode) {
     if (action.toItemId === 'stroller_rain_cover') return 'Regenverdeck verwenden';
     if (action.toItemId === 'stroller_sunshade') return 'Sonnensegel / Sonnenschirm verwenden';
     if (action.toItemId?.startsWith('carrier_cover_')) return `${to} verwenden`;
-    if (action.toItemId === 'car_blanket_over_harness') return 'Decke über dem geschlossenen Autositzgurt verwenden';
+    if (['car_blanket_over_harness','car_warm_blanket_over_harness'].includes(action.toItemId)) return 'Decke über dem geschlossenen Autositzgurt verwenden';
     return `${to} anziehen`;
   }
   if (action.kind === 'remove') {
@@ -968,8 +949,6 @@ export function bindDayTripPlanner({ getSnapshot, assetStore, showToast = () => 
     if (fieldTarget.type === 'checkbox') segment.context[field] = fieldTarget.checked;
     else if (fieldTarget.type === 'number') segment.context[field] = fieldTarget.value === '' ? null : Number(fieldTarget.value);
     else segment.context[field] = fieldTarget.value || null;
-    if (segment.mode === 'car' && field === 'cabinTempC') segment.context.cabinTempSource = 'manual';
-    if (segment.mode === 'car' && field === 'cabinTempSource' && segment.context.cabinTempSource === 'estimated') Object.assign(segment.context, estimateCabinTemperature());
     if (field === 'activity') segment.context.activitySource = 'user';
     renderSegments(draft);
   });

@@ -89,11 +89,6 @@ test('Sheets und Tagesausflug behalten Touchflächen und fokussierbare Aktionen'
     '#cancelSituationButton',
     '#applySituationButton'
   ]));
-  await page.locator('#situationOptions [data-situation="carrier"]').click();
-  expectTouchTargets(await visibleMeasurements(page, [
-    '.carrier-placement-option',
-    '#situationContextFields [data-context-field="sunExposure"]'
-  ]));
   await closeOpenDialog(page);
 
   await page.locator('[data-open-dialog="neckFeedbackDialog"]').click();

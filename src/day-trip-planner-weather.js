@@ -69,16 +69,13 @@ export function validateTripPlannerRequest(request) {
     if (!segment?.segmentId || segmentStart === null || segmentEnd === null || segmentEnd <= segmentStart) return invalid();
     if (!context || typeof context !== 'object' || !SUPPORTED_MODES.has(context.mode)) return invalid();
     if (index > 0 && plan.segments[index - 1].endTime !== segment.startTime) return invalid();
-    if (context.mode === 'car' && (!finiteNumber(context.cabinTempC) || !context.cabinTempSource)) {
-      return [coverageIssue(segment.startTime, segment.endTime, 'invalid_segment', segment.segmentId)];
-    }
   }
   return [];
 }
 
 function weatherRequiredAtSegmentStart(context) {
   return WEATHER_HOURLY_MODES.has(context.mode)
-    || (context.mode === 'car' && context.includeOutdoorTransition === true);
+    || context.mode === 'car';
 }
 
 function usableWeatherPoints(weather) {
@@ -151,7 +148,7 @@ function weatherSlice(weather, currentPoint, checkpointStartTime, checkpointEndT
 function normalizedContext(context, startTime, endTime) {
   const normalized = cloneTripValue(context);
   delete normalized.plannedMinutes;
-  if (['outdoor', 'stroller', 'carrier', 'car'].includes(normalized.mode)) {
+  if (['outdoor', 'stroller', 'carrier'].includes(normalized.mode)) {
     normalized.plannedMinutes = minutesBetween(startTime, endTime);
   }
   return normalized;
@@ -176,14 +173,6 @@ function buildCheckpoint({ request, segment, startTime, endTime, weatherPoint })
     },
     recommendation:null
   };
-}
-
-function checkpointCoverageEnd(segment, checkpointStartTime, checkpointEndTime) {
-  if (segment.context.mode !== 'car' || segment.context.includeOutdoorTransition !== true) return checkpointEndTime;
-  const transitionMinutes = finiteNumber(segment.context.outsideTransitionMinutes)
-    ? Math.max(0, segment.context.outsideTransitionMinutes)
-    : minutesBetween(checkpointStartTime, checkpointEndTime);
-  return new Date(parseTripTime(checkpointStartTime) + transitionMinutes * 60000).toISOString();
 }
 
 export function prepareTripCheckpoints(request) {
@@ -230,9 +219,8 @@ export function prepareTripCheckpoints(request) {
       const checkpoint = buildCheckpoint({ request, segment, startTime, endTime, weatherPoint });
       checkpoints.push(checkpoint);
 
-      if (needsWeather) {
-        const coverageEnd = checkpointCoverageEnd(segment, startTime, endTime);
-        const gap = firstForecastGap(points, startTime, coverageEnd);
+      if (WEATHER_HOURLY_MODES.has(segment.context.mode)) {
+        const gap = firstForecastGap(points, startTime, endTime);
         if (gap) {
           issues.push(coverageIssue(new Date(gap.startMs).toISOString(), new Date(gap.endMs).toISOString(), 'forecast_gap', segment.segmentId));
           haltAfterCheckpointId = checkpoint.checkpointId;

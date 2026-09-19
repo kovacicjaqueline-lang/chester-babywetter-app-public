@@ -3,13 +3,13 @@ import { SLEEP_BAG_IDS, genericTogGuidanceForRoomTemp } from './sleep-tog-rules.
 import {
   TEMPERATURE_BANDS, RELATION_ORDER, createSession, setWarmthOffset, lockItem, temperatureBandFor,
   createPhaseState, seedBaseline, activityAdjustmentFor, traceThermal, strollerStateAdjustment,
-  evaluateWind, warmthBiasAdjustment, neckFeedbackAdjustment, selectStrollerThermalAccessory, selectCarrierAccessory,
+  evaluateWind, warmthBiasAdjustment, neckFeedbackAdjustment, selectStrollerThermalAccessory, selectCarrierAccessory, selectCarThermalAccessory,
   setSelected, carrierThermalCredit, applyThermalDelta, applyCarrierTorsoReduction,
   protectCarrierExposedAreas, rainRequirement, sunRequirement, selectStrollerWeatherAccessory,
   addNotice, applyRainProtection, applyWindProtection, applySunProtection, applyGroundContact,
   applyBodyLocksAndRebalance, applyQuickCorrection, applyWeatherQuality, finalizePhase,
   phaseStatusFromResult, summarizeWeatherWindow, thermalEnvironment, makeCarSafeBaseline,
-  mergeResult, enforceCarSafetyAfterLocks, findLock, nearestSleepUnderlayer, overrideUnsafeLock,
+  enforceCarSafetyAfterLocks, findLock, nearestSleepUnderlayer, overrideUnsafeLock,
   blockPhase, alternativeCandidateIds, thermalSignature, diffRecommendations, addTrace, roundHalf,
   ageMonths, isFiniteNumber, clamp
 } from './outfit-engine-support.js';
@@ -204,44 +204,22 @@ function evaluateOutdoorLike(result, request, phase, effectiveMode) {
 }
 
 function evaluateCar(result, request) {
-  const { context, profile, session, neckFeedback } = request;
+  const { profile, weather, session, neckFeedback } = request;
   addNotice(result,'CAR_SEAT_NO_BULKY_LAYERS','hard_rule','in_car',['CAR_HARNESS_SAFETY'],{});
-
-  if (context.includeOutdoorTransition) {
-    const transitionContext = {
-      mode:'outdoor',
-      plannedMinutes:context.outsideTransitionMinutes ?? context.plannedMinutes ?? null,
-      activity:'normal',
-      activitySource:'default',
-      sunExposure:'unknown',
-      groundContact:'none'
-    };
-    const subRequest = {
-      ...request,
-      context:transitionContext,
-      session:{ ...session, manualLocks:session.manualLocks.filter((lock) => lock.phase === 'outdoor_transition') }
-    };
-    const transitionResult = createResult({ ...request, context:{ ...request.context, mode:'car'} });
-    evaluateOutdoorLike(transitionResult, subRequest, 'outdoor_transition', 'outdoor');
-    mergeResult(result, transitionResult, 'outdoor_transition');
-    if (transitionResult.status === 'blocked') result.status = 'partial';
-    if (result.slots.some((slot) => slot.phase === 'outdoor_transition' && CLOTHING_CATALOG[slot.selected.itemId]?.carSeatCompatibility === 'prohibited')) {
-      addNotice(result,'CAR_SEAT_REMOVE_OUTER_BEFORE_HARNESS','hard_rule','outdoor_transition',['CAR_HARNESS_SAFETY'],{});
-    }
-  }
-
-  if (!isFiniteNumber(context.cabinTempC)) {
-    blockPhase(result,'in_car',['context.cabinTempC']);
-    result.status = 'blocked';
+  const point = weather?.current ?? null;
+  if (!point || !isFiniteNumber(point.airTempC)) {
+    blockPhase(result,'in_car',['weather.current.airTempC']);
+    addNotice(result,'WEATHER_DATA_INCOMPLETE','caution','in_car',['CAR_OUTDOOR_TEMPERATURE_REQUIRED'],{});
     return result;
   }
 
-  const band = temperatureBandFor(context.cabinTempC);
+  const thermal = thermalEnvironment(point);
+  const band = temperatureBandFor(thermal.thermalReferenceC);
   const state = createPhaseState(result,'in_car','car');
   seedBaseline(state, band.id, 'car');
   makeCarSafeBaseline(state);
 
-  const ageAdjustment = youngInfantThermalAdjustment(profile.birthDate, request.requestedAt, context.cabinTempC);
+  const ageAdjustment = youngInfantThermalAdjustment(profile.birthDate, request.requestedAt, thermal.thermalReferenceC);
   if (ageAdjustment) traceThermal(result,'profile.age','in_car',ageAdjustment,'YOUNG_INFANT_AGE_WARMTH');
   const bias = warmthBiasAdjustment(profile.warmthBias);
   const neck = neckFeedbackAdjustment(neckFeedback);
@@ -262,25 +240,31 @@ function evaluateCar(result, request) {
   sanitizeAutomaticConditionalCarLayers(state);
   enforceCarSafetyAfterLocks(state,result,request,'in_car');
 
+  const thermalAccessory = selectCarThermalAccessory(request,thermal.thermalReferenceC,'in_car');
+  setSelected(state,'car_thermal_accessory',thermalAccessory.itemId,thermalAccessory.source,'over_harness',thermalAccessory.reasons);
+  const accessoryCredit = CLOTHING_CATALOG[thermalAccessory.itemId].thermalStepCredit;
+  if (accessoryCredit) addTrace(result,'situation.car.over_harness_warmth','in_car','thermal_up',thermalAccessory.itemId,accessoryCredit,'CAR_OVER_HARNESS_WARMTH');
+
   addNotice(result,'CAR_SEAT_BLANKET_OVER_HARNESS_ONLY','hard_rule','in_car',['CAR_HARNESS_SAFETY'],{});
+  if (thermalAccessory.itemId !== 'car_thermal_none') addNotice(result,'CAR_SEAT_REMOVE_COVER_WHEN_WARM','hard_rule','in_car',['CAR_HARNESS_SAFETY'],{});
   addNotice(result,'CHECK_NECK','info','in_car',['THERMAL_FEEDBACK_REQUIRED'],{});
-  if (context.cabinTempSource === 'estimated') {
-    result.dataQuality.usedEstimatedCabinTemperature = true;
-    addNotice(result,'CAR_CABIN_TEMPERATURE_ESTIMATED','info','in_car',['CAR_CABIN_TEMPERATURE_ESTIMATED'],{ cabinTempC:context.cabinTempC });
+  if (weather.freshness === 'stale') {
+    result.status = 'partial';
+    addNotice(result,'WEATHER_DATA_STALE','caution','in_car',['STALE_WEATHER_USED'],{});
   }
 
   finalizePhase(state);
-  const inCarStatus = context.cabinTempSource === 'estimated' ? 'ready_with_estimate' : 'ready';
+  const inCarStatus = result.status === 'partial' ? 'partial' : 'ready';
   result.phases.push({
     phase:'in_car',
     status:inCarStatus,
-    thermalReferenceC:context.cabinTempC,
-    thermalReferenceSource:'cabin_temp',
+    thermalReferenceC:thermal.thermalReferenceC,
+    thermalReferenceSource:thermal.referenceSource,
     thermalBand:band.id,
-    thermalAdjustment:roundHalf(ageAdjustment + bias + neck + session.warmthOffset),
+    thermalAdjustment:roundHalf(ageAdjustment + bias + neck + session.warmthOffset - accessoryCredit),
     missingFields:[]
   });
-  if (result.status !== 'partial' && result.status !== 'blocked') result.status = inCarStatus;
+  result.status = inCarStatus;
   return result;
 }
 

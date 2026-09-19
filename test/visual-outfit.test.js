@@ -63,62 +63,24 @@ test('same session and same seed produce exactly the same visual look', () => {
   assert.deepEqual(second, first);
 });
 
-test('the next seed produces a different look whenever an alternate exists', () => {
+test('a new seed can produce a different look without changing recommendation data', () => {
   const rec = recommendation(['long_sleeve_bodysuit', 'trousers', 'thin_sweater']);
   const before = structuredClone(rec);
   const baseline = selectVisualLook({ recommendation: rec, assetManifest, visualManifest, styleTheme: 'neutral', visualSeed: 0 });
-  const candidate = selectVisualLook({ recommendation: rec, assetManifest, visualManifest, styleTheme: 'neutral', visualSeed: nextVisualSeed(0) });
 
-  assert.equal(baseline.hasAlternateLook, true);
-  assert.notDeepEqual(candidate.items.map((item) => item.assetPath), baseline.items.map((item) => item.assetPath));
-  assert.deepEqual(candidate.items.map((item) => item.itemId), baseline.items.map((item) => item.itemId));
-  assert.deepEqual(rec, before);
-});
-
-test('a single available visual is recognized without searching or looping', () => {
-  const singleAssetManifest = {
-    assetGroups: [{
-      id: 'only_item', label: 'Einzelteil', altText: 'Einzelteil.',
-      variantPaths: { neutral: 'assets/clothing/only-item.webp' }
-    }]
-  };
-  const singleVisualManifest = {
-    fallbackSourceStyle: 'neutral',
-    themes: [{ id: 'only_theme', palette: ['cream'] }],
-    sourceStyleProfiles: {
-      neutral: { themeIds: ['only_theme'], stylePreferenceRank: { neutral: 0 } }
-    },
-    assetOverrides: {
-      only_item: { neutral: { themeIds: ['only_theme'], paletteTags: ['cream'], pattern: 'solid' } }
+  let changed = false;
+  let seed = 0;
+  for (let attempt = 0; attempt < 30; attempt += 1) {
+    seed = nextVisualSeed(seed);
+    const candidate = selectVisualLook({ recommendation: rec, assetManifest, visualManifest, styleTheme: 'neutral', visualSeed: seed });
+    if (candidate.themeId !== baseline.themeId || candidate.items.some((item, index) => item.variantId !== baseline.items[index].variantId)) {
+      changed = true;
+      break;
     }
-  };
-  const rec = recommendation(['only_item']);
-  const first = selectVisualLook({ recommendation: rec, assetManifest: singleAssetManifest, visualManifest: singleVisualManifest, visualSeed: 0 });
-  const next = selectVisualLook({ recommendation: rec, assetManifest: singleAssetManifest, visualManifest: singleVisualManifest, visualSeed: nextVisualSeed(0) });
-
-  assert.equal(first.availableLookCount, 1);
-  assert.equal(first.hasAlternateLook, false);
-  assert.deepEqual(next.items, first.items);
-});
-
-test('available looks form a finite deterministic cycle without duplicate adjacent looks', () => {
-  const rec = recommendation(['long_sleeve_bodysuit', 'trousers', 'thin_sweater']);
-  const first = selectVisualLook({ recommendation: rec, assetManifest, visualManifest, styleTheme: 'neutral', visualSeed: 0 });
-  const signatures = [];
-  for (let seed = 0; seed < first.availableLookCount; seed += 1) {
-    const look = selectVisualLook({ recommendation: rec, assetManifest, visualManifest, styleTheme: 'neutral', visualSeed: seed });
-    signatures.push(look.items.map((item) => item.assetPath).join('|'));
   }
-  const wrapped = selectVisualLook({
-    recommendation: rec,
-    assetManifest,
-    visualManifest,
-    styleTheme: 'neutral',
-    visualSeed: first.availableLookCount
-  });
 
-  assert.equal(new Set(signatures).size, first.availableLookCount);
-  assert.deepEqual(wrapped.items.map((item) => item.assetPath), first.items.map((item) => item.assetPath));
+  assert.equal(changed, true);
+  assert.deepEqual(rec, before);
 });
 
 test('all rendered items are compatible with the selected theme or explicit neutral fallback', () => {

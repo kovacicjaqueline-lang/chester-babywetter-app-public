@@ -231,7 +231,7 @@ Für Wachkleidung gilt als vorsichtige V1-Produktheuristik:
 - `>=3 Monate`: `0`,
 - unbekanntes/ungültiges Alter: `0` thermische Alterskorrektur.
 
-Die Korrektur gilt für `outdoor`, `stroller`, `carrier`, `indoor` sowie für sichere körpernahe Kleidung in `car/in_car`. Die Autositz-Gurtsicherheitsregeln bleiben dabei immer vorrangig. `outdoor_transition` übernimmt dieselbe Outdoor-Regel.
+Die Korrektur gilt für `outdoor`, `stroller`, `carrier`, `indoor` sowie für sichere körpernahe Kleidung in `car/in_car`. Die Autositz-Gurtsicherheitsregeln bleiben dabei immer vorrangig.
 
 Ab `28 °C` wird **keine zusätzliche Isolation allein wegen jungen Alters** ergänzt. Sonnen-/UV-Schutz und Hitzewarnungen bleiben unabhängig davon aktiv.
 
@@ -450,47 +450,38 @@ Diese Reduktion gilt **nicht** automatisch für Kopf, Füße, Unterschenkel und 
 
 ### 10.1 Phasen
 
-- `outdoor_transition`: wetterbasierte Kleidung zum/vom Auto,
-- `in_car`: Kleidung unter/über dem Gurt anhand einer bekannten oder geschätzten Innenraumtemperatur.
+- Aktiv ist nur `in_car`.
+- `outdoor_transition` ist ein veraltetes Ergebnisformat und wird nicht mehr erzeugt.
 
-### 10.2 Innenraumtemperatur
+### 10.2 Thermische Referenz
 
-Für V1 gelten drei Quellen mit klarer Semantik:
+Die Auto-Empfehlung verwendet denselben aktuellen Wetterpunkt wie die übrigen Außenmodi:
 
-- `manual`: der Nutzer hat den Innenraumwert manuell korrigiert,
-- `measured`: der Nutzer markiert einen tatsächlich gemessenen Innenraumwert ausdrücklich als gemessen,
-- `estimated`: die Innenraumtemperatur ist unbekannt und wird durch die vorgelagerte Integrationslogik geschätzt.
+- vertrauenswürdige `apparentTempC`, sonst
+- `airTempC`.
 
-Für `estimated` verwendet V1 **fix 20 °C als neutrale klima-kontrollierte Annahme**. Diese Zahl ist bewusst grob und keine Prognose des realen Fahrzeuginnenraums. Sie wird nicht aus `airTempC`, `apparentTempC`, Wind, Sonne oder Fahrtdauer berechnet.
+Es wird weder eine feste noch eine aus Außenwetter berechnete Innenraumtemperatur verwendet. Ohne HVAC-Status, Vorheizen/Vorkühlen, Parkdauer, solare Aufheizung und tatsächlichen Innenraumzustand wäre beides scheinpräzise. Regen-, Wind- und UV-Schutzschichten werden für `in_car` nicht automatisch ergänzt.
 
-Begründung: Die verfügbaren V1-Inputs enthalten weder tatsächlichen Innenraumzustand noch HVAC-/Heizungs-/Klimastatus, Vorheizen/Vorkühlen, Parkdauer oder solare Aufheizung. Eine außenwetterabhängige Formel würde deshalb Scheingenauigkeit erzeugen. Außenwetter gehört ausschließlich in `outdoor_transition`; `in_car` verwendet `cabinTempC`.
+### 10.3 Zusatzwärme über dem Gurt
 
-Bei `estimated` muss die App:
+Der eigene Slot `car_thermal_accessory` wird nach der gurtsicheren Körperkleidung bestimmt:
 
-- `cabinTempSource: estimated` bis ins Ergebnis tragen,
-- `CAR_CABIN_TEMPERATURE_ESTIMATED` sichtbar anzeigen,
-- `ready_with_estimate` statt unmarkiertem `ready` verwenden,
-- eine schnelle manuelle Korrektur erlauben,
-- beim manuellen Ändern von `cabinTempC` auf `manual` wechseln,
-- beim Zurückschalten auf `estimated` wieder 20 °C einsetzen,
-- keine Gurtsicherheitsentscheidung aus der Schätzung oder der Temperaturquelle ableiten.
+- `>= 12 °C`: keine zusätzliche Decke,
+- `8 bis < 12 °C`: leichte Decke über dem Gurt,
+- `< 8 °C`: wärmere Decke bzw. warmer entfernbarer Überwurf über dem Gurt.
 
-`measured` und `manual` verwenden den angegebenen Wert ohne Schätzkennzeichnung.
+Diese Grenzen sind nicht neu geschätzt. Sie folgen exakt den bestehenden Basisband-Wechseln: ab 12 °C enthält die Outdoor-Baseline keine Außenschicht, unter 12 °C eine Jacke und unter 8 °C einen Overall. Die Körperbaseline wird zuerst erzeugt und anschließend gurtsicher gemacht; das Zubehör ersetzt die entfernte Außenschicht funktional. Sein `thermalStepCredit` wird nur für Signatur, Vergleich und Erklärung erfasst und nicht nochmals von der Körperkleidung abgezogen. So entsteht keine thermische Doppelzählung.
 
-### 10.3 Gurtsicherheit
+### 10.4 Gurtsicherheit
 
 - `allowed`: darf automatisch `under_harness` gewählt werden,
 - `conditional`: nur als Alternative mit Passform-/Gurthinweis,
 - `prohibited`: nie unter dem Gurt.
 
-Winteroverall/voluminöse Jacke:
-
-- erlaubt in `outdoor_transition`,
-- vor `in_car` explizit entfernen.
-
-Zusätzliche Decke/Jacke:
-
-- nur **über** dem bereits korrekt geschlossenen Gurt.
+- Winteroverall und voluminöse Jacke werden nie unter dem Gurt empfohlen.
+- Zusätzliche Decke oder Überwurf liegt nur **über** dem bereits korrekt geschlossenen Gurt.
+- Sobald der Innenraum warm wird, Decke oder Überwurf entfernen.
+- Gurtsicherheit hat immer Vorrang vor Wärmeoptimierung und manuellen Locks.
 
 ## 11. Modus `indoor`
 
@@ -694,10 +685,9 @@ Mindestens:
 
 - `CHECK_NECK`,
 - `CAR_SEAT_NO_BULKY_LAYERS`,
-- `CAR_SEAT_REMOVE_OUTER_BEFORE_HARNESS`,
 - `CAR_SEAT_BLANKET_OVER_HARNESS_ONLY`,
+- `CAR_SEAT_REMOVE_COVER_WHEN_WARM`,
 - `CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT`,
-- `CAR_CABIN_TEMPERATURE_ESTIMATED`,
 - `SLEEP_NO_HAT`,
 - `SLEEP_NO_LOOSE_BEDDING`,
 - `SLEEP_NO_WEIGHTED_PRODUCTS`,
@@ -745,10 +735,10 @@ Mindestens:
 25. `wärmer` / `dünner` verändert möglichst wenig Teile.
 26. Nackentest lernt in V1 keinen permanenten Bias.
 27. Schuhe werden ohne Bodenkontakt nicht automatisch empfohlen.
-28. `cabinTempSource: estimated` bedeutet in V1 exakt die neutrale 20-°C-Annahme und wird nicht aus Außenwetter abgeleitet.
-29. `manual` und `measured` verwenden den angegebenen Innenraumwert ohne Schätzkennzeichnung.
-30. Manuelle Änderung der Innenraumtemperatur setzt die Quelle auf `manual`; Zurückschalten auf `estimated` setzt wieder 20 °C.
-31. Gurtsicherheitsregeln sind für `manual | measured | estimated` identisch und unabhängig von der Schätzhöhe.
+28. `car/in_car` verwendet die aktuelle Außenwetter-Referenz und nie eine pauschale Innenraumtemperatur.
+29. `car` erzeugt weder `outdoor_transition` noch wetterbedingte Regen-, Wind- oder UV-Schichten.
+30. Der Auto-Zubehörslot folgt ausschließlich den aus bestehenden Baseline-Bändern abgeleiteten Grenzen 12 °C und 8 °C.
+31. Autositz-Zubehör liegt immer `over_harness`; alle Körperkleidungs-Slots liegen `under_harness` und enthalten keine voluminöse Schicht.
 32. Ein Baby unter drei vollendeten Monaten erhält bei thermischer Referenz `<28 °C` in Wachkleidungsmodi `+0.5 thermalStep`; ab drei Monaten entfällt dieser Altersaufschlag.
 33. Unbekanntes Alter erzeugt keinen thermischen Altersaufschlag; die konservative direkte-Sonne-Regel bleibt davon unabhängig.
 34. Schlafempfehlungen ändern sich durch den thermischen Altersfaktor nicht.

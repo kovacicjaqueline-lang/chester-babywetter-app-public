@@ -91,31 +91,3 @@ test('Alle Situationen können im Draft gewählt und committed werden', async ({
     await expect(page.locator('#situationLabel')).toHaveText(label);
   }
 });
-
-test('Trage zeigt verständliche Radio-Auswahl und bewahrt beide Placement-Werte', async ({ page }) => {
-  await openDemo(page);
-  await openSituationSheet(page);
-  await page.locator('[data-situation="carrier"]').click();
-
-  await expect(page.locator('#situationContextFields legend')).toHaveText('Baby wird getragen …');
-  await expect(page.locator('#situationContextFields')).not.toContainText('Position');
-  const placement = page.locator('#situationContextFields input[type="radio"][data-context-field="placement"]');
-  await expect(placement).toHaveCount(2);
-  await expect(placement.nth(0)).toHaveAttribute('value', 'under_wearer_outerwear');
-  await expect(placement.nth(1)).toHaveAttribute('value', 'over_wearer_outerwear');
-  await expect(placement.nth(0)).toHaveAccessibleName('Unter meiner Jacke');
-  await expect(placement.nth(1)).toHaveAccessibleName('Über meiner Jacke');
-  await expect(placement.nth(1)).toBeChecked();
-  await expect(placement.nth(0)).not.toBeChecked();
-
-  await placement.nth(0).check();
-  await expect(placement.nth(0)).toBeChecked();
-  await expect(placement.nth(1)).not.toBeChecked();
-  await page.keyboard.press('ArrowDown');
-  await expect(placement.nth(1)).toBeChecked();
-  await page.keyboard.press('ArrowUp');
-  await expect(placement.nth(0)).toBeChecked();
-
-  await page.locator('#applySituationButton').click();
-  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('babyweather.v1.uiState') || '{}').contexts?.carrier?.placement)).toBe('under_wearer_outerwear');
-});

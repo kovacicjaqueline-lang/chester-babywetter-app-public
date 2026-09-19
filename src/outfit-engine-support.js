@@ -141,6 +141,14 @@ export function selectCarrierAccessory(request,temp,phase) {
   return { itemId, source:'engine', reasons:['CARRIER_COVER_OPTION'] };
 }
 
+export function selectCarThermalAccessory(request,temp,phase) {
+  const lock = findLock(request.session,phase,'car_thermal_accessory');
+  if (lock && CLOTHING_CATALOG[lock.itemId]?.slot === 'car_thermal_accessory') return { itemId:lock.itemId, source:'manual_lock', reasons:['MANUAL_ITEM_LOCK'] };
+  if (temp < 8) return { itemId:'car_warm_blanket_over_harness', source:'engine', reasons:['CAR_WARM_OVER_HARNESS_WARMTH'] };
+  if (temp < 12) return { itemId:'car_blanket_over_harness', source:'engine', reasons:['CAR_LIGHT_OVER_HARNESS_WARMTH'] };
+  return { itemId:'car_thermal_none', source:'engine', reasons:['NO_CAR_OVER_HARNESS_WARMTH_REQUIRED'] };
+}
+
 export function carrierThermalCredit(context,coverCredit) {
   let credit = 1 + coverCredit;
   if (context.placement === 'under_wearer_outerwear') credit += 0.5;
@@ -419,7 +427,7 @@ export function alternativeCandidateIds(slotResult,mode) {
   return (SLOT_ITEMS[slotResult.slot] ?? []).filter((itemId) => {
     const def = CLOTHING_CATALOG[itemId];
     if (!def.allowedSituations.includes(mode)) return false;
-    if (slotResult.phase === 'in_car' && def.carSeatCompatibility === 'prohibited') return false;
+    if (slotResult.phase === 'in_car' && BODY_SLOTS.includes(slotResult.slot) && def.carSeatCompatibility === 'prohibited') return false;
     if (mode === 'sleep' && !def.sleepSafe) return false;
     return true;
   });
@@ -431,7 +439,7 @@ export function thermalSignature(result,phase) {
     const def = CLOTHING_CATALOG[entry.selected.itemId];
     if (!def) continue;
     if (def.slot === 'sleep_bag' || def.slot === 'sleep_underlayer') score += def.sleepWarmthWeight ?? 0;
-    else if (def.slot === 'stroller_thermal_accessory' || def.slot === 'carrier_accessory') score += (def.thermalStepCredit ?? 0) * 2;
+    else if (['stroller_thermal_accessory','carrier_accessory','car_thermal_accessory'].includes(def.slot)) score += (def.thermalStepCredit ?? 0) * 2;
     else if (BODY_SLOTS.includes(def.slot)) score += def.thermalWeight ?? 0;
   }
   return score;
@@ -499,15 +507,6 @@ export function addTrace(result,ruleId,phase,effect,target,delta,reasonCode) {
 export function traceThermal(result,ruleId,phase,delta,reasonCode) {
   if (!delta) return;
   addTrace(result,ruleId,phase,delta > 0 ? 'thermal_up' : 'thermal_down',null,delta,reasonCode);
-}
-
-export function mergeResult(target,source,phase) {
-  target.slots.push(...source.slots.filter((slot) => slot.phase === phase));
-  target.notices.push(...source.notices.filter((notice) => notice.phase === phase && notice.code !== 'CHECK_NECK'));
-  target.ruleTrace.push(...source.ruleTrace.filter((trace) => trace.phase === phase));
-  target.phases.push(...source.phases.filter((entry) => entry.phase === phase));
-  target.dataQuality.missingFields.push(...source.dataQuality.missingFields);
-  if (source.status === 'partial') target.status = 'partial';
 }
 
 export function phaseStatusFromResult(result) {

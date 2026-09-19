@@ -124,7 +124,7 @@ test('Planner übernimmt Kinderwagen-Zustand vollständig und lässt Details tou
   expect(sheetMetrics.scrollWidth).toBeLessThanOrEqual(sheetMetrics.clientWidth + 1);
 });
 
-test('Autositz-Segment hält Gurt-Safety und geschätzte Innenraumtemperatur sichtbar', async ({ page }) => {
+test('Autositz-Segment nutzt Außenwetter ohne technische Innenraumeingaben', async ({ page }) => {
   await openDemo(page);
   await openPlanner(page);
   await chooseFullForecastWindow(page);
@@ -133,18 +133,16 @@ test('Autositz-Segment hält Gurt-Safety und geschätzte Innenraumtemperatur sic
   const carSegment = page.locator('.trip-segment-card').nth(1);
   await carSegment.locator('[data-trip-segment-mode="car"]').click();
   await expect(page.locator('.trip-segment-card').nth(1).locator('.trip-inline-safety')).toContainText('keine voluminöse Jacke');
+  await expect(page.locator('.trip-segment-card').nth(1).locator('.trip-inline-safety')).toContainText('Außenwetter');
+  await expect(page.locator('.trip-segment-card').nth(1).locator('[data-trip-context-field="cabinTempC"]')).toHaveCount(0);
+  await expect(page.locator('.trip-segment-card').nth(1).locator('[data-trip-context-field="cabinTempSource"]')).toHaveCount(0);
+  await expect(page.locator('.trip-segment-card').nth(1).locator('[data-trip-context-field="includeOutdoorTransition"]')).toHaveCount(0);
 
   await page.locator('#tripGenerateButton').click();
   await expect(page.locator('#tripResultView')).toBeVisible();
   await expect(page.locator('[data-trip-notice-code="CAR_SEAT_NO_BULKY_LAYERS"]')).toBeVisible();
   await expect(page.locator('[data-trip-notice-code="CAR_SEAT_NO_BULKY_LAYERS"]')).toContainText('keine dicken Schichten');
-  const hintSummary = page.locator('#tripHintSummary');
-  await expect(hintSummary).toBeVisible();
-  const hintToggle = hintSummary.locator('button');
-  await expect(hintToggle).toHaveAttribute('aria-expanded', 'false');
-  await hintToggle.click();
-  await expect(hintToggle).toHaveAttribute('aria-expanded', 'true');
-  await expect(page.locator('[data-trip-notice-code="CAR_CABIN_TEMPERATURE_ESTIMATED"]')).toBeVisible();
+  await expect(page.locator('[data-trip-notice-code="CAR_CABIN_TEMPERATURE_ESTIMATED"]')).toHaveCount(0);
   expect(await page.locator('[data-trip-action][data-safety-critical="true"]').count()).toBeGreaterThan(0);
 
   const safety = page.locator('#tripSafetyNotices');

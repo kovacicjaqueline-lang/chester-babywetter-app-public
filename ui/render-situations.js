@@ -29,9 +29,9 @@ export function renderSituationOptions(selectedMode) {
   }
 }
 
-function selectField(labelText, field, options, value, { secondary = false } = {}) {
+function selectField(labelText, field, options, value) {
   const label = document.createElement('label');
-  label.className = `field compact-field${secondary ? ' secondary-context-field' : ''}`;
+  label.className = 'field compact-field';
   label.append(document.createTextNode(labelText));
   const select = document.createElement('select');
   select.dataset.contextField = field;
@@ -67,43 +67,17 @@ function numberField(labelText, field, value, min, max, suffix) {
   return label;
 }
 
-function checkboxField(labelText, field, checked) {
-  const label = document.createElement('label');
-  label.className = 'check-field';
-  const input = document.createElement('input');
-  input.type = 'checkbox';
-  input.dataset.contextField = field;
-  input.checked = Boolean(checked);
-  label.append(input, document.createTextNode(labelText));
-  return label;
-}
-
-function carrierPlacementField(value) {
-  const fieldset = document.createElement('fieldset');
-  fieldset.className = 'choice-fieldset carrier-placement-fieldset';
-  const legend = document.createElement('legend');
-  legend.textContent = 'Baby wird getragen …';
-  fieldset.append(legend);
-
-  const options = [
-    ['under_wearer_outerwear', 'Unter meiner Jacke'],
-    ['over_wearer_outerwear', 'Über meiner Jacke']
-  ];
-  for (const [optionValue, optionLabel] of options) {
-    const label = document.createElement('label');
-    label.className = 'carrier-placement-option';
-    const input = document.createElement('input');
-    input.type = 'radio';
-    input.name = 'carrierPlacement';
-    input.value = optionValue;
-    input.dataset.contextField = 'placement';
-    input.checked = optionValue === value;
-    const text = document.createElement('span');
-    text.textContent = optionLabel;
-    label.append(input, text);
-    fieldset.append(label);
-  }
-  return fieldset;
+function carSafetySummary() {
+  const summary = document.createElement('div');
+  summary.className = 'car-context-summary';
+  const title = document.createElement('strong');
+  title.textContent = 'Keine zusätzlichen Angaben nötig';
+  const weather = document.createElement('p');
+  weather.textContent = 'Die Empfehlung startet mit dem aktuellen Außenwetter und bleibt unter dem Gurt schlank.';
+  const cover = document.createElement('p');
+  cover.textContent = 'Zusätzliche Wärme kommt erst über den korrekt geschlossenen Gurt. Sobald das Auto warm wird, Decke oder Überwurf entfernen.';
+  summary.append(title, weather, cover);
+  return summary;
 }
 
 export function renderSituationContext(mode, context) {
@@ -116,8 +90,8 @@ export function renderSituationContext(mode, context) {
   if (mode === 'outdoor') {
     host.append(
       selectField('Aktivität', 'activity', [['normal', 'Normal'], ['active', 'Sehr aktiv']], context.activity === 'active' ? 'active' : 'normal'),
-      selectField('Sonne', 'sunExposure', [['shade', 'Schatten'], ['partial', 'Teilweise Sonne'], ['direct', 'Direkte Sonne'], ['unknown', 'Unbekannt']], context.sunExposure, { secondary: true }),
-      selectField('Am Boden', 'groundContact', [['none', 'Keiner'], ['standing', 'Steht'], ['walking', 'Läuft']], context.groundContact, { secondary: true })
+      selectField('Sonne', 'sunExposure', [['shade', 'Schatten'], ['partial', 'Teilweise Sonne'], ['direct', 'Direkte Sonne'], ['unknown', 'Unbekannt']], context.sunExposure),
+      selectField('Bodenkontakt', 'groundContact', [['none', 'Keiner'], ['standing', 'Steht'], ['walking', 'Läuft']], context.groundContact)
     );
   }
   if (mode === 'stroller') {
@@ -126,23 +100,18 @@ export function renderSituationContext(mode, context) {
       : context.activity === 'active' ? 'very_active' : 'awake';
     host.append(
       selectField('Baby gerade', 'strollerBehavior', [['asleep', 'Schläft'], ['awake', 'Wach'], ['very_active', 'Sehr aktiv']], behavior),
-      selectField('Sonne', 'sunExposure', [['shade', 'Schatten'], ['partial', 'Teilweise Sonne'], ['direct', 'Direkte Sonne'], ['unknown', 'Unbekannt']], context.sunExposure, { secondary: true }),
-      selectField('Windschutz am Wagen', 'windProtection', [['none', 'Kein Windschutz'], ['partial', 'Teilweise'], ['good', 'Gut'], ['unknown', 'Unbekannt']], context.windProtection, { secondary: true })
+      selectField('Sonne', 'sunExposure', [['shade', 'Schatten'], ['partial', 'Teilweise Sonne'], ['direct', 'Direkte Sonne'], ['unknown', 'Unbekannt']], context.sunExposure),
+      selectField('Windschutz', 'windProtection', [['none', 'Kein Windschutz'], ['partial', 'Teilweise'], ['good', 'Gut'], ['unknown', 'Unbekannt']], context.windProtection)
     );
   }
   if (mode === 'carrier') {
     host.append(
-      carrierPlacementField(context.placement),
-      selectField('Sonne', 'sunExposure', [['shade', 'Schatten'], ['partial', 'Teilweise Sonne'], ['direct', 'Direkte Sonne'], ['unknown', 'Unbekannt']], context.sunExposure, { secondary: true })
+      selectField('Sonne', 'sunExposure', [['shade', 'Schatten'], ['partial', 'Teilweise Sonne'], ['direct', 'Direkte Sonne'], ['unknown', 'Unbekannt']], context.sunExposure),
+      selectField('Position', 'placement', [['over_wearer_outerwear', 'Über der Jacke'], ['under_wearer_outerwear', 'Unter der Jacke']], context.placement)
     );
   }
   if (mode === 'car') {
-    host.append(
-      numberField('Innenraumtemperatur', 'cabinTempC', context.cabinTempC, -10, 45, '°C'),
-      selectField('Temperaturquelle', 'cabinTempSource', [['manual', 'Manuell'], ['measured', 'Gemessen'], ['estimated', 'Geschätzt']], context.cabinTempSource),
-      checkboxField('Weg zum/vom Auto berücksichtigen', 'includeOutdoorTransition', context.includeOutdoorTransition),
-      numberField('Dauer draußen', 'outsideTransitionMinutes', context.outsideTransitionMinutes, 0, 60, 'Min.')
-    );
+    host.append(carSafetySummary());
   }
   if (mode === 'indoor') {
     host.append(

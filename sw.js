@@ -24,7 +24,6 @@ const SHELL = [
   '/src/day-trip-planner-weather.js',
   '/src/day-trip-planner-recommendations.js',
   '/src/visual-outfit.js',
-  '/src/integration/cabin-temperature.js',
   '/src/integration/weather-series.js',
   '/src/integration/hourly-selection.js',
   '/src/integration/background-scene.js',
