@@ -39,6 +39,7 @@ const SHELL = [
   '/src/weather/service.js',
   '/ui/asset-store.js',
   '/ui/render.js',
+  '/ui/weather-copy.js',
   '/ui/render-situations.js',
   '/ui/background-scene.js',
   '/ui/swipe-controller.js',
