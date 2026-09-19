@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 
+const APP_SHELL_CACHE = 'babywetter-shell-v0.2.0-assets24';
+
 async function openDemo(page) {
   await page.goto('/?demo=1');
   await expect(page.locator('#confidencePill')).not.toHaveText('Lädt …');
@@ -33,6 +35,7 @@ async function setWeatherCacheAge(page, minutes) {
 async function restartFromPersistedCacheOffline(page, context, ageMinutes) {
   await page.evaluate(() => navigator.serviceWorker.ready);
   await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
+  await expect.poll(() => page.evaluate((cacheName) => caches.has(cacheName), APP_SHELL_CACHE)).toBe(true);
   await setWeatherCacheAge(page, ageMinutes);
   await page.close();
   await context.addInitScript(() => {

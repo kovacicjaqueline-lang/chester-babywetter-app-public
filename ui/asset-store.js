@@ -50,9 +50,10 @@ export class ClothingAssetStore {
     this.error = null;
     this.currentVisualContext = null;
     try {
+      const fetchOptions = navigator.onLine ? { cache: 'no-store' } : {};
       const [assetResponse, visualResponse] = await Promise.all([
-        fetch(MANIFEST_URL, { cache: 'no-store' }),
-        fetch(VISUAL_MANIFEST_URL, { cache: 'no-store' })
+        fetch(MANIFEST_URL, fetchOptions),
+        fetch(VISUAL_MANIFEST_URL, fetchOptions)
       ]);
       if (!assetResponse.ok) throw new Error(`Asset manifest HTTP ${assetResponse.status}`);
       if (!visualResponse.ok) throw new Error(`Visual manifest HTTP ${visualResponse.status}`);
