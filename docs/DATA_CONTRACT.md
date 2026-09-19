@@ -892,7 +892,7 @@ Ausgangslage:
 }
 ```
 
-Hauptempfehlung kann `sleep_bag_2_5 + short_sleeve_bodysuit` sein.
+Hauptempfehlung ist `sleep_bag_1_5 + light_pajamas`. Beide Komponenten ergeben im internen Rebalancing weiterhin das Zielgewicht `5`; die Arme sind bedeckt, ohne gegenüber der früheren Kombination `sleep_bag_2_5 + short_sleeve_bodysuit` zusätzliche Wärme zu addieren.
 
 Wählt der Nutzer `sleep_bag_1_0`, wird gespeichert:
 
