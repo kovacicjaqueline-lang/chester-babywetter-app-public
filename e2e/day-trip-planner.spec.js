@@ -153,6 +153,7 @@ test('Autositz-Segment nutzt Außenwetter ohne technische Innenraumeingaben', as
   await expect(safety.locator('[data-severity]:not([data-severity="hard_rule"])')).toHaveCount(0);
 
   await expect(hintToggle).toHaveAttribute('aria-controls', 'tripHintDetails');
+  await hintToggle.click();
   await expect(page.locator('#tripHintDetails')).toBeVisible();
 });
 
