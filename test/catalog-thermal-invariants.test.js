@@ -45,7 +45,9 @@ const EXPECTED_V1_IDS = Object.freeze([
   'carrier_cover_none',
   'carrier_cover_light',
   'carrier_cover_warm',
+  'car_thermal_none',
   'car_blanket_over_harness',
+  'car_warm_blanket_over_harness',
   'sleep_bag_none',
   'sleep_bag_0_5',
   'sleep_bag_1_0',
@@ -191,7 +193,10 @@ test('car-seat safety attributes are independent of thermal class', () => {
   assert.equal(CLOTHING_CATALOG.transition_overall.carSeatCompatibility,'prohibited');
   assert.equal(CLOTHING_CATALOG.winter_overall.carSeatCompatibility,'prohibited');
   assert.equal(CLOTHING_CATALOG.car_blanket_over_harness.carSeatCompatibility,'prohibited');
-  assert.equal(CLOTHING_CATALOG.car_blanket_over_harness.thermalWeight,2);
+  assert.equal(CLOTHING_CATALOG.car_blanket_over_harness.thermalWeight,1);
+  assert.equal(CLOTHING_CATALOG.car_blanket_over_harness.slot,'car_thermal_accessory');
+  assert.equal(CLOTHING_CATALOG.car_warm_blanket_over_harness.thermalWeight,2);
+  assert.equal(CLOTHING_CATALOG.car_warm_blanket_over_harness.slot,'car_thermal_accessory');
 });
 
 test('asset manifest metadata maps each visual group to the same fach item without changing thermal logic', () => {

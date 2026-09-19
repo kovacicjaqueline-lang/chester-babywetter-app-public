@@ -108,7 +108,7 @@ test('sleep remains room-temperature and TOG based regardless of age',()=>{
 });
 
 test('in-car age adjustment preserves harness safety',()=>{
-  const context = { mode:'car', plannedMinutes:30, includeOutdoorTransition:false, outsideTransitionMinutes:null, cabinTempC:20, cabinTempSource:'manual' };
+  const context = { mode:'car' };
   const oneMonth = recommendOutfit(request({ birthDate:'2026-07-24', context }));
   const sevenMonths = recommendOutfit(request({ birthDate:'2026-01-24', context }));
 

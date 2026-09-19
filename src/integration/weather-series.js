@@ -158,13 +158,6 @@ export function compensateWeatherRiskHorizon(
   if (['outdoor', 'stroller', 'carrier'].includes(adjusted.mode)) {
     const planned = finiteNumber(adjusted.plannedMinutes) ? Math.max(0, adjusted.plannedMinutes) : fallbackWindow;
     adjusted.plannedMinutes = planned + lagMinutes;
-  } else if (adjusted.mode === 'car' && adjusted.includeOutdoorTransition) {
-    const transition = finiteNumber(adjusted.outsideTransitionMinutes)
-      ? Math.max(0, adjusted.outsideTransitionMinutes)
-      : finiteNumber(adjusted.plannedMinutes)
-        ? Math.max(0, adjusted.plannedMinutes)
-        : fallbackWindow;
-    adjusted.outsideTransitionMinutes = transition + lagMinutes;
   }
 
   return adjusted;

@@ -12,8 +12,7 @@ const FIXED_UNDERLAYER_PREFERENCE = Object.freeze({
 
 function phaseOrderFor(context, recommendation) {
   if (context.mode === 'car') {
-    const order = context.includeOutdoorTransition ? ['outdoor_transition', 'in_car'] : ['in_car'];
-    return order.filter((phase) => recommendation.slots.some((entry) => entry.phase === phase));
+    return ['in_car'].filter((phase) => recommendation.slots.some((entry) => entry.phase === phase));
   }
   return ['main'].filter((phase) => recommendation.slots.some((entry) => entry.phase === phase));
 }
@@ -225,7 +224,7 @@ function legThermalSupport(recommendation, phase) {
       const definition = CLOTHING_CATALOG[entry.selected.itemId];
       if (!definition?.bodyZones.includes('legs')) return support;
       if (entry.slot === 'legs') return support + (definition.thermalWeight ?? 0);
-      const isExternalAccessory = ['stroller_thermal_accessory', 'carrier_accessory'].includes(entry.slot);
+      const isExternalAccessory = ['stroller_thermal_accessory', 'carrier_accessory', 'car_thermal_accessory'].includes(entry.slot);
       return support + (isExternalAccessory
         ? (definition.thermalStepCredit ?? 0)
         : (definition.thermalWeight ?? 0));

@@ -43,22 +43,20 @@ function bodyThermalWeight(result, phase='main') {
     .reduce((sum,entry) => sum + (CLOTHING_CATALOG[entry.selected.itemId]?.thermalWeight ?? 0),0);
 }
 
-test('car with missing transition weather is partial while in_car remains ready', () => {
+test('car without current outdoor weather blocks safely', () => {
   const result = recommendOutfit(request({
-    mode:'car', plannedMinutes:30, includeOutdoorTransition:true, outsideTransitionMinutes:5,
-    cabinTempC:21, cabinTempSource:'manual'
+    mode:'car'
   }));
-  assert.equal(result.status,'partial');
-  assert.equal(result.phases.find((phase) => phase.phase === 'outdoor_transition')?.status,'blocked');
-  assert.equal(result.phases.find((phase) => phase.phase === 'in_car')?.status,'ready');
+  assert.equal(result.status,'blocked');
+  assert.deepEqual(result.phases.map((phase) => phase.phase),['in_car']);
+  assert.ok(result.dataQuality.missingFields.includes('weather.current.airTempC'));
 });
 
 test('automatic warmer correction in car never selects conditional/prohibited under harness layers', () => {
   const session = setWarmthOffset(createSession('car_warmer'),'warmer');
   const result = recommendOutfit(request({
-    mode:'car', plannedMinutes:30, includeOutdoorTransition:false, outsideTransitionMinutes:null,
-    cabinTempC:14, cabinTempSource:'manual'
-  }, { session }));
+    mode:'car'
+  }, { session, w:weather(14) }));
   const underHarness = result.slots.filter((entry) => entry.phase === 'in_car' && entry.selected.wearPosition === 'under_harness');
   assert.ok(underHarness.length > 0);
   for (const entry of underHarness) {

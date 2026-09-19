@@ -82,8 +82,6 @@ function restorePlannedDuration(context, weather, requestedAt) {
 
   if (OUTDOOR_DURATION_MODES.has(restored.mode) && finiteNumber(restored.plannedMinutes)) {
     restored.plannedMinutes = Math.max(0, restored.plannedMinutes - lagMinutes);
-  } else if (restored.mode === 'car' && restored.includeOutdoorTransition && finiteNumber(restored.outsideTransitionMinutes)) {
-    restored.outsideTransitionMinutes = Math.max(0, restored.outsideTransitionMinutes - lagMinutes);
   }
   return restored;
 }

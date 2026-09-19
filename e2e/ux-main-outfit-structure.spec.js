@@ -60,37 +60,25 @@ test('Toast-Feedback bleibt oberhalb der fixierten mobilen Navigation', async ({
   expect(positions.toastBottom).toBeLessThanOrEqual(positions.navTop);
 });
 
-test('Autositz trennt Übergang und Fahrt mit Safety-Aktion dazwischen', async ({ page }) => {
+test('Autositz zeigt genau eine gurtsichere Fahrtphase', async ({ page }) => {
   await openDemo(page);
   await chooseSituation(page, 'car');
 
-  const transition = page.locator('[data-outfit-phase="outdoor_transition"]');
   const inCar = page.locator('[data-outfit-phase="in_car"]');
-  const bridge = page.locator('[data-safety-bridge="car-harness"]');
-  await expect(transition.locator('.outfit-phase-heading')).toHaveText('Zum/vom Auto');
+  await expect(page.locator('[data-outfit-phase="outdoor_transition"]')).toHaveCount(0);
   await expect(inCar.locator('.outfit-phase-heading')).toHaveText('Im Autositz');
-  await expect(bridge).toContainText('Vor dem Anschnallen');
-  await expect(bridge).toContainText('dicken Overall');
-
-  const [bridgeBox, inCarBox] = await Promise.all([bridge.boundingBox(), inCar.locator('[data-item-id]').first().boundingBox()]);
-  expect(bridgeBox).not.toBeNull();
-  expect(inCarBox).not.toBeNull();
-  expect(bridgeBox.y + bridgeBox.height).toBeLessThanOrEqual(inCarBox.y);
-
-  const transitionNames = await transition.locator('[data-item-id]').evaluateAll((nodes) => nodes.map((node) => node.getAttribute('aria-label')));
   const inCarNames = await inCar.locator('[data-item-id]').evaluateAll((nodes) => nodes.map((node) => node.getAttribute('aria-label')));
-  expect(transitionNames.every((name) => name?.includes('Zum/vom Auto'))).toBe(true);
   expect(inCarNames.every((name) => name?.includes('Im Autositz'))).toBe(true);
+  await expect(page.locator('[data-notice-code="CAR_SEAT_NO_BULKY_LAYERS"]')).toBeVisible();
 });
 
-test('Autositz zeigt dasselbe Kleidungsstück über mehrere Phasen nicht doppelt', async ({ page }) => {
+test('Autositz zeigt jedes empfohlene Teil nur einmal', async ({ page }) => {
   await openDemo(page);
   await chooseSituation(page, 'car');
 
   const itemIds = await page.locator('#outfitGrid [data-item-id]').evaluateAll((nodes) => nodes.map((node) => node.dataset.itemId));
   expect(new Set(itemIds).size).toBe(itemIds.length);
-  await expect(page.locator('[data-outfit-phase="outdoor_transition"] [data-item-id="long_sleeve_bodysuit"]')).toHaveCount(1);
-  await expect(page.locator('[data-outfit-phase="in_car"] [data-item-id="long_sleeve_bodysuit"]')).toHaveCount(0);
+  await expect(page.locator('[data-outfit-phase="in_car"] [data-item-id="long_sleeve_bodysuit"]')).toHaveCount(1);
 });
 
 test('Nur tatsächlich austauschbare Teile kündigen Alternativen an', async ({ page }) => {

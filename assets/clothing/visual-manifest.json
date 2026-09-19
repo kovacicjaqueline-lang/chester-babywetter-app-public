@@ -1381,6 +1381,42 @@
         "pattern": "solid"
       }
     },
+    "car_warm_blanket_over_harness": {
+      "neutral": {
+        "themeIds": [
+          "sage_oat",
+          "terracotta_greige"
+        ],
+        "paletteTags": [
+          "sage",
+          "cream",
+          "terracotta"
+        ],
+        "pattern": "fine_texture"
+      },
+      "boy": {
+        "themeIds": [
+          "dusty_blue_sand"
+        ],
+        "paletteTags": [
+          "dusty_blue",
+          "sand",
+          "cream"
+        ],
+        "pattern": "micro_quilt"
+      },
+      "girl": {
+        "themeIds": [
+          "mauve_cream"
+        ],
+        "paletteTags": [
+          "mauve",
+          "cream",
+          "greige"
+        ],
+        "pattern": "micro_quilt"
+      }
+    },
     "sleep_bag_0_5": {
       "neutral": {
         "themeIds": [

@@ -36,7 +36,7 @@ Keine Findings.
 4. `stroller_warm_blanket` und `stroller_light_footmuff` haben beide `thermalStepCredit: 1`. Das ist eine bewusst gleichwertige externe Isolationsstufe bei unterschiedlicher Bauform.
 5. `sleep_bag_2_5` und `sleep_bag_3_5` teilen wegen der allgemeinen `thermalWeight`-Skala den Wert `4`, werden im Schlafmodus aber korrekt über `sleepWarmthWeight: 4` bzw. `5` unterschieden.
 6. Schuhwärme wird nicht zur globalen Körperwärme-Rebalancierung addiert. Die öffentliche Engine-Contract-Schicht kalibriert Schuhalternativen separat nach deren `thermalWeight`; warme Schuhe werden deshalb gegenüber leichten/wetterfesten Schuhen korrekt als wärmer bzw. die Gegenrichtung als kühler sortiert.
-7. `car_blanket_over_harness` ist mit `thermalWeight: 2` und `carSeatCompatibility: prohibited` katalogisiert. `prohibited` verhindert eine Verwendung **unter** dem Gurt; die Sicherheitsregel für zusätzliche Decke/Jacke über dem korrekt geschlossenen Gurt bleibt davon unabhängig. Ob bzw. wann dieses vorbereitete Item als eigenes `over_harness`-Outfitteil aktiv angeboten wird, ist eine separate Interaktions-/Autositzmodellierungsfrage und kein offener Punkt der ThermalWeight-Kalibrierung.
+7. Autositz-Zusatzwärme liegt im eigenen Slot `car_thermal_accessory`: `car_blanket_over_harness` bildet mit `thermalWeight: 1`/`thermalStepCredit: 0.5` die leichte Stufe, `car_warm_blanket_over_harness` mit `2`/`1` die warme Stufe. Beide sind ausschließlich `over_harness`; `carSeatCompatibility: prohibited` verhindert eine Verwendung unter dem Gurt. Die Auswahlgrenzen 12 °C und 8 °C stammen aus den bestehenden Wechseln der Outdoor-Baseline und sind keine neue freie Temperaturschätzung.
 
 ## Audit der V1-Katalogstufen
 

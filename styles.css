@@ -1016,6 +1016,17 @@ code { font-size: .84em; }
   font-size: .9rem;
 }
 .compact-field { margin: 8px 0; }
+.car-context-summary {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+}
+.car-context-summary strong { font-size: .9rem; }
+.car-context-summary p { margin: 0; color: var(--muted); font-size: .8rem; line-height: 1.45; }
 .secondary-context-field {
   margin-top: 6px;
   margin-bottom: 6px;

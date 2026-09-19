@@ -157,7 +157,8 @@ test('stale risk horizon is compensated to start from actual request time withou
     stale,
     { now: () => new Date('2026-08-26T11:58:00.000Z') }
   );
-  assert.equal(car.outsideTransitionMinutes, 63);
+  assert.equal(car.outsideTransitionMinutes, 5);
+  assert.equal(car.plannedMinutes, 30);
 });
 
 test('fresh cache does not get a compensated risk horizon', () => {

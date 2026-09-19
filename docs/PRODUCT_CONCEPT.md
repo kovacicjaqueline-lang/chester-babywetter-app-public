@@ -269,18 +269,11 @@ Körperwärme der tragenden Person und Trage zählen als zusätzliche Wärme am 
 
 ### 7.4 Auto (`car`)
 
-Die App zeigt zwei klar getrennte Sets:
+Die App zeigt ein einziges, alltagstaugliches Autositz-Set (`in_car`). Ausgangspunkt ist das aktuelle Außenwetter: die vertrauenswürdige gefühlte Temperatur, sonst die Lufttemperatur. Eine pauschale oder berechnete Innenraumtemperatur wird nicht verwendet, weil tatsächlicher Innenraumzustand, Heizung/Klimaanlage, Vorheizen/Vorkühlen, Parkdauer und solare Aufheizung unbekannt sind.
 
-1. **Zum Auto / vom Auto** (`outdoor_transition`),
-2. **Im Autositz** (`in_car`).
+Unter dem Gurt werden ausschließlich schlanke, gurtsichere Schichten empfohlen. Voluminöse Jacken und dicke Overalls sind dort immer ausgeschlossen. Fehlt bei Kälte die Wärme einer sonst üblichen Außenschicht, wird sie als leicht entfernbare Decke oder Überwurf **über** dem bereits korrekt geschlossenen Gurt ergänzt. Sobald der Innenraum warm wird, muss diese Zusatzwärme entfernt werden.
 
-Für die Fahrt wird eine Innenraumtemperatur verwendet. Ist sie nicht bekannt, verwendet V1 bewusst eine **neutrale, klima-kontrollierte Schätzannahme von 20 °C** und kennzeichnet sie sichtbar als `estimated`. Die Schätzung wird **nicht** aus der Außentemperatur abgeleitet.
-
-Eine dynamische Ableitung wäre mit den V1-Inputs scheinpräzise: Es fehlen insbesondere tatsächlicher Innenraumzustand, Heizung/Klimaanlage, Vorheizen/Vorkühlen, Parkdauer und solare Aufheizung. Das Außenwetter bleibt deshalb ausschließlich für `outdoor_transition` maßgeblich; `in_car` nutzt die bekannte oder geschätzte Innenraumtemperatur.
-
-Die 20-°C-Annahme ist jederzeit schnell korrigierbar. Eine Änderung des Temperaturwerts gilt als `manual`; `measured` wird nur verwendet, wenn ein tatsächlich gemessener Wert ausdrücklich so markiert wird. Beim Zurückschalten auf `estimated` wird wieder die neutrale 20-°C-Annahme eingesetzt. Keine Gurtsicherheitsregel darf von dieser Schätzung oder ihrer Höhe abgeleitet werden.
-
-Voluminöse Jacken und Winteroveralls dürfen nicht unter dem Gurt empfohlen werden. Ein für draußen empfohlener Overall muss beim Wechsel in die Fahrphase explizit entfernt werden. Zusätzliche Decke/Jacke nur über dem korrekt geschlossenen Gurt.
+Die frühere separate Phase `outdoor_transition` und die dazugehörigen Nutzereingaben werden im aktiven V1-Modell nicht mehr verwendet. Bestehende lokale V2-Daten werden migrationsverträglich eingelesen; die alten Auto-Felder werden dabei verworfen.
 
 ### 7.5 Drinnen (`indoor`)
 
@@ -394,7 +387,7 @@ Beispiele:
 
 - `offline + stale + partial`,
 - `location denied + manual weather + ready`,
-- `car/in_car + geschätzte Innenraumtemperatur + ready_with_estimate`,
+- `car/in_car + stale Außenwetter + partial`,
 - `indoor + roomTemp fehlt + blocked`,
 - `sleep + roomTemp fehlt + blocked`.
 
@@ -447,7 +440,7 @@ Diese Quellen werden **nur** verwendet, um eine generische Produkt-Orientierung 
 
 ## 15. Technischer Entscheidungsstatus
 
-Die V1-Entscheidung für `cabinTempSource: estimated` ist geschlossen: unbekannte Autoinnenraumtemperatur wird als transparente neutrale 20-°C-Klimaannahme modelliert und nicht aus Außentemperatur abgeleitet.
+Die Auto-Entscheidung ist geschlossen: keine geschätzte Innenraumtemperatur und keine getrennte Übergangsphase. Die Autositz-Empfehlung startet mit dem aktuellen Außenwetter, priorisiert Gurtsicherheit und modelliert entfernbare Zusatzwärme in einem eigenen Zubehörslot über dem Gurt.
 
 Die V1-Entscheidung zur finalen Katalogzuordnung und relativen `thermalWeight`-Kalibrierung ist ebenfalls geschlossen. Der vollständige Audit vom 2026-08-28 ist in `docs/THERMAL_WEIGHT_AUDIT.md` dokumentiert. Die aktuellen `thermalWeight`-, `thermalStepCredit`- und `sleepWarmthWeight`-Werte sind intern konsistent und werden durch gezielte Kataloginvarianten abgesichert.
 
