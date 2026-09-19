@@ -577,7 +577,7 @@ Diese Punkte sind **keine TOG-Einheiten**; sie sind lediglich Rebalancing-Gewich
 | `24–<27 °C` | 0.5 TOG + Kurzarmbody | kein Schlafsack + leichter Pyjama |
 | `22–<24 °C` | 1.0 TOG + Kurzarmbody | 0.5 TOG + leichter Pyjama |
 | `20–<22 °C` | 1.5 TOG + Kurzarmbody | 1.0 TOG + leichter Pyjama |
-| `18–<20 °C` | 2.5 TOG + Kurzarmbody | 1.5 TOG + leichter Pyjama |
+| `18–<20 °C` | 1.5 TOG + leichter langärmeliger Pyjama | 2.5 TOG + Kurzarmbody |
 | `16–<18 °C` | 2.5 TOG + Langarmbody | 3.5 TOG + Kurzarmbody |
 | `<16 °C` | 3.5 TOG + Langarmbody | 2.5 TOG + Kurzarmbody + leichter Pyjama |
 
@@ -597,7 +597,7 @@ Beim Wechsel des Schlafsacks:
 
 Beispiel bei 18–20 °C:
 
-- Hauptset: `2.5 TOG + Kurzarmbody`,
+- Hauptset: `1.5 TOG + leichter langärmeliger Pyjama`,
 - Nutzer wählt `1.0 TOG`,
 - Engine ergänzt entsprechend mehr körpernahe Schlafkleidung statt loser Bettware.
 

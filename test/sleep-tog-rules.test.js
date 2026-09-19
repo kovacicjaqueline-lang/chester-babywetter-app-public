@@ -25,9 +25,35 @@ test('generic V1 TOG orientation has calibrated bands',()=>{
   assert.equal(genericTogGuidanceForRoomTemp(25).sleepBagId,'sleep_bag_0_5');
   assert.equal(genericTogGuidanceForRoomTemp(23).sleepBagId,'sleep_bag_1_0');
   assert.equal(genericTogGuidanceForRoomTemp(21).sleepBagId,'sleep_bag_1_5');
-  assert.equal(genericTogGuidanceForRoomTemp(19).sleepBagId,'sleep_bag_2_5');
+  assert.equal(genericTogGuidanceForRoomTemp(19).sleepBagId,'sleep_bag_1_5');
+  assert.equal(genericTogGuidanceForRoomTemp(19).underlayerId,'sleep_under_light_pajamas');
   assert.equal(genericTogGuidanceForRoomTemp(15).sleepBagId,'sleep_bag_3_5');
   assert.equal(GENERIC_TOG_TABLE.length,7);
+});
+
+test('sleep bands from 16 to below 22 C keep one-step transitions and intentional arm coverage',()=>{
+  const at17=recommendOutfit(req(17));
+  const at19=recommendOutfit(req(19));
+  const at21=recommendOutfit(req(21));
+
+  assert.deepEqual(
+    [id(at17,'sleep_bag'),id(at17,'sleep_underlayer')],
+    ['sleep_bag_2_5','sleep_under_long_sleeve_bodysuit']
+  );
+  assert.deepEqual(
+    [id(at19,'sleep_bag'),id(at19,'sleep_underlayer')],
+    ['sleep_bag_1_5','sleep_under_light_pajamas']
+  );
+  assert.deepEqual(
+    [id(at21,'sleep_bag'),id(at21,'sleep_underlayer')],
+    ['sleep_bag_1_5','sleep_under_short_sleeve_bodysuit']
+  );
+
+  const totalWarmth=(result)=>['sleep_bag','sleep_underlayer']
+    .map((slot)=>CLOTHING_CATALOG[id(result,slot)].sleepWarmthWeight ?? 0)
+    .reduce((sum,weight)=>sum+weight,0);
+  assert.deepEqual([totalWarmth(at17),totalWarmth(at19),totalWarmth(at21)],[6,5,4]);
+  assert.ok(CLOTHING_CATALOG[id(at19,'sleep_underlayer')].bodyZones.includes('arms'));
 });
 
 test('sleep uses room temperature and ignores outside weather',()=>{
@@ -51,14 +77,29 @@ test('all five TOGs plus none are exchangeable alternatives',()=>{
   assert.deepEqual(new Set(SLEEP_BAG_IDS),ids);
 });
 
-test('2.5 TOG to 1.0 TOG lock produces warmer underclothing',()=>{
+test('1.5 TOG to 1.0 TOG lock produces warmer underclothing',()=>{
   const base=recommendOutfit(req(18.5));
   const session=lockItem(createSession('sleep'),{slot:'sleep_bag',itemId:'sleep_bag_1_0'});
   const swapped=recommendOutfit(req(18.5,session));
-  assert.equal(id(base,'sleep_bag'),'sleep_bag_2_5');
-  assert.equal(id(base,'sleep_underlayer'),'sleep_under_short_sleeve_bodysuit');
+  assert.equal(id(base,'sleep_bag'),'sleep_bag_1_5');
+  assert.equal(id(base,'sleep_underlayer'),'sleep_under_light_pajamas');
   assert.equal(id(swapped,'sleep_bag'),'sleep_bag_1_0');
   assert.ok((CLOTHING_CATALOG[id(swapped,'sleep_underlayer')].sleepWarmthWeight ?? 0) > (CLOTHING_CATALOG[id(base,'sleep_underlayer')].sleepWarmthWeight ?? 0));
+});
+
+test('locking 2.5 TOG at 18.5 C rebalances to the equivalent short-sleeve underlayer',()=>{
+  const base=recommendOutfit(req(18.5));
+  const bagAlternative=base.slots
+    .find((slotResult)=>slotResult.slot==='sleep_bag')
+    .alternatives.find((alternative)=>alternative.itemId==='sleep_bag_2_5');
+  const session=lockItem(createSession('sleep'),{slot:'sleep_bag',itemId:'sleep_bag_2_5'});
+  const result=recommendOutfit(req(18.5,session));
+  assert.equal(bagAlternative.relation,'equivalent');
+  assert.equal(bagAlternative.relativeThermalDelta,0);
+  assert.ok(bagAlternative.projectedChanges.some((change)=>change.slot==='sleep_underlayer'));
+  assert.equal(id(result,'sleep_bag'),'sleep_bag_2_5');
+  assert.equal(result.slots.find((slotResult)=>slotResult.slot==='sleep_bag').selected.selectionSource,'manual_lock');
+  assert.equal(id(result,'sleep_underlayer'),'sleep_under_short_sleeve_bodysuit');
 });
 
 test('sleep bag lock remains manual and alternatives project underlayer changes',()=>{
@@ -113,8 +154,8 @@ test('legacy personal sleep-bag inventory/manufacturer data is ignored in V1',()
   const legacyProfile={ ...profile, sleepBagInventory:[{sleepBagId:'custom',tog:2.5,manufacturer:'Legacy',guidanceBands:[{minRoomTempC:18,maxRoomTempC:20,recommendedUnderlayers:[]}]}] };
   const a=recommendOutfit(req(19));
   const b=recommendOutfit({ ...req(19), profile:legacyProfile });
-  assert.equal(id(a,'sleep_bag'),'sleep_bag_2_5');
-  assert.equal(id(b,'sleep_bag'),'sleep_bag_2_5');
+  assert.equal(id(a,'sleep_bag'),'sleep_bag_1_5');
+  assert.equal(id(b,'sleep_bag'),'sleep_bag_1_5');
   assert.deepEqual(a.slots,b.slots);
 });
 
