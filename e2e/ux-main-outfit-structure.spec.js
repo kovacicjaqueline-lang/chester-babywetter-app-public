@@ -103,12 +103,13 @@ test('Status steht im Kontext der Outfit-Überschrift', async ({ page }) => {
   await page.locator('#applyWeatherOverrideButton').click();
 
   await expect(page.locator('#confidencePill')).toHaveText('Teilweise');
-  await expect(page.locator('#outfitStatusText')).toContainText('Wetterzeitraum unvollständig');
+  await expect(page.locator('#outfitStatusText')).toContainText('Winddaten fehlen');
   await expect(page.locator('#outfitStatusText')).not.toContainText('Teilweise');
   await expect(page.locator('#outfitStatusText')).toContainText('UV-Wert fehlt');
 });
 
 test('Drinnen und Schlafen zeigen Raumtemperatur primär und Außenwetter sekundär', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
   await openDemo(page);
 
   await chooseSituation(page, 'indoor');
@@ -118,9 +119,26 @@ test('Drinnen und Schlafen zeigen Raumtemperatur primär und Außenwetter sekund
   await expect(page.locator('#weatherFactsLabel')).toHaveText('Außenwetter · sekundär');
   await expect(page.locator('#weatherAdjustRow')).toBeHidden();
 
-  await chooseSituation(page, 'sleep');
-  await expect(page.locator('#temperatureValue')).toHaveText('18.5°');
+  await page.locator('[data-open-dialog="situationDialog"]').first().click();
+  await page.locator('[data-situation="sleep"]').click();
+  await page.locator('#situationDialog [data-context-field="roomTempC"]').fill('19');
+  await page.locator('#applySituationButton').click();
+
+  await expect(page.locator('#temperatureValue')).toHaveText('19°');
   await expect(page.locator('#weatherHeading')).toHaveText('Schlafraum');
   await expect(page.locator('#weatherDescription')).toHaveText('Raumtemperatur für Schlafen');
+  await expect(page.locator('#weatherFactsLabel')).toHaveText('Außenwetter · sekundär');
+  await expect(page.locator('#weatherAdjustRow')).toBeHidden();
+  const sleepTemperatureFontSize = await page.locator('#temperatureValue').evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
+  expect(sleepTemperatureFontSize).toBeGreaterThan(40);
+  await expect(page.locator('#weatherFacts')).toContainText('Außenwetter');
+  await expect(page.locator('#weatherFacts')).not.toContainText('19°');
   await expect(page.locator('#outfitContextLabel')).toHaveText('Schlafen · Raumtemperatur + TOG');
+
+  await page.reload();
+  await expect(page.locator('#confidencePill')).not.toHaveText('Lädt …');
+  await expect(page.locator('#situationLabel')).toHaveText('Schlafen');
+  await expect(page.locator('#weatherHeading')).toHaveText('Schlafraum');
+  await expect(page.locator('#temperatureValue')).toHaveText('19°');
+  await expect(page.locator('#weatherDescription')).toHaveText('Raumtemperatur für Schlafen');
 });

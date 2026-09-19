@@ -1,4 +1,4 @@
-const CACHE_NAME = 'babywetter-shell-v0.2.0-assets23';
+const CACHE_NAME = 'babywetter-shell-v0.2.0-assets24';
 const ASSET_MANIFEST_PATH = '/assets/clothing/manifest.json';
 const VISUAL_MANIFEST_PATH = '/assets/clothing/visual-manifest.json';
 const SHELL = [
@@ -38,6 +38,7 @@ const SHELL = [
   '/src/weather/service.js',
   '/ui/asset-store.js',
   '/ui/render.js',
+  '/ui/weather-copy.js',
   '/ui/render-situations.js',
   '/ui/background-scene.js',
   '/ui/swipe-controller.js',
@@ -124,7 +125,10 @@ self.addEventListener('fetch', (event) => {
 
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request)
+      Promise.race([
+        fetch(request),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('navigation network timeout')), 1500))
+      ])
         .then((response) => {
           if (response.ok) caches.open(CACHE_NAME).then((cache) => cache.put('/index.html', response.clone()));
           return response;
@@ -144,5 +148,6 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  event.respondWith(caches.match(request).then((cached) => cached || fetch(request)));
+  const cacheKey = new Request(url.pathname, { method: 'GET' });
+  event.respondWith(caches.match(cacheKey).then((cached) => cached || fetch(request)));
 });

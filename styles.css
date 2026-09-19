@@ -877,6 +877,41 @@ code { font-size: .84em; }
   font-size: .79rem;
   font-weight: 800;
 }
+.carrier-placement-fieldset {
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 12px;
+}
+.carrier-placement-fieldset legend {
+  font-size: .9rem;
+}
+.choice-fieldset .carrier-placement-option {
+  min-height: 56px;
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 11px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: #fff;
+  cursor: pointer;
+  font-size: .84rem;
+  font-weight: 760;
+}
+.choice-fieldset .carrier-placement-option:has(input:checked) {
+  border-color: #bba393;
+  background: #fbf5f0;
+}
+.choice-fieldset .carrier-placement-option input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+}
+.choice-fieldset .carrier-placement-option:focus-within {
+  outline: 3px solid rgba(93, 112, 164, .34);
+  outline-offset: 2px;
+}
 .choice-fieldset label {
   min-height: 40px;
   display: flex;
@@ -992,6 +1027,16 @@ code { font-size: .84em; }
 }
 .car-context-summary strong { font-size: .9rem; }
 .car-context-summary p { margin: 0; color: var(--muted); font-size: .8rem; line-height: 1.45; }
+.secondary-context-field {
+  margin-top: 6px;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: .75rem;
+}
+.secondary-context-field select,
+.secondary-context-field input {
+  background: #fcfcfb;
+}
 .check-field {
   min-height: 44px;
   display: flex;
