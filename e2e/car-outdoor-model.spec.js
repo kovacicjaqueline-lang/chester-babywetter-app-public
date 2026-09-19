@@ -48,7 +48,7 @@ test('Außentemperatur steuert entfernbare Zusatzwärme über dem Gurt', async (
   await expect(blanket).toHaveAttribute('data-phase','in_car');
   await expect(page.locator('[data-notice-code="CAR_SEAT_NO_BULKY_LAYERS"]')).toBeVisible();
   await expect(page.locator('[data-notice-code="CAR_SEAT_REMOVE_COVER_WHEN_WARM"]')).toBeVisible();
-  await expect(page.locator('#outfitReason')).toContainText('aktuellen Außenwetter');
+  await expect(page.locator('#outfitReason')).toContainText('aktuelle Außenwetter');
 });
 
 test('alter V2-Autokontext migriert ohne Innenraum- und Übergangsfelder auf V3', async ({ page }) => {

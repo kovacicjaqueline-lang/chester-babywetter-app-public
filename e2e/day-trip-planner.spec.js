@@ -141,7 +141,7 @@ test('Autositz-Segment nutzt Außenwetter ohne technische Innenraumeingaben', as
   await page.locator('#tripGenerateButton').click();
   await expect(page.locator('#tripResultView')).toBeVisible();
   await expect(page.locator('[data-trip-notice-code="CAR_SEAT_NO_BULKY_LAYERS"]')).toBeVisible();
-  await expect(page.locator('[data-trip-notice-code="CAR_SEAT_NO_BULKY_LAYERS"]')).toContainText('Keine dicken Schichten');
+  await expect(page.locator('[data-trip-notice-code="CAR_SEAT_NO_BULKY_LAYERS"]')).toContainText('keine dicken Schichten');
   await expect(page.locator('[data-trip-notice-code="CAR_CABIN_TEMPERATURE_ESTIMATED"]')).toHaveCount(0);
   expect(await page.locator('[data-trip-action][data-safety-critical="true"]').count()).toBeGreaterThan(0);
 
