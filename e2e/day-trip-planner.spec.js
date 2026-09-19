@@ -147,6 +147,7 @@ test('Autositz-Segment nutzt Außenwetter ohne technische Innenraumeingaben', as
 
   const safety = page.locator('#tripSafetyNotices');
   const startOutfit = page.getByTestId('trip-start-outfit');
+  const hintToggle = page.locator('#tripHintToggle');
   expect(await safety.evaluate((node, outfit) => Boolean(node.compareDocumentPosition(outfit) & Node.DOCUMENT_POSITION_FOLLOWING), await startOutfit.elementHandle())).toBe(true);
   await expect(safety.locator('[data-severity="hard_rule"]')).not.toHaveCount(0);
   await expect(safety.locator('[data-severity]:not([data-severity="hard_rule"])')).toHaveCount(0);
