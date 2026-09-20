@@ -1,4 +1,4 @@
-import { formatPrecipitation, formatTemperature, precipitationLabelFor } from './weather-copy.js';
+import { formatPrecipitation, formatTemperature, formatTemperatureC, formatUvIndex, precipitationLabelFor } from './weather-copy.js';
 
 const MODE_COPY = Object.freeze({
   outdoor: { label: 'Draußen', icon: '☀', short: 'Wetter + Aktivität' },
@@ -296,10 +296,10 @@ export function renderWeather(weather, location, runtime = {}, context = null) {
     facts.append(secondaryLabel);
   }
   const rows = current ? [
-    ['Gefühlt', current.apparentTempC == null ? '–' : `${Math.round(current.apparentTempC)}°`],
+    ['Gefühlt', current.apparentTempC == null ? '–' : formatTemperature(current.apparentTempC)],
     ['Wind', current.windSpeedKmh == null ? '–' : `${Math.round(current.windSpeedKmh)} km/h`],
     [precipitationLabelFor(current), current.precipProbabilityPct == null ? '–' : `${Math.round(current.precipProbabilityPct)} %`],
-    ['UV', current.uvIndex == null ? '–' : current.uvIndex.toFixed(1)]
+    ['UV', formatUvIndex(current.uvIndex)]
   ] : [['Status', runtime.weatherCacheStatus === 'expired' ? 'Cache zu alt' : runtime.weatherCacheStatus === 'location_mismatch' ? 'Cache anderer Ort' : runtime.weatherError ? 'Fehler' : 'Keine Daten']];
   for (const [index, [nameText, valueText]] of rows.entries()) {
     const row = document.createElement('div');
@@ -487,7 +487,10 @@ function reasonFor(context, recommendation) {
       : null;
   if (context.mode === 'carrier') return 'Körperkontakt reduziert den Wärmebedarf am bedeckten Rumpf; exponierte Bereiche werden separat geschützt.';
   if (context.mode === 'car') return 'Ausgangspunkt ist das aktuelle Außenwetter. Unter dem Gurt bleibt die Kleidung schlank; zusätzliche Wärme kommt nur darüber und wird im warmen Auto entfernt.';
-  if (context.mode === 'sleep') return `Die Schlafempfehlung basiert auf ${context.roomTempC ?? 'der fehlenden'} °C Raumtemperatur, nicht auf dem Außenwetter.`;
+  if (context.mode === 'sleep') {
+    const roomTemperature = Number.isFinite(context.roomTempC) ? formatTemperatureC(context.roomTempC) : 'der fehlenden';
+    return `Die Schlafempfehlung basiert auf ${roomTemperature} Raumtemperatur, nicht auf dem Außenwetter.`;
+  }
   return null;
 }
 

@@ -1,6 +1,16 @@
 export function formatTemperature(value) {
   if (!Number.isFinite(value)) return '–';
-  return `${Number.isInteger(value) ? value : value.toFixed(1)}°`;
+  return `${Math.round(value)}°`;
+}
+
+export function formatTemperatureC(value) {
+  if (!Number.isFinite(value)) return '–';
+  return `${Math.round(value)} °C`;
+}
+
+export function formatUvIndex(value) {
+  if (!Number.isFinite(value)) return '–';
+  return String(Math.round(value));
 }
 
 export function precipitationLabelFor(point = null) {
