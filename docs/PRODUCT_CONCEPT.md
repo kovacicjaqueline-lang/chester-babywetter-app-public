@@ -176,6 +176,8 @@ Provider-`feelsLike` wird nicht blind verwendet. Die Wetterdaten-Schicht normali
 
 Für den vorgesehenen Open-Meteo-Adapter kann `apparent_temperature` als bekannt interpretiert werden: Open-Meteo dokumentiert Windchill, relative Feuchte und Solarstrahlung als Bestandteile. Diese Faktoren dürfen dann thermisch nicht doppelt verrechnet werden.
 
+Für regelrelevante Temperatur- und UV-Schwellen verwendet die Recommendation dieselbe auf ganze Werte gerundete Zahl, die in der UI sichtbar ist. Die Rohwerte in `WeatherSeries` und im gespeicherten Situationskontext bleiben dabei unverändert; die Rundung erfolgt nur in der internen Request-Kopie für die aktuelle Empfehlung.
+
 ### 6.4 Cache, Freshness und Offline-Verwendung
 
 Die Freshness eines gespeicherten `WeatherSeries` wird ausschließlich aus `fetchedAt` berechnet. `current.time` bzw. `observedAt` ersetzt diesen Abrufzeitpunkt nicht.
@@ -469,7 +471,7 @@ Der Planer darf intern stündliche bzw. situationsbedingte Empfehlungen erzeugen
 - Ohne Situationswechsel gilt eine Situation für den ganzen Zeitraum.
 - Schlaf im Kinderwagen bleibt `strollerState: asleep`.
 - Ein echtes `sleep`-Segment ist nur ausdrücklich geplant und verwendet ausschließlich `roomTempC`/TOG, niemals Außenwetter.
-- `car` behält seine getrennten Phasen und alle Gurtsicherheitsregeln.
+- `car` verwendet ausschließlich `in_car` und behält alle Gurtsicherheitsregeln.
 
 ### 16.2 Wetter und Dauer
 
