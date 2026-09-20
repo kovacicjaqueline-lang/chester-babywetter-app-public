@@ -102,6 +102,7 @@ export function recommendOutfit(input) {
   if (context?.mode !== 'indoor') return recommendBase(input);
   if (!Number.isFinite(context.roomTempC)) return indoorBlockedResult(input);
 
+  const roomTempC = Math.round(context.roomTempC);
   const activity = context.activity === 'active' ? 'active' : 'normal';
   const outdoorContext = {
     mode:'outdoor',
@@ -115,7 +116,7 @@ export function recommendOutfit(input) {
     ...input,
     context:outdoorContext,
     situation:undefined,
-    weather:syntheticIndoorWeather(context.roomTempC, input?.requestedAt)
+    weather:syntheticIndoorWeather(roomTempC, input?.requestedAt)
   };
-  return adaptIndoorResult(recommendBase(baseInput), context.roomTempC);
+  return adaptIndoorResult(recommendBase(baseInput), roomTempC);
 }

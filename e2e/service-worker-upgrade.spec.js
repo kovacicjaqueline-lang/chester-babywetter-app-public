@@ -27,4 +27,8 @@ test('Service-Worker-Upgrade ersetzt den vorherigen App-Shell-Cache', async ({ p
     const response = await (await caches.open(name)).match('/ui/render.js');
     return response ? response.text() : '';
   }, NEW_CACHE)).toContain('Schlafraum');
+  await expect.poll(() => upgradePage.evaluate(async (name) => {
+    const response = await (await caches.open(name)).match('/ui/weather-copy.js');
+    return response ? response.text() : '';
+  }, NEW_CACHE)).toContain('Math.round');
 });

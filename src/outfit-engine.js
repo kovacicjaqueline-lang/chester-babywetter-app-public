@@ -20,6 +20,37 @@ const BODY_THERMAL_SLOTS = Object.freeze(['base_torso','legs','mid','outer','fee
 const PROTECTION_REBALANCE_PRIORITY = Object.freeze(['mid','legs','base_torso','feet','head','hands']);
 const CARRIER_PROTECTION_REBALANCE_PRIORITY = Object.freeze(['mid','base_torso']);
 
+function roundVisibleRuleValue(value) {
+  if (!isFiniteNumber(value)) return value;
+  const rounded = Math.round(value);
+  return Object.is(rounded, -0) ? 0 : rounded;
+}
+
+function normalizeWeatherPointForRules(point) {
+  if (!point || typeof point !== 'object') return point;
+  return {
+    ...point,
+    airTempC:roundVisibleRuleValue(point.airTempC),
+    apparentTempC:roundVisibleRuleValue(point.apparentTempC),
+    uvIndex:roundVisibleRuleValue(point.uvIndex)
+  };
+}
+
+function normalizeWeatherForRules(weather) {
+  if (!weather || typeof weather !== 'object') return weather;
+  return {
+    ...weather,
+    current:normalizeWeatherPointForRules(weather.current),
+    hourly:Array.isArray(weather.hourly) ? weather.hourly.map(normalizeWeatherPointForRules) : weather.hourly
+  };
+}
+
+function normalizeContextForRules(context) {
+  if (!context || typeof context !== 'object') return context;
+  if (!['sleep','indoor'].includes(context.mode) || !isFiniteNumber(context.roomTempC)) return context;
+  return { ...context, roomTempC:roundVisibleRuleValue(context.roomTempC) };
+}
+
 export function recommendOutfit(input) {
   const request = normalizeRequest(input);
   const result = recommendCore(request);
@@ -38,7 +69,7 @@ export function recommendOutfit(input) {
 function normalizeRequest(input) {
   if (!input || typeof input !== 'object') throw new TypeError('request is required');
   const profile = input.profile;
-  const context = input.context ?? input.situation;
+  const context = normalizeContextForRules(input.context ?? input.situation);
   if (!profile || typeof profile !== 'object') throw new TypeError('profile is required');
   if (!context || typeof context !== 'object' || !context.mode) throw new TypeError('context.mode is required');
   const session = input.session ?? createSession('session_default');
@@ -48,7 +79,7 @@ function normalizeRequest(input) {
     requestedAt:input.requestedAt ?? '1970-01-01T00:00:00.000Z',
     profile,
     context,
-    weather:input.weather ?? null,
+    weather:normalizeWeatherForRules(input.weather ?? null),
     session:{
       sessionId:session.sessionId ?? 'session_default',
       manualLocks:[...(session.manualLocks ?? [])],
@@ -222,8 +253,11 @@ function evaluateCar(result, request) {
   const ageAdjustment = youngInfantThermalAdjustment(profile.birthDate, request.requestedAt, thermal.thermalReferenceC);
   if (ageAdjustment) traceThermal(result,'profile.age','in_car',ageAdjustment,'YOUNG_INFANT_AGE_WARMTH');
   const bias = warmthBiasAdjustment(profile.warmthBias);
+  if (bias) traceThermal(result,'profile.warmth_bias','in_car',bias,bias > 0 ? 'BABY_RUNS_COOL' : 'BABY_RUNS_WARM');
   const neck = neckFeedbackAdjustment(neckFeedback);
-  applyThermalDelta(state, ageAdjustment + bias, new Set(), 'car');
+  applyThermalDelta(state, ageAdjustment, new Set(), 'car');
+  makeCarSafeBaseline(state);
+  applyThermalDelta(state, bias, new Set(), 'car');
   makeCarSafeBaseline(state);
 
   applyBodyLocksAndRebalance(state,result,request,'in_car','car');
@@ -248,6 +282,8 @@ function evaluateCar(result, request) {
   addNotice(result,'CAR_SEAT_BLANKET_OVER_HARNESS_ONLY','hard_rule','in_car',['CAR_HARNESS_SAFETY'],{});
   if (thermalAccessory.itemId !== 'car_thermal_none') addNotice(result,'CAR_SEAT_REMOVE_COVER_WHEN_WARM','hard_rule','in_car',['CAR_HARNESS_SAFETY'],{});
   addNotice(result,'CHECK_NECK','info','in_car',['THERMAL_FEEDBACK_REQUIRED'],{});
+  if (thermal.thermalReferenceC < 0) addNotice(result,'EXTREME_COLD_CAUTION','caution','in_car',['EXTREME_COLD_CAUTION'],{ thermalReferenceC:thermal.thermalReferenceC });
+  if (thermal.thermalReferenceC >= 30) addNotice(result,'EXTREME_HEAT_CAUTION','caution','in_car',['EXTREME_HEAT_CAUTION'],{ thermalReferenceC:thermal.thermalReferenceC });
   if (weather.freshness === 'stale') {
     result.status = 'partial';
     addNotice(result,'WEATHER_DATA_STALE','caution','in_car',['STALE_WEATHER_USED'],{});
