@@ -60,10 +60,11 @@ test('Manuelle Sonne, Bewölkung und Niederschlag bleiben in Zusammenfassung und
   await page.locator('input[name="manualSunPreset"][value="sunny"]').check();
   await page.locator('#applyWeatherOverrideButton').click();
 
+  await expect(page.locator('#temperatureValue')).toHaveText('19°');
   await expect(page.locator('#weatherDescription')).toHaveText('Klar');
   await expect(page.locator('#weatherSymbol')).toHaveText('☀');
   await expect(page.locator('#weatherFacts')).toContainText('Wind29 km/h');
-  await expect(page.locator('#weatherFacts')).toContainText('UV6.0');
+  await expect(page.locator('#weatherFacts')).toContainText('UV6');
   await expect(page.locator('#weatherOverrideStatus')).toHaveText('Manuell angepasst');
 
   await page.locator('[data-open-dialog="weatherOverrideDialog"]').click();
@@ -72,7 +73,7 @@ test('Manuelle Sonne, Bewölkung und Niederschlag bleiben in Zusammenfassung und
   await page.locator('#applyWeatherOverrideButton').click();
   await expect(page.locator('#weatherDescription')).toHaveText('Bewölkt');
   await expect(page.locator('#weatherSymbol')).toHaveText('☁');
-  await expect(page.locator('#weatherFacts')).toContainText('UV1.0');
+  await expect(page.locator('#weatherFacts')).toContainText('UV1');
 
   await page.locator('[data-open-dialog="weatherOverrideDialog"]').click();
   await page.locator('input[name="manualPrecipitationPreset"][value="rain"]').check();
@@ -81,7 +82,7 @@ test('Manuelle Sonne, Bewölkung und Niederschlag bleiben in Zusammenfassung und
   await expect(page.locator('#weatherDescription')).toHaveText('Regen');
   await expect(page.locator('#weatherSymbol')).toHaveText('🌧');
   await expect(page.locator('#weatherFacts')).toContainText('Regen70 %');
-  await expect(page.locator('#weatherFacts')).toContainText('UV6.0');
+  await expect(page.locator('#weatherFacts')).toContainText('UV6');
   await expect(dialog).toBeHidden();
 });
 
