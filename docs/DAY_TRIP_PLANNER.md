@@ -160,7 +160,6 @@ Der Planer extrapoliert Wetter nicht stillschweigend über nicht abgedeckte Zeit
 - Ist der Start auswertbar, aber ein späterer Zeitraum nicht ausreichend abgedeckt, wird der Plan `partial` und nennt den nicht abgedeckten Zeitraum.
 - Bis zum letzten vollständig auswertbaren Checkpoint dürfen Start-Outfit, Packteile und Aktionen ausgegeben werden; für die Lücke werden keine erfundenen Wechsel erzeugt.
 - Fehlende optionale Wetterfelder bleiben wie in der Einzel-Empfehlung `partial`/Unsicherheit und werden nie als `0` interpretiert.
-- Ein kompletter Plan mit ausschließlich `ready_with_estimate`-Autosegmenten kann `ready_with_estimate` sein.
 
 Ein später fehlender Forecast darf nicht durch einfaches Fortschreiben des letzten Outfits als scheinbar vollständiger Plan kaschiert werden.
 
