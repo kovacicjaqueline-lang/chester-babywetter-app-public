@@ -54,9 +54,17 @@ test('car blocks without current outdoor temperature', () => {
   assert.ok(codes(result).includes('WEATHER_DATA_INCOMPLETE'));
 });
 
-test('car accessory thresholds follow existing 12 and 8 degree baseline boundaries', () => {
-  for (const [temp, itemId] of [[12,'car_thermal_none'],[11.9,'car_blanket_over_harness'],[8,'car_blanket_over_harness'],[7.9,'car_warm_blanket_over_harness']]) {
+test('car accessory thresholds follow the visible whole-degree 12 and 8 boundaries', () => {
+  for (const [temp, visibleTemp, itemId] of [
+    [12,12,'car_thermal_none'],
+    [11.5,12,'car_thermal_none'],
+    [11.4,11,'car_blanket_over_harness'],
+    [8,8,'car_blanket_over_harness'],
+    [7.5,8,'car_blanket_over_harness'],
+    [7.4,7,'car_warm_blanket_over_harness']
+  ]) {
     const result = recommend(temp);
+    assert.equal(result.phases[0].thermalReferenceC, visibleTemp, `${temp} °C`);
     assert.equal(accessory(result).selected.itemId, itemId, `${temp} °C`);
     assert.equal(accessory(result).selected.wearPosition, 'over_harness');
     assert.equal(codes(result).includes('CAR_SEAT_REMOVE_COVER_WHEN_WARM'), itemId !== 'car_thermal_none');
