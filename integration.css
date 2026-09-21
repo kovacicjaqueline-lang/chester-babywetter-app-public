@@ -159,16 +159,27 @@ input:disabled {
   color: #50677f;
 }
 
-/* The scene background already communicates the current weather condition.
-   Keep the hero focused on the temperature and center it independently of any icon. */
+/* The scene background already communicates outdoor weather. Center the temperature
+   independently of the decorative symbol, and keep room-mode context icons available. */
 .weather-hero > div:first-child,
 .temperature-line {
   width: 100%;
 }
 .temperature-line {
-  justify-content: center;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0;
+}
+.temperature {
+  grid-column: 2;
 }
 .weather-symbol {
+  grid-column: 3;
+  justify-self: start;
+  margin-left: 12px;
+}
+.weather-hero:not(.weather-hero--room) .weather-symbol {
   display: none;
 }
 
