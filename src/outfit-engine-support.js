@@ -312,8 +312,7 @@ export function ensureFunctionalOuter(state,type,level) {
   const currentProtection = type === 'rain' ? def?.rainProtection ?? 0 : def?.windProtection ?? 0;
   if (currentProtection >= level) return;
   if (type === 'rain') setSelected(state,'outer','rain_jacket','engine','on_body',['RAIN_PROTECTION_REQUIRED']);
-  else if (level >= 3) setSelected(state,'outer','softshell_jacket','engine','on_body',['WIND_PROTECTION_REQUIRED']);
-  else if (level >= 2) setSelected(state,'outer','insulated_transition_jacket','engine','on_body',['WIND_PROTECTION_REQUIRED']);
+  else if (level >= 2) setSelected(state,'outer','softshell_jacket','engine','on_body',['WIND_PROTECTION_REQUIRED']);
   else setSelected(state,'outer','light_transition_jacket','engine','on_body',['WIND_PROTECTION_REQUIRED']);
 }
 

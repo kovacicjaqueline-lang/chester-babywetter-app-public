@@ -195,6 +195,7 @@ test('car-seat safety attributes are independent of thermal class', () => {
   assert.equal(CLOTHING_CATALOG.fleece_jacket.carSeatCompatibility,'conditional');
   assert.equal(CLOTHING_CATALOG.softshell_jacket.carSeatCompatibility,'conditional');
   assert.equal(CLOTHING_CATALOG.insulated_transition_jacket.carSeatCompatibility,'conditional');
+  assert.equal(CLOTHING_CATALOG.insulated_transition_jacket.windProtection,1);
   assert.equal(CLOTHING_CATALOG.transition_overall.carSeatCompatibility,'prohibited');
   assert.equal(CLOTHING_CATALOG.winter_overall.carSeatCompatibility,'prohibited');
   assert.equal(CLOTHING_CATALOG.car_blanket_over_harness.carSeatCompatibility,'prohibited');

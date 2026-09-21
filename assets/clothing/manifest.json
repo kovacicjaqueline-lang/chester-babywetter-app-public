@@ -274,7 +274,7 @@
     },
     {
       "id": "insulated_transition_jacket",
-      "label": "Gefütterte Übergangsjacke",
+      "label": "Gefütterte Teddy-Übergangsjacke",
       "category": "insulated_transition_jacket",
       "slot": "outer",
       "situations": [
@@ -286,7 +286,7 @@
       "styleVariants": [
         "neutral"
       ],
-      "altText": "Gefütterte Übergangsjacke.",
+      "altText": "Gefütterte Teddy-Übergangsjacke.",
       "assetPath": "assets/clothing/insulated_transition_jacket/neutral.png"
     },
     {

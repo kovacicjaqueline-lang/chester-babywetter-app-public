@@ -123,7 +123,7 @@ test('strong wind still adds functional wind protection at 13 C', () => {
     weather(13, { windSpeedKmh:35, windGustKmh:42 })
   ));
 
-  assert.equal(item(result, 'outer'), 'insulated_transition_jacket');
+  assert.equal(item(result, 'outer'), 'softshell_jacket');
 });
 
 test('low precipitation probability without current rain does not add a rain element', () => {

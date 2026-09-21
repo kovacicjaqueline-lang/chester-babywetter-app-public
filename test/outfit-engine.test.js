@@ -66,13 +66,13 @@ test('8 C uses the insulated transition jacket without fleece stacking',()=>{
 
 test('transition jacket ladder distinguishes light, insulated and softshell outerwear',()=>{
   const result=recommendOutfit(request(outdoor(),{w:weather(14,{windSpeedKmh:35,windGustKmh:42})}));
-  assert.equal(id(result,'outer'),'insulated_transition_jacket');
+  assert.equal(id(result,'outer'),'softshell_jacket');
   assert.equal(id(result,'mid'),null);
   const light = slot(result,'outer').alternatives.find((option)=>option.itemId==='light_transition_jacket');
-  const softshell = slot(result,'outer').alternatives.find((option)=>option.itemId==='softshell_jacket');
+  const insulated = slot(result,'outer').alternatives.find((option)=>option.itemId==='insulated_transition_jacket');
   assert.ok(light?.projectedChanges.some((change)=>change.slot==='outer'));
-  assert.ok(softshell?.projectedChanges.some((change)=>change.slot==='outer'));
-  assert.ok(light && softshell);
+  assert.ok(insulated?.projectedChanges.some((change)=>change.slot==='outer'));
+  assert.ok(light && insulated);
 });
 
 test('stroller accessory credit only cools covered zones',()=>{
