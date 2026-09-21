@@ -431,6 +431,7 @@ interface OutfitItemDefinition {
   bodyZones: BodyZone[];
 
   thermalWeight: ThermalWeight;
+  thermalWeightByZone?: Partial<Record<BodyZone, ThermalWeight>>;
   thermalStepCredit: number; // externe Isolation/Carrier-Zubehör; sonst 0
   sleepWarmthWeight: number | null;
   tog: SleepBagTog | null;
@@ -447,6 +448,8 @@ interface OutfitItemDefinition {
 ```
 
 `thermalStepCredit` ist eine relative Produktheuristik und keine TOG-Einheit.
+
+`thermalWeightByZone` überschreibt für einzelne Körperzonen die pauschale Item-Wärmeklasse, wenn ein Kleidungsstück mehrere Zonen gleichzeitig bedeckt. Nicht angegebene Zonen verwenden weiterhin `thermalWeight`. Das verhindert, dass ein Ganzkörper-Overall seine gesamte Außenschicht-Wärme für jede bedeckte Zone mehrfach zählt; aktuell wird die Beinabdeckung der Overalls für das Rebalancing separat mit `1` kalibriert.
 
 Die Außenschicht unterscheidet fachlich zwischen `light_transition_jacket` (ungefüttert/sehr leicht, primär Windschutz, `thermalWeight: 1`) und `insulated_transition_jacket` (leicht gefüttert bzw. Teddy-/Cordjacke, `thermalWeight: 2`, `windProtection: 1`). Beide liegen im Slot `outer`; die gefütterte Teddy-Übergangsjacke ist damit wärmer als die leichte Übergangsjacke, aber deutlich weniger windschützend als Softshell-/Regenjacken.
 

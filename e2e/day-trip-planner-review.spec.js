@@ -44,6 +44,6 @@ test('Situationswechsel wird als nachvollziehbarer Übergang mit Ausgangs- und Z
   const transition = page.locator('[data-trip-transition]').first();
   await expect(transition).toBeVisible();
   await expect(transition).toContainText('Draußen');
-  await expect(transition).toContainText('Outfit bleibt unverändert');
+  await expect(transition).toContainText('Leichte Kinderwagendecke ausziehen');
   await expect(transition.locator('time')).toHaveCount(1);
 });

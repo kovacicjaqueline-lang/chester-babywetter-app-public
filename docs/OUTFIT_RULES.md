@@ -30,7 +30,7 @@ Für Outdoor-relevante Modi wird eine thermische Referenz bestimmt:
 
 1. Ist `apparentTempC` vorhanden und vom Wetteradapter als vertrauenswürdig markiert, wird dieser Wert verwendet.
 2. Andernfalls wird `airTempC` verwendet.
-3. Faktoren, die bereits in `apparentTempC` enthalten sind, werden thermisch nicht erneut addiert.
+3. Eine vertrauenswürdige `apparentTempC` ist die autoritative kombinierte thermische Referenz. Sie wird thermisch nicht erneut durch Wind aufgewertet – auch dann nicht, wenn optionale `apparentTempIncludes`-Metadaten fehlen. Faktoren, die dort enthalten sind, werden nicht erneut addiert.
 4. Wind-, Regen- und UV-Schutz bleiben unabhängig davon als Funktionsanforderungen erhalten.
 
 Für `indoor` wird ausschließlich `roomTempC` verwendet. Außenwetter, Wind, Regen und UV fließen dort nicht in die thermische Empfehlung ein. Für `sleep` gilt ebenfalls `roomTempC`, jedoch mit eigener TOG-/Schlaflogik.
@@ -69,6 +69,10 @@ Beispiele:
 - Gefütterte Übergangsjacke: 2,
 - Fleece/warme Hose/isolierende Softshell: 3,
 - Winteroverall/warmer Fußsack: 4.
+
+Bei Kleidungsstücken mit mehreren Körperzonen kann `thermalWeightByZone` die Wärme für eine einzelne Zone überschreiben. Ein Ganzkörper-Overall im `outer`-Slot bedeckt zusätzlich die Beine. Wird er als manuelle Alternative zu einer Jacke gewählt, darf die vorhandene warme Hose deshalb nicht unverändert darunter liegen: Bei der 8–10-°C-Baseline wird `warm_trousers` auf `trousers` rebalanced. Die Beinabdeckung ist eine lokale Überlappungskorrektur und ersetzt keine pauschale zusätzliche Wärmestufe am gesamten Körper.
+
+Das gleiche Prinzip gilt für situative Außenwärme: Ein Tragecover darf seinen eigenen Wärmeanteil gegen Oberkörper und bedeckte Beine verrechnen. Die Körperwärme der tragenden Person bleibt dagegen torso-orientiert; ohne Cover wird deshalb nicht automatisch die Hose dünner gewählt.
 
 ## 3. Outdoor-Temperaturbaseline
 
@@ -280,13 +284,15 @@ Böen:
 
 ### 5.2 Thermischer Windeffekt
 
-Wenn `apparentTempIncludes` bereits `wind` enthält:
+Wenn eine vertrauenswürdige `apparentTempC` vorliegt:
 
 - **kein** zusätzlicher thermischer Wind-Step,
 - Windschutz-Anforderung bleibt bestehen,
 - die vertrauenswürdige `apparentTempC` bleibt die thermische Referenz; V1 versucht nicht, den Windanteil aus einem kombinierten Feels-like-Wert herauszurechnen.
 
-Wenn keine vertrauenswürdige scheinbare Temperatur vorliegt oder Wind dort nicht als enthalten markiert ist und das Baby exponiert ist:
+`apparentTempIncludes` dokumentiert weiterhin die Herkunft des kombinierten Werts. Es darf aber nicht dazu führen, dass ein als vertrauenswürdig markierter Feels-like-Wert bei unvollständigen Metadaten ein zweites Mal thermisch korrigiert wird.
+
+Wenn keine vertrauenswürdige scheinbare Temperatur vorliegt und das Baby exponiert ist:
 
 - `20–28 km/h`: `+0.5 thermalStep`,
 - `29–38 km/h`: `+1`,
@@ -307,6 +313,17 @@ Ist Wind bereits Bestandteil einer vertrauenswürdigen `apparentTempC`, verände
 Neue Kinderwagen-Kontexte starten mit `windProtection: unknown`. Alte unversionierte UI-Zustände aus der früheren Default-Semantik (`partial`) werden einmalig konservativ auf `unknown` migriert. Danach bleibt eine vom Nutzer ausdrücklich gewählte versionierte Einstellung `none | partial | good | unknown` erhalten.
 
 Windschutz darf nicht als luftdichtes Verschließen umgesetzt werden.
+
+### 5.4 Kopf-/Ohrenschutz bei Wind
+
+Windschutz für den Körper und Schutz für Kopf/Ohren sind getrennte Entscheidungen:
+
+- ab `20 km/h` wird bei thermischer Referenz unter `20 °C` mindestens eine dünne Mütze empfohlen, sofern keine manuelle Kopfbedeckung fixiert ist,
+- ab der nächsten Windschutzstufe kann eine warme Mütze erforderlich werden,
+- diese lokale Kopfentscheidung erzeugt keine zusätzliche Fleece-, Hosen-, Socken- oder Handschuhstufe am übrigen Körper,
+- Handschuhe werden bei moderatem Wind und einer thermischen Referenz um `10–16 °C` nicht allein wegen des Windes ergänzt.
+
+Bei `15 °C`, etwa `20 km/h` Wind und einer gefühlten Temperatur um `11 °C` bleibt deshalb die dünne Mütze erhalten; erwartet werden normale Bein- und Fußbekleidung sowie eine funktionale Übergangs-/Softshell-Außenschicht, nicht Fleece plus Shell.
 
 ## 6. Regenkalibrierung
 
