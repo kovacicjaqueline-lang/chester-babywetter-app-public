@@ -116,6 +116,8 @@ test('body thermalWeight calibration stays monotonic within comparable slots', (
   assert.ok(CLOTHING_CATALOG.thin_sweater.thermalWeight < CLOTHING_CATALOG.fleece_jacket.thermalWeight);
   assert.ok(CLOTHING_CATALOG.light_transition_jacket.thermalWeight < CLOTHING_CATALOG.softshell_jacket.thermalWeight);
   assert.ok(CLOTHING_CATALOG.softshell_jacket.thermalWeight < CLOTHING_CATALOG.winter_overall.thermalWeight);
+  assert.equal(CLOTHING_CATALOG.transition_overall.thermalWeightByZone.legs,1);
+  assert.equal(CLOTHING_CATALOG.winter_overall.thermalWeightByZone.legs,1);
   assert.ok(CLOTHING_CATALOG.socks.thermalWeight < CLOTHING_CATALOG.warm_socks_booties.thermalWeight);
   assert.ok(CLOTHING_CATALOG.thin_hat.thermalWeight < CLOTHING_CATALOG.warm_hat.thermalWeight);
   assert.ok(CLOTHING_CATALOG.light_shoes.thermalWeight < CLOTHING_CATALOG.warm_shoes.thermalWeight);

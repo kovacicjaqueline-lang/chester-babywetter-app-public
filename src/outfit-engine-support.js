@@ -45,7 +45,7 @@ export const BODY_SLOTS = Object.freeze(['base_torso','legs','mid','outer','feet
 const LOCKABLE_ITEM_SLOTS = Object.freeze([...BODY_SLOTS,'footwear']);
 export const QUICK_WARM_PRIORITY = Object.freeze(['mid','outer','base_torso','legs','feet','head','hands']);
 export const QUICK_COOL_PRIORITY = Object.freeze(['outer','mid','legs','base_torso','feet','head','hands']);
-const HALF_WARM_PRIORITY = Object.freeze(['feet','head','hands','legs','outer','mid','base_torso']);
+const HALF_WARM_PRIORITY = Object.freeze(['feet','legs','outer','mid','base_torso','head','hands']);
 const HALF_COOL_PRIORITY = Object.freeze(['hands','head','feet','outer','legs','mid','base_torso']);
 export const RELATION_ORDER = Object.freeze({ equivalent:0, warmer:1, cooler:2 });
 
@@ -97,9 +97,24 @@ export function makeCarSafeBaseline(state) {
   }
 }
 
-export function applyCarrierTorsoReduction(state, credit, mode) {
-  if (credit <= 0) return;
-  applyThermalDelta(state,-credit,new Set(['legs','feet','head','hands']),mode,['mid','outer','base_torso']);
+export function applyCarrierTorsoReduction(state, totalCredit, coverCredit, mode) {
+  if (totalCredit <= 0) return;
+
+  // The carrier's own body heat is primarily a torso effect. The cover is
+  // different: it also wraps the legs, so only that portion may cool the
+  // leg layer. Keeping the two credits separate prevents a cover from
+  // leaving warm trousers in place while simultaneously stripping all
+  // upper-body layers, but also avoids thinning trousers at mild
+  // temperatures when no cover is present.
+  const legCredit = Math.min(1, Math.max(0, coverCredit));
+  if (legCredit > 0) {
+    applyThermalDelta(state,-legCredit,new Set(['feet','head','hands']),mode,['legs']);
+  }
+
+  const torsoCredit = totalCredit - legCredit;
+  if (torsoCredit > 0) {
+    applyThermalDelta(state,-torsoCredit,new Set(['legs','feet','head','hands']),mode,['mid','outer','base_torso']);
+  }
 }
 
 const STROLLER_COVERAGE_COOL_PRIORITY = Object.freeze(['legs','feet','base_torso','mid','outer']);
@@ -267,7 +282,12 @@ export function evaluateWind(weatherWindow,thermal,context,mode) {
     else if (gust >= 39) level = Math.max(level,2);
   }
   let thermalAdjustment = 0;
-  if (!thermal.included.has('wind') && isFiniteNumber(speed)) {
+  // A trusted apparent temperature is already the combined thermal reference
+  // shown to the user. Do not add a second body-warming wind step when a
+  // provider omitted the optional factor metadata; wind protection remains a
+  // separate functional requirement below.
+  const windAlreadyReflected = thermal.referenceSource === 'apparent_temp' || thermal.included.has('wind');
+  if (!windAlreadyReflected && isFiniteNumber(speed)) {
     if (speed >= 50) thermalAdjustment = 2;
     else if (speed >= 39) thermalAdjustment = 1.5;
     else if (speed >= 29) thermalAdjustment = 1;
@@ -304,6 +324,21 @@ export function applyWindProtection(state,result,wind,phase,mode) {
   const accessoryWind = mode === 'stroller' ? CLOTHING_CATALOG[state.map.get('stroller_weather_accessory')?.itemId]?.windProtection ?? 0 : 0;
   if (accessoryWind < wind.requiredProtection) ensureFunctionalOuter(state,'wind',wind.requiredProtection);
   addTrace(result,'weather.wind.protection',phase,'protect','outer',wind.requiredProtection,'WIND_PROTECTION_REQUIRED');
+}
+
+export function applyWindHeadProtection(state,result,wind,temp,phase,mode) {
+  if (!['outdoor','stroller','carrier'].includes(mode) || wind.requiredProtection < 1 || temp >= 20) return;
+
+  const existing = state.map.get('head');
+  const existingDefinition = existing ? CLOTHING_CATALOG[existing.itemId] : null;
+  const targetItemId = wind.requiredProtection >= 2 ? 'warm_hat' : 'thin_hat';
+  const targetDefinition = CLOTHING_CATALOG[targetItemId];
+
+  if (existingDefinition?.windProtection >= wind.requiredProtection && existingDefinition.thermalWeight >= targetDefinition.thermalWeight) return;
+  if (existing?.selectionSource === 'manual_lock') return;
+
+  setSelected(state,'head',targetItemId,'engine','on_body',['WIND_HEAD_PROTECTION_REQUIRED']);
+  addTrace(result,'weather.wind.head_protection',phase,'protect','head',wind.requiredProtection,'WIND_HEAD_PROTECTION_REQUIRED');
 }
 
 export function ensureFunctionalOuter(state,type,level) {
@@ -357,6 +392,7 @@ export function applyBodyLocksAndRebalance(state,result,request,phase,mode) {
       continue;
     }
     const before = state.map.get(lock.slot)?.itemId ?? null;
+    const legsBeforeLock = state.map.get('legs')?.itemId ?? null;
     const beforeWeight = before ? CLOTHING_CATALOG[before]?.thermalWeight ?? 0 : 0;
     const delta = definition.thermalWeight - beforeWeight;
     const wearPosition = phase === 'in_car' ? 'under_harness' : 'on_body';
@@ -366,7 +402,30 @@ export function applyBodyLocksAndRebalance(state,result,request,phase,mode) {
       addNotice(result,'CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT','caution',phase,['CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT'],{ itemId:lock.itemId });
     }
     if (delta) rebalanceOtherSlots(state,-delta,lockedThermalSlots,mode,lock.slot);
+    rebalanceNewlyCoveredLegs(state,result,before,definition,legsBeforeLock,lockedThermalSlots,phase,mode,lock.slot);
   }
+}
+
+function rebalanceNewlyCoveredLegs(state,result,beforeItemId,lockedDefinition,legsBeforeLock,lockedThermalSlots,phase,mode,lockedSlot) {
+  if (lockedSlot !== 'outer') return;
+
+  const beforeDefinition = CLOTHING_CATALOG[beforeItemId];
+  const newlyCoveredLegWeight = thermalWeightForZone(lockedDefinition,'legs') - thermalWeightForZone(beforeDefinition,'legs');
+  if (newlyCoveredLegWeight <= 0 || state.map.get('legs')?.itemId !== legsBeforeLock) return;
+
+  const legs = state.map.get('legs');
+  if ((CLOTHING_CATALOG[legs?.itemId]?.thermalWeight ?? 0) < 2) return;
+
+  const changed = applyThermalDelta(state,-Math.min(1,newlyCoveredLegWeight),lockedThermalSlots,mode,['legs'],true);
+  if (changed) addTrace(result,'swap.coverage.legs',phase,'thermal_down','legs',-1,'BODY_ZONE_COVERAGE_REBALANCE');
+}
+
+export function thermalWeightForZone(definition,zone) {
+  if (!definition?.bodyZones?.includes(zone)) return 0;
+  if (definition.thermalWeightByZone && Object.prototype.hasOwnProperty.call(definition.thermalWeightByZone,zone)) {
+    return definition.thermalWeightByZone[zone] ?? 0;
+  }
+  return definition.thermalWeight ?? 0;
 }
 
 export function enforceCarSafetyAfterLocks(state,result,request,phase) {

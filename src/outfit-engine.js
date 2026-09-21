@@ -6,7 +6,7 @@ import {
   evaluateWind, warmthBiasAdjustment, neckFeedbackAdjustment, selectStrollerThermalAccessory, selectCarrierAccessory, selectCarThermalAccessory,
   setSelected, carrierThermalCredit, applyThermalDelta, applyCoveredThermalCredit, applyCarrierTorsoReduction,
   protectCarrierExposedAreas, rainRequirement, sunRequirement, selectStrollerWeatherAccessory,
-  addNotice, applyRainProtection, applyWindProtection, applySunProtection, applyGroundContact,
+  addNotice, applyRainProtection, applyWindProtection, applyWindHeadProtection, applySunProtection, applyGroundContact,
   applyBodyLocksAndRebalance, applyQuickCorrection, applyWeatherQuality, finalizePhase,
   phaseStatusFromResult, summarizeWeatherWindow, thermalEnvironment, makeCarSafeBaseline,
   enforceCarSafetyAfterLocks, findLock, nearestSleepUnderlayer, overrideUnsafeLock,
@@ -172,10 +172,12 @@ function evaluateOutdoorLike(result, request, phase, effectiveMode) {
   }
 
   let carrierTorsoCredit = 0;
+  let carrierCoverCredit = 0;
   if (effectiveMode === 'carrier') {
     const carrier = selectCarrierAccessory(request, thermal.thermalReferenceC, phase);
     setSelected(state,'carrier_accessory',carrier.itemId,carrier.source,'external',carrier.reasons);
-    carrierTorsoCredit = carrierThermalCredit(context, CLOTHING_CATALOG[carrier.itemId].thermalStepCredit);
+    carrierCoverCredit = CLOTHING_CATALOG[carrier.itemId].thermalStepCredit;
+    carrierTorsoCredit = carrierThermalCredit(context, carrierCoverCredit);
     addTrace(result,'situation.carrier.body_heat',phase,'thermal_down',carrier.itemId,-carrierTorsoCredit,'CARRIER_BODY_HEAT');
   }
 
@@ -202,7 +204,7 @@ function evaluateOutdoorLike(result, request, phase, effectiveMode) {
   if (effectiveMode === 'stroller') enforceAutomaticStrollerWarmWeatherLimits(state,result,phase,thermal.thermalReferenceC);
 
   if (effectiveMode === 'carrier') {
-    applyCarrierTorsoReduction(state, carrierTorsoCredit, effectiveMode);
+    applyCarrierTorsoReduction(state, carrierTorsoCredit, carrierCoverCredit, effectiveMode);
     protectCarrierExposedAreas(state, thermal.thermalReferenceC);
     addNotice(result,'CHECK_NECK','info',phase,['THERMAL_FEEDBACK_REQUIRED'],{});
   }
@@ -225,6 +227,7 @@ function evaluateOutdoorLike(result, request, phase, effectiveMode) {
   rebalanceFunctionalProtection(state, thermalWeightBeforeProtection, effectiveMode);
 
   applySunProtection(state, result, request, uv, thermal.thermalReferenceC, phase, effectiveMode);
+  applyWindHeadProtection(state, result, wind, thermal.thermalReferenceC, phase, effectiveMode);
   applyGroundContact(state, rain, thermal.thermalReferenceC, context, effectiveMode);
 
   applyBodyLocksAndRebalance(state, result, request, phase, effectiveMode);
@@ -490,6 +493,12 @@ function functionalProtectionSlots(state, rain, wind, mode, uv) {
     for (const slot of ['head','base_torso','legs']) {
       if (state.map.has(slot)) protectedSlots.add(slot);
     }
+  }
+
+  const head = state.map.get('head');
+  const headDefinition = head ? CLOTHING_CATALOG[head.itemId] : null;
+  if (headDefinition && wind.requiredProtection > 0 && headDefinition.windProtection >= wind.requiredProtection) {
+    protectedSlots.add('head');
   }
   return protectedSlots;
 }
