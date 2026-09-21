@@ -97,9 +97,24 @@ export function makeCarSafeBaseline(state) {
   }
 }
 
-export function applyCarrierTorsoReduction(state, credit, mode) {
-  if (credit <= 0) return;
-  applyThermalDelta(state,-credit,new Set(['legs','feet','head','hands']),mode,['mid','outer','base_torso']);
+export function applyCarrierTorsoReduction(state, totalCredit, coverCredit, mode) {
+  if (totalCredit <= 0) return;
+
+  // The carrier's own body heat is primarily a torso effect. The cover is
+  // different: it also wraps the legs, so only that portion may cool the
+  // leg layer. Keeping the two credits separate prevents a cover from
+  // leaving warm trousers in place while simultaneously stripping all
+  // upper-body layers, but also avoids thinning trousers at mild
+  // temperatures when no cover is present.
+  const legCredit = Math.min(1, Math.max(0, coverCredit));
+  if (legCredit > 0) {
+    applyThermalDelta(state,-legCredit,new Set(['feet','head','hands']),mode,['legs']);
+  }
+
+  const torsoCredit = totalCredit - legCredit;
+  if (torsoCredit > 0) {
+    applyThermalDelta(state,-torsoCredit,new Set(['legs','feet','head','hands']),mode,['mid','outer','base_torso']);
+  }
 }
 
 const STROLLER_COVERAGE_COOL_PRIORITY = Object.freeze(['legs','feet','base_torso','mid','outer']);

@@ -172,10 +172,12 @@ function evaluateOutdoorLike(result, request, phase, effectiveMode) {
   }
 
   let carrierTorsoCredit = 0;
+  let carrierCoverCredit = 0;
   if (effectiveMode === 'carrier') {
     const carrier = selectCarrierAccessory(request, thermal.thermalReferenceC, phase);
     setSelected(state,'carrier_accessory',carrier.itemId,carrier.source,'external',carrier.reasons);
-    carrierTorsoCredit = carrierThermalCredit(context, CLOTHING_CATALOG[carrier.itemId].thermalStepCredit);
+    carrierCoverCredit = CLOTHING_CATALOG[carrier.itemId].thermalStepCredit;
+    carrierTorsoCredit = carrierThermalCredit(context, carrierCoverCredit);
     addTrace(result,'situation.carrier.body_heat',phase,'thermal_down',carrier.itemId,-carrierTorsoCredit,'CARRIER_BODY_HEAT');
   }
 
@@ -202,7 +204,7 @@ function evaluateOutdoorLike(result, request, phase, effectiveMode) {
   if (effectiveMode === 'stroller') enforceAutomaticStrollerWarmWeatherLimits(state,result,phase,thermal.thermalReferenceC);
 
   if (effectiveMode === 'carrier') {
-    applyCarrierTorsoReduction(state, carrierTorsoCredit, effectiveMode);
+    applyCarrierTorsoReduction(state, carrierTorsoCredit, carrierCoverCredit, effectiveMode);
     protectCarrierExposedAreas(state, thermal.thermalReferenceC);
     addNotice(result,'CHECK_NECK','info',phase,['THERMAL_FEEDBACK_REQUIRED'],{});
   }

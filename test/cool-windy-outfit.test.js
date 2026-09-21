@@ -168,3 +168,27 @@ test('stroller awake/asleep, carrier and car keep their situation-specific therm
   assert.equal(item(car,'car_thermal_accessory','in_car'),'car_blanket_over_harness');
   assert.equal(item(car,'outer','in_car'),null);
 });
+
+test('carrier cover warmth is also applied to covered legs, but body heat without a cover is torso-only', () => {
+  const covered = recommend('carrier', {}, {
+    airTempC:10,
+    apparentTempC:10,
+    apparentTempTrusted:true,
+    apparentTempIncludes:[],
+    windSpeedKmh:5,
+    windGustKmh:8
+  });
+  const uncovered = recommend('carrier', {}, {
+    airTempC:15,
+    apparentTempC:15,
+    apparentTempTrusted:true,
+    apparentTempIncludes:[],
+    windSpeedKmh:5,
+    windGustKmh:8
+  });
+
+  assert.equal(item(covered,'carrier_accessory'),'carrier_cover_light');
+  assert.equal(item(covered,'legs'),'light_trousers');
+  assert.equal(item(uncovered,'carrier_accessory'),'carrier_cover_none');
+  assert.equal(item(uncovered,'legs'),'trousers');
+});
