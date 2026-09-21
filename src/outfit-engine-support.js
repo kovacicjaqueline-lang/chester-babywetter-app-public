@@ -45,7 +45,7 @@ export const BODY_SLOTS = Object.freeze(['base_torso','legs','mid','outer','feet
 const LOCKABLE_ITEM_SLOTS = Object.freeze([...BODY_SLOTS,'footwear']);
 export const QUICK_WARM_PRIORITY = Object.freeze(['mid','outer','base_torso','legs','feet','head','hands']);
 export const QUICK_COOL_PRIORITY = Object.freeze(['outer','mid','legs','base_torso','feet','head','hands']);
-const HALF_WARM_PRIORITY = Object.freeze(['feet','head','hands','legs','outer','mid','base_torso']);
+const HALF_WARM_PRIORITY = Object.freeze(['feet','legs','outer','mid','base_torso','head','hands']);
 const HALF_COOL_PRIORITY = Object.freeze(['hands','head','feet','outer','legs','mid','base_torso']);
 export const RELATION_ORDER = Object.freeze({ equivalent:0, warmer:1, cooler:2 });
 
@@ -267,7 +267,12 @@ export function evaluateWind(weatherWindow,thermal,context,mode) {
     else if (gust >= 39) level = Math.max(level,2);
   }
   let thermalAdjustment = 0;
-  if (!thermal.included.has('wind') && isFiniteNumber(speed)) {
+  // A trusted apparent temperature is already the combined thermal reference
+  // shown to the user. Do not add a second body-warming wind step when a
+  // provider omitted the optional factor metadata; wind protection remains a
+  // separate functional requirement below.
+  const windAlreadyReflected = thermal.referenceSource === 'apparent_temp' || thermal.included.has('wind');
+  if (!windAlreadyReflected && isFiniteNumber(speed)) {
     if (speed >= 50) thermalAdjustment = 2;
     else if (speed >= 39) thermalAdjustment = 1.5;
     else if (speed >= 29) thermalAdjustment = 1;
@@ -304,6 +309,21 @@ export function applyWindProtection(state,result,wind,phase,mode) {
   const accessoryWind = mode === 'stroller' ? CLOTHING_CATALOG[state.map.get('stroller_weather_accessory')?.itemId]?.windProtection ?? 0 : 0;
   if (accessoryWind < wind.requiredProtection) ensureFunctionalOuter(state,'wind',wind.requiredProtection);
   addTrace(result,'weather.wind.protection',phase,'protect','outer',wind.requiredProtection,'WIND_PROTECTION_REQUIRED');
+}
+
+export function applyWindHeadProtection(state,result,wind,temp,phase,mode) {
+  if (!['outdoor','stroller','carrier'].includes(mode) || wind.requiredProtection < 1 || temp >= 20) return;
+
+  const existing = state.map.get('head');
+  const existingDefinition = existing ? CLOTHING_CATALOG[existing.itemId] : null;
+  const targetItemId = wind.requiredProtection >= 2 ? 'warm_hat' : 'thin_hat';
+  const targetDefinition = CLOTHING_CATALOG[targetItemId];
+
+  if (existingDefinition?.windProtection >= wind.requiredProtection && existingDefinition.thermalWeight >= targetDefinition.thermalWeight) return;
+  if (existing?.selectionSource === 'manual_lock') return;
+
+  setSelected(state,'head',targetItemId,'engine','on_body',['WIND_HEAD_PROTECTION_REQUIRED']);
+  addTrace(result,'weather.wind.head_protection',phase,'protect','head',wind.requiredProtection,'WIND_HEAD_PROTECTION_REQUIRED');
 }
 
 export function ensureFunctionalOuter(state,type,level) {
