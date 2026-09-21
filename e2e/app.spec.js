@@ -244,12 +244,12 @@ test('Kleidungsbilder bleiben nach Offline-Reload verfügbar', async ({ page, co
 test('Einstellungen bleiben nach Reload erhalten', async ({ page }) => {
   await openDemo(page);
   await page.locator('[data-open-dialog="settingsDialog"]').first().click();
-  await page.locator('input[name="styleTheme"][value="boy"]').check();
-  await expect(page.locator('body')).toHaveAttribute('data-style-theme', 'boy');
+  await page.locator('input[name="paletteMode"][value="cool"]').check();
+  await expect(page.locator('body')).toHaveAttribute('data-palette-mode', 'cool');
   await page.reload();
-  await expect(page.locator('body')).toHaveAttribute('data-style-theme', 'boy');
+  await expect(page.locator('body')).toHaveAttribute('data-palette-mode', 'cool');
   await page.locator('[data-open-dialog="settingsDialog"]').first().click();
-  await expect(page.locator('input[name="styleTheme"][value="boy"]')).toBeChecked();
+  await expect(page.locator('input[name="paletteMode"][value="cool"]')).toBeChecked();
 });
 
 test('Layout funktioniert bei 375 x 812 und erzeugt Screenshot', async ({ page }, testInfo) => {

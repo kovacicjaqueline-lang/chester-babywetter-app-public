@@ -42,7 +42,7 @@ test('gültiger Import wird vollständig validiert und unbekannte Felder werden 
   await openDemo(page);
   await uploadJson(page, validEnvelope());
   await expect(page.locator('#toast')).toContainText('Einstellungen importiert');
-  await expect(page.locator('body')).toHaveAttribute('data-style-theme', 'boy');
+  await expect(page.locator('body')).toHaveAttribute('data-palette-mode', 'cool');
   await expect(page.locator('#situationLabel')).toHaveText('Draußen');
 
   const stored = await page.evaluate(() => ({
