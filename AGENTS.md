@@ -94,6 +94,10 @@ Nie behaupten, ein Test oder CI sei erfolgreich gewesen, wenn er nicht tatsächl
 - Für unabhängige Arbeitsstränge getrennte Branches verwenden; Arbeiten an denselben Komponenten möglichst bündeln.
 - Fremde Branch-Änderungen nicht ungefragt übernehmen.
 - Einen laufenden Branch nicht nur wegen eines neueren `main` rebasen oder mergen.
+- Wenn ein echter lokaler Worktree verfügbar ist, Änderungen, Tests und lokale Commits dort durchführen.
+- Remote-Aktionen wie Push/Ref-Update, Branch-/PR-Abgleich, PR-Erstellung und CI-Status bevorzugt über den authentifizierten GitHub-Connector ausführen, sobald lokale GitHub-Authentifizierung nicht nachweislich funktioniert oder der Connector ausdrücklich verlangt wurde.
+- Kein direktes `git push` nur als Authentifizierungsprobe versuchen. Ist die lokale Remote-Authentifizierung in der aktuellen Umgebung nicht bereits verifiziert, direkt den GitHub-Connector verwenden statt einen erwartbar fehlschlagenden Push vorzuschalten.
+- Direktes `git push` nur verwenden, wenn die lokale Remote-Authentifizierung in der aktuellen Umgebung tatsächlich verfügbar ist.
 - Innerhalb eines beauftragten Branches dürfen Scope-Dateien geändert, gestaged, committet und gepusht sowie ein Draft-PR gegen `main` erstellt oder aktualisiert werden.
 - Nicht ohne ausdrückliche Freigabe mergen oder Auto-Merge aktivieren.
 
@@ -107,3 +111,15 @@ Ein abgeschlossener Arbeitsstrang nennt kurz:
 - Draft-PR,
 - geprüften CI-Status,
 - offene Abhängigkeiten.
+
+## 8. Effiziente AI-Arbeit
+
+- Klar spezifizierte technische Aufträge in einem Arbeitsdurchgang bearbeiten.
+- Wenn Analyse und Umsetzung ausdrücklich gemeinsam beauftragt sind, keine zusätzliche Freigabeschleife dazwischen einfügen.
+- Nur die für den Scope relevanten Dateien, Dokumente und Tests lesen; bereits geprüfte unveränderte Inhalte nicht ohne Anlass erneut analysieren.
+- Eng zusammenhängende Änderungen bündeln, statt für jeden kleinen Teilauftrag einen eigenen Branch, PR und Full-Gate zu erzeugen.
+- Vor dem Abschluss in derselben Arbeitsrunde den kleinstmöglichen relevanten Test, das erforderliche Gate, das Diff-Selbstreview sowie Commit und Draft-PR erledigen.
+- „Weiter“ bedeutet, im bestehenden Scope fortzufahren; den Auftrag nicht ohne neue Information neu planen.
+- Dauerhafte fachliche Entscheidungen im kompakten Register `docs/AI_DECISIONS.md` nachschlagen. Die dortigen Verweise auf die maßgeblichen Fachdokumente bleiben bindend; das Register darf keine abweichende Zweitregel definieren.
+- Für einen Chatwechsel `docs/AI_HANDOFF_TEMPLATE.md` verwenden. Flüchtiger Branch-/PR-Status gehört in die Übergabe oder PR-Beschreibung, nicht in `AGENTS.md`.
+- Unnötige Fortschritts- und Wiederholungsberichte vermeiden. Der Abschlussbericht enthält die tatsächlich ausgeführten Arbeiten, Tests, Commit-/PR-Daten und offenen Punkte.
