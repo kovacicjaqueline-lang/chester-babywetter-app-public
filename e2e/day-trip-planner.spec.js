@@ -165,7 +165,7 @@ test('Autositz-Segment nutzt Außenwetter ohne technische Innenraumeingaben', as
   const safety = page.locator('#tripSafetyNotices');
   const startOutfit = page.getByTestId('trip-start-outfit');
   const hintToggle = page.locator('#tripHintToggle');
-  await expect(safety).toBeHidden();
+  await expect(safety).toBeVisible();
   await expect(page.getByTestId('trip-timeline').locator('[data-trip-notice-code="CAR_SEAT_NO_BULKY_LAYERS"]')).toBeVisible();
   await expect(page.getByTestId('trip-timeline').locator('[data-trip-notice-code="CAR_SEAT_NO_BULKY_LAYERS"]')).toContainText('keine dicken Schichten');
   expect(await safety.evaluate((node, outfit) => Boolean(node.compareDocumentPosition(outfit) & Node.DOCUMENT_POSITION_FOLLOWING), await startOutfit.elementHandle())).toBe(true);
