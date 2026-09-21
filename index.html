@@ -53,6 +53,7 @@
             <span class="chevron" aria-hidden="true">›</span>
           </button>
         </div>
+        <div id="primarySituationControl" class="primary-situation-host" hidden></div>
         <div class="warmth-control" role="group" aria-label="Outfit anpassen">
           <button type="button" data-warmth="cooler">Dünner</button>
           <button type="button" class="is-active" data-warmth="balanced" aria-pressed="true">Passend</button>
@@ -66,7 +67,7 @@
           <div class="neck-icon" aria-hidden="true">☁</div>
           <div>
             <h2>Nackentest</h2>
-            <p>Warm & trocken: passt. Heiß/schwitzig: dünner. Kühl: wärmer.</p>
+            <p class="neck-check-guidance"><strong>Warm & trocken</strong> → passend<br><strong>Heiß oder schwitzig</strong> → eine Schicht weniger<br><strong>Kühl</strong> → eine Schicht mehr</p>
             <div class="neck-action-row">
               <button type="button" class="neck-action-button" data-open-dialog="neckFeedbackDialog">Nackentest anwenden</button>
             </div>

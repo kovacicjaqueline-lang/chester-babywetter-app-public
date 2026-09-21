@@ -314,6 +314,16 @@ function bindGlobalActions() {
   document.addEventListener('click', (event) => {
     const open = event.target.closest('[data-open-dialog]'); if (open) { openDialog(open.dataset.openDialog); return; }
     const close = event.target.closest('[data-close-dialog]'); if (close) { closeDialog(close.dataset.closeDialog); return; }
+    const carrierPlacement = event.target.closest('[data-carrier-placement]'); if (carrierPlacement && MODES.has(state.mode) && state.mode === 'carrier') {
+      const placement = carrierPlacement.dataset.carrierPlacement;
+      if (!['under_wearer_outerwear', 'over_wearer_outerwear'].includes(placement)) return;
+      state.contexts.carrier.placement = placement;
+      persistSettings();
+      resetSession();
+      renderAll();
+      showToast(placement === 'under_wearer_outerwear' ? 'Trageposition: unter deiner Jacke.' : 'Trageposition: über deiner Jacke.');
+      return;
+    }
     const warmth = event.target.closest('[data-warmth]'); if (warmth && !warmth.disabled) { state.warmthDirection = warmth.dataset.warmth; session = setWarmthOffset(session, state.warmthDirection); renderRecommendation(); return; }
     const situation = event.target.closest('[data-situation]'); if (situation && MODES.has(situation.dataset.situation)) { if (situation.closest('#situationDialog')) { if (!situationDraft) return; situationDraft.mode = situation.dataset.situation; renderSituationSheet(); document.querySelector(`#situationOptions [data-situation="${situationDraft.mode}"]`)?.focus(); return; } return; }
     const outfitCard = event.target.closest('[data-open-alternatives="true"]'); if (outfitCard && lastRecommendation) { alternativeSlot = lastRecommendation.slots.find((slot) => slot.phase === outfitCard.dataset.phase && slot.slot === outfitCard.dataset.slot) ?? null; if (alternativeSlot?.alternatives?.length) { renderAlternatives(alternativeSlot, assetStore, state.profile.styleTheme); openDialog('alternativeDialog'); } return; }

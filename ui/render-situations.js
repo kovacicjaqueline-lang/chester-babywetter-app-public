@@ -73,10 +73,8 @@ function carSafetySummary() {
   const title = document.createElement('strong');
   title.textContent = 'Keine zusätzlichen Angaben nötig';
   const weather = document.createElement('p');
-  weather.textContent = 'Die Empfehlung startet mit dem aktuellen Außenwetter und bleibt unter dem Gurt schlank.';
-  const cover = document.createElement('p');
-  cover.textContent = 'Zusätzliche Wärme kommt erst über den korrekt geschlossenen Gurt. Sobald das Auto warm wird, Decke oder Überwurf entfernen.';
-  summary.append(title, weather, cover);
+  weather.textContent = 'Die Empfehlung startet mit dem aktuellen Außenwetter. Die Sicherheitsregeln stehen direkt bei der Outfit-Empfehlung.';
+  summary.append(title, weather);
   return summary;
 }
 

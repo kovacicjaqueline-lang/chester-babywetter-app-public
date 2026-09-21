@@ -151,6 +151,18 @@ test('alternative projectedChanges contains whole-outfit rebalancing',()=>{
   assert.ok(!fleece.projectedChanges.some(change=>change.slot==='outer'));
 });
 
+test('alternative relation separates item warmth from resulting outfit warmth',()=>{
+  const r=recommendOutfit(request(outdoor(),{w:weather(14)}));
+  const fleece=slot(r,'mid').alternatives.find((option)=>option.itemId==='fleece_jacket');
+  assert.ok(fleece);
+  assert.equal(fleece.itemRelation,'warmer');
+  assert.equal(fleece.itemThermalDelta,1);
+  assert.equal(fleece.outfitRelation,'equivalent');
+  assert.equal(fleece.outfitThermalDelta,0);
+  assert.equal(fleece.relation,fleece.outfitRelation);
+  assert.equal(fleece.relativeThermalDelta,fleece.outfitThermalDelta);
+});
+
 test('precip probability below 40 alone adds no rain element',()=>{
   const r=recommendOutfit(request(outdoor(),{w:weather(18,{precipProbabilityPct:39})}));
   assert.notEqual(id(r,'outer'),'rain_jacket');

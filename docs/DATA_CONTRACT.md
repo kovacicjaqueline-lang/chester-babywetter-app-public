@@ -657,6 +657,13 @@ interface ProjectedChange {
 
 interface AlternativeOption {
   itemId: string;
+  /** Wärmebeziehung des einzelnen Ersatzteils im selben Slot. */
+  itemRelation: AlternativeRelation;
+  itemThermalDelta: number;
+  /** Wärmebeziehung des nach der Neuberechnung resultierenden Gesamtoutfits. */
+  outfitRelation: AlternativeRelation;
+  outfitThermalDelta: number;
+  /** Compatibility aliases; legacy consumers may retain slot-specific historical semantics. */
   relation: AlternativeRelation;
   relativeThermalDelta: number;
   projectedChanges: ProjectedChange[];
