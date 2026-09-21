@@ -448,6 +448,8 @@ interface OutfitItemDefinition {
 
 `thermalStepCredit` ist eine relative Produktheuristik und keine TOG-Einheit.
 
+Die Außenschicht unterscheidet fachlich zwischen `light_transition_jacket` (ungefüttert/sehr leicht, primär Windschutz, `thermalWeight: 1`) und `insulated_transition_jacket` (leicht gefüttert, `thermalWeight: 2`, `windProtection: 2`). Beide liegen im Slot `outer`; eine gefütterte Übergangsjacke ist damit wärmer als die leichte Übergangsjacke, aber unter Softshell-/Overall-Stufen eingeordnet.
+
 Bei externer Isolation werden `bodyZones` zusätzlich als Abdeckungsinformation verwendet: Rebalancing darf thermische Schritte nur aus vollständig abgedeckten Körperzonen entnehmen. `thermalStepCredit` beschreibt dabei die Stärke der Isolation, nicht die zu entfernenden Slots.
 
 ## 9. Kalibrierte Zubehördefinitionen

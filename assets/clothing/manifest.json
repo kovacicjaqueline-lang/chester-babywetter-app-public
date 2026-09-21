@@ -273,6 +273,23 @@
       "assetPath": "assets/clothing/light_transition_jacket/neutral.webp"
     },
     {
+      "id": "insulated_transition_jacket",
+      "label": "Gefütterte Übergangsjacke",
+      "category": "insulated_transition_jacket",
+      "slot": "outer",
+      "situations": [
+        "outdoor",
+        "stroller",
+        "carrier",
+        "car"
+      ],
+      "styleVariants": [
+        "neutral"
+      ],
+      "altText": "Gefütterte Übergangsjacke.",
+      "assetPath": "assets/clothing/insulated_transition_jacket/neutral.png"
+    },
+    {
       "id": "softshell_jacket",
       "label": "Softshelljacke",
       "category": "softshell_jacket",

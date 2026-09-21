@@ -445,7 +445,7 @@ Diese Quellen werden **nur** verwendet, um eine generische Produkt-Orientierung 
 
 Die Auto-Entscheidung ist geschlossen: keine geschätzte Innenraumtemperatur und keine getrennte Übergangsphase. Die Autositz-Empfehlung startet mit dem aktuellen Außenwetter, priorisiert Gurtsicherheit und modelliert entfernbare Zusatzwärme in einem eigenen Zubehörslot über dem Gurt.
 
-Die V1-Entscheidung zur finalen Katalogzuordnung und relativen `thermalWeight`-Kalibrierung ist ebenfalls geschlossen. Der vollständige Audit vom 2026-08-28 ist in `docs/THERMAL_WEIGHT_AUDIT.md` dokumentiert. Die aktuellen `thermalWeight`-, `thermalStepCredit`- und `sleepWarmthWeight`-Werte sind intern konsistent und werden durch gezielte Kataloginvarianten abgesichert.
+Die V1-Entscheidung zur finalen Katalogzuordnung und relativen `thermalWeight`-Kalibrierung ist ebenfalls geschlossen. Für Übergangsjacken werden eine ungefütterte leichte Windschutzschicht und eine leicht gefütterte wärmere Zwischenstufe als eigene `outer`-Items geführt; eine zusätzliche Mittelschicht wird bei passenden Bedingungen nicht automatisch gestapelt. Der vollständige Audit ist in `docs/THERMAL_WEIGHT_AUDIT.md` dokumentiert. Die aktuellen `thermalWeight`-, `thermalStepCredit`- und `sleepWarmthWeight`-Werte sind intern konsistent und werden durch gezielte Kataloginvarianten abgesichert.
 
 Die V1-Alterskalibrierung ist geschlossen: `birthDate` aus dem Babyprofil wird ohne redundantes Altersfeld ausgewertet; unter drei vollendeten Monaten gilt außerhalb des Schlafmodus bei thermischer Referenz unter 28 °C ein kleiner `+0.5 thermalStep`-Faktor. Ab drei Monaten entfällt der allgemeine Altersaufschlag.
 

@@ -63,7 +63,7 @@ test('Alle Runtime-Kleidungsbilder halten den sichtbaren Alpha-Sicherheitsrand e
     const add = (path) => {
       if (typeof path !== 'string') return;
       const normalized = path.replace(/^\/+/, '');
-      if (normalized.startsWith('assets/clothing/') && normalized.endsWith('.webp')) paths.add(`/${normalized}`);
+      if (normalized.startsWith('assets/clothing/') && /\.(?:webp|png)$/.test(normalized)) paths.add(`/${normalized}`);
     };
     for (const group of assetManifest.assetGroups || []) {
       add(group.assetPath);

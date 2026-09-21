@@ -72,3 +72,25 @@ test('warm outdoor wind protection keeps light leg coverage and avoids insulated
   assert.ok(selected.has('rain_jacket'));
   assert.ok(!selected.has('softshell_jacket'));
 });
+
+test('cool apparent windy weather uses one light outer layer without over-warming', () => {
+  const result = recommendOutfit(request({
+    mode:'outdoor', plannedMinutes:60, activity:'normal', activitySource:'user', sunExposure:'shade', groundContact:'none'
+  }, weather(15, {
+    apparentTempC:11,
+    apparentTempTrusted:true,
+    apparentTempIncludes:['wind'],
+    windSpeedKmh:20,
+    windGustKmh:22
+  })));
+  const selected = new Set(result.slots.filter((slot) => slot.phase === 'main').map((slot) => slot.selected.itemId));
+
+  assert.ok(selected.has('long_sleeve_bodysuit'));
+  assert.ok(selected.has('trousers'));
+  assert.ok(selected.has('light_transition_jacket'));
+  assert.ok(!selected.has('thin_sweater'));
+  assert.ok(!selected.has('fleece_jacket'));
+  assert.ok(!selected.has('warm_trousers'));
+  assert.ok(selected.has('thin_hat'));
+  assert.ok(!selected.has('gloves'));
+});

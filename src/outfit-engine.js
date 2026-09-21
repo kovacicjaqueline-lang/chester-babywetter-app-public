@@ -458,7 +458,7 @@ function enforceAutomaticStrollerWarmWeatherLimits(state,result,phase,temp) {
 function preferLightWindShellInWarmWeather(state, temp, rain, wind, mode) {
   if (!['outdoor','stroller'].includes(mode) || temp < 24 || rain.required || wind.requiredProtection <= 0) return;
   const outer = state.map.get('outer');
-  if (!outer || !['light_transition_jacket','softshell_jacket'].includes(outer.itemId)) return;
+  if (!outer || !['light_transition_jacket','insulated_transition_jacket','softshell_jacket'].includes(outer.itemId)) return;
   if (!outer.reasonCodes.includes('WIND_PROTECTION_REQUIRED')) return;
   setSelected(state,'outer','rain_jacket','engine','on_body',['WIND_PROTECTION_REQUIRED','WARM_WEATHER_LIGHT_SHELL']);
 }
