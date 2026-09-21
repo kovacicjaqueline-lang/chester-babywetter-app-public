@@ -1277,12 +1277,37 @@ interface TripAction {
   toWearPosition: WearPosition | null;
   reasonCodes: string[];
   safetyCritical: boolean;
+  noticeCode: string | null;
 }
 ```
 
 Eine Aktion wird nur erzeugt, wenn praktisch etwas geändert werden muss. Identische fachliche Item-Sets, reine Reason-Code-Änderungen und eine andere Engine-Hauptauswahl bei weiterhin sicherer `equivalent`-Alternative erzeugen keine künstliche Aktion.
 
-Änderungen von `wearPosition`, insbesondere rund um `car/in_car`, sind relevante Aktionen, wenn der Nutzer tatsächlich umpositionieren oder ein Teil entfernen muss.
+Änderungen von `wearPosition`, insbesondere rund um `car/in_car`, sind nur dann relevante Aktionen, wenn der Nutzer tatsächlich umpositionieren oder ein Teil entfernen muss. Bei demselben körpernahen Item ist `on_body` ↔ `under_harness` eine technische Gurtsicherheitsklassifikation und keine sichtbare Repositionierungsaktion. `over_harness` bei einem Autositz-Zubehörteil bleibt dagegen eine reale Platzierungsanweisung.
+
+### 36.3.1 Sichtbare Übergänge
+
+```ts
+interface TripTransition {
+  transitionId: string;
+  at: string;
+  situationChanged: boolean;
+  fromSegment: { segmentId: string; mode: SituationMode; phase: RecommendationPhase; at: string } | null;
+  toSegment: { segmentId: string; mode: SituationMode; phase: RecommendationPhase; at: string };
+  before: TripTransitionState | null;
+  after: TripTransitionState;
+  actions: TripAction[];
+  unchangedItems: TripOutfitItem[];
+  notices: RecommendationNotice[];
+}
+
+interface TripTransitionState extends TripOutfitState {
+  mode: SituationMode;
+  phase: RecommendationPhase;
+}
+```
+
+`TripTransition` ist die für die Darstellung verdichtete Folge aus Situations- und praktischen Outfitwechseln. Reine stündliche Checkpoints ohne sichtbare Änderung werden nicht als eigener UI-Eintrag ausgegeben. Ein Situationswechsel ohne Kleidungsaktion bleibt als genau ein Übergang sichtbar.
 
 ### 36.4 Coverage
 
@@ -1314,6 +1339,7 @@ interface TripResult {
   startOutfit: TripOutfitState | null;
   packList: TripPackItem[];
   actions: TripAction[];
+  transitions: TripTransition[];
   notices: RecommendationNotice[];
   coverage: TripCoverage;
 }

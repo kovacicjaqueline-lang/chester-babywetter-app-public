@@ -63,6 +63,7 @@ function stateFromRecommendation(recommendation, phase, checkpoint) {
   return {
     at:checkpoint.startTime,
     segmentId:checkpoint.segmentId,
+    mode:checkpoint.engineRequest.context.mode,
     phase,
     recommendationId:recommendation.recommendationId,
     recommendation,

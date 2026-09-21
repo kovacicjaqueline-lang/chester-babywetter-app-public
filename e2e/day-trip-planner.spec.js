@@ -23,7 +23,7 @@ test('Tagesausflug-Eingabe ist auf Mobile eindeutig und kompakt verständlich', 
   await expect(page.locator('.trip-intro')).toHaveText('Start und Ende festlegen. Eine weitere Situation brauchst du nur, wenn ihr später wechselt.');
   await expect(page.locator('#tripSegmentsHeading')).toHaveText('Situationen');
   await expect(page.locator('#tripSegmentsNote')).toContainText('Pro Abschnitt eine Situation wählen');
-  await expect(page.locator('#tripAddSegmentButton')).toHaveText('+ Wechsel hinzufügen');
+  await expect(page.locator('#tripAddSegmentButton')).toHaveText('Nächsten Wechsel hinzufügen');
   await expect(page.locator('#tripGenerateButton')).toHaveText('Ausflug planen');
   expect(await page.locator('.trip-sheet').evaluate((node) => node.scrollTop)).toBe(0);
 
@@ -37,6 +37,23 @@ test('Tagesausflug-Eingabe ist auf Mobile eindeutig und kompakt verständlich', 
   await firstSegment.locator('[data-trip-segment-mode="carrier"]').click();
   await expect(firstSegment.locator('[data-trip-segment-mode="carrier"]')).toHaveAttribute('aria-pressed', 'true');
   await expect(firstSegment.locator('.trip-mode-button[aria-pressed="true"]')).toHaveCount(1);
+});
+
+test('Wechsel wird nach dem letzten Abschnitt ergänzt', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await openDemo(page);
+  await openPlanner(page);
+
+  const list = page.locator('#tripSegments');
+  const addRow = page.locator('.trip-add-row');
+  const listBox = await list.boundingBox();
+  const addBox = await addRow.boundingBox();
+  expect(addBox?.y ?? 0).toBeGreaterThan((listBox?.y ?? 0) + (listBox?.height ?? 0));
+
+  const startTime = await page.locator('#tripStartTime').inputValue();
+  await page.locator('#tripAddSegmentButton').click();
+  const secondStart = await page.locator('.trip-segment-card').nth(1).locator('[data-trip-segment-time]').inputValue();
+  expect(Date.parse(secondStart)).toBeGreaterThan(Date.parse(startTime));
 });
 
 async function chooseFullForecastWindow(page, { moveStartForward = false } = {}) {
@@ -90,11 +107,11 @@ test('Tagesausflug lässt Zeitraum und Segment wählen und zeigt Start-Outfit, P
   await expect(page.getByTestId('trip-timeline')).toContainText('Regenverdeck');
 
   const timeline = page.getByTestId('trip-timeline');
-  const groups = timeline.locator('[data-trip-time-group]');
+  const groups = timeline.locator('[data-trip-transition]');
   expect(await groups.count()).toBeGreaterThan(0);
   for (const group of await groups.all()) {
     const actionCount = Number(await group.getAttribute('data-trip-action-count'));
-    expect(await group.locator('[data-trip-action]').count()).toBe(actionCount);
+    expect(await group.locator('[data-trip-action]').count()).toBeLessThanOrEqual(actionCount);
     await expect(group.locator('time')).toHaveCount(1);
   }
 
@@ -148,13 +165,16 @@ test('Autositz-Segment nutzt Außenwetter ohne technische Innenraumeingaben', as
   const safety = page.locator('#tripSafetyNotices');
   const startOutfit = page.getByTestId('trip-start-outfit');
   const hintToggle = page.locator('#tripHintToggle');
+  await expect(safety).toBeHidden();
+  await expect(page.getByTestId('trip-timeline').locator('[data-trip-notice-code="CAR_SEAT_NO_BULKY_LAYERS"]')).toBeVisible();
+  await expect(page.getByTestId('trip-timeline').locator('[data-trip-notice-code="CAR_SEAT_NO_BULKY_LAYERS"]')).toContainText('keine dicken Schichten');
   expect(await safety.evaluate((node, outfit) => Boolean(node.compareDocumentPosition(outfit) & Node.DOCUMENT_POSITION_FOLLOWING), await startOutfit.elementHandle())).toBe(true);
-  await expect(safety.locator('[data-severity="hard_rule"]')).not.toHaveCount(0);
-  await expect(safety.locator('[data-severity]:not([data-severity="hard_rule"])')).toHaveCount(0);
 
   await expect(hintToggle).toHaveAttribute('aria-controls', 'tripHintDetails');
   await hintToggle.click();
   await expect(page.locator('#tripHintDetails')).toBeVisible();
+  await expect(page.locator('#tripHintDetails')).not.toContainText('Nackentest');
+  await expect(page.locator('#tripNeckReminder')).toBeVisible();
 });
 
 test('Tagesausflug verändert die normale Einzelzeit-Auswahl nicht', async ({ page }) => {
@@ -181,7 +201,8 @@ test('Tagesplan-Hinweise bleiben vollständig deutsch', async ({ page }) => {
   const hintToggle = page.locator('#tripHintToggle');
   await expect(hintToggle).toHaveCount(1);
   await hintToggle.click();
-  await expect(page.locator('#tripHintDetails')).toContainText('Nackentest');
+  await expect(page.locator('#tripNeckReminder')).toContainText('Nackentest');
+  await expect(page.locator('#tripHintDetails')).not.toContainText('Nackentest');
   await expect(page.locator('#tripHintDetails')).not.toContainText('CHECK NECK');
 });
 

@@ -37,6 +37,7 @@ export function invalidTripResult(request, issues) {
     startOutfit:null,
     packList:[],
     actions:[],
+    transitions:[],
     notices:[],
     coverage:{
       plannedStartTime:startTime,
