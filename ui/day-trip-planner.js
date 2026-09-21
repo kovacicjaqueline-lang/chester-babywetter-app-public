@@ -314,14 +314,14 @@ function ensureStyles() {
     .trip-sheet{max-width:680px;max-height:min(92dvh,860px);overflow:auto;scroll-behavior:auto}.trip-sheet-header{position:sticky;top:0;z-index:3;background:rgba(255,250,246,.96);backdrop-filter:blur(10px)}.trip-sheet-header .eyebrow{margin:0 0 2px}.trip-sheet-header h2{margin:0}
     .trip-intro{margin:0 0 15px;color:var(--muted);line-height:1.4;max-width:42rem}.trip-builder-section{margin:0 0 16px}.trip-builder-section>h3,.trip-section-heading h3{margin:0;font-size:1rem}.trip-section-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px}.trip-section-note{margin:4px 0 10px;color:var(--muted);font-size:.82rem;line-height:1.4}
     .trip-time-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.trip-field{display:grid;gap:5px;color:var(--muted);font-size:.75rem;font-weight:700}.trip-field select,.trip-field input,.trip-segment-time{width:100%;min-height:44px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);padding:0 11px;font:inherit;font-size:.9rem}.trip-number-row{display:grid;grid-template-columns:1fr auto;align-items:center;border:1px solid var(--line);border-radius:12px;background:#fff;padding-right:10px}.trip-number-row input{border:0;min-width:0}.trip-number-row>span{font-size:.75rem;color:var(--muted)}
-    .trip-segments{display:grid;gap:10px}.trip-segment-card{border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.72);padding:12px}.trip-segment-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}.trip-segment-time-label{font-size:.8rem;font-weight:800;color:var(--accent)}.trip-segment-time{max-width:126px}.trip-remove-segment{min-height:44px;min-width:44px;border:0;background:transparent;color:var(--muted);font-size:1.2rem;border-radius:12px}.trip-mode-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.trip-mode-button{position:relative;min-height:52px;border:1px solid transparent;border-radius:13px;background:var(--surface-soft,#f6f0eb);color:var(--ink);padding:7px 5px;font-size:.875rem;font-weight:750;display:grid;place-items:center;gap:2px}.trip-mode-icon{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.trip-mode-button.is-selected{border-color:rgba(155,109,85,.65);background:#fff7f1;color:var(--accent);box-shadow:0 0 0 2px rgba(155,109,85,.12)}.trip-mode-button.is-selected::after{content:'✓';position:absolute;top:5px;right:7px;font-size:.7rem;font-weight:900;line-height:1;color:var(--accent)}
+    .trip-segments{display:grid;gap:10px}.trip-segment-card{border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.72);padding:12px}.trip-segment-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}.trip-segment-time-label{font-size:.8rem;font-weight:800;color:var(--accent)}.trip-segment-time{max-width:126px}.trip-remove-segment{min-height:44px;min-width:44px;border:0;background:transparent;color:var(--muted);font-size:1.2rem;border-radius:12px}.trip-add-row{display:flex;justify-content:flex-start;margin-top:10px}.trip-mode-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.trip-mode-button{position:relative;min-height:52px;border:1px solid transparent;border-radius:13px;background:var(--surface-soft,#f6f0eb);color:var(--ink);padding:7px 5px;font-size:.875rem;font-weight:750;display:grid;place-items:center;gap:2px}.trip-mode-icon{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.trip-mode-button.is-selected{border-color:rgba(155,109,85,.65);background:#fff7f1;color:var(--accent);box-shadow:0 0 0 2px rgba(155,109,85,.12)}.trip-mode-button.is-selected::after{content:'✓';position:absolute;top:5px;right:7px;font-size:.7rem;font-weight:900;line-height:1;color:var(--accent)}
     .trip-segment-details{margin-top:10px;border-top:0;padding-top:0}.trip-segment-details summary{min-height:44px;display:flex;align-items:center;cursor:pointer;color:var(--accent);font-size:.875rem;font-weight:800;border:1px solid var(--line);border-radius:12px;background:#fff;padding:0 11px;list-style:none}.trip-segment-details summary::-webkit-details-marker{display:none}.trip-segment-details summary::after{content:'⌄';margin-left:auto;font-size:1rem;line-height:1}.trip-segment-details[open] summary::after{content:'⌃'}.trip-context-fields{display:grid;gap:10px;padding:10px 0 2px}.trip-choice-field{display:grid;gap:5px}.trip-choice-label{font-size:.75rem;color:var(--muted);font-weight:700}.trip-choice-buttons{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px}.trip-choice-buttons button{min-height:44px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);font-size:.875rem;font-weight:700}.trip-choice-buttons button.is-selected{border-color:rgba(155,109,85,.5);background:#fff7f1;color:var(--accent)}.trip-check-field{min-height:44px;display:flex;align-items:center;gap:9px;font-size:.875rem;font-weight:700}.trip-check-field input{width:20px;height:20px}.trip-inline-safety{border-radius:13px;background:#fff3e5;padding:10px 12px;color:#6c4d32;font-size:.875rem;font-weight:700;line-height:1.4}
     .trip-add-button{min-height:44px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--accent);padding:0 12px;font-weight:800}.trip-add-button:disabled{opacity:.66}.trip-generate{width:100%;min-height:52px}.trip-error{border-radius:14px;background:#fff0ed;color:#8a3d32;padding:11px 13px;margin-bottom:14px;font-size:.84rem;font-weight:700}.trip-error[hidden]{display:none!important}
     .trip-result-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:14px}.trip-result-head h3{margin:2px 0 0;font-size:1.1rem}.trip-status-pill{display:inline-flex;align-items:center;min-height:30px;border-radius:999px;background:#f3ece6;padding:0 10px;font-size:.75rem;font-weight:800}.trip-status-pill[data-status="partial"],.trip-status-pill[data-status="blocked"]{background:#fff0ed;color:#8a3d32}.trip-status-pill[data-status="ready_with_estimate"]{background:#fff4df;color:#74531e}
     .trip-safety-list{display:grid;gap:8px;margin:0 0 16px}.trip-safety-notice{border-left:4px solid #c77f4c;border-radius:12px;background:#fff6e9;padding:10px 12px}.trip-safety-notice strong{display:block;font-size:.875rem}.trip-safety-notice p{margin:3px 0 0;color:#6b574a;font-size:.75rem;line-height:1.4}.trip-safety-notice[data-severity="hard_rule"]{border-left-color:#b24b3d;background:#fff0ed}.trip-notice-summary{margin:0 0 18px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.62);overflow:hidden}.trip-notice-toggle{width:100%;min-height:48px;display:flex;align-items:center;gap:8px;border:0;background:transparent;color:var(--accent);padding:0 13px;text-align:left;font:inherit;font-size:.875rem;font-weight:800}.trip-notice-toggle::after{content:'⌄';margin-left:auto;font-size:1rem}.trip-notice-toggle[aria-expanded="true"]::after{content:'⌃'}.trip-notice-details{padding:0 10px 10px}.trip-notice-details[hidden]{display:none!important}.trip-notice-details .trip-safety-list{margin:0}.trip-notice-details .trip-safety-notice{background:#fff;border-left-color:#c9ad99}.trip-notice-details .trip-safety-notice[data-severity="caution"]{background:#fff6e9}
     .trip-result-section{margin:0 0 18px}.trip-result-section h4{margin:0 0 9px;font-size:.98rem}.trip-outfit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(94px,1fr));gap:8px}.trip-item-card{min-width:0;border:1px solid var(--line);border-radius:15px;background:#fff;padding:8px;text-align:center}.trip-item-image{height:78px;display:grid;place-items:center;overflow:hidden}.trip-item-image img{max-width:100%;max-height:100%;object-fit:contain}.trip-item-card strong{display:block;margin-top:5px;font-size:.875rem;line-height:1.2}.trip-item-card small{display:block;margin-top:2px;color:var(--muted);font-size:.75rem}
     .trip-pack-list{display:grid;gap:7px}.trip-pack-item{display:grid;grid-template-columns:44px minmax(0,1fr);align-items:start;gap:10px;min-height:58px;border:1px solid var(--line);border-radius:14px;background:#fff;padding:7px 10px}.trip-pack-thumb{width:44px;height:44px;display:grid;place-items:center;overflow:hidden}.trip-pack-thumb img{max-width:100%;max-height:100%;object-fit:contain}.trip-pack-copy{min-width:0;padding:2px 0}.trip-pack-item strong{display:block;font-size:.875rem;line-height:1.25;overflow-wrap:anywhere;word-break:break-word}.trip-pack-item small{display:block;margin-top:3px;color:var(--muted);font-size:.75rem;line-height:1.25}.trip-empty{margin:0;border:1px dashed var(--line);border-radius:14px;padding:12px;color:var(--muted);font-size:.875rem}
-    .trip-timeline{display:grid;gap:0;margin-left:8px}.trip-time-group{position:relative;border-left:2px solid var(--line);padding:0 0 14px 17px}.trip-time-group:last-child{padding-bottom:0}.trip-time-group::before{content:"";position:absolute;left:-6px;top:5px;width:10px;height:10px;border-radius:50%;background:#b58b72;border:2px solid #fff}.trip-time-group[data-has-safety="true"]::before{background:#b24b3d}.trip-time-group-head{display:flex;align-items:center;gap:7px;flex-wrap:wrap;min-height:24px}.trip-time-group-title{margin:0;color:var(--accent);font-size:.875rem;line-height:1.25}.trip-time-group-title time{font-weight:900}.trip-time-group-count{font-weight:700}.trip-time-group-list{display:grid;gap:7px;margin:8px 0 0;padding:0;list-style:none}.trip-action,.trip-segment-marker{position:relative;padding:0}.trip-segment-marker{color:var(--muted)}.trip-segment-marker strong{display:block;font-size:.875rem;color:var(--ink)}.trip-action-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;color:var(--muted);font-size:.75rem}.trip-action strong{display:block;font-size:.875rem;line-height:1.3}.trip-action[data-safety-critical="true"] strong{color:#8a3d32}.trip-action-priority{display:inline-flex;align-items:center;width:max-content;border-radius:999px;background:#fff0ed;color:#8a3d32;padding:2px 7px;font-size:.75rem;font-weight:800}.trip-weather-chip{border-radius:999px;background:#f4eee9;padding:2px 7px}.trip-coverage{border-radius:13px;background:#fff4df;color:#74531e;padding:10px 12px;margin-bottom:14px;font-size:.875rem;font-weight:700}.trip-result-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}.trip-result-actions button{min-height:48px}
+    .trip-timeline{display:grid;gap:10px}.trip-transition{border:1px solid var(--line);border-radius:16px;background:#fff;padding:11px 12px}.trip-transition[data-has-safety="true"]{border-color:#e1a28b}.trip-transition-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}.trip-transition-title{margin:0;color:var(--accent);font-size:.9rem;line-height:1.3}.trip-transition-title time{font-weight:900}.trip-transition-subtitle{margin:3px 0 0;color:var(--muted);font-size:.75rem;line-height:1.3}.trip-transition-weather{flex:0 0 auto}.trip-transition-safety{display:grid;gap:6px;margin-top:10px}.trip-transition-safety .trip-safety-notice{margin:0}.trip-transition-groups{display:grid;gap:8px;margin-top:10px}.trip-transition-group{margin:0}.trip-transition-group h6{margin:0 0 2px;color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.04em}.trip-transition-group ul{display:grid;gap:2px;margin:0;padding-left:18px}.trip-transition-group li{font-size:.84rem;line-height:1.3}.trip-transition-unchanged{margin:9px 0 0;color:var(--muted);font-size:.76rem;line-height:1.35}.trip-transition-state{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}.trip-transition-state summary{cursor:pointer;color:var(--accent);font-size:.78rem;font-weight:800}.trip-transition-state .trip-outfit-grid{margin-top:8px}.trip-transition-state[open] summary{margin-bottom:2px}.trip-weather-chip{border-radius:999px;background:#f4eee9;padding:2px 7px}.trip-neck-reminder{border:1px solid #d8c3a8;border-radius:14px;background:#fff9ef;padding:10px 12px;margin:0 0 18px}.trip-neck-reminder strong{display:block;font-size:.875rem}.trip-neck-reminder p{margin:3px 0 0;color:#6b574a;font-size:.76rem;line-height:1.4}.trip-coverage{border-radius:13px;background:#fff4df;color:#74531e;padding:10px 12px;margin-bottom:14px;font-size:.875rem;font-weight:700}.trip-result-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}.trip-result-actions button{min-height:48px}
     @media(max-width:430px){.trip-sheet{max-height:96dvh}.trip-time-grid{grid-template-columns:1fr 1fr}.trip-mode-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.trip-outfit-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.trip-result-actions{grid-template-columns:1fr}.trip-entry-row{justify-content:stretch}.trip-entry-button{width:100%}}
   `;
   document.head.append(style);
@@ -365,9 +365,10 @@ function ensureUi() {
             </div>
           </section>
           <section class="trip-builder-section" aria-labelledby="tripSegmentsHeading">
-            <div class="trip-section-heading"><h3 id="tripSegmentsHeading">Situationen</h3><button id="tripAddSegmentButton" class="trip-add-button" type="button">+ Wechsel hinzufügen</button></div>
+            <div class="trip-section-heading"><h3 id="tripSegmentsHeading">Situationen</h3></div>
             <p id="tripSegmentsNote" class="trip-section-note">Pro Abschnitt eine Situation wählen. Weitere Abschnitte nur hinzufügen, wenn ihr später wechselt.</p>
             <div id="tripSegments" class="trip-segments"></div>
+            <div class="trip-add-row"><button id="tripAddSegmentButton" class="trip-add-button" type="button">Nächsten Wechsel hinzufügen</button></div>
           </section>
           <button id="tripGenerateButton" class="primary-button trip-generate" type="button">Ausflug planen</button>
         </div>
@@ -375,6 +376,7 @@ function ensureUi() {
           <div class="trip-result-head"><div><span id="tripResultStatus" class="trip-status-pill"></span><h3 id="tripResultTitle" tabindex="-1">Dein Tagesplan</h3></div><span id="tripResultRange" class="trip-segment-time-label"></span></div>
           <div id="tripSafetyNotices" class="trip-safety-list" aria-label="Sicherheitshinweise"></div>
           <section class="trip-result-section" aria-labelledby="tripStartOutfitHeading"><h4 id="tripStartOutfitHeading">Start-Outfit</h4><div id="tripStartOutfit" class="trip-outfit-grid" data-testid="trip-start-outfit"></div></section>
+          <div id="tripNeckReminder" class="trip-neck-reminder" hidden><strong>Nackentest</strong><p>Nach dem Anziehen und nach einem echten Wechsel prüfen: warm und trocken passt; heiß oder schwitzig bedeutet eine sinnvolle Schicht weniger; kühl bedeutet eine sinnvolle Schicht mehr.</p></div>
           <div id="tripCoverageNotice" class="trip-coverage" hidden></div>
           <div id="tripHintSummary" class="trip-notice-summary" hidden></div>
           <section class="trip-result-section" aria-labelledby="tripPackHeading"><h4 id="tripPackHeading">Mitnehmen</h4><div id="tripPackList" class="trip-pack-list" data-testid="trip-pack-list"></div></section>
@@ -441,12 +443,9 @@ function packItemRow(assetStore, styleTheme, item) {
   return row;
 }
 
-function actionText(action, assetStore, segmentMode) {
+function actionText(action, assetStore) {
   const from = itemLabel(assetStore, action.fromItemId);
   const to = itemLabel(assetStore, action.toItemId);
-  if (action.kind === 'safety_instruction') {
-    return segmentMode === 'car' ? 'Autositz-Sicherheitsregel beachten' : 'Sicherheitshinweis beachten';
-  }
   if (action.kind === 'add') {
     if (action.toItemId === 'stroller_rain_cover') return 'Regenverdeck verwenden';
     if (action.toItemId === 'stroller_sunshade') return 'Sonnensegel / Sonnenschirm verwenden';
@@ -459,10 +458,10 @@ function actionText(action, assetStore, segmentMode) {
     if (action.fromItemId === 'stroller_sunshade') return 'Sonnensegel / Sonnenschirm wieder entfernen';
     return `${from} ausziehen`;
   }
-  if (action.kind === 'replace') return `${from} gegen ${to} tauschen`;
+  if (action.kind === 'replace') return `${from} ausziehen und ${to} anziehen`;
   if (action.kind === 'reposition') {
     if (action.toWearPosition === 'over_harness') return `${to} über dem geschlossenen Gurt verwenden`;
-    return `${to} neu positionieren`;
+    return `${to} anders anlegen`;
   }
   return 'Outfit anpassen';
 }
@@ -492,8 +491,10 @@ function renderNotices(result) {
   const hardHost = document.querySelector('#tripSafetyNotices');
   hardHost.replaceChildren();
   const notices = result.notices ?? [];
-  const hardNotices = notices.filter((notice) => notice.severity === 'hard_rule');
-  const otherNotices = notices.filter((notice) => notice.severity !== 'hard_rule');
+  const localNoticeCodes = new Set((result.transitions ?? []).flatMap((transition) =>
+    (transition.notices ?? []).map((notice) => notice.code)));
+  const hardNotices = notices.filter((notice) => notice.severity === 'hard_rule' && !localNoticeCodes.has(notice.code));
+  const otherNotices = notices.filter((notice) => notice.severity !== 'hard_rule' && notice.code !== 'CHECK_NECK');
   for (const notice of hardNotices) hardHost.append(noticeRow(notice));
   setHidden(hardHost, hardHost.children.length === 0);
 
@@ -552,6 +553,12 @@ function renderCoverage(result) {
   setHidden(host, false);
 }
 
+function renderNeckReminder(result) {
+  const host = document.querySelector('#tripNeckReminder');
+  const hasNeckNotice = (result.notices ?? []).some((notice) => notice.code === 'CHECK_NECK');
+  setHidden(host, !hasNeckNotice);
+}
+
 function appendTimelineWeather(meta, snapshot, at) {
   const point = weatherAt(snapshot, at);
   if (!point) return;
@@ -562,103 +569,113 @@ function appendTimelineWeather(meta, snapshot, at) {
   meta.append(weather);
 }
 
-function timelineActionRow(action, assetStore, segmentModes) {
-  const row = document.createElement('li');
-  row.className = 'trip-action';
-  row.dataset.tripAction = action.actionId;
-  row.dataset.safetyCritical = String(Boolean(action.safetyCritical));
-  if (action.safetyCritical) {
-    const priority = document.createElement('span');
-    priority.className = 'trip-action-priority';
-    priority.textContent = 'Sicherheitsaktion';
-    row.append(priority);
+function transitionLabel(mode) {
+  return MODE_COPY[mode]?.label ?? mode ?? 'Situation';
+}
+
+function appendActionGroup(host, title, actions, assetStore) {
+  if (!actions.length) return;
+  const group = document.createElement('div');
+  group.className = 'trip-transition-group';
+  const heading = document.createElement('h6');
+  heading.textContent = title;
+  const list = document.createElement('ul');
+  for (const action of actions) {
+    const item = document.createElement('li');
+    item.dataset.tripAction = action.actionId;
+    item.dataset.safetyCritical = String(Boolean(action.safetyCritical));
+    item.textContent = actionText(action, assetStore);
+    list.append(item);
   }
-  const text = document.createElement('strong');
-  text.textContent = actionText(action, assetStore, segmentModes.get(action.segmentId));
-  row.append(text);
-  return row;
+  group.append(heading, list);
+  host.append(group);
 }
 
-function timelineSegmentRow(segment) {
-  const row = document.createElement('li');
-  row.className = 'trip-segment-marker';
-  row.dataset.tripSegmentMarker = segment.segmentId;
-  const meta = document.createElement('div');
-  meta.className = 'trip-action-meta';
-  meta.textContent = 'Situationswechsel';
-  const text = document.createElement('strong');
-  text.textContent = `Situation: ${MODE_COPY[segment.mode]?.label ?? segment.mode}`;
-  row.append(meta, text);
-  return row;
+function compactStateText(items, assetStore) {
+  return items.map((item) => itemLabel(assetStore, item.itemId)).join(', ');
 }
 
-function groupTimelineEntries(entries) {
-  const groups = [];
-  const byTime = new Map();
-  entries.forEach((entry, index) => {
-    const parsed = parseTime(entry.at);
-    const key = parsed ?? entry.at;
-    let group = byTime.get(key);
-    if (!group) {
-      group = { at: entry.at, entries: [] };
-      byTime.set(key, group);
-      groups.push(group);
-    }
-    group.entries.push({ ...entry, index });
-  });
-  return groups
-    .sort((left, right) => parseTime(left.at) - parseTime(right.at))
-    .map((group) => ({
-      ...group,
-      entries: group.entries.sort((left, right) => {
-        const leftPriority = left.kind === 'action' && left.action.safetyCritical ? 0 : left.kind === 'action' ? 1 : 2;
-        const rightPriority = right.kind === 'action' && right.action.safetyCritical ? 0 : right.kind === 'action' ? 1 : 2;
-        return leftPriority - rightPriority || left.index - right.index;
-      })
-    }));
-}
+function transitionRow(transition, snapshot, assetStore, styleTheme, index) {
+  const row = document.createElement('article');
+  row.className = 'trip-transition';
+  row.dataset.tripTransition = transition.transitionId;
+  row.dataset.tripTransitionIndex = String(index);
+  row.dataset.hasSafety = String(transition.notices?.length > 0);
+  row.dataset.tripActionCount = String(transition.actions?.length ?? 0);
 
-function timelineGroupRow(group, snapshot, assetStore, segmentModes, groupIndex) {
-  const actions = group.entries.filter((entry) => entry.kind === 'action').map((entry) => entry.action);
-  const hasSafety = actions.some((action) => action.safetyCritical);
-  const row = document.createElement('section');
-  row.className = 'trip-time-group';
-  row.dataset.tripTimeGroup = group.at;
-  row.dataset.tripActionCount = String(actions.length);
-  row.dataset.hasSafety = String(hasSafety);
-  const headingId = `trip-time-group-${groupIndex + 1}`;
-  row.setAttribute('aria-labelledby', headingId);
-
-  const header = document.createElement('div');
-  header.className = 'trip-time-group-head';
-  const heading = document.createElement('h5');
-  heading.id = headingId;
-  heading.className = 'trip-time-group-title';
+  const header = document.createElement('header');
+  header.className = 'trip-transition-head';
+  const copy = document.createElement('div');
+  const title = document.createElement('h5');
+  title.className = 'trip-transition-title';
   const time = document.createElement('time');
-  time.dateTime = group.at;
-  time.textContent = formatTime(group.at);
-  heading.append(time, document.createTextNode(' – '));
-  const count = document.createElement('span');
-  count.className = 'trip-time-group-count';
-  count.textContent = actions.length === 0
-    ? 'Situationswechsel'
-    : `${actions.length} ${actions.length === 1 ? 'Änderung' : 'Änderungen'}`;
-  heading.append(count);
-  header.append(heading);
-  appendTimelineWeather(header, snapshot, group.at);
+  time.dateTime = transition.at;
+  time.textContent = formatTime(transition.at);
+  title.append(time, document.createTextNode(' · '));
+  if (transition.situationChanged) {
+    title.append(document.createTextNode(`${transitionLabel(transition.fromSegment?.mode)} → ${transitionLabel(transition.toSegment?.mode)}`));
+  } else {
+    title.append(document.createTextNode(`Weiter im ${transitionLabel(transition.toSegment?.mode)}`));
+  }
+  const subtitle = document.createElement('p');
+  subtitle.className = 'trip-transition-subtitle';
+  subtitle.textContent = transition.situationChanged
+    ? `Neuer Abschnitt ab ${formatTime(transition.toSegment?.at ?? transition.at)}`
+    : 'Wetter- oder Schutzanpassung im selben Abschnitt';
+  copy.append(title, subtitle);
+  header.append(copy);
+  const weather = document.createElement('div');
+  weather.className = 'trip-transition-weather';
+  appendTimelineWeather(weather, snapshot, transition.at);
+  header.append(weather);
   row.append(header);
 
-  const list = document.createElement('ol');
-  list.className = 'trip-time-group-list';
-  list.setAttribute('aria-label', actions.length
-    ? `${actions.length} ${actions.length === 1 ? 'Änderung' : 'Änderungen'} um ${formatTime(group.at)}`
-    : `Situationswechsel um ${formatTime(group.at)}`);
-  for (const entry of group.entries) {
-    list.append(entry.kind === 'segment'
-      ? timelineSegmentRow(entry.segment)
-      : timelineActionRow(entry.action, assetStore, segmentModes));
+  const notices = [];
+  const seenNoticeCodes = new Set();
+  for (const notice of transition.notices ?? []) {
+    if (notice.code === 'CHECK_NECK' || seenNoticeCodes.has(notice.code)) continue;
+    seenNoticeCodes.add(notice.code);
+    notices.push(notice);
   }
-  row.append(list);
+  if (notices.length) {
+    const safety = document.createElement('div');
+    safety.className = 'trip-transition-safety';
+    for (const notice of notices) safety.append(noticeRow(notice));
+    row.append(safety);
+  }
+
+  const actions = transition.actions ?? [];
+  const outfitActions = actions.filter((action) => action.kind !== 'safety_instruction');
+  const groups = document.createElement('div');
+  groups.className = 'trip-transition-groups';
+  appendActionGroup(groups, 'Ausziehen / entfernen', outfitActions.filter((action) => action.kind === 'remove'), assetStore);
+  appendActionGroup(groups, 'Anziehen / verwenden', outfitActions.filter((action) => action.kind === 'add' || action.kind === 'replace'), assetStore);
+  appendActionGroup(groups, 'Tatsächlich positionieren', outfitActions.filter((action) => action.kind === 'reposition'), assetStore);
+  if (groups.children.length) row.append(groups);
+
+  if (!outfitActions.length && transition.situationChanged) {
+    const unchanged = document.createElement('p');
+    unchanged.className = 'trip-transition-unchanged';
+    unchanged.textContent = 'Outfit bleibt unverändert – nur die Situation wechselt.';
+    row.append(unchanged);
+  } else if (transition.unchangedItems?.length) {
+    const unchanged = document.createElement('p');
+    unchanged.className = 'trip-transition-unchanged';
+    unchanged.textContent = `Bleibt an: ${compactStateText(transition.unchangedItems, assetStore)}.`;
+    row.append(unchanged);
+  }
+
+  if (transition.after?.items?.length) {
+    const details = document.createElement('details');
+    details.className = 'trip-transition-state';
+    const summary = document.createElement('summary');
+    summary.textContent = `Zustand ab ${formatTime(transition.after.at)} anzeigen`;
+    const outfit = document.createElement('div');
+    outfit.className = 'trip-outfit-grid';
+    for (const item of transition.after.items) outfit.append(outfitItemCard(assetStore, styleTheme, item));
+    details.append(summary, outfit);
+    row.append(details);
+  }
   return row;
 }
 
@@ -670,6 +687,7 @@ function renderResult(result, draft, snapshot, assetStore) {
   document.querySelector('#tripResultRange').textContent = `${formatTime(draft.startTime)}–${formatTime(draft.endTime)}`;
   renderCoverage(result);
   renderNotices(result);
+  renderNeckReminder(result);
 
   const outfitHost = document.querySelector('#tripStartOutfit');
   outfitHost.replaceChildren();
@@ -693,17 +711,11 @@ function renderResult(result, draft, snapshot, assetStore) {
     packHost.append(empty);
   }
 
-  const segmentModes = new Map(draft.segments.map((segment) => [segment.segmentId, segment.mode]));
   const timeline = document.querySelector('#tripTimeline');
   timeline.replaceChildren();
-  const timelineEntries = [
-    ...draft.segments.slice(1).map((segment) => ({ kind: 'segment', at: segment.startTime, segment })),
-    ...(result.actions ?? []).map((action) => ({ kind: 'action', at: action.at, action }))
-  ].sort((left, right) => parseTime(left.at) - parseTime(right.at)
-    || (left.kind === 'segment' ? 0 : 1) - (right.kind === 'segment' ? 0 : 1));
-  const timelineGroups = groupTimelineEntries(timelineEntries);
-  if (timelineGroups.length) {
-    timelineGroups.forEach((group, index) => timeline.append(timelineGroupRow(group, snapshot, assetStore, segmentModes, index)));
+  const transitions = result.transitions ?? [];
+  if (transitions.length) {
+    transitions.forEach((transition, index) => timeline.append(transitionRow(transition, snapshot, assetStore, snapshot.profile.styleTheme, index)));
   } else {
     const empty = document.createElement('p');
     empty.className = 'trip-empty';
@@ -727,6 +739,12 @@ function renderTimeControls(draft) {
 function availableInteriorTimes(draft, currentSegmentId = null) {
   const occupied = new Set(draft.segments.filter((segment) => segment.segmentId !== currentSegmentId).map((segment) => segment.startTime));
   return draft.points.filter((point) => parseTime(point.time) > parseTime(draft.startTime) && parseTime(point.time) < parseTime(draft.endTime) && !occupied.has(point.time));
+}
+
+function nextAvailableInteriorTimes(draft) {
+  const ordered = [...draft.segments].sort((left, right) => parseTime(left.startTime) - parseTime(right.startTime));
+  const last = ordered.at(-1);
+  return availableInteriorTimes(draft).filter((point) => !last || parseTime(point.time) > parseTime(last.startTime));
 }
 
 function renderSegments(draft) {
@@ -795,7 +813,7 @@ function renderSegments(draft) {
     card.append(details);
     host.append(card);
   });
-  document.querySelector('#tripAddSegmentButton').disabled = availableInteriorTimes(draft).length === 0;
+  document.querySelector('#tripAddSegmentButton').disabled = nextAvailableInteriorTimes(draft).length === 0;
 }
 
 function renderBuilder(draft) {
@@ -881,10 +899,9 @@ export function bindDayTripPlanner({ getSnapshot, assetStore, showToast = () => 
 
   document.querySelector('#tripAddSegmentButton').addEventListener('click', () => {
     if (!draft || !snapshot) return;
-    const candidates = availableInteriorTimes(draft);
+    const candidates = nextAvailableInteriorTimes(draft);
     if (!candidates.length) return;
-    const midpoint = (parseTime(draft.startTime) + parseTime(draft.endTime)) / 2;
-    const point = candidates.find((candidate) => parseTime(candidate.time) >= midpoint) ?? candidates[0];
+    const point = candidates[0];
     const previous = [...draft.segments].sort((left, right) => parseTime(left.startTime) - parseTime(right.startTime)).at(-1);
     const mode = PRIMARY_NEXT_MODE[previous?.mode] ?? 'outdoor';
     segmentSequence += 1;

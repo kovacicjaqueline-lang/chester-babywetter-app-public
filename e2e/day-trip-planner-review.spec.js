@@ -28,7 +28,7 @@ test('Tagesausflug verankert die sichtbare Jetzt-Auswahl am tatsächlichen Öffn
   expect(startMs).toBeLessThanOrEqual(afterOpen + 1000);
 });
 
-test('Situationswechsel bleibt als neutraler Timeline-Marker sichtbar, unabhängig davon ob dabei Kleidung gewechselt werden muss', async ({ page }) => {
+test('Situationswechsel wird als nachvollziehbarer Übergang mit Ausgangs- und Zielsituation sichtbar', async ({ page }) => {
   await openDemo(page);
   await openPlanner(page);
 
@@ -41,8 +41,9 @@ test('Situationswechsel bleibt als neutraler Timeline-Marker sichtbar, unabhäng
   await page.locator('#tripGenerateButton').click();
 
   await expect(page.locator('#tripResultView')).toBeVisible();
-  const marker = page.locator('[data-trip-segment-marker]').first();
-  await expect(marker).toBeVisible();
-  await expect(marker).toContainText('Situation: Draußen');
-  await expect(marker.locator('.trip-action-meta')).not.toBeEmpty();
+  const transition = page.locator('[data-trip-transition]').first();
+  await expect(transition).toBeVisible();
+  await expect(transition).toContainText('Draußen');
+  await expect(transition).toContainText('Outfit bleibt unverändert');
+  await expect(transition.locator('time')).toHaveCount(1);
 });
