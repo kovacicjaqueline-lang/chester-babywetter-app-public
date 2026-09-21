@@ -104,7 +104,7 @@ test('Tagesausflug lässt Zeitraum und Segment wählen und zeigt Start-Outfit, P
   await expect(page.getByTestId('trip-start-outfit').locator('img').first()).toBeVisible();
   expect(await page.getByTestId('trip-pack-list').locator('[data-trip-pack-item]').count()).toBeGreaterThan(0);
   expect(await page.getByTestId('trip-timeline').locator('[data-trip-action]').count()).toBeGreaterThan(0);
-  await expect(page.getByTestId('trip-timeline')).toContainText('Regenverdeck');
+  await expect(page.getByTestId('trip-timeline')).toContainText('Regenjacke');
 
   const timeline = page.getByTestId('trip-timeline');
   const groups = timeline.locator('[data-trip-transition]');
