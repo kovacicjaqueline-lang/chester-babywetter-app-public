@@ -79,7 +79,7 @@ test('15 C with 11 C apparent temperature and 20 km/h wind stays in a light norm
   assert.equal(result.phases[0].thermalReferenceC,11);
   assert.equal(result.phases[0].thermalAdjustment,0);
   assert.equal(item(result,'base_torso'),'long_sleeve_bodysuit');
-  assert.equal(item(result,'legs'),'trousers');
+  assert.equal(item(result,'legs'),'light_trousers');
   assert.ok(['light_transition_jacket','softshell_jacket'].includes(item(result,'outer')));
   assert.equal(item(result,'head'),'thin_hat');
   assert.equal(item(result,'feet'),'socks');
