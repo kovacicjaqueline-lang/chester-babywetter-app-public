@@ -69,7 +69,7 @@ Beispiele:
 - Fleece/warme Hose/isolierende Softshell: 3,
 - Winteroverall/warmer Fußsack: 4.
 
-Ein Ganzkörper-Overall im `outer`-Slot bedeckt zusätzlich die Beine. Wird er als manuelle Alternative zu einer Jacke gewählt, darf die vorhandene warme Hose deshalb nicht unverändert darunter liegen: Bei der 8–10-°C-Baseline wird `warm_trousers` auf `trousers` rebalanced. Die Beinabdeckung ist eine lokale Überlappungskorrektur und ersetzt keine pauschale zusätzliche Wärmestufe am gesamten Körper.
+Bei Kleidungsstücken mit mehreren Körperzonen kann `thermalWeightByZone` die Wärme für eine einzelne Zone überschreiben. Ein Ganzkörper-Overall im `outer`-Slot bedeckt zusätzlich die Beine. Wird er als manuelle Alternative zu einer Jacke gewählt, darf die vorhandene warme Hose deshalb nicht unverändert darunter liegen: Bei der 8–10-°C-Baseline wird `warm_trousers` auf `trousers` rebalanced. Die Beinabdeckung ist eine lokale Überlappungskorrektur und ersetzt keine pauschale zusätzliche Wärmestufe am gesamten Körper.
 
 ## 3. Outdoor-Temperaturbaseline
 

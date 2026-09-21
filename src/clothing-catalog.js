@@ -2,12 +2,13 @@ const MODES = ['outdoor', 'stroller', 'carrier', 'car', 'sleep'];
 
 function def({ itemId, kind = 'clothing', slot, category = itemId, bodyZones = [], thermalWeight = 0,
   thermalStepCredit = 0, sleepWarmthWeight = null, tog = null, windProtection = 0,
-  rainProtection = 0, sunCoverage = 0, carSeatCompatibility = 'allowed', sleepSafe = false,
+  rainProtection = 0, sunCoverage = 0, thermalWeightByZone = null, carSeatCompatibility = 'allowed', sleepSafe = false,
   allowedSituations = MODES, styleAssetGroup = itemId }) {
   return Object.freeze({
     itemId, kind, slot, category, labelKey: `clothing.${itemId}`, bodyZones: Object.freeze([...bodyZones]),
     thermalWeight, thermalStepCredit, sleepWarmthWeight, tog, windProtection, rainProtection,
-    sunCoverage, carSeatCompatibility, sleepSafe, allowedSituations: Object.freeze([...allowedSituations]),
+    sunCoverage, thermalWeightByZone: thermalWeightByZone ? Object.freeze({ ...thermalWeightByZone }) : null,
+    carSeatCompatibility, sleepSafe, allowedSituations: Object.freeze([...allowedSituations]),
     styleAssetGroup
   });
 }
@@ -31,8 +32,8 @@ const items = [
   def({ itemId:'light_transition_jacket', slot:'outer', bodyZones:['torso','arms'], thermalWeight:1, windProtection:1, carSeatCompatibility:'conditional', allowedSituations:['outdoor','stroller','carrier','car'] }),
   def({ itemId:'softshell_jacket', slot:'outer', bodyZones:['torso','arms'], thermalWeight:3, windProtection:3, rainProtection:1, carSeatCompatibility:'conditional', allowedSituations:['outdoor','stroller','carrier','car'] }),
   def({ itemId:'rain_jacket', slot:'outer', bodyZones:['torso','arms'], thermalWeight:0, windProtection:3, rainProtection:3, carSeatCompatibility:'conditional', allowedSituations:['outdoor','stroller','carrier','car'] }),
-  def({ itemId:'transition_overall', slot:'outer', bodyZones:['torso','arms','legs'], thermalWeight:3, windProtection:3, rainProtection:1, carSeatCompatibility:'prohibited', allowedSituations:['outdoor','stroller','car'] }),
-  def({ itemId:'winter_overall', slot:'outer', bodyZones:['torso','arms','legs'], thermalWeight:4, windProtection:3, rainProtection:2, carSeatCompatibility:'prohibited', allowedSituations:['outdoor','stroller','car'] }),
+  def({ itemId:'transition_overall', slot:'outer', bodyZones:['torso','arms','legs'], thermalWeight:3, thermalWeightByZone:{ legs:1 }, windProtection:3, rainProtection:1, carSeatCompatibility:'prohibited', allowedSituations:['outdoor','stroller','car'] }),
+  def({ itemId:'winter_overall', slot:'outer', bodyZones:['torso','arms','legs'], thermalWeight:4, thermalWeightByZone:{ legs:1 }, windProtection:3, rainProtection:2, carSeatCompatibility:'prohibited', allowedSituations:['outdoor','stroller','car'] }),
 
   def({ itemId:'socks', slot:'feet', bodyZones:['feet'], thermalWeight:1, sleepSafe:false, allowedSituations:['outdoor','stroller','carrier','car'] }),
   def({ itemId:'warm_socks_booties', slot:'feet', bodyZones:['feet'], thermalWeight:2, sleepSafe:false, allowedSituations:['outdoor','stroller','carrier','car'] }),

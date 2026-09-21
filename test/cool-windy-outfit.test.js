@@ -149,7 +149,7 @@ test('choosing a full-body overall reduces a warm trouser layer', () => {
 
   assert.equal(item(result,'outer'),'transition_overall');
   assert.equal(item(result,'legs'),'trousers');
-  assert.ok(result.ruleTrace.some((entry) => entry.reasonCode === 'OVERALL_LEG_COVERAGE'));
+  assert.ok(result.ruleTrace.some((entry) => entry.reasonCode === 'BODY_ZONE_COVERAGE_REBALANCE'));
 });
 
 test('stroller awake/asleep, carrier and car keep their situation-specific thermal rules', () => {

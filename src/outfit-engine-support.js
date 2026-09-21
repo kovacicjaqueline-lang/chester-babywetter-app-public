@@ -377,6 +377,7 @@ export function applyBodyLocksAndRebalance(state,result,request,phase,mode) {
       continue;
     }
     const before = state.map.get(lock.slot)?.itemId ?? null;
+    const legsBeforeLock = state.map.get('legs')?.itemId ?? null;
     const beforeWeight = before ? CLOTHING_CATALOG[before]?.thermalWeight ?? 0 : 0;
     const delta = definition.thermalWeight - beforeWeight;
     const wearPosition = phase === 'in_car' ? 'under_harness' : 'on_body';
@@ -386,21 +387,30 @@ export function applyBodyLocksAndRebalance(state,result,request,phase,mode) {
       addNotice(result,'CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT','caution',phase,['CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT'],{ itemId:lock.itemId });
     }
     if (delta) rebalanceOtherSlots(state,-delta,lockedThermalSlots,mode,lock.slot);
-    rebalanceCoveredLegLayer(state,result,before,definition,lockedThermalSlots,phase,mode,lock.slot);
+    rebalanceNewlyCoveredLegs(state,result,before,definition,legsBeforeLock,lockedThermalSlots,phase,mode,lock.slot);
   }
 }
 
-function rebalanceCoveredLegLayer(state,result,beforeItemId,lockedDefinition,lockedThermalSlots,phase,mode,lockedSlot) {
-  if (lockedSlot !== 'outer' || !lockedDefinition?.bodyZones.includes('legs')) return;
+function rebalanceNewlyCoveredLegs(state,result,beforeItemId,lockedDefinition,legsBeforeLock,lockedThermalSlots,phase,mode,lockedSlot) {
+  if (lockedSlot !== 'outer') return;
 
   const beforeDefinition = CLOTHING_CATALOG[beforeItemId];
-  if (beforeDefinition?.bodyZones.includes('legs')) return;
+  const newlyCoveredLegWeight = thermalWeightForZone(lockedDefinition,'legs') - thermalWeightForZone(beforeDefinition,'legs');
+  if (newlyCoveredLegWeight <= 0 || state.map.get('legs')?.itemId !== legsBeforeLock) return;
 
   const legs = state.map.get('legs');
-  if (legs?.itemId !== 'warm_trousers') return;
+  if ((CLOTHING_CATALOG[legs?.itemId]?.thermalWeight ?? 0) < 2) return;
 
-  const changed = applyThermalDelta(state,-1,lockedThermalSlots,mode,['legs'],true);
-  if (changed) addTrace(result,'swap.overall.leg_coverage',phase,'thermal_down','legs',-1,'OVERALL_LEG_COVERAGE');
+  const changed = applyThermalDelta(state,-Math.min(1,newlyCoveredLegWeight),lockedThermalSlots,mode,['legs'],true);
+  if (changed) addTrace(result,'swap.coverage.legs',phase,'thermal_down','legs',-1,'BODY_ZONE_COVERAGE_REBALANCE');
+}
+
+export function thermalWeightForZone(definition,zone) {
+  if (!definition?.bodyZones?.includes(zone)) return 0;
+  if (definition.thermalWeightByZone && Object.prototype.hasOwnProperty.call(definition.thermalWeightByZone,zone)) {
+    return definition.thermalWeightByZone[zone] ?? 0;
+  }
+  return definition.thermalWeight ?? 0;
 }
 
 export function enforceCarSafetyAfterLocks(state,result,request,phase) {
