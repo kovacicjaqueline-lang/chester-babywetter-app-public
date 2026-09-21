@@ -2003,6 +2003,49 @@
         "pattern": "fine_knit"
       }
     ],
+    "insulated_transition_jacket": [
+      {
+        "id": "dusty-blue-01",
+        "assetPath": "assets/clothing/insulated_transition_jacket/dusty-blue-01.png",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue",
+          "cream"
+        ],
+        "pattern": "micro_texture"
+      },
+      {
+        "id": "sand-greige-01",
+        "assetPath": "assets/clothing/insulated_transition_jacket/sand-greige-01.png",
+        "themeIds": [
+          "clay_cream",
+          "ocher_taupe",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "sand",
+          "greige",
+          "cream"
+        ],
+        "pattern": "micro_texture"
+      },
+      {
+        "id": "terracotta-olive-01",
+        "assetPath": "assets/clothing/insulated_transition_jacket/terracotta-olive-01.png",
+        "themeIds": [
+          "terracotta_greige"
+        ],
+        "paletteTags": [
+          "terracotta",
+          "sage",
+          "cream"
+        ],
+        "pattern": "micro_texture"
+      }
+    ],
     "light_shoes": [
       {
         "id": "sage-01",

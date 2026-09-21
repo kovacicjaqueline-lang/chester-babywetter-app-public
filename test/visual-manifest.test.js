@@ -204,6 +204,19 @@ test('palette modes declare explicit theme and source-variant boundaries', () =>
   assert.deepEqual(visualManifest.paletteModeProfiles.neutral.sourceStyleRank, { neutral: 0 });
 });
 
+test('insulated teddy jacket exposes the four planned colorways', () => {
+  const variants = visualManifest.additionalVariants.insulated_transition_jacket;
+  assert.deepEqual(variants.map((variant) => variant.id), ['dusty-blue-01', 'sand-greige-01', 'terracotta-olive-01']);
+  assert.deepEqual(variants.flatMap((variant) => variant.themeIds).sort(), [
+    'apricot_oat',
+    'clay_cream',
+    'dusty_blue_sand',
+    'ocher_taupe',
+    'slate_blue_greige',
+    'terracotta_greige'
+  ]);
+});
+
 test('all referenced paths exist and no runtime image is accidentally unreferenced', () => {
   const referenced = new Set(allReferencedPaths());
   for (const relativePath of referenced) {
