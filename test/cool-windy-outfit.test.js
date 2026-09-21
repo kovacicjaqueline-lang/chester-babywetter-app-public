@@ -138,7 +138,7 @@ test('choosing a full-body overall reduces a warm trouser layer', () => {
     ?.alternatives.find((option) => option.itemId === 'transition_overall');
 
   assert.ok(alternative?.projectedChanges.some((change) =>
-    change.slot === 'legs' && change.fromItemId === 'warm_trousers' && change.toItemId === 'trousers'));
+    change.slot === 'legs' && change.fromItemId === 'trousers' && change.toItemId === 'light_trousers'));
 
   const session = lockItem(createSession('overall-swap'), {
     phase:'main',
