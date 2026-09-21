@@ -1,4 +1,7 @@
 import { formatPrecipitation, formatTemperature, formatTemperatureC, formatUvIndex, precipitationLabelFor } from './weather-copy.js';
+import { CLOTHING_CATALOG } from '../src/clothing-catalog.js';
+
+export { renderSituationContext } from './render-situations.js';
 
 const MODE_COPY = Object.freeze({
   outdoor: { label: 'Draußen', icon: '☀', short: 'Wetter + Aktivität' },
@@ -84,7 +87,7 @@ function imageFallback(shell, label) {
   shell.append(fallback);
 }
 
-function clothingCard({ slotResult = null, itemId, asset, label, role = '', interactive = false, contextLabel = '' }) {
+function clothingCard({ slotResult = null, itemId, asset, label, description = '', role = '', interactive = false, contextLabel = '' }) {
   const element = document.createElement(interactive ? 'button' : 'article');
   if (interactive) element.type = 'button';
   element.className = `clothing-card${interactive ? ' clothing-card-button' : ''}`;
@@ -93,7 +96,8 @@ function clothingCard({ slotResult = null, itemId, asset, label, role = '', inte
     element.dataset.slot = slotResult.slot;
     element.dataset.phase = slotResult.phase;
     const accessibleContext = [contextLabel, role].filter(Boolean).join(' · ');
-    element.setAttribute('aria-label', `${accessibleContext ? `${accessibleContext}: ` : ''}${label}${interactive ? ' – Alternativen anzeigen' : ''}`);
+    element.setAttribute('aria-label', `${accessibleContext ? `${accessibleContext}: ` : ''}${label}. ${description}${interactive ? ' – Alternativen anzeigen' : ''}`);
+    if (description) element.title = description;
     if (interactive) element.dataset.openAlternatives = 'true';
   }
 
@@ -119,7 +123,10 @@ function clothingCard({ slotResult = null, itemId, asset, label, role = '', inte
   const roleText = document.createElement('p');
   roleText.className = 'clothing-role';
   roleText.textContent = role;
-  element.append(shell, name, roleText);
+  const descriptionText = document.createElement('p');
+  descriptionText.className = 'clothing-description';
+  descriptionText.textContent = description;
+  element.append(shell, name, descriptionText, roleText);
   return element;
 }
 
@@ -199,13 +206,15 @@ function renderGroup(slots, { mode, phase, context, assetStore, styleTheme, visu
   let missingAssets = 0;
   for (const slotResult of slots) {
     const itemGroup = assetStore.group(slotResult.selected.itemId);
+    const definition = CLOTHING_CATALOG[slotResult.selected.itemId];
     const asset = assetStore.resolveSlot(slotResult, visual.bySlot);
     if (!asset && itemGroup?.assetPath !== null) missingAssets += 1;
     grid.append(clothingCard({
       slotResult,
       itemId: slotResult.selected.itemId,
       asset,
-      label: itemGroup?.label ?? slotResult.selected.itemId.replaceAll('_', ' '),
+      label: definition?.label ?? itemGroup?.label ?? slotResult.selected.itemId.replaceAll('_', ' '),
+      description: definition?.description ?? '',
       role: slotRole(slotResult.slot),
       interactive: slotResult.alternatives?.length > 0,
       contextLabel: phaseLabel
@@ -362,119 +371,80 @@ export function renderSituationOptions(selectedMode) {
   }
 }
 
-function selectField(labelText, field, options, value) {
-  const label = document.createElement('label');
-  label.className = 'field compact-field';
-  label.append(document.createTextNode(labelText));
-  const select = document.createElement('select');
-  select.dataset.contextField = field;
-  for (const [optionValue, optionLabel] of options) {
-    const option = document.createElement('option');
-    option.value = optionValue;
-    option.textContent = optionLabel;
-    option.selected = optionValue === value;
-    select.append(option);
-  }
-  label.append(select);
-  return label;
-}
-
-function numberField(labelText, field, value, min, max, suffix) {
-  const label = document.createElement('label');
-  label.className = 'field compact-field';
-  label.append(document.createTextNode(labelText));
-  const row = document.createElement('span');
-  row.className = 'input-with-suffix';
-  const input = document.createElement('input');
-  input.type = 'number';
-  input.inputMode = 'decimal';
-  input.min = String(min);
-  input.max = String(max);
-  input.step = '0.5';
-  input.dataset.contextField = field;
-  input.value = value ?? '';
-  const unit = document.createElement('span');
-  unit.textContent = suffix;
-  row.append(input, unit);
-  label.append(row);
-  return label;
-}
-
-export function renderSituationContext(mode, context) {
-  const host = document.querySelector('#situationContextFields');
+export function renderPrimarySituationControl(context) {
+  const host = document.querySelector('#primarySituationControl');
+  if (!host) return;
   host.replaceChildren();
-  const title = document.createElement('h3');
-  title.textContent = 'Details für diese Situation';
-  host.append(title);
+  host.hidden = context?.mode !== 'carrier';
+  if (host.hidden) return;
 
-  if (mode === 'outdoor') {
-    host.append(
-      selectField('Aktivität', 'activity', [['calm', 'Ruhig'], ['normal', 'Normal'], ['active', 'Aktiv']], context.activity),
-      selectField('Sonne', 'sunExposure', [['shade', 'Schatten'], ['partial', 'Teilweise Sonne'], ['direct', 'Direkte Sonne'], ['unknown', 'Unbekannt']], context.sunExposure),
-      selectField('Bodenkontakt', 'groundContact', [['none', 'Keiner'], ['standing', 'Steht'], ['walking', 'Läuft']], context.groundContact)
-    );
+  const fieldset = document.createElement('fieldset');
+  fieldset.className = 'primary-situation-control';
+  const legend = document.createElement('legend');
+  legend.textContent = 'Trageposition';
+  const hint = document.createElement('p');
+  hint.className = 'primary-situation-hint';
+  hint.textContent = 'Wo liegt die Trage im Verhältnis zu deiner Jacke?';
+  const options = document.createElement('div');
+  options.className = 'primary-situation-options';
+  for (const [value, label] of [['under_wearer_outerwear', 'Unter meiner Jacke'], ['over_wearer_outerwear', 'Über meiner Jacke']]) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'primary-situation-option';
+    button.dataset.carrierPlacement = value;
+    button.setAttribute('aria-pressed', String(context.placement === value));
+    button.classList.toggle('is-selected', context.placement === value);
+    button.textContent = label;
+    options.append(button);
   }
-  if (mode === 'stroller') {
-    const stateField = selectField('Zustand', 'strollerState', [['awake', 'Wach'], ['asleep', 'Schläft']], context.strollerState);
-    const activityField = selectField('Aktivität wach', 'activity', [['calm', 'Ruhig'], ['normal', 'Normal'], ['active', 'Sehr aktiv']], context.activity);
-    const syncActivityVisibility = (strollerState) => {
-      const hidden = strollerState === 'asleep';
-      activityField.hidden = hidden;
-      activityField.style.display = hidden ? 'none' : '';
-    };
-    syncActivityVisibility(context.strollerState);
-    stateField.querySelector('select').addEventListener('change', (event) => {
-      syncActivityVisibility(event.target.value);
-    });
-    host.append(
-      stateField,
-      activityField,
-      selectField('Sonne', 'sunExposure', [['shade', 'Schatten'], ['partial', 'Teilweise Sonne'], ['direct', 'Direkte Sonne'], ['unknown', 'Unbekannt']], context.sunExposure),
-      selectField('Windschutz', 'windProtection', [['none', 'Kein Windschutz'], ['partial', 'Teilweise'], ['good', 'Gut'], ['unknown', 'Unbekannt']], context.windProtection)
-    );
-  }
-  if (mode === 'carrier') {
-    host.append(
-      selectField('Sonne', 'sunExposure', [['shade', 'Schatten'], ['partial', 'Teilweise Sonne'], ['direct', 'Direkte Sonne'], ['unknown', 'Unbekannt']], context.sunExposure),
-      selectField('Position', 'placement', [['over_wearer_outerwear', 'Über der Jacke'], ['under_wearer_outerwear', 'Unter der Jacke']], context.placement)
-    );
-  }
-  if (mode === 'car') {
-    const summary = document.createElement('div');
-    summary.className = 'car-context-summary';
-    summary.innerHTML = '<strong>Keine zusätzlichen Angaben nötig</strong><p>Die Empfehlung startet mit dem aktuellen Außenwetter und bleibt unter dem Gurt schlank.</p><p>Zusätzliche Wärme kommt erst über den korrekt geschlossenen Gurt. Sobald das Auto warm wird, Decke oder Überwurf entfernen.</p>';
-    host.append(summary);
-  }
-  if (mode === 'sleep') {
-    host.append(numberField('Raumtemperatur', 'roomTempC', context.roomTempC, 5, 35, '°C'));
-  }
+  fieldset.append(legend, hint, options);
+  host.append(fieldset);
 }
 
-function renderNotices(recommendation, excludedCodes = new Set()) {
+function noticeRow(code, severity, titleText, bodyText = '') {
+  const row = document.createElement('div');
+  row.className = `notice-row notice-row--${severity}`;
+  row.dataset.noticeCode = code;
+  const marker = document.createElement('span');
+  marker.className = 'notice-marker';
+  marker.setAttribute('aria-hidden', 'true');
+  marker.textContent = severity === 'hard_rule' ? '!' : '✦';
+  const copy = document.createElement('div');
+  const title = document.createElement('strong');
+  title.textContent = titleText;
+  copy.append(title);
+  if (bodyText) {
+    const text = document.createElement('p');
+    text.textContent = bodyText;
+    copy.append(text);
+  }
+  row.append(marker, copy);
+  return row;
+}
+
+function renderNotices(recommendation, context, excludedCodes = new Set()) {
   const host = document.querySelector('#safetyNotice');
   const notices = recommendation?.notices?.filter((notice) => !REDUNDANT_NOTICE_CODES.has(notice.code) && !excludedCodes.has(notice.code)) ?? [];
   host.replaceChildren();
-  host.hidden = notices.length === 0;
-  for (const notice of notices) {
-    const row = document.createElement('div');
-    row.className = `notice-row notice-row--${notice.severity}`;
-    row.dataset.noticeCode = notice.code;
-    const marker = document.createElement('span');
-    marker.className = 'notice-marker';
-    marker.setAttribute('aria-hidden', 'true');
-    marker.textContent = notice.severity === 'hard_rule' ? '!' : '✦';
-    const copy = document.createElement('div');
-    const title = document.createElement('strong');
-    const mapped = NOTICE_COPY[notice.code] ?? [notice.code, ''];
-    title.textContent = mapped[0];
-    copy.append(title);
-    if (notice.severity !== 'info' && mapped[1]) {
-      const text = document.createElement('p');
-      text.textContent = mapped[1];
-      copy.append(text);
+  const carSafetyCodes = new Set(['CAR_SEAT_NO_BULKY_LAYERS', 'CAR_SEAT_BLANKET_OVER_HARNESS_ONLY', 'CAR_SEAT_REMOVE_COVER_WHEN_WARM', 'CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT']);
+  const carSafetyNotices = context?.mode === 'car' ? notices.filter((notice) => carSafetyCodes.has(notice.code)) : [];
+  const remaining = notices.filter((notice) => !carSafetyCodes.has(notice.code));
+  if (carSafetyNotices.length) {
+    const safetyBody = [
+      'Unter dem Gurt: schlanke Kleidung; dicke Jacke oder Overall ausziehen.',
+      'Zusätzliche Wärme nur über dem korrekt geschlossenen Gurt.',
+      'Decke oder Überwurf entfernen, sobald das Auto warm wird.'
+    ];
+    if (carSafetyNotices.some((notice) => notice.code === 'CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT')) {
+      safetyBody.push('Nach jeder dünnen Schicht prüfen, ob der Gurt weiterhin korrekt eng anliegt.');
     }
-    row.append(marker, copy);
+    const row = noticeRow('CAR_SEAT_SAFETY', 'hard_rule', 'Autositz: Gurtsicherheit zuerst', safetyBody.join(' '));
     host.append(row);
+  }
+  host.hidden = !carSafetyNotices.length && remaining.length === 0;
+  for (const notice of remaining) {
+    const mapped = NOTICE_COPY[notice.code] ?? [notice.code, ''];
+    host.append(noticeRow(notice.code, notice.severity, mapped[0], notice.severity !== 'info' ? mapped[1] : ''));
   }
 }
 
@@ -486,7 +456,7 @@ function reasonFor(context, recommendation) {
       ? 'Ein waches, sehr aktives Baby im Kinderwagen wird leichter bewertet als ein schlafendes Baby.'
       : null;
   if (context.mode === 'carrier') return 'Körperkontakt reduziert den Wärmebedarf am bedeckten Rumpf; exponierte Bereiche werden separat geschützt.';
-  if (context.mode === 'car') return 'Ausgangspunkt ist das aktuelle Außenwetter. Unter dem Gurt bleibt die Kleidung schlank; zusätzliche Wärme kommt nur darüber und wird im warmen Auto entfernt.';
+  if (context.mode === 'car') return null;
   if (context.mode === 'sleep') {
     const roomTemperature = Number.isFinite(context.roomTempC) ? formatTemperatureC(context.roomTempC) : 'der fehlenden';
     return `Die Schlafempfehlung basiert auf ${roomTemperature} Raumtemperatur, nicht auf dem Außenwetter.`;
@@ -527,6 +497,7 @@ export function renderOutfit({ recommendation, context, warmthDirection, styleTh
   pill.style.display = showStatus ? '' : 'none';
   const contextLabel = document.querySelector('#outfitContextLabel');
   contextLabel.textContent = contextLabelFor(context);
+  renderPrimarySituationControl(context);
   const statusText = document.querySelector('#outfitStatusText');
   statusText.textContent = statusTextFor(recommendation);
   statusText.hidden = !statusText.textContent;
@@ -537,7 +508,7 @@ export function renderOutfit({ recommendation, context, warmthDirection, styleTh
     button.disabled = recommendation?.status === 'blocked';
   }
   document.querySelector('#changeLookButton').disabled = assetStore.status !== 'ready' || !visibleSlots.length || !visual.look?.hasAlternateLook;
-  renderNotices(recommendation);
+  renderNotices(recommendation, context);
   const assetNotice = document.querySelector('#assetNotice');
   assetNotice.hidden = assetStore.status === 'ready' && missingAssets === 0;
   if (!assetNotice.hidden) {
@@ -551,8 +522,9 @@ export function renderCatalog(assetStore, styleTheme) {
   const host = document.querySelector('#catalogGrid');
   host.replaceChildren();
   for (const group of assetStore.listGroups().filter((entry) => entry.assetPath || entry.variantPaths)) {
+    const definition = CLOTHING_CATALOG[group.id];
     const asset = assetStore.resolveCatalog(group.id, styleTheme);
-    host.append(clothingCard({ itemId: group.id, asset, label: group.label ?? group.id, role: slotRole(group.slot) }));
+    host.append(clothingCard({ itemId: group.id, asset, label: definition?.label ?? group.label ?? group.id, description: definition?.description ?? '', role: slotRole(group.slot) }));
   }
 }
 
@@ -561,9 +533,11 @@ export function renderAlternatives(slotResult, assetStore, styleTheme) {
   const title = document.querySelector('#alternativeTitle');
   host.replaceChildren();
   const selectedGroup = assetStore.group(slotResult.selected.itemId);
-  title.textContent = `${selectedGroup?.label ?? 'Kleidungsstück'} austauschen`;
+  const selectedDefinition = CLOTHING_CATALOG[slotResult.selected.itemId];
+  title.textContent = `${selectedDefinition?.label ?? selectedGroup?.label ?? 'Kleidungsstück'} austauschen`;
   for (const alternative of slotResult.alternatives ?? []) {
     const group = assetStore.group(alternative.itemId);
+    const definition = CLOTHING_CATALOG[alternative.itemId];
     const asset = assetStore.resolve(alternative.itemId, styleTheme);
     const button = document.createElement('button');
     button.type = 'button';
@@ -582,12 +556,22 @@ export function renderAlternatives(slotResult, assetStore, styleTheme) {
     }
     const copy = document.createElement('span');
     const strong = document.createElement('strong');
-    strong.textContent = group?.label ?? alternative.itemId.replaceAll('_', ' ');
+    strong.textContent = definition?.label ?? group?.label ?? alternative.itemId.replaceAll('_', ' ');
     const small = document.createElement('small');
-    const relation = alternative.relation === 'warmer' ? 'wärmer' : alternative.relation === 'cooler' ? 'kühler' : 'ähnlich warm';
-    const changed = Math.max(0, (alternative.projectedChanges?.length ?? 1) - 1);
-    small.textContent = changed ? `${relation} · Outfit wird in ${changed} weiter${changed === 1 ? 'em Bereich' : 'en Bereichen'} angepasst` : relation;
-    copy.append(strong, small);
+    const relationText = (relation) => relation === 'warmer' ? 'wärmer' : relation === 'cooler' ? 'kühler' : 'ähnlich warm';
+    const itemRelation = relationText(alternative.itemRelation ?? alternative.relation);
+    const outfitRelation = relationText(alternative.outfitRelation ?? alternative.relation);
+    small.textContent = `Einzelteil: ${itemRelation} · Gesamtoutfit: ${outfitRelation}`;
+    const description = document.createElement('span');
+    description.className = 'alternative-description';
+    description.textContent = definition?.description ?? '';
+    const changes = document.createElement('span');
+    changes.className = 'alternative-changes';
+    const projectedChanges = (alternative.projectedChanges ?? []).filter((change) => change.slot !== slotResult.slot);
+    changes.textContent = projectedChanges.length
+      ? `Zusätzlich angepasst: ${projectedChanges.length} ${projectedChanges.length === 1 ? 'Bereich' : 'Bereiche'}`
+      : 'Sonst bleibt das Outfit gleich.';
+    copy.append(strong, description, small, changes);
     button.append(image, copy, document.createTextNode('›'));
     host.append(button);
   }

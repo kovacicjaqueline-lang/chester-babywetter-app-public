@@ -69,7 +69,35 @@ test('Autositz zeigt genau eine gurtsichere Fahrtphase', async ({ page }) => {
   await expect(inCar.locator('.outfit-phase-heading')).toHaveText('Im Autositz');
   const inCarNames = await inCar.locator('[data-item-id]').evaluateAll((nodes) => nodes.map((node) => node.getAttribute('aria-label')));
   expect(inCarNames.every((name) => name?.includes('Im Autositz'))).toBe(true);
-  await expect(page.locator('[data-notice-code="CAR_SEAT_NO_BULKY_LAYERS"]')).toBeVisible();
+  await expect(page.locator('[data-notice-code="CAR_SEAT_SAFETY"]')).toBeVisible();
+  await expect(page.locator('[data-notice-code="CAR_SEAT_SAFETY"]')).toContainText('Unter dem Gurt');
+  await expect(page.locator('[data-notice-code="CAR_SEAT_NO_BULKY_LAYERS"]')).toHaveCount(0);
+});
+
+test('Trageposition bleibt als primäre Entscheidung im Haupt-Outfit sichtbar', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await openDemo(page);
+  await chooseSituation(page, 'carrier');
+
+  const control = page.locator('#primarySituationControl');
+  await expect(control).toBeVisible();
+  await expect(control).toContainText('Unter meiner Jacke');
+  await expect(control).toContainText('Über meiner Jacke');
+  await expect(control.locator('[aria-pressed="true"]')).toHaveText('Über meiner Jacke');
+  await control.locator('[data-carrier-placement="under_wearer_outerwear"]').click();
+  await expect(control.locator('[aria-pressed="true"]')).toHaveText('Unter meiner Jacke');
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('babyweather.v1.uiState') || '{}').contexts?.carrier?.placement)).toBe('under_wearer_outerwear');
+});
+
+test('Alternativen trennen Einzelteil, Gesamtoutfit und Definition', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await openDemo(page);
+  await page.locator('#outfitGrid [data-open-alternatives="true"]').first().click();
+  const option = page.locator('#alternativeDialog [data-alternative-item-id]').first();
+  await expect(option).toContainText('Einzelteil:');
+  await expect(option).toContainText('Gesamtoutfit:');
+  await expect(option.locator('.alternative-description')).toBeVisible();
+  await expect(option.locator('.alternative-changes')).toBeVisible();
 });
 
 test('Autositz zeigt jedes empfohlene Teil nur einmal', async ({ page }) => {

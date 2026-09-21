@@ -440,13 +440,18 @@ export function alternativeCandidateIds(slotResult,mode) {
 export function thermalSignature(result,phase) {
   let score = 0;
   for (const entry of result.slots.filter((slot) => slot.phase === phase)) {
-    const def = CLOTHING_CATALOG[entry.selected.itemId];
-    if (!def) continue;
-    if (def.slot === 'sleep_bag' || def.slot === 'sleep_underlayer') score += def.sleepWarmthWeight ?? 0;
-    else if (['stroller_thermal_accessory','carrier_accessory','car_thermal_accessory'].includes(def.slot)) score += (def.thermalStepCredit ?? 0) * 2;
-    else if (BODY_SLOTS.includes(def.slot)) score += def.thermalWeight ?? 0;
+    score += thermalContributionForItem(entry.selected.itemId);
   }
   return score;
+}
+
+export function thermalContributionForItem(itemId, { includeFootwear = false } = {}) {
+  const def = CLOTHING_CATALOG[itemId];
+  if (!def) return 0;
+  if (def.slot === 'sleep_bag' || def.slot === 'sleep_underlayer') return def.sleepWarmthWeight ?? 0;
+  if (['stroller_thermal_accessory','carrier_accessory','car_thermal_accessory'].includes(def.slot)) return (def.thermalStepCredit ?? 0) * 2;
+  if (BODY_SLOTS.includes(def.slot) || (includeFootwear && def.slot === 'footwear')) return def.thermalWeight ?? 0;
+  return 0;
 }
 
 export function diffRecommendations(before,after,phase) {

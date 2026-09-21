@@ -10,7 +10,7 @@ import {
   applyBodyLocksAndRebalance, applyQuickCorrection, applyWeatherQuality, finalizePhase,
   phaseStatusFromResult, summarizeWeatherWindow, thermalEnvironment, makeCarSafeBaseline,
   enforceCarSafetyAfterLocks, findLock, nearestSleepUnderlayer, overrideUnsafeLock,
-  blockPhase, alternativeCandidateIds, thermalSignature, diffRecommendations, addTrace, roundHalf,
+  blockPhase, alternativeCandidateIds, thermalSignature, thermalContributionForItem, diffRecommendations, addTrace, roundHalf,
   ageMonths, isFiniteNumber, clamp
 } from './outfit-engine-support.js';
 
@@ -401,13 +401,26 @@ function attachAlternatives(result,request) {
       const projectedSelection = projected.slots.find((entry) => entry.phase === slotResult.phase && entry.slot === slotResult.slot);
       if (!projectedSelection || projectedSelection.selected.itemId !== itemId) continue;
       const projectedScore = thermalSignature(projected,slotResult.phase);
-      const delta = roundHalf(projectedScore - baselineScore);
-      const relation = Math.abs(delta) < 0.25 ? 'equivalent' : delta > 0 ? 'warmer' : 'cooler';
+      const outfitDelta = roundHalf(projectedScore - baselineScore);
+      const outfitRelation = Math.abs(outfitDelta) < 0.25 ? 'equivalent' : outfitDelta > 0 ? 'warmer' : 'cooler';
+      const itemDelta = roundHalf(thermalContributionForItem(itemId, { includeFootwear:true }) - thermalContributionForItem(slotResult.selected.itemId, { includeFootwear:true }));
+      const itemRelation = Math.abs(itemDelta) < 0.25 ? 'equivalent' : itemDelta > 0 ? 'warmer' : 'cooler';
       const projectedChanges = diffRecommendations(result,projected,slotResult.phase).map((change) => ({
         ...change,
         reasonCode:change.slot === slotResult.slot ? 'MANUAL_ITEM_LOCK' : 'OUTFIT_REBALANCED_AFTER_SWAP'
       }));
-      options.push({ itemId, relation, relativeThermalDelta:delta, projectedChanges });
+      options.push({
+        itemId,
+        // relation/relativeThermalDelta remain compatibility aliases for consumers
+        // that have not migrated to the explicit outfit fields yet.
+        relation:outfitRelation,
+        relativeThermalDelta:outfitDelta,
+        itemRelation,
+        itemThermalDelta:itemDelta,
+        outfitRelation,
+        outfitThermalDelta:outfitDelta,
+        projectedChanges
+      });
     }
     options.sort((a,b) => RELATION_ORDER[a.relation] - RELATION_ORDER[b.relation]
       || Math.abs(a.relativeThermalDelta) - Math.abs(b.relativeThermalDelta)

@@ -1,6 +1,6 @@
 import { CLOTHING_CATALOG } from './clothing-catalog.js';
 import { recommendOutfit as recommendOutfitCore } from './outfit-engine.js';
-import { RELATION_ORDER, evaluateWind, rainRequirement, summarizeWeatherWindow, thermalEnvironment } from './outfit-engine-support.js';
+import { RELATION_ORDER, evaluateWind, rainRequirement, summarizeWeatherWindow, thermalContributionForItem, thermalEnvironment } from './outfit-engine-support.js';
 
 /**
  * Public calibrated V1 entry point. Keep cross-cutting postconditions here when
@@ -163,12 +163,18 @@ function missingWeatherWindowFields(weather,plannedMinutes) {
 
 function calibrateFootwearAlternatives(result) {
   for (const slotResult of result.slots.filter((entry) => entry.slot === 'footwear')) {
-    const currentWeight = CLOTHING_CATALOG[slotResult.selected.itemId]?.thermalWeight ?? 0;
+    const currentWeight = thermalContributionForItem(slotResult.selected.itemId, { includeFootwear:true });
     for (const option of slotResult.alternatives) {
-      const candidateWeight = CLOTHING_CATALOG[option.itemId]?.thermalWeight ?? currentWeight;
+      const candidateWeight = thermalContributionForItem(option.itemId, { includeFootwear:true });
       const delta = candidateWeight - currentWeight;
-      option.relativeThermalDelta = delta;
-      option.relation = delta === 0 ? 'equivalent' : delta > 0 ? 'warmer' : 'cooler';
+      option.itemThermalDelta = delta;
+      option.itemRelation = delta === 0 ? 'equivalent' : delta > 0 ? 'warmer' : 'cooler';
+      option.outfitRelation ??= option.relation;
+      option.outfitThermalDelta ??= option.relativeThermalDelta;
+      // Footwear historically exposed the item relation through the legacy alias;
+      // keep that behavior while the explicit outfit fields carry the new meaning.
+      option.relation = option.itemRelation;
+      option.relativeThermalDelta = option.itemThermalDelta;
     }
     slotResult.alternatives.sort((a,b) =>
       RELATION_ORDER[a.relation] - RELATION_ORDER[b.relation]
