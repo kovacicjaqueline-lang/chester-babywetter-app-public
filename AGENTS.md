@@ -107,3 +107,15 @@ Ein abgeschlossener Arbeitsstrang nennt kurz:
 - Draft-PR,
 - geprüften CI-Status,
 - offene Abhängigkeiten.
+
+## 8. Effiziente AI-Arbeit
+
+- Klar spezifizierte technische Aufträge in einem Arbeitsdurchgang bearbeiten.
+- Wenn Analyse und Umsetzung ausdrücklich gemeinsam beauftragt sind, keine zusätzliche Freigabeschleife dazwischen einfügen.
+- Nur die für den Scope relevanten Dateien, Dokumente und Tests lesen; bereits geprüfte unveränderte Inhalte nicht ohne Anlass erneut analysieren.
+- Eng zusammenhängende Änderungen bündeln, statt für jeden kleinen Teilauftrag einen eigenen Branch, PR und Full-Gate zu erzeugen.
+- Vor dem Abschluss in derselben Arbeitsrunde den kleinstmöglichen relevanten Test, das erforderliche Gate, das Diff-Selbstreview sowie Commit und Draft-PR erledigen.
+- „Weiter“ bedeutet, im bestehenden Scope fortzufahren; den Auftrag nicht ohne neue Information neu planen.
+- Dauerhafte fachliche Entscheidungen im kompakten Register `docs/AI_DECISIONS.md` nachschlagen. Die dortigen Verweise auf die maßgeblichen Fachdokumente bleiben bindend; das Register darf keine abweichende Zweitregel definieren.
+- Für einen Chatwechsel `docs/AI_HANDOFF_TEMPLATE.md` verwenden. Flüchtiger Branch-/PR-Status gehört in die Übergabe oder PR-Beschreibung, nicht in `AGENTS.md`.
+- Unnötige Fortschritts- und Wiederholungsberichte vermeiden. Der Abschlussbericht enthält die tatsächlich ausgeführten Arbeiten, Tests, Commit-/PR-Daten und offenen Punkte.
