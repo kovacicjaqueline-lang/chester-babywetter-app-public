@@ -181,12 +181,12 @@ test('coolest underlayers are selected from the whole outing and warm upper laye
   assert.equal(result.status,'ready');
   assert.ok(result.startOutfit.items.some((item) => item.slot === 'base_torso' && item.itemId === 'short_sleeve_bodysuit'));
   assert.ok(result.startOutfit.items.some((item) => item.slot === 'legs' && item.itemId === 'light_trousers'));
-  assert.ok(result.startOutfit.items.some((item) => item.slot === 'outer' && item.itemId === 'winter_overall'));
+  assert.ok(result.startOutfit.items.some((item) => item.slot === 'outer' && item.itemId === 'softshell_jacket'));
   assert.ok(result.actions.some((action) =>
     action.at === '2026-08-31T11:00:00.000Z'
     && action.kind === 'remove'
     && action.slot === 'outer'
-    && action.fromItemId === 'winter_overall'));
+    && action.fromItemId === 'softshell_jacket'));
   assert.ok(result.actions.every((action) => !['base_torso','legs'].includes(action.slot)));
 });
 

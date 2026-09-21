@@ -192,6 +192,7 @@ test('palette modes declare explicit theme and source-variant boundaries', () =>
     assert.ok(Object.keys(profile.sourceStyleRank).length > 0, `${mode} needs source style ranks`);
     assert.equal(Object.values(profile.sourceStyleRank).every((rank) => Number.isInteger(rank) && rank >= 0), true, `${mode} has invalid source style rank`);
   }
+  assert.deepEqual(visualManifest.paletteModeProfiles.neutral.themeIds, visualManifest.themes.map((theme) => theme.id));
   assert.deepEqual(visualManifest.paletteModeProfiles.neutral.sourceStyleRank, { neutral: 0 });
 });
 

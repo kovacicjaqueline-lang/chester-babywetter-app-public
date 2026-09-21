@@ -111,8 +111,8 @@ V1-Felder:
 - optional `birthDate`,
 - `mobilityStage: low_mobility | crawling | walking`,
 - `warmthBias: runs_cool | neutral | runs_warm`,
-- `paletteMode: all | neutral | cool | warm` für die sichtbare Farbwelt. Die Auswahl beschreibt Farben, Muster und Gesamtwirkung; Geschlecht ist kein Fachparameter und wird nicht abgefragt.
-- Das frühere `styleTheme: neutral | boy | girl` bleibt nur als Import-Kompatibilität lesbar und wird auf `all | cool | warm` migriert.
+- `paletteMode: all | neutral | cool | warm` für die sichtbare Farbwelt. In der Oberfläche bedeutet `neutral` „Unisex / ausgewogen“: nicht geschlechtlich codierte Optik, nicht „beige“ und nicht auf wenige ruhige Farben begrenzt. `cool` und `warm` sind Farbwirkungen, keine Geschlechtsoptionen; `all` lässt alle passenden Farbwelten zu.
+- Das frühere `styleTheme: neutral | boy | girl` bleibt nur als Import-Kompatibilität lesbar und wird auf `neutral | cool | warm` migriert. Die technischen Altlabels sind keine Nutzer- oder Geschlechtsauswahl.
 - `defaultMode`,
 - Zeitstempel.
 
@@ -159,7 +159,7 @@ Die Wärmetendenz wird bewusst vom Nutzer gesetzt. Sie darf die Empfehlung höch
 
 ### 5.4 Stil
 
-`neutral`, `boy` und `girl` steuern ausschließlich Farben, Muster und Asset-Varianten. Die fachlichen `itemId`s bleiben identisch.
+`paletteMode` steuert ausschließlich Farben, Muster und Asset-Varianten. Die fachlichen `itemId`s bleiben identisch. Die technische Altbezeichnung `neutral` bezeichnet dabei die unisex bevorzugte Variante; ihre Theme-Auswahl umfasst alle vorhandenen Farbwelten.
 
 ## 6. Wetterverhalten
 

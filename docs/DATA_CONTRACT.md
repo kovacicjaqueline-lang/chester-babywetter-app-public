@@ -448,6 +448,8 @@ interface OutfitItemDefinition {
 
 `thermalStepCredit` ist eine relative Produktheuristik und keine TOG-Einheit.
 
+Bei externer Isolation werden `bodyZones` zusätzlich als Abdeckungsinformation verwendet: Rebalancing darf thermische Schritte nur aus vollständig abgedeckten Körperzonen entnehmen. `thermalStepCredit` beschreibt dabei die Stärke der Isolation, nicht die zu entfernenden Slots.
+
 ## 9. Kalibrierte Zubehördefinitionen
 
 Beispiele:

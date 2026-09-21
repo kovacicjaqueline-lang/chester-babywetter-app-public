@@ -102,7 +102,7 @@ Nicht zulässig:
 
 ## 6. Technische Varianten und sichtbare Farbwelten
 
-`neutral`, `boy` und `girl` verändern ausschließlich Farbe, Muster und kleine dekorative Details.
+Die technischen Variantenlabels `neutral`, `boy` und `girl` verändern ausschließlich Farbe, Muster und kleine dekorative Details. `neutral` ist im Nutzerprodukt keine Beige-Kategorie, sondern die bevorzugte unisex / ausgewogene Optik.
 
 Unverändert bleiben müssen:
 
@@ -117,7 +117,7 @@ Varianten eines Items müssen deshalb erkennbar dasselbe Grundmodell darstellen.
 
 Empfohlene Palette:
 
-- `neutral`: Creme, Oatmeal, warmes Beige, Sage, Taupe und gedämpfte Naturtöne,
+- `neutral`: unisex geeignete Farben wie Sage, Dusty Blue, Petrol, Ocker, Terracotta, Creme, Oatmeal, Taupe und weitere gedeckte Naturtöne,
 - `boy`: Dusty Blue, Sage, gedecktes Blau/Grün und dezente kleine Muster,
 - `girl`: Dusty Rose, Mauve, warmes Rosé und gedeckte florale oder feine Muster.
 
@@ -140,7 +140,8 @@ no text, no letters, no logo, no brand mark, no watermark,
 no cropped edges, no extra garments, no duplicate objects, no unrelated props.
 The manifest may still use the technical source labels `neutral`, `boy` and `girl` for
 legacy physical variants. They are not user-facing gender choices: the composer maps
-them into palette worlds (`all`, `neutral`, `cool`, `warm`). For all variants keep
+them into palette worlds (`all`, `neutral`, `cool`, `warm`). In the user-facing `neutral`
+world, all palette themes remain eligible while unisex variants are preferred. For all variants keep
 exactly the same garment category, silhouette,
 construction and apparent material thickness; change only color, pattern and minor decoration.
 ```

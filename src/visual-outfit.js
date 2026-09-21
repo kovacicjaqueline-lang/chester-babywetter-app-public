@@ -1,5 +1,5 @@
 const PALETTE_MODES = new Set(['all', 'neutral', 'cool', 'warm']);
-const LEGACY_STYLE_TO_PALETTE_MODE = Object.freeze({ neutral: 'all', boy: 'cool', girl: 'warm' });
+const LEGACY_STYLE_TO_PALETTE_MODE = Object.freeze({ neutral: 'neutral', boy: 'cool', girl: 'warm' });
 const COMPOSITION_BEAM_WIDTH = 96;
 
 function assertObject(value, label) {
@@ -315,11 +315,10 @@ function scoreVariantInComposition(candidate, theme, paletteMode, state) {
   const newPrimaryCount = primaries.filter((tag) => !state.primaryTags.has(tag)).length;
   const patternPenalty = !SUBTLE_PATTERNS.has(candidate.variant.pattern) && state.patterns.size > 0 ? 12 : 0;
   const primaryPenalty = newPrimaryCount > 1 ? 5 : newPrimaryCount === 1 && state.primaryTags.size > 0 ? 2 : 0;
-  const neutralBonus = paletteMode === 'neutral' && primaries.length === 0 ? 4 : 0;
   const repeatedAccentBonus = primaries.some((tag) => state.primaryTags.has(tag)) ? 4 : 0;
   const secondarySupportBonus = secondaries.some((tag) => state.secondaryTags.has(tag)) ? 3 : 0;
   const neutralSupportBonus = neutrals.length > 0 && state.primaryTags.size > 0 ? 2 : 0;
-  return candidate.score + neutralBonus + repeatedAccentBonus + secondarySupportBonus + neutralSupportBonus - patternPenalty - primaryPenalty;
+  return candidate.score + repeatedAccentBonus + secondarySupportBonus + neutralSupportBonus - patternPenalty - primaryPenalty;
 }
 
 function compositionSignature(selected) {

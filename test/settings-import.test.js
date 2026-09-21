@@ -41,7 +41,7 @@ test('valid V1 import is returned as an explicit sanitized payload', () => {
   assert.equal(result.schemaVersion, 1);
   assert.equal(result.payload.profile.birthDate, '2026-01-24');
   assert.equal(result.payload.profile.mobilityStage, 'crawling');
-  assert.equal(result.payload.profile.paletteMode, 'all');
+  assert.equal(result.payload.profile.paletteMode, 'neutral');
   assert.equal(result.payload.settings.weatherMode, 'auto_with_override');
   assert.equal(result.payload.settings.weatherCacheMaxAgeMinutes, 120);
   assert.equal('injected' in result.payload.profile, false);

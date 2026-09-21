@@ -2,7 +2,7 @@ import { WEATHER_CACHE_MAX_AGE_MINUTES, WEATHER_FRESH_MAX_AGE_MINUTES } from './
 
 const MODES = new Set(['outdoor', 'stroller', 'carrier', 'car', 'indoor', 'sleep']);
 const PALETTE_MODES = new Set(['all', 'neutral', 'cool', 'warm']);
-const LEGACY_STYLE_TO_PALETTE_MODE = Object.freeze({ neutral: 'all', boy: 'cool', girl: 'warm' });
+const LEGACY_STYLE_TO_PALETTE_MODE = Object.freeze({ neutral: 'neutral', boy: 'cool', girl: 'warm' });
 const BIASES = new Set(['runs_cool', 'neutral', 'runs_warm']);
 const MOBILITY_STAGES = new Set(['low_mobility', 'crawling', 'walking']);
 const FEEDBACK = new Set(['warm_dry', 'hot_sweaty', 'cool']);

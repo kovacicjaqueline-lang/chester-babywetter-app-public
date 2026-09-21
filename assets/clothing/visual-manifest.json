@@ -247,7 +247,18 @@
       }
     },
     "neutral": {
-      "themeIds": ["sage_oat", "ocher_taupe"],
+      "themeIds": [
+        "sage_oat",
+        "dusty_blue_sand",
+        "clay_cream",
+        "terracotta_greige",
+        "ocher_taupe",
+        "petrol_warm_beige",
+        "mauve_cream",
+        "apricot_oat",
+        "slate_blue_greige",
+        "soft_lavender_sand"
+      ],
       "sourceStyleRank": {
         "neutral": 0
       }

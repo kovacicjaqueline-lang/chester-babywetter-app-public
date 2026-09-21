@@ -10,6 +10,7 @@ import {
 } from '../src/visual-outfit.js';
 
 const visualManifest = JSON.parse(readFileSync(new URL('../assets/clothing/visual-manifest.json', import.meta.url), 'utf8'));
+const realAssetManifest = JSON.parse(readFileSync(new URL('../assets/clothing/manifest.json', import.meta.url), 'utf8'));
 
 const assetManifest = {
   assetGroups: [
@@ -233,7 +234,7 @@ test('car safety and sleep recommendation payloads are left byte-for-byte unchan
   }
 });
 
-test('legacy theme-compatible style variants are actually explored across seeds', () => {
+test('all-color mode explores compatible legacy style variants across seeds', () => {
   const catalog = buildVisualCatalog(assetManifest, visualManifest);
   const observed = new Set();
   for (let seed = 0; seed < 40; seed += 1) {
@@ -241,7 +242,7 @@ test('legacy theme-compatible style variants are actually explored across seeds'
       catalog,
       assetGroupId: 'long_sleeve_bodysuit',
       themeId: 'dusty_blue_sand',
-      styleTheme: 'neutral',
+      paletteMode: 'all',
       seedKey: `variation-${seed}`
     }).sourceStyle);
   }
@@ -393,6 +394,24 @@ test('palette modes select visual worlds without changing fachliche items', () =
     assert.deepEqual(look.items.map((item) => item.itemId), expectedItemIds);
     assert.equal(look.items.some((item) => item.sourceStyle === forbiddenSourceStyle), false);
   }
+});
+
+test('real unisex mode is not restricted to beige-looking themes', () => {
+  const rec = recommendation(['long_sleeve_bodysuit', 'trousers', 'thin_sweater', 'thin_hat']);
+  const observedThemes = new Set();
+  for (let seed = 0; seed < 20; seed += 1) {
+    const look = selectVisualLook({
+      recommendation: rec,
+      assetManifest: realAssetManifest,
+      visualManifest,
+      paletteMode: 'neutral',
+      visualSeed: seed
+    });
+    observedThemes.add(look.themeId);
+    assert.equal(look.items.every((item) => item.sourceStyle === 'neutral'), true);
+  }
+  assert.equal(observedThemes.has('dusty_blue_sand'), true);
+  assert.equal(observedThemes.has('apricot_oat'), true);
 });
 
 test('theme selection uses whole-outfit composition score instead of manifest order', () => {
