@@ -23,7 +23,7 @@ const items = [
   def({ itemId:'leggings', slot:'legs', bodyZones:['legs'], thermalWeight:2, sleepSafe:false, allowedSituations:['outdoor','stroller','carrier','car'] }),
   def({ itemId:'trousers', slot:'legs', bodyZones:['legs'], thermalWeight:2, sleepSafe:false, allowedSituations:['outdoor','stroller','carrier','car'] }),
   def({ itemId:'warm_trousers', slot:'legs', bodyZones:['legs'], thermalWeight:3, sleepSafe:false, allowedSituations:['outdoor','stroller','carrier','car'] }),
-  def({ itemId:'tights', slot:'legs', bodyZones:['legs','feet'], thermalWeight:2, sleepSafe:false, allowedSituations:['outdoor','stroller','carrier','car'] }),
+  def({ itemId:'tights', slot:'legs', bodyZones:['legs','feet'], thermalWeight:2, thermalWeightByZone:{ feet:1 }, sleepSafe:false, allowedSituations:['outdoor','stroller','carrier','car'] }),
 
   def({ itemId:'thin_sweater', slot:'mid', bodyZones:['torso','arms'], thermalWeight:2, carSeatCompatibility:'allowed', allowedSituations:['outdoor','stroller','carrier','car'] }),
   def({ itemId:'sweatshirt', slot:'mid', bodyZones:['torso','arms'], thermalWeight:2, carSeatCompatibility:'allowed', allowedSituations:['outdoor','stroller','carrier','car'] }),
