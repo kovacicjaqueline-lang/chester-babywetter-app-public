@@ -88,7 +88,7 @@ Die bereits bestehende Semantik der auswählbaren Stundenprognose bleibt unverä
 
 Die unterste Kleidungsschicht bleibt während des gesamten Ausflugs unverändert. Das gilt für das Oberteil (`base_torso`) und das Unterteil (`legs`). Sie wird nicht blind vom ersten Zeitpunkt übernommen: Der Planer betrachtet alle relevanten Checkpoints und wählt je Slot die kühlste dort benötigte, durchgehend tragbare Variante. Bei 10 °C am Morgen und 25 °C später kann dadurch z. B. ein Kurzarmbody als Basisschicht durchgehend getragen werden; morgens kommen warme obere Schichten darüber, die später abgelegt werden. Für die Basisschicht erzeugt der Planer keine Wechsel-, Austausch- oder Repositionierungsaktion. Anpassungen erfolgen über darüberliegende Schichten, Zubehör oder notwendige Safety-Aktionen.
 
-Zwei aufeinanderfolgende Checkpoints erzeugen nur dann eine sichtbare Wechselaktion, wenn der Nutzer praktisch etwas ändern muss.
+Zwei aufeinanderfolgende Checkpoints erzeugen nur dann eine sichtbare Outfitaktion, wenn der Nutzer praktisch etwas ändern muss. Ein echter Situationswechsel bleibt als neutraler, aber eindeutig beschrifteter Übergang sichtbar.
 
 Immer relevant sind:
 
@@ -102,10 +102,11 @@ Nicht als Outfitwechsel anzeigen:
 
 - nur geänderte Reason-Codes oder Datenqualitätswerte,
 - identische Item-Sets,
+- dieselbe körpernahe Kleidung mit der technischen Wear-Position-Änderung `on_body` ↔ `under_harness`,
 - reine Änderung der Engine-Hauptauswahl, wenn das bereits getragene Teil im neuen Ergebnis als `equivalent` zulässige Alternative weiterverwendet werden kann,
 - kosmetische Style-/Asset-Variation ohne Änderung der fachlichen `itemId`.
 
-Safety-Hinweise und Extremwetter-Hinweise können sichtbar bleiben, auch wenn kein Kleidungswechsel nötig ist.
+Safety-Hinweise und Extremwetter-Hinweise können sichtbar bleiben, auch wenn kein Kleidungswechsel nötig ist. Die UI bündelt sie am betroffenen Übergang; technische Wear-Positionen werden nicht als Handlungsanweisung formuliert.
 
 ## 8. Kontinuitäts- und Packlistenoptimierung
 

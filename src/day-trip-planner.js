@@ -21,6 +21,33 @@ function stateMap(state) {
   return new Map((state?.items ?? []).map((item) => [item.slot, item]));
 }
 
+function samePhysicalWearPosition(left, right) {
+  if (!left || !right || left.itemId !== right.itemId) return false;
+  if (left.wearPosition === right.wearPosition) return true;
+  return new Set([left.wearPosition, right.wearPosition]).has('on_body')
+    && new Set([left.wearPosition, right.wearPosition]).has('under_harness');
+}
+
+function stateSnapshot(state) {
+  if (!state) return null;
+  return {
+    at:state.at,
+    segmentId:state.segmentId,
+    mode:state.mode,
+    phase:state.phase,
+    sourceRecommendationId:state.recommendationId,
+    items:state.items.map(({ reasonCodes, ...item }) => item)
+  };
+}
+
+function unchangedItems(before, after) {
+  const beforeMap = stateMap(before);
+  const afterMap = stateMap(after);
+  return [...beforeMap.entries()]
+    .filter(([slot, item]) => samePhysicalWearPosition(item, afterMap.get(slot)))
+    .map(([slot, item]) => ({ slot, itemId:item.itemId, wearPosition:item.wearPosition }));
+}
+
 function hardRuleKey(notice) {
   return `${notice.code}|${notice.phase}|${JSON.stringify(notice.reasonCodes ?? [])}|${JSON.stringify(notice.data ?? {})}`;
 }
@@ -33,10 +60,7 @@ function practicalDiff(before, after) {
   for (const slot of slots) {
     const from = beforeMap.get(slot) ?? null;
     const to = afterMap.get(slot) ?? null;
-    if (from?.itemId === to?.itemId && (
-      from?.wearPosition === to?.wearPosition
-      || FIXED_TRIP_UNDERLAYER_SLOTS.has(slot)
-    )) continue;
+    if (samePhysicalWearPosition(from, to) || FIXED_TRIP_UNDERLAYER_SLOTS.has(slot)) continue;
     let kind = 'replace';
     if (!from) kind = 'add';
     else if (!to) kind = 'remove';
@@ -46,15 +70,26 @@ function practicalDiff(before, after) {
   return changes;
 }
 
-function actionsFromTimeline(timeline) {
+function segmentReference(state) {
+  return state ? {
+    segmentId:state.segmentId,
+    mode:state.mode,
+    phase:state.phase,
+    at:state.at
+  } : null;
+}
+
+function timelineProjection(timeline) {
   const actions = [];
+  const transitions = [];
   let previous = timeline[0] ?? null;
   for (let index = 1; index < timeline.length; index += 1) {
     const current = timeline[index];
+    const transitionActions = [];
     const previousHardRules = new Set((previous?.hardRules ?? []).map(hardRuleKey));
     for (const notice of current.hardRules) {
       if (previousHardRules.has(hardRuleKey(notice))) continue;
-      actions.push({
+      const action = {
         actionId:`trip-action:${actions.length + 1}`,
         at:current.at,
         segmentId:current.segmentId,
@@ -66,14 +101,17 @@ function actionsFromTimeline(timeline) {
         fromWearPosition:null,
         toWearPosition:null,
         reasonCodes:[...(notice.reasonCodes ?? [])],
-        safetyCritical:true
-      });
+        safetyCritical:true,
+        noticeCode:notice.code
+      };
+      actions.push(action);
+      transitionActions.push(action);
     }
 
     for (const change of practicalDiff(previous, current)) {
       const reasonCodes = unique([...(change.from?.reasonCodes ?? []), ...(change.to?.reasonCodes ?? [])]);
       const hardReasons = new Set(current.hardRules.flatMap((notice) => notice.reasonCodes ?? []));
-      actions.push({
+      const action = {
         actionId:`trip-action:${actions.length + 1}`,
         at:current.at,
         segmentId:current.segmentId,
@@ -85,22 +123,47 @@ function actionsFromTimeline(timeline) {
         fromWearPosition:change.from?.wearPosition ?? null,
         toWearPosition:change.to?.wearPosition ?? null,
         reasonCodes,
-        safetyCritical:reasonCodes.some((reason) => hardReasons.has(reason))
+        safetyCritical:reasonCodes.some((reason) => hardReasons.has(reason)),
+        noticeCode:null
+      };
+      actions.push(action);
+      transitionActions.push(action);
+    }
+
+    const situationChanged = previous.segmentId !== current.segmentId;
+    if (situationChanged || transitionActions.length) {
+      const introducedNoticeCodes = new Set(transitionActions
+        .filter((action) => action.kind === 'safety_instruction' && action.noticeCode)
+        .map((action) => action.noticeCode));
+      transitions.push({
+        transitionId:`trip-transition:${transitions.length + 1}`,
+        at:current.at,
+        situationChanged,
+        fromSegment:segmentReference(previous),
+        toSegment:segmentReference(current),
+        before:stateSnapshot(previous),
+        after:stateSnapshot(current),
+        actions:transitionActions,
+        unchangedItems:unchangedItems(previous, current),
+        notices:current.hardRules
+          .filter((notice) => introducedNoticeCodes.has(notice.code))
+          .map((notice) => ({ ...notice }))
       });
     }
     previous = current;
   }
-  return actions;
+  return { actions, transitions };
 }
 
 function startOutfitFrom(timeline) {
   const first = timeline[0];
   if (!first) return null;
+  const snapshot = stateSnapshot(first);
   return {
     at:first.at,
     segmentId:first.segmentId,
     sourceRecommendationId:first.recommendationId,
-    items:first.items.map(({ reasonCodes, ...item }) => item)
+    items:snapshot.items
   };
 }
 
@@ -132,7 +195,9 @@ function packListFrom(timeline, startOutfit) {
 function dedupeNotices(notices) {
   const seen = new Set();
   return notices.filter((notice) => {
-    const key = `${notice.code}|${notice.phase}|${notice.severity}|${JSON.stringify(notice.reasonCodes ?? [])}|${JSON.stringify(notice.data ?? {})}`;
+    const key = notice.code === 'CHECK_NECK'
+      ? notice.code
+      : `${notice.code}|${notice.phase}|${notice.severity}|${JSON.stringify(notice.reasonCodes ?? [])}|${JSON.stringify(notice.data ?? {})}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -187,7 +252,8 @@ export function planDayTrip(request) {
   const firstRecommendation = evaluated[0]?.recommendation;
   const startStatus = firstRecommendation ? plannerRecommendationStatus(firstRecommendation) : 'blocked';
   const startOutfit = startStatus === 'blocked' ? null : startOutfitFrom(timeline);
-  const actions = startOutfit ? actionsFromTimeline(timeline) : [];
+  const projection = startOutfit ? timelineProjection(timeline) : { actions:[], transitions:[] };
+  const actions = projection.actions;
   const packList = startOutfit ? packListFrom(timeline, startOutfit) : [];
   const notices = startOutfit
     ? dedupeNotices(evaluated.flatMap((checkpoint) => tripNoticesFrom(checkpoint.recommendation)))
@@ -202,6 +268,7 @@ export function planDayTrip(request) {
     startOutfit,
     packList,
     actions,
+    transitions:projection.transitions,
     notices,
     coverage:{
       plannedStartTime:request.plan.startTime,

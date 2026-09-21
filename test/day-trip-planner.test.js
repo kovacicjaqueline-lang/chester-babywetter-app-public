@@ -295,8 +295,41 @@ test('entering a car segment keeps harness safety visible and prioritized over c
   assert.equal(result.status,'ready');
   assert.ok(carActions.some((action) => action.kind === 'safety_instruction' && action.safetyCritical));
   assert.ok(carActions.some((action) => action.phase === 'in_car' && ['remove','replace','reposition'].includes(action.kind)));
+  assert.ok(!carActions.some((action) => action.kind === 'reposition' && action.fromItemId === action.toItemId));
   assert.ok(carActions.every((action) => !['base_torso','legs'].includes(action.slot)));
   assert.ok(result.notices.some((notice) => notice.code === 'CAR_SEAT_NO_BULKY_LAYERS'));
+  assert.equal(result.notices.filter((notice) => notice.code === 'CHECK_NECK').length,1);
+
+  const transition = result.transitions.find((entry) => entry.at === '2026-08-31T11:00:00.000Z');
+  assert.ok(transition);
+  assert.equal(transition.fromSegment.mode,'outdoor');
+  assert.equal(transition.toSegment.mode,'car');
+  assert.equal(transition.before.mode,'outdoor');
+  assert.equal(transition.after.mode,'car');
+  assert.ok(transition.unchangedItems.some((item) => item.itemId === 'warm_socks_booties'));
+});
+
+test('a situation-only segment change is represented once without an outfit action', () => {
+  const w = weather([
+    point('2026-08-31T10:00:00.000Z',18),
+    point('2026-08-31T11:00:00.000Z',18),
+    point('2026-08-31T12:00:00.000Z',18)
+  ]);
+  const result = planDayTrip(request({
+    weatherValue:w,
+    segments:[
+      { segmentId:'first', startTime:'2026-08-31T10:00:00.000Z', endTime:'2026-08-31T11:00:00.000Z', context:outdoor() },
+      { segmentId:'second', startTime:'2026-08-31T11:00:00.000Z', endTime:'2026-08-31T12:00:00.000Z', context:outdoor() }
+    ]
+  }));
+
+  assert.equal(result.status,'ready');
+  assert.equal(result.actions.length,0);
+  assert.equal(result.transitions.length,1);
+  assert.equal(result.transitions[0].situationChanged,true);
+  assert.equal(result.transitions[0].fromSegment.segmentId,'first');
+  assert.equal(result.transitions[0].toSegment.segmentId,'second');
+  assert.deepEqual(result.transitions[0].actions,[]);
 });
 
 test('missing thermal forecast at trip start blocks, while a later forecast gap is partial without invented later actions', () => {
