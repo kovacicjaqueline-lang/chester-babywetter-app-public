@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { CLOTHING_CATALOG, createSession, recommendOutfit } from '../src/index.js';
+import { CLOTHING_CATALOG, createSession, lockItem, recommendOutfit } from '../src/index.js';
 
 const PROFILE = Object.freeze({
   profileId:'cool_windy_baby',
@@ -57,14 +57,14 @@ function context(mode = 'outdoor', overrides = {}) {
   };
 }
 
-function recommend(mode = 'outdoor', contextOverrides = {}, weatherOverrides = {}) {
+function recommend(mode = 'outdoor', contextOverrides = {}, weatherOverrides = {}, session = createSession('cool-windy-session')) {
   return recommendOutfit({
     requestId:`cool-windy-${mode}`,
     requestedAt:'2026-09-21T10:00:00.000Z',
     profile:PROFILE,
     context:context(mode, contextOverrides),
     weather:weather(weatherOverrides),
-    session:createSession('cool-windy-session'),
+    session,
     neckFeedback:null
   });
 }
@@ -121,6 +121,35 @@ test('normal outdoor activity does not inherit active or cold-situation insulati
   assert.ok(!result.ruleTrace.some((entry) => entry.reasonCode === 'ACTIVITY_COOLER'));
   assert.ok(!result.ruleTrace.some((entry) => entry.reasonCode === 'STROLLER_STATE_THERMAL_ADJUSTMENT'));
   assert.equal(item(result,'hands'),null);
+});
+
+test('choosing a full-body overall reduces a warm trouser layer', () => {
+  const weatherOverrides = {
+    airTempC:9,
+    apparentTempC:null,
+    apparentTempTrusted:false,
+    apparentTempIncludes:[],
+    windSpeedKmh:5,
+    windGustKmh:8
+  };
+  const base = recommend('outdoor', {}, weatherOverrides);
+  const alternative = base.slots
+    .find((entry) => entry.phase === 'main' && entry.slot === 'outer')
+    ?.alternatives.find((option) => option.itemId === 'transition_overall');
+
+  assert.ok(alternative?.projectedChanges.some((change) =>
+    change.slot === 'legs' && change.fromItemId === 'warm_trousers' && change.toItemId === 'trousers'));
+
+  const session = lockItem(createSession('overall-swap'), {
+    phase:'main',
+    slot:'outer',
+    itemId:'transition_overall'
+  });
+  const result = recommend('outdoor', {}, weatherOverrides, session);
+
+  assert.equal(item(result,'outer'),'transition_overall');
+  assert.equal(item(result,'legs'),'trousers');
+  assert.ok(result.ruleTrace.some((entry) => entry.reasonCode === 'OVERALL_LEG_COVERAGE'));
 });
 
 test('stroller awake/asleep, carrier and car keep their situation-specific thermal rules', () => {

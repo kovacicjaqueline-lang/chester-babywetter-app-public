@@ -386,7 +386,21 @@ export function applyBodyLocksAndRebalance(state,result,request,phase,mode) {
       addNotice(result,'CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT','caution',phase,['CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT'],{ itemId:lock.itemId });
     }
     if (delta) rebalanceOtherSlots(state,-delta,lockedThermalSlots,mode,lock.slot);
+    rebalanceCoveredLegLayer(state,result,before,definition,lockedThermalSlots,phase,mode,lock.slot);
   }
+}
+
+function rebalanceCoveredLegLayer(state,result,beforeItemId,lockedDefinition,lockedThermalSlots,phase,mode,lockedSlot) {
+  if (lockedSlot !== 'outer' || !lockedDefinition?.bodyZones.includes('legs')) return;
+
+  const beforeDefinition = CLOTHING_CATALOG[beforeItemId];
+  if (beforeDefinition?.bodyZones.includes('legs')) return;
+
+  const legs = state.map.get('legs');
+  if (legs?.itemId !== 'warm_trousers') return;
+
+  const changed = applyThermalDelta(state,-1,lockedThermalSlots,mode,['legs'],true);
+  if (changed) addTrace(result,'swap.overall.leg_coverage',phase,'thermal_down','legs',-1,'OVERALL_LEG_COVERAGE');
 }
 
 export function enforceCarSafetyAfterLocks(state,result,request,phase) {
