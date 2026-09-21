@@ -94,6 +94,10 @@ Nie behaupten, ein Test oder CI sei erfolgreich gewesen, wenn er nicht tatsächl
 - Für unabhängige Arbeitsstränge getrennte Branches verwenden; Arbeiten an denselben Komponenten möglichst bündeln.
 - Fremde Branch-Änderungen nicht ungefragt übernehmen.
 - Einen laufenden Branch nicht nur wegen eines neueren `main` rebasen oder mergen.
+- Wenn ein echter lokaler Worktree verfügbar ist, Änderungen, Tests und lokale Commits dort durchführen.
+- Remote-Aktionen wie Push/Ref-Update, Branch-/PR-Abgleich, PR-Erstellung und CI-Status bevorzugt über den authentifizierten GitHub-Connector ausführen, sobald lokale GitHub-Authentifizierung nicht nachweislich funktioniert oder der Connector ausdrücklich verlangt wurde.
+- Kein direktes `git push` nur als Authentifizierungsprobe versuchen. Ist die lokale Remote-Authentifizierung in der aktuellen Umgebung nicht bereits verifiziert, direkt den GitHub-Connector verwenden statt einen erwartbar fehlschlagenden Push vorzuschalten.
+- Direktes `git push` nur verwenden, wenn die lokale Remote-Authentifizierung in der aktuellen Umgebung tatsächlich verfügbar ist.
 - Innerhalb eines beauftragten Branches dürfen Scope-Dateien geändert, gestaged, committet und gepusht sowie ein Draft-PR gegen `main` erstellt oder aktualisiert werden.
 - Nicht ohne ausdrückliche Freigabe mergen oder Auto-Merge aktivieren.
 
