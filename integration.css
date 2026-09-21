@@ -183,6 +183,19 @@ input:disabled {
   display: none;
 }
 
+/* Each fact owns the full width of its quarter so value and label share the same center. */
+.weather-fact {
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr);
+  justify-content: stretch;
+  justify-items: center;
+  text-align: center;
+}
+.weather-fact > span,
+.weather-fact > strong {
+  justify-self: center;
+}
+
 .weather-fact span,
 .weather-fact:not(:first-child) span {
   color: #52677e;
