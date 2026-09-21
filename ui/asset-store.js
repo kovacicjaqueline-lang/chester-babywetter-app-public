@@ -3,36 +3,53 @@ import { selectVisualLook } from '../src/visual-outfit.js';
 const ROOT_URL = new URL('../', import.meta.url);
 const MANIFEST_URL = new URL('../assets/clothing/manifest.json', import.meta.url);
 const VISUAL_MANIFEST_URL = new URL('../assets/clothing/visual-manifest.json', import.meta.url);
+const PALETTE_MODES = new Set(['all', 'neutral', 'cool', 'warm']);
+const LEGACY_STYLE_TO_PALETTE_MODE = Object.freeze({ neutral: 'all', boy: 'cool', girl: 'warm' });
+
+function normalizePaletteMode(paletteMode) {
+  if (PALETTE_MODES.has(paletteMode)) return paletteMode;
+  return LEGACY_STYLE_TO_PALETTE_MODE[paletteMode] ?? 'all';
+}
 
 function rootAssetUrl(path) {
   return new URL(path.replace(/^\//, ''), ROOT_URL).href;
 }
 
-function variantPath(group, styleTheme) {
+function variantPath(group, paletteMode) {
   if (group.variantPaths && typeof group.variantPaths === 'object') {
-    return group.variantPaths[styleTheme] ?? group.variantPaths.neutral ?? Object.values(group.variantPaths).find(Boolean) ?? null;
+    const legacySourceStyle = LEGACY_STYLE_TO_PALETTE_MODE[paletteMode] ? paletteMode : null;
+    return group.variantPaths[paletteMode]
+      ?? (legacySourceStyle && group.variantPaths[legacySourceStyle])
+      ?? group.variantPaths.neutral
+      ?? Object.values(group.variantPaths).find(Boolean)
+      ?? null;
   }
   return typeof group.assetPath === 'string' ? group.assetPath : null;
 }
 
-function preferredThemeIds(visualManifest, styleTheme) {
-  const profile = visualManifest?.sourceStyleProfiles?.[styleTheme];
+function preferredThemeIds(visualManifest, paletteMode) {
+  const normalizedPaletteMode = normalizePaletteMode(paletteMode);
+  const profile = visualManifest?.paletteModeProfiles?.[normalizedPaletteMode]
+    ?? visualManifest?.sourceStyleProfiles?.[paletteMode]
+    ?? visualManifest?.sourceStyleProfiles?.[normalizedPaletteMode]
+    ?? visualManifest?.sourceStyleProfiles?.neutral;
   return Array.isArray(profile?.themeIds) ? profile.themeIds : [];
 }
 
-function pickCatalogVariant(group, styleTheme, visualManifest) {
+function pickCatalogVariant(group, paletteMode, visualManifest) {
   if (!group || !visualManifest) return null;
   const additional = visualManifest.additionalVariants?.[group.category]
     ?? visualManifest.additionalVariants?.[group.id]
     ?? [];
   if (!Array.isArray(additional) || !additional.length) return null;
 
-  const preferredThemes = new Set(preferredThemeIds(visualManifest, styleTheme));
+  const normalizedPaletteMode = normalizePaletteMode(paletteMode);
+  const preferredThemes = new Set(preferredThemeIds(visualManifest, paletteMode));
   const compatible = additional.find((variant) =>
     Array.isArray(variant.themeIds) && variant.themeIds.some((themeId) => preferredThemes.has(themeId))
   );
   if (compatible) return compatible;
-  return styleTheme === 'neutral' ? additional[0] ?? null : null;
+  return normalizedPaletteMode === 'all' || normalizedPaletteMode === 'neutral' ? additional[0] ?? null : null;
 }
 
 export class ClothingAssetStore {
@@ -80,16 +97,17 @@ export class ClothingAssetStore {
     return [...this.byId.values()];
   }
 
-  resolve(itemId, styleTheme = 'neutral') {
-    const currentLookAsset = this.resolveCurrentLookAsset(itemId, styleTheme);
-    return currentLookAsset ?? this.resolveCatalog(itemId, styleTheme);
+  resolve(itemId, paletteMode = 'all') {
+    const normalizedPaletteMode = normalizePaletteMode(paletteMode);
+    const currentLookAsset = this.resolveCurrentLookAsset(itemId, normalizedPaletteMode);
+    return currentLookAsset ?? this.resolveCatalog(itemId, paletteMode);
   }
 
-  resolveCatalog(itemId, styleTheme = 'neutral') {
+  resolveCatalog(itemId, paletteMode = 'all') {
     const group = this.group(itemId);
     if (!group) return null;
-    const catalogVariant = pickCatalogVariant(group, styleTheme, this.visualManifest);
-    const assetPath = catalogVariant?.assetPath ?? variantPath(group, styleTheme);
+    const catalogVariant = pickCatalogVariant(group, paletteMode, this.visualManifest);
+    const assetPath = catalogVariant?.assetPath ?? variantPath(group, paletteMode);
     if (!assetPath) return null;
     return {
       src: rootAssetUrl(assetPath),
@@ -100,7 +118,7 @@ export class ClothingAssetStore {
     };
   }
 
-  resolveLook(recommendation, styleTheme = 'neutral', visualSeed = 0, themeId = null) {
+  resolveLook(recommendation, paletteMode = 'all', visualSeed = 0, themeId = null) {
     if (this.status !== 'ready' || !this.assetManifest || !this.visualManifest) {
       return { look: null, bySlot: new Map() };
     }
@@ -108,7 +126,7 @@ export class ClothingAssetStore {
       recommendation,
       assetManifest: this.assetManifest,
       visualManifest: this.visualManifest,
-      styleTheme,
+      paletteMode: normalizePaletteMode(paletteMode),
       visualSeed,
       themeId
     });
@@ -118,7 +136,7 @@ export class ClothingAssetStore {
       || 'visual-session';
     this.currentVisualContext = {
       sessionAnchor,
-      styleTheme: look.styleTheme,
+      paletteMode: look.paletteMode,
       visualSeed: look.visualSeed,
       themeId: look.themeId
     };
@@ -129,10 +147,11 @@ export class ClothingAssetStore {
     return { look, bySlot };
   }
 
-  resolveCurrentLookAsset(itemId, styleTheme = 'neutral') {
+  resolveCurrentLookAsset(itemId, paletteMode = 'all') {
     const context = this.currentVisualContext;
     const group = this.group(itemId);
-    if (!context || !group || context.styleTheme !== styleTheme || this.status !== 'ready' || !this.assetManifest || !this.visualManifest) {
+    const normalizedPaletteMode = normalizePaletteMode(paletteMode);
+    if (!context || !group || context.paletteMode !== normalizedPaletteMode || this.status !== 'ready' || !this.assetManifest || !this.visualManifest) {
       return null;
     }
 
@@ -144,7 +163,7 @@ export class ClothingAssetStore {
       },
       assetManifest: this.assetManifest,
       visualManifest: this.visualManifest,
-      styleTheme,
+      paletteMode: normalizedPaletteMode,
       visualSeed: context.visualSeed,
       themeId: context.themeId
     });

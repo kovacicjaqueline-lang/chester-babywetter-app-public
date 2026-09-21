@@ -184,7 +184,7 @@ function phaseLabelFor(phase, context) {
   return PHASE_COPY[phase] ?? phase;
 }
 
-function renderGroup(slots, { mode, phase, context, assetStore, styleTheme, visual }) {
+function renderGroup(slots, { mode, phase, context, assetStore, paletteMode, visual }) {
   if (!slots.length) return null;
   const groupKey = groupKeyForSlot(slots[0].slot);
   const group = document.createElement('div');
@@ -221,7 +221,7 @@ function phaseSlots(recommendation, phase) {
     .sort((left, right) => SLOT_ORDER.indexOf(left.slot) - SLOT_ORDER.indexOf(right.slot));
 }
 
-function renderPhase(recommendation, phaseEvaluation, context, assetStore, styleTheme, visual) {
+function renderPhase(recommendation, phaseEvaluation, context, assetStore, paletteMode, visual) {
   const phase = phaseEvaluation.phase;
   const section = document.createElement('section');
   section.className = `outfit-phase${phase === 'in_car' ? ' outfit-phase--in-car' : ''}`;
@@ -242,7 +242,7 @@ function renderPhase(recommendation, phaseEvaluation, context, assetStore, style
   }
   let missingAssets = 0;
   for (const groupKey of ['body', 'extremities', 'situational']) {
-    const rendered = renderGroup(grouped.get(groupKey) ?? [], { mode: context?.mode, phase, context, assetStore, styleTheme, visual });
+    const rendered = renderGroup(grouped.get(groupKey) ?? [], { mode: context?.mode, phase, context, assetStore, paletteMode, visual });
     if (!rendered) continue;
     missingAssets += rendered.missingAssets;
     section.append(rendered.element);
@@ -494,15 +494,15 @@ function reasonFor(context, recommendation) {
   return null;
 }
 
-export function renderOutfit({ recommendation, context, warmthDirection, styleTheme, visualSeed }, assetStore) {
+export function renderOutfit({ recommendation, context, warmthDirection, paletteMode, visualSeed }, assetStore) {
   const grid = document.querySelector('#outfitGrid');
   grid.replaceChildren();
-  const visual = assetStore.resolveLook(recommendation, styleTheme, visualSeed);
+  const visual = assetStore.resolveLook(recommendation, paletteMode, visualSeed);
   const visibleSlots = (recommendation?.slots ?? []).filter((slot) => !slot.selected.itemId.endsWith('_none'));
   let missingAssets = 0;
   const phaseEvaluations = recommendation?.phases ?? [];
   for (const phaseEvaluation of orderedPhasesForDisplay(phaseEvaluations)) {
-    const rendered = renderPhase(recommendation, phaseEvaluation, context, assetStore, styleTheme, visual);
+    const rendered = renderPhase(recommendation, phaseEvaluation, context, assetStore, paletteMode, visual);
     missingAssets += rendered.missingAssets;
     grid.append(rendered.element);
   }
@@ -547,16 +547,16 @@ export function renderOutfit({ recommendation, context, warmthDirection, styleTh
   }
 }
 
-export function renderCatalog(assetStore, styleTheme) {
+export function renderCatalog(assetStore, paletteMode) {
   const host = document.querySelector('#catalogGrid');
   host.replaceChildren();
   for (const group of assetStore.listGroups().filter((entry) => entry.assetPath || entry.variantPaths)) {
-    const asset = assetStore.resolveCatalog(group.id, styleTheme);
+    const asset = assetStore.resolveCatalog(group.id, paletteMode);
     host.append(clothingCard({ itemId: group.id, asset, label: group.label ?? group.id, role: slotRole(group.slot) }));
   }
 }
 
-export function renderAlternatives(slotResult, assetStore, styleTheme) {
+export function renderAlternatives(slotResult, assetStore, paletteMode) {
   const host = document.querySelector('#alternativeOptions');
   const title = document.querySelector('#alternativeTitle');
   host.replaceChildren();
@@ -564,7 +564,7 @@ export function renderAlternatives(slotResult, assetStore, styleTheme) {
   title.textContent = `${selectedGroup?.label ?? 'Kleidungsstück'} austauschen`;
   for (const alternative of slotResult.alternatives ?? []) {
     const group = assetStore.group(alternative.itemId);
-    const asset = assetStore.resolve(alternative.itemId, styleTheme);
+    const asset = assetStore.resolve(alternative.itemId, paletteMode);
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'alternative-option';

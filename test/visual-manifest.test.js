@@ -183,6 +183,18 @@ test('theme color roles preserve the existing palette and partition it cleanly',
   }
 });
 
+test('palette modes declare explicit theme and source-variant boundaries', () => {
+  const themeIds = new Set(visualManifest.themes.map((theme) => theme.id));
+  assert.deepEqual(Object.keys(visualManifest.paletteModeProfiles).sort(), ['all', 'cool', 'neutral', 'warm']);
+  for (const [mode, profile] of Object.entries(visualManifest.paletteModeProfiles)) {
+    assert.ok(profile.themeIds.length > 0, `${mode} needs themes`);
+    assert.equal(profile.themeIds.every((themeId) => themeIds.has(themeId)), true, `${mode} references unknown theme`);
+    assert.ok(Object.keys(profile.sourceStyleRank).length > 0, `${mode} needs source style ranks`);
+    assert.equal(Object.values(profile.sourceStyleRank).every((rank) => Number.isInteger(rank) && rank >= 0), true, `${mode} has invalid source style rank`);
+  }
+  assert.deepEqual(visualManifest.paletteModeProfiles.neutral.sourceStyleRank, { neutral: 0 });
+});
+
 test('all referenced paths exist and no WebP is accidentally unreferenced', () => {
   const referenced = new Set(allReferencedPaths());
   for (const relativePath of referenced) {

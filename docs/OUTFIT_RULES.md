@@ -729,7 +729,7 @@ Mindestens:
 19. Alle fünf TOGs plus `none` sind austauschbar.
 20. TOG-Tausch rebalanciert Unterkleidung.
 21. Schlafmodus empfiehlt nie lose Bettware – auch bei `sleep_bag_none`.
-22. `styleTheme` verändert keine Fachentscheidung.
+22. `paletteMode` verändert keine Fachentscheidung, Wärmeentscheidung oder Safety-Codes; das frühere `styleTheme` bleibt nur als Import-Kompatibilität lesbar.
 23. Manueller Item-Lock bleibt in derselben Session erhalten.
 24. Sicherheitsregel darf Lock überstimmen und muss einen strukturierten Grund liefern.
 25. `wärmer` / `dünner` verändert möglichst wenig Teile.

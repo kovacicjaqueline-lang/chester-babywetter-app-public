@@ -1,7 +1,8 @@
 import { WEATHER_CACHE_MAX_AGE_MINUTES, WEATHER_FRESH_MAX_AGE_MINUTES } from './weather-series.js';
 
 const MODES = new Set(['outdoor', 'stroller', 'carrier', 'car', 'indoor', 'sleep']);
-const STYLES = new Set(['neutral', 'boy', 'girl']);
+const PALETTE_MODES = new Set(['all', 'neutral', 'cool', 'warm']);
+const LEGACY_STYLE_TO_PALETTE_MODE = Object.freeze({ neutral: 'all', boy: 'cool', girl: 'warm' });
 const BIASES = new Set(['runs_cool', 'neutral', 'runs_warm']);
 const MOBILITY_STAGES = new Set(['low_mobility', 'crawling', 'walking']);
 const FEEDBACK = new Set(['warm_dry', 'hot_sweaty', 'cool']);
@@ -26,6 +27,12 @@ function nullableString(value, field, { max = 200 } = {}) {
 function enumValue(value, allowed, field) {
   if (!allowed.has(value)) throw new TypeError(`${field} is invalid`);
   return value;
+}
+
+function paletteModeValue(value) {
+  if (value.paletteMode !== undefined) return enumValue(value.paletteMode, PALETTE_MODES, 'profile.paletteMode');
+  const legacyStyle = enumValue(value.styleTheme, new Set(Object.keys(LEGACY_STYLE_TO_PALETTE_MODE)), 'profile.styleTheme');
+  return LEGACY_STYLE_TO_PALETTE_MODE[legacyStyle];
 }
 
 function isValidCalendarDate(year, month, day) {
@@ -69,7 +76,8 @@ function validateProfile(value, now) {
       ? 'low_mobility'
       : enumValue(value.mobilityStage, MOBILITY_STAGES, 'profile.mobilityStage'),
     warmthBias: enumValue(value.warmthBias, BIASES, 'profile.warmthBias'),
-    styleTheme: enumValue(value.styleTheme, STYLES, 'profile.styleTheme'),
+    paletteMode: paletteModeValue(value),
+    styleTheme: 'neutral',
     defaultMode: enumValue(value.defaultMode, MODES, 'profile.defaultMode'),
     createdAt: isoTimestamp(value.createdAt, 'profile.createdAt'),
     updatedAt: isoTimestamp(value.updatedAt, 'profile.updatedAt')

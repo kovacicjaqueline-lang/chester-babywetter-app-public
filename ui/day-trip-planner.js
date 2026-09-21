@@ -674,7 +674,7 @@ function renderResult(result, draft, snapshot, assetStore) {
   const outfitHost = document.querySelector('#tripStartOutfit');
   outfitHost.replaceChildren();
   if (result.startOutfit?.items?.length) {
-    for (const item of result.startOutfit.items) outfitHost.append(outfitItemCard(assetStore, snapshot.profile.styleTheme, item));
+    for (const item of result.startOutfit.items) outfitHost.append(outfitItemCard(assetStore, snapshot.profile.paletteMode, item));
   } else {
     const empty = document.createElement('p');
     empty.className = 'trip-empty';
@@ -685,7 +685,7 @@ function renderResult(result, draft, snapshot, assetStore) {
   const packHost = document.querySelector('#tripPackList');
   packHost.replaceChildren();
   if (result.packList?.length) {
-    for (const item of result.packList) packHost.append(packItemRow(assetStore, snapshot.profile.styleTheme, item));
+    for (const item of result.packList) packHost.append(packItemRow(assetStore, snapshot.profile.paletteMode, item));
   } else {
     const empty = document.createElement('p');
     empty.className = 'trip-empty';

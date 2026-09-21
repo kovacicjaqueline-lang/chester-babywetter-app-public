@@ -17,7 +17,8 @@ const UI_STATE_VERSION = 3;
 const WEATHER_CACHE_KEY = 'babyweather.v1.weatherCache';
 const DEMO_MODE = new URLSearchParams(location.search).get('demo') === '1';
 const MODES = new Set(['outdoor', 'stroller', 'carrier', 'car', 'indoor', 'sleep']);
-const STYLES = new Set(['neutral', 'boy', 'girl']);
+const PALETTE_MODES = new Set(['all', 'neutral', 'cool', 'warm']);
+const LEGACY_STYLE_TO_PALETTE_MODE = Object.freeze({ neutral: 'all', boy: 'cool', girl: 'warm' });
 const BIASES = new Set(['runs_cool', 'neutral', 'runs_warm']);
 const MOBILITY_STAGES = new Set(['low_mobility', 'crawling', 'walking']);
 const NECK_FEEDBACKS = new Set(['warm_dry', 'hot_sweaty', 'cool']);
@@ -32,7 +33,7 @@ const DEMO_LOCATIONS = Object.freeze({
 function nowIso() { return new Date().toISOString(); }
 function defaultProfile() {
   const now = nowIso();
-  return { profileId: 'baby_local', displayName: 'Baby', birthDate: null, mobilityStage: 'low_mobility', warmthBias: 'neutral', styleTheme: 'neutral', defaultMode: 'stroller', createdAt: now, updatedAt: now };
+  return { profileId: 'baby_local', displayName: 'Baby', birthDate: null, mobilityStage: 'low_mobility', warmthBias: 'neutral', paletteMode: 'all', styleTheme: 'neutral', defaultMode: 'stroller', createdAt: now, updatedAt: now };
 }
 const DEFAULT_CONTEXTS = Object.freeze({
   outdoor: { mode: 'outdoor', plannedMinutes: 60, activity: 'normal', activitySource: 'user', sunExposure: 'unknown', groundContact: 'none' },
@@ -48,9 +49,13 @@ function sanitizeWeatherCacheMaxAgeMinutes(value) {
 }
 function defaultSettings() { return { defaultMode: 'stroller', temperatureUnit: 'celsius', weatherMode: 'auto_with_override', allowLocation: null, weatherCacheMaxAgeMinutes: WEATHER_CACHE_MAX_AGE_MINUTES }; }
 function safeParse(key) { try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : null; } catch { return null; } }
+function paletteModeFromProfile(stored) {
+  if (PALETTE_MODES.has(stored?.paletteMode)) return stored.paletteMode;
+  return LEGACY_STYLE_TO_PALETTE_MODE[stored?.styleTheme] ?? 'all';
+}
 function loadProfile() {
   const fallback = defaultProfile(); const stored = safeParse(PROFILE_KEY); if (!stored || typeof stored !== 'object') return fallback;
-  return { ...fallback, profileId: typeof stored.profileId === 'string' ? stored.profileId : fallback.profileId, displayName: typeof stored.displayName === 'string' ? stored.displayName.slice(0, 40) : null, birthDate: typeof stored.birthDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(stored.birthDate) ? stored.birthDate : null, mobilityStage: MOBILITY_STAGES.has(stored.mobilityStage) ? stored.mobilityStage : 'low_mobility', warmthBias: BIASES.has(stored.warmthBias) ? stored.warmthBias : 'neutral', styleTheme: STYLES.has(stored.styleTheme) ? stored.styleTheme : 'neutral', defaultMode: MODES.has(stored.defaultMode) ? stored.defaultMode : 'stroller', createdAt: typeof stored.createdAt === 'string' ? stored.createdAt : fallback.createdAt, updatedAt: typeof stored.updatedAt === 'string' ? stored.updatedAt : fallback.updatedAt };
+  return { ...fallback, profileId: typeof stored.profileId === 'string' ? stored.profileId : fallback.profileId, displayName: typeof stored.displayName === 'string' ? stored.displayName.slice(0, 40) : null, birthDate: typeof stored.birthDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(stored.birthDate) ? stored.birthDate : null, mobilityStage: MOBILITY_STAGES.has(stored.mobilityStage) ? stored.mobilityStage : 'low_mobility', warmthBias: BIASES.has(stored.warmthBias) ? stored.warmthBias : 'neutral', paletteMode: paletteModeFromProfile(stored), styleTheme: 'neutral', defaultMode: MODES.has(stored.defaultMode) ? stored.defaultMode : 'stroller', createdAt: typeof stored.createdAt === 'string' ? stored.createdAt : fallback.createdAt, updatedAt: typeof stored.updatedAt === 'string' ? stored.updatedAt : fallback.updatedAt };
 }
 function loadSettings(profile) {
   const fallback = defaultSettings(); const stored = safeParse(SETTINGS_KEY); if (!stored || typeof stored !== 'object') return { ...fallback, defaultMode: profile.defaultMode };
@@ -128,7 +133,7 @@ function computeRecommendation() {
 }
 function renderCurrentRecommendation() {
   if (!lastRecommendation) return;
-  renderOutfit({ recommendation: lastRecommendation, context: state.contexts[state.mode], warmthDirection: state.warmthDirection, styleTheme: state.profile.styleTheme, visualSeed: state.visualSeed }, assetStore);
+  renderOutfit({ recommendation: lastRecommendation, context: state.contexts[state.mode], warmthDirection: state.warmthDirection, paletteMode: state.profile.paletteMode, visualSeed: state.visualSeed }, assetStore);
 }
 function renderRecommendation() {
   syncActiveWeatherFreshness();
@@ -247,8 +252,8 @@ function syncNeckFeedbackStatus() {
   else status.textContent = changed ? 'Heiß/schwitzig – dünner angepasst' : 'Heiß/schwitzig – keine weitere sinnvolle oder sichere Schichtänderung möglich';
 }
 function renderSituationSheet() { const mode = situationDraft?.mode ?? state.mode; const contexts = situationDraft?.contexts ?? state.contexts; renderSituationOptions(mode); renderSituationContext(mode, contexts[mode]); }
-function renderAll() { document.body.dataset.styleTheme = state.profile.styleTheme; renderWeather(state.weather, state.location, state.runtime, state.contexts[state.mode]); renderHourly(state.weather); renderSituation(state.mode); renderSituationSheet(); renderRecommendation(); renderCatalog(assetStore, state.profile.styleTheme); syncForms(); syncNeckFeedbackStatus(); updateConnectionBanner(); }
-function syncForms() { document.querySelector('#profileName').value = state.profile.displayName ?? ''; document.querySelector('#profileBirthDate').value = state.profile.birthDate ?? ''; for (const input of document.querySelectorAll('input[name="mobilityStage"]')) input.checked = input.value === state.profile.mobilityStage; document.querySelector('#locationInput').value = state.location?.label ?? ''; for (const input of document.querySelectorAll('input[name="warmthBias"]')) input.checked = input.value === state.profile.warmthBias; for (const input of document.querySelectorAll('input[name="styleTheme"]')) input.checked = input.value === state.profile.styleTheme; document.querySelector('#appVersion').textContent = APP_VERSION; syncWeatherOverrideForm(); }
+function renderAll() { document.body.dataset.paletteMode = state.profile.paletteMode; renderWeather(state.weather, state.location, state.runtime, state.contexts[state.mode]); renderHourly(state.weather); renderSituation(state.mode); renderSituationSheet(); renderRecommendation(); renderCatalog(assetStore, state.profile.paletteMode); syncForms(); syncNeckFeedbackStatus(); updateConnectionBanner(); }
+function syncForms() { document.querySelector('#profileName').value = state.profile.displayName ?? ''; document.querySelector('#profileBirthDate').value = state.profile.birthDate ?? ''; for (const input of document.querySelectorAll('input[name="mobilityStage"]')) input.checked = input.value === state.profile.mobilityStage; document.querySelector('#locationInput').value = state.location?.label ?? ''; for (const input of document.querySelectorAll('input[name="warmthBias"]')) input.checked = input.value === state.profile.warmthBias; for (const input of document.querySelectorAll('input[name="paletteMode"]')) input.checked = input.value === state.profile.paletteMode; document.querySelector('#appVersion').textContent = APP_VERSION; syncWeatherOverrideForm(); }
 function showToast(message) { const toast = document.querySelector('#toast'); toast.textContent = message; toast.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { toast.hidden = true; }, 3200); }
 function openDialog(id) { const dialog = document.getElementById(id); if (!(dialog instanceof HTMLDialogElement)) return; for (const open of document.querySelectorAll('dialog[open]')) if (open !== dialog) open.close(); if (dialog.open) return; if (id === 'situationDialog') { const active = document.activeElement; if (active instanceof HTMLElement) situationDialogReturnFocus.set(dialog, active); situationDraft = { mode: state.mode, contexts: structuredClone(state.contexts) }; renderSituationSheet(); } dialog.showModal(); if (id === 'situationDialog') requestAnimationFrame(() => dialog.querySelector('.sheet-header .icon-button')?.focus()); }
 function closeDialog(id) { const dialog = document.getElementById(id); if (dialog instanceof HTMLDialogElement && dialog.open) dialog.close(); }
@@ -316,7 +321,7 @@ function bindGlobalActions() {
     const close = event.target.closest('[data-close-dialog]'); if (close) { closeDialog(close.dataset.closeDialog); return; }
     const warmth = event.target.closest('[data-warmth]'); if (warmth && !warmth.disabled) { state.warmthDirection = warmth.dataset.warmth; session = setWarmthOffset(session, state.warmthDirection); renderRecommendation(); return; }
     const situation = event.target.closest('[data-situation]'); if (situation && MODES.has(situation.dataset.situation)) { if (situation.closest('#situationDialog')) { if (!situationDraft) return; situationDraft.mode = situation.dataset.situation; renderSituationSheet(); document.querySelector(`#situationOptions [data-situation="${situationDraft.mode}"]`)?.focus(); return; } return; }
-    const outfitCard = event.target.closest('[data-open-alternatives="true"]'); if (outfitCard && lastRecommendation) { alternativeSlot = lastRecommendation.slots.find((slot) => slot.phase === outfitCard.dataset.phase && slot.slot === outfitCard.dataset.slot) ?? null; if (alternativeSlot?.alternatives?.length) { renderAlternatives(alternativeSlot, assetStore, state.profile.styleTheme); openDialog('alternativeDialog'); } return; }
+    const outfitCard = event.target.closest('[data-open-alternatives="true"]'); if (outfitCard && lastRecommendation) { alternativeSlot = lastRecommendation.slots.find((slot) => slot.phase === outfitCard.dataset.phase && slot.slot === outfitCard.dataset.slot) ?? null; if (alternativeSlot?.alternatives?.length) { renderAlternatives(alternativeSlot, assetStore, state.profile.paletteMode); openDialog('alternativeDialog'); } return; }
     const alternative = event.target.closest('[data-alternative-item-id]'); if (alternative) { session = lockItem(session, { phase: alternative.dataset.alternativePhase, slot: alternative.dataset.alternativeSlot, itemId: alternative.dataset.alternativeItemId, lockedAt: nowIso() }); closeDialog('alternativeDialog'); renderRecommendation(); showToast('Alternative gewählt – Outfit wurde neu bewertet.'); return; }
     const neck = event.target.closest('[data-neck-feedback]'); if (neck && NECK_FEEDBACKS.has(neck.dataset.neckFeedback)) { state.neckFeedback = neck.dataset.neckFeedback; closeDialog('neckFeedbackDialog'); renderRecommendation(); syncNeckFeedbackStatus(); showToast('Nackentest auf die aktuelle Empfehlung angewendet.'); return; }
     if (event.target.closest('#changeLookButton')) { state.visualSeed = nextVisualSeed(state.visualSeed); persistSettings(); renderCurrentRecommendation(); return; }
@@ -397,7 +402,7 @@ function bindWeatherOverride() {
     showToast('Automatisches Wetter neu geladen.');
   });
 }
-function bindStyleSettings() { document.querySelectorAll('input[name="styleTheme"]').forEach((input) => { input.addEventListener('change', () => { if (!input.checked || !STYLES.has(input.value)) return; state.profile.styleTheme = input.value; persistProfile(); renderAll(); showToast('Kleidungsstil gespeichert.'); }); }); }
+function bindPaletteSettings() { document.querySelectorAll('input[name="paletteMode"]').forEach((input) => { input.addEventListener('change', () => { if (!input.checked || !PALETTE_MODES.has(input.value)) return; state.profile.paletteMode = input.value; state.profile.styleTheme = 'neutral'; persistProfile(); renderAll(); showToast('Farbstil gespeichert.'); }); }); }
 function exportSettings() { const envelope = { schemaVersion: 1, exportedAt: nowIso(), appVersion: APP_VERSION, payload: { profile: state.profile, settings: state.settings, feedback: [] } }; const blob = new Blob([JSON.stringify(envelope, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'babywetter-einstellungen.json'; document.body.append(anchor); anchor.click(); anchor.remove(); URL.revokeObjectURL(url); showToast('Einstellungen als JSON exportiert.'); }
 async function importSettings(file) {
   if (!file) return;
@@ -435,7 +440,7 @@ async function refreshWeatherIfNeeded() {
 }
 async function init() {
   if (migrateLegacyUiDefaults) persistSettings();
-  bindGlobalActions(); bindSituationContext(); bindProfile(); bindLocation(); bindWeatherOverride(); bindStyleSettings(); bindImportExport(); bindDayTripPlanner({ getSnapshot: tripPlannerSnapshot, assetStore, showToast }); bindDialogs();
+  bindGlobalActions(); bindSituationContext(); bindProfile(); bindLocation(); bindWeatherOverride(); bindPaletteSettings(); bindImportExport(); bindDayTripPlanner({ getSnapshot: tripPlannerSnapshot, assetStore, showToast }); bindDialogs();
   window.addEventListener('babyweather:recalculate-recommendation', () => { resetSession(); renderRecommendation(); syncNeckFeedbackStatus(); });
   window.addEventListener('babyweather:pull-to-refresh', () => { if (weatherRefreshInFlight) return; showToast('Aktuelles Wetter und Standort werden geladen …'); void refreshCurrentLocation(); });
   window.addEventListener('online', () => refreshWeather(state.location ?? DEFAULT_LOCATION));

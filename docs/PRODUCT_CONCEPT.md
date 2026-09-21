@@ -111,7 +111,8 @@ V1-Felder:
 - optional `birthDate`,
 - `mobilityStage: low_mobility | crawling | walking`,
 - `warmthBias: runs_cool | neutral | runs_warm`,
-- `styleTheme: neutral | boy | girl`,
+- `paletteMode: all | neutral | cool | warm` für die sichtbare Farbwelt. Die Auswahl beschreibt Farben, Muster und Gesamtwirkung; Geschlecht ist kein Fachparameter und wird nicht abgefragt.
+- Das frühere `styleTheme: neutral | boy | girl` bleibt nur als Import-Kompatibilität lesbar und wird auf `all | cool | warm` migriert.
 - `defaultMode`,
 - Zeitstempel.
 

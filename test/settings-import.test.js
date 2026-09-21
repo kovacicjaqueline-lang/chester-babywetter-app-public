@@ -41,10 +41,22 @@ test('valid V1 import is returned as an explicit sanitized payload', () => {
   assert.equal(result.schemaVersion, 1);
   assert.equal(result.payload.profile.birthDate, '2026-01-24');
   assert.equal(result.payload.profile.mobilityStage, 'crawling');
+  assert.equal(result.payload.profile.paletteMode, 'all');
   assert.equal(result.payload.settings.weatherMode, 'auto_with_override');
   assert.equal(result.payload.settings.weatherCacheMaxAgeMinutes, 120);
   assert.equal('injected' in result.payload.profile, false);
   assert.equal('injected' in result.payload.settings, false);
+});
+
+test('palette mode imports directly and legacy gender labels migrate to visual worlds', () => {
+  const modern = validEnvelope();
+  modern.payload.profile.paletteMode = 'cool';
+  delete modern.payload.profile.styleTheme;
+  assert.equal(validateImportEnvelopeV1(modern, { now: NOW }).payload.profile.paletteMode, 'cool');
+
+  const legacy = validEnvelope();
+  legacy.payload.profile.styleTheme = 'girl';
+  assert.equal(validateImportEnvelopeV1(legacy, { now: NOW }).payload.profile.paletteMode, 'warm');
 });
 
 test('legacy V1 profiles without mobility migrate conservatively to low_mobility', () => {

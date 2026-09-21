@@ -36,7 +36,8 @@ type ActivityLevel = "calm" | "normal" | "active";
 type ActivitySource = "default" | "inferred" | "user";
 type MobilityStage = "low_mobility" | "crawling" | "walking";
 type WarmthBias = "runs_cool" | "neutral" | "runs_warm";
-type StyleTheme = "neutral" | "boy" | "girl";
+type PaletteMode = "all" | "neutral" | "cool" | "warm";
+type LegacyStyleTheme = "neutral" | "boy" | "girl";
 type NeckFeedback = "warm_dry" | "hot_sweaty" | "cool";
 type SunExposure = "shade" | "partial" | "direct" | "unknown";
 type GroundContact = "none" | "standing" | "walking";
@@ -79,7 +80,9 @@ interface BabyProfile {
   birthDate: string | null; // YYYY-MM-DD
   mobilityStage: MobilityStage;
   warmthBias: WarmthBias;
-  styleTheme: StyleTheme;
+  paletteMode: PaletteMode;
+  // Legacy V1 field; accepted on import and kept only for compatibility.
+  styleTheme?: LegacyStyleTheme;
   defaultMode: SituationMode;
   createdAt: string;
   updatedAt: string;
@@ -95,6 +98,7 @@ Beispiel:
   "birthDate": "2026-01-24",
   "mobilityStage": "crawling",
   "warmthBias": "neutral",
+  "paletteMode": "all",
   "styleTheme": "neutral",
   "defaultMode": "stroller",
   "createdAt": "2026-08-25T12:00:00.000Z",
@@ -1051,7 +1055,7 @@ Für `mobilityStage` ist in V1 keine thermische Regel-ID vorgesehen, weil der Pr
 
 ## 32. Testinvarianten
 
-1. `styleTheme` ändert keine Fach-Item-IDs oder Safety-Codes.
+1. `paletteMode` ändert keine Fach-Item-IDs, Wärmeentscheidungen oder Safety-Codes.
 2. Kinderwagen erzwingt nicht `activity: calm/passive`.
 3. Die Kinderwagen-UI bietet genau `Schläft | Wach | Sehr aktiv` und mappt diese Werte deterministisch auf `strollerState`/`activity`.
 4. `awake + active` und `asleep` im Kinderwagen dürfen unterschiedliche Empfehlungen erzeugen.

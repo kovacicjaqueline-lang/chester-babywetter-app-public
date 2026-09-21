@@ -100,7 +100,7 @@ Nicht zulässig:
 - Wasserzeichen,
 - zusätzliche nicht angeforderte Kleidungsstücke.
 
-## 6. Neutral, Boy und Girl
+## 6. Technische Varianten und sichtbare Farbwelten
 
 `neutral`, `boy` und `girl` verändern ausschließlich Farbe, Muster und kleine dekorative Details.
 
@@ -138,7 +138,10 @@ transparent background, clean alpha edges, no baked background panel, no hard ca
 no baby, no person, no model, no mannequin, no hanger, no hands,
 no text, no letters, no logo, no brand mark, no watermark,
 no cropped edges, no extra garments, no duplicate objects, no unrelated props.
-For neutral/boy/girl variants keep exactly the same garment category, silhouette,
+The manifest may still use the technical source labels `neutral`, `boy` and `girl` for
+legacy physical variants. They are not user-facing gender choices: the composer maps
+them into palette worlds (`all`, `neutral`, `cool`, `warm`). For all variants keep
+exactly the same garment category, silhouette,
 construction and apparent material thickness; change only color, pattern and minor decoration.
 ```
 
@@ -207,7 +210,7 @@ Für jedes Runtime-Bild prüfen:
 - keine Buchstaben, Logos oder Marken,
 - keine unerwünschten Dubletten,
 - kein Stilbruch,
-- Neutral/Boy/Girl als dasselbe Grundmodell,
+- technische Neutral/Boy/Girl-Varianten bleiben dasselbe Grundmodell; die sichtbare Auswahl erfolgt über Farbwelten,
 - gute Erkennbarkeit im tatsächlichen Mobile-Katalog und im Outfit,
 - auf HiDPI/Retina keine sichtbare Unschärfe gegenüber den übrigen Assets.
 
