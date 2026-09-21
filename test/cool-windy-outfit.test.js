@@ -148,7 +148,7 @@ test('choosing a full-body overall reduces a warm trouser layer', () => {
   const result = recommend('outdoor', {}, weatherOverrides, session);
 
   assert.equal(item(result,'outer'),'transition_overall');
-  assert.equal(item(result,'legs'),'trousers');
+  assert.equal(item(result,'legs'),'light_trousers');
   assert.ok(result.ruleTrace.some((entry) => entry.reasonCode === 'BODY_ZONE_COVERAGE_REBALANCE'));
 });
 
