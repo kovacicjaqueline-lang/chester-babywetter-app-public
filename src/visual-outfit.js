@@ -1,4 +1,6 @@
-const PROFILE_STYLES = new Set(['neutral', 'boy', 'girl']);
+const PALETTE_MODES = new Set(['all', 'neutral', 'cool', 'warm']);
+const LEGACY_STYLE_TO_PALETTE_MODE = Object.freeze({ neutral: 'neutral', boy: 'cool', girl: 'warm' });
+const COMPOSITION_BEAM_WIDTH = 96;
 
 function assertObject(value, label) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
@@ -26,6 +28,22 @@ function pickStable(values, seedKey) {
   return values[stableHash(seedKey) % values.length];
 }
 
+function normalizePaletteMode(paletteMode, styleTheme) {
+  if (paletteMode !== undefined && paletteMode !== null) {
+    if (PALETTE_MODES.has(paletteMode)) return paletteMode;
+    const legacyMode = LEGACY_STYLE_TO_PALETTE_MODE[paletteMode];
+    if (legacyMode) return legacyMode;
+    throw new Error(`Unknown paletteMode: ${paletteMode}`);
+  }
+  if (styleTheme !== undefined && styleTheme !== null) {
+    const legacyMode = LEGACY_STYLE_TO_PALETTE_MODE[styleTheme];
+    if (legacyMode) return legacyMode;
+    if (PALETTE_MODES.has(styleTheme)) return styleTheme;
+    throw new Error(`Unknown paletteMode: ${styleTheme}`);
+  }
+  return 'all';
+}
+
 function legacyVariantEntries(group) {
   if (group.variantPaths && typeof group.variantPaths === 'object') {
     return Object.entries(group.variantPaths)
@@ -43,8 +61,8 @@ function legacyVariantEntries(group) {
   return [];
 }
 
-function normalizeStyleRank(profile, styleTheme) {
-  const rank = profile.stylePreferenceRank?.[styleTheme];
+function normalizeStyleRank(profile, sourceStyle) {
+  const rank = profile.stylePreferenceRank?.[sourceStyle];
   return Number.isInteger(rank) && rank >= 0 ? rank : 99;
 }
 
@@ -78,11 +96,13 @@ export function buildVisualCatalog(assetManifest, visualManifest) {
       id: theme.id,
       label: theme.label || theme.id,
       palette: Object.freeze([...(theme.palette || [])]),
+      colors: Object.freeze(Object.fromEntries(Object.entries(theme.colors || {}).map(([role, values]) => [role, Object.freeze([...(values || [])])])))
     });
   });
 
   const sourceProfiles = visualManifest.sourceStyleProfiles || {};
   const fallbackSourceStyle = visualManifest.fallbackSourceStyle || 'neutral';
+  const paletteModeProfiles = visualManifest.paletteModeProfiles || {};
   const visualVariantIds = new Set();
   const groupsById = {};
 
@@ -168,6 +188,14 @@ export function buildVisualCatalog(assetManifest, visualManifest) {
   return Object.freeze({
     schemaVersion: visualManifest.schemaVersion || 1,
     fallbackSourceStyle,
+    sourceStyleProfiles: Object.freeze(Object.fromEntries(Object.entries(sourceProfiles).map(([style, profile]) => [style, Object.freeze({
+      themeIds: Object.freeze([...(profile.themeIds || [])]),
+      stylePreferenceRank: Object.freeze({ ...(profile.stylePreferenceRank || {}) })
+    })]))),
+    paletteModeProfiles: Object.freeze(Object.fromEntries(Object.entries(paletteModeProfiles).map(([mode, profile]) => [mode, Object.freeze({
+      themeIds: Object.freeze([...(profile.themeIds || [])]),
+      sourceStyleRank: Object.freeze({ ...(profile.sourceStyleRank || {}) })
+    })]))),
     themes: Object.freeze(themes),
     groupsById: Object.freeze(groupsById),
     visualVariantCount: visualVariantIds.size
@@ -201,20 +229,54 @@ function primaryPaletteTags(variant) {
   return paletteTags(variant).filter((tag) => !NEUTRAL_PALETTE_TAGS.has(tag));
 }
 
-function themeOverlap(variant, theme) {
-  const themePalette = new Set(theme.palette);
-  return paletteTags(variant).filter((tag) => themePalette.has(tag)).length;
+function paletteModeProfile(catalog, visualManifest, paletteMode) {
+  const configured = catalog.paletteModeProfiles?.[paletteMode];
+  if (configured) return configured;
+  const sourceStyleProfiles = visualManifest.sourceStyleProfiles || catalog.sourceStyleProfiles || {};
+  const legacy = sourceStyleProfiles?.[paletteMode]
+    || sourceStyleProfiles?.neutral
+    || {};
+  return {
+    themeIds: Array.isArray(legacy.themeIds) ? legacy.themeIds : catalog.themes.map((theme) => theme.id),
+    sourceStyleRank: { ...(legacy.stylePreferenceRank || {}) }
+  };
 }
 
-function stylePreferenceScore(variant, styleTheme) {
-  const rank = normalizeStyleRank(variant, styleTheme);
+function sourceStyleRank(variant, profile) {
+  const configuredRank = profile.sourceStyleRank?.[variant.sourceStyle];
+  if (Number.isInteger(configuredRank) && configuredRank >= 0) return configuredRank;
+  return normalizeStyleRank(variant, variant.sourceStyle);
+}
+
+function stylePreferenceScore(variant, profile) {
+  const rank = sourceStyleRank(variant, profile);
   return rank >= 99 ? 0 : Math.max(0, 3 - rank);
 }
 
-function variantCandidates(group, theme, styleTheme) {
-  const themed = group.visualVariants.filter((variant) => variant.themeIds.includes(theme.id));
+function themeRoleScore(variant, theme) {
+  const colors = theme.colors || {};
+  return paletteTags(variant).reduce((sum, tag) => {
+    if (colors.primary?.includes(tag)) return sum + 6;
+    if (colors.secondary?.includes(tag)) return sum + 3;
+    if (colors.neutral?.includes(tag)) return sum + 1;
+    return sum;
+  }, 0);
+}
+
+function roleTags(variant, theme, role) {
+  const roleColors = new Set(theme.colors?.[role] || []);
+  return paletteTags(variant).filter((tag) => roleColors.has(tag));
+}
+
+function variantCandidates(group, theme, paletteMode, catalog, visualManifest) {
+  const profile = paletteModeProfile(catalog, visualManifest, paletteMode);
+  const rankedSources = Object.keys(profile.sourceStyleRank || {});
+  const eligible = rankedSources.length > 0
+    ? group.visualVariants.filter((variant) => rankedSources.includes(variant.sourceStyle))
+    : group.visualVariants;
+  const themed = eligible.filter((variant) => variant.themeIds.includes(theme.id));
   const rankedThemed = themed
-    .map((variant) => ({ variant, rank: normalizeStyleRank(variant, styleTheme) }))
+    .map((variant) => ({ variant, rank: sourceStyleRank(variant, profile) }))
     .filter(({ rank }) => rank < 99);
   const bestRank = rankedThemed.length > 0
     ? Math.min(...rankedThemed.map(({ rank }) => rank))
@@ -222,12 +284,12 @@ function variantCandidates(group, theme, styleTheme) {
   const compatibleThemed = bestRank == null
     ? []
     : rankedThemed
-      .filter(({ rank }) => rank === bestRank || styleTheme === 'neutral' && rank <= bestRank + 1)
+      .filter(({ rank }) => rank <= bestRank + 1)
       .map(({ variant }) => variant);
-  const fallbackPool = group.visualVariants.filter((variant) => variant.isFallback);
+  const fallbackPool = eligible.filter((variant) => variant.isFallback);
   const candidates = compatibleThemed.length > 0
     ? compatibleThemed
-    : fallbackPool.length > 0
+      : fallbackPool.length > 0
       ? fallbackPool
       : group.visualVariants;
 
@@ -235,9 +297,9 @@ function variantCandidates(group, theme, styleTheme) {
     variant,
     themed: themed.includes(variant),
     score: (themed.includes(variant) ? 100 : 0)
-      + themeOverlap(variant, theme) * 4
-      + stylePreferenceScore(variant, styleTheme) * 4
-      + (!themed.includes(variant) && variant.isFallback ? 10 : 0)
+      + themeRoleScore(variant, theme)
+      + stylePreferenceScore(variant, profile) * 4
+      - (!themed.includes(variant) && variant.isFallback ? 25 : 0)
   }));
 }
 
@@ -246,13 +308,29 @@ function compareCandidates(left, right) {
   return left.variant.id.localeCompare(right.variant.id);
 }
 
-function chooseVariantsForTheme(catalog, itemIds, theme, styleTheme, forcedVariantIds = new Map()) {
-  const state = {
-    primaryTags: new Set(),
-    patterns: new Set(),
-    selected: []
-  };
+function scoreVariantInComposition(candidate, theme, paletteMode, state) {
+  const primaries = roleTags(candidate.variant, theme, 'primary');
+  const secondaries = roleTags(candidate.variant, theme, 'secondary');
+  const neutrals = roleTags(candidate.variant, theme, 'neutral');
+  const newPrimaryCount = primaries.filter((tag) => !state.primaryTags.has(tag)).length;
+  const patternPenalty = !SUBTLE_PATTERNS.has(candidate.variant.pattern) && state.patterns.size > 0 ? 12 : 0;
+  const primaryPenalty = newPrimaryCount > 1 ? 5 : newPrimaryCount === 1 && state.primaryTags.size > 0 ? 2 : 0;
+  const repeatedAccentBonus = primaries.some((tag) => state.primaryTags.has(tag)) ? 4 : 0;
+  const secondarySupportBonus = secondaries.some((tag) => state.secondaryTags.has(tag)) ? 3 : 0;
+  const neutralSupportBonus = neutrals.length > 0 && state.primaryTags.size > 0 ? 2 : 0;
+  return candidate.score + repeatedAccentBonus + secondarySupportBonus + neutralSupportBonus - patternPenalty - primaryPenalty;
+}
 
+function compositionSignature(selected) {
+  return selected.map((entry) => entry.chosen?.variant?.id || '').join('|');
+}
+
+function compareCompositionStates(left, right) {
+  if (right.score !== left.score) return right.score - left.score;
+  return compositionSignature(left.selected).localeCompare(compositionSignature(right.selected));
+}
+
+function chooseVariantsForTheme(catalog, visualManifest, itemIds, theme, paletteMode, forcedVariantIds = new Map()) {
   const entries = itemIds.map((itemId, index) => ({
     itemId,
     index,
@@ -260,38 +338,33 @@ function chooseVariantsForTheme(catalog, itemIds, theme, styleTheme, forcedVaria
   })).filter((entry) => entry.group);
   entries.sort((left, right) => itemWeight(right.group) - itemWeight(left.group) || left.index - right.index);
 
+  let beam = [{ primaryTags: new Set(), secondaryTags: new Set(), patterns: new Set(), selected: [], score: 0 }];
   for (const entry of entries) {
-    const candidates = variantCandidates(entry.group, theme, styleTheme);
-    candidates.sort(compareCandidates);
-    let best = null;
-    for (const candidate of candidates) {
-      const variant = candidate.variant;
-      const primaries = primaryPaletteTags(variant);
-      const visiblePattern = !SUBTLE_PATTERNS.has(variant.pattern);
-      const newPrimaryCount = primaries.filter((tag) => !state.primaryTags.has(tag)).length;
-      const patternPenalty = visiblePattern && state.patterns.size > 0 ? 8 : 0;
-      const primaryPenalty = newPrimaryCount > 1 ? 4 : newPrimaryCount === 1 && state.primaryTags.size > 0 ? 1 : 0;
-      const neutralBonus = styleTheme === 'neutral' && primaries.length === 0 ? 2 : 0;
-      const repeatedAccentBonus = primaries.some((tag) => state.primaryTags.has(tag)) ? 2 : 0;
-      const score = candidate.score + neutralBonus + repeatedAccentBonus - patternPenalty - primaryPenalty;
-      const scored = { ...candidate, score };
-      if (forcedVariantIds.get(entry.index) === variant.id) {
-        best = scored;
-        break;
-      }
-      if (!best || scored.score > best.score || (scored.score === best.score && variant.id.localeCompare(best.variant.id) < 0)) {
-        best = scored;
+    let candidates = variantCandidates(entry.group, theme, paletteMode, catalog, visualManifest).sort(compareCandidates);
+    const forcedId = forcedVariantIds.get(entry.index);
+    if (forcedId) candidates = candidates.filter((candidate) => candidate.variant.id === forcedId);
+    const expanded = [];
+    for (const state of beam) {
+      for (const candidate of candidates) {
+        const score = scoreVariantInComposition(candidate, theme, paletteMode, state);
+        const next = {
+          primaryTags: new Set(state.primaryTags),
+          secondaryTags: new Set(state.secondaryTags),
+          patterns: new Set(state.patterns),
+          selected: [...state.selected, { ...entry, chosen: { ...candidate, score } }],
+          score: state.score + score * itemWeight(entry.group)
+        };
+        for (const tag of roleTags(candidate.variant, theme, 'primary')) next.primaryTags.add(tag);
+        for (const tag of roleTags(candidate.variant, theme, 'secondary')) next.secondaryTags.add(tag);
+        if (!SUBTLE_PATTERNS.has(candidate.variant.pattern)) next.patterns.add(candidate.variant.pattern);
+        expanded.push(next);
       }
     }
-
-    const chosen = best || { variant: null, themed: false, score: 0 };
-    if (chosen.variant) {
-      for (const tag of primaryPaletteTags(chosen.variant)) state.primaryTags.add(tag);
-      if (!SUBTLE_PATTERNS.has(chosen.variant.pattern)) state.patterns.add(chosen.variant.pattern);
-    }
-    state.selected.push({ ...entry, chosen });
+    expanded.sort(compareCompositionStates);
+    beam = expanded.slice(0, COMPOSITION_BEAM_WIDTH);
   }
 
+  const state = beam[0] || { selected: [], score: 0 };
   const byIndex = new Map(state.selected.map((entry) => [entry.index, entry]));
   const selections = itemIds.map((itemId, index) => byIndex.get(index) || {
     itemId,
@@ -299,25 +372,25 @@ function chooseVariantsForTheme(catalog, itemIds, theme, styleTheme, forcedVaria
     group: catalog.groupsById[itemId] || null,
     chosen: { variant: null, themed: false, score: 0 }
   });
-  const compositionScore = state.selected.reduce((sum, entry) => sum + entry.chosen.score * itemWeight(entry.group), 0);
-  return { selections, compositionScore };
+  return { selections, compositionScore: state.score };
 }
 
-function scoreTheme(catalog, visualManifest, itemIds, theme, styleTheme) {
-  const result = chooseVariantsForTheme(catalog, itemIds, theme, styleTheme);
-  return scoreComposition(catalog, visualManifest, itemIds, theme, styleTheme, result);
+function scoreTheme(catalog, visualManifest, itemIds, theme, paletteMode) {
+  const result = chooseVariantsForTheme(catalog, visualManifest, itemIds, theme, paletteMode);
+  return scoreComposition(catalog, visualManifest, itemIds, theme, paletteMode, result);
 }
 
-function scoreComposition(catalog, visualManifest, itemIds, theme, styleTheme, result) {
+function scoreComposition(catalog, visualManifest, itemIds, theme, paletteMode, result) {
   const coverage = result.selections.reduce((sum, entry) => {
     const weight = entry.group ? itemWeight(entry.group) : 0;
     return sum + (entry.chosen.themed ? weight : 0);
   }, 0);
   const styleBias = result.selections.reduce((sum, entry) => {
     const variant = entry.chosen.variant;
-    return sum + (variant ? stylePreferenceScore(variant, styleTheme) * itemWeight(entry.group) : 0);
+    const profile = paletteModeProfile(catalog, visualManifest, paletteMode);
+    return sum + (variant ? stylePreferenceScore(variant, profile) * itemWeight(entry.group) : 0);
   }, 0);
-  const preferredThemeIds = visualManifest.sourceStyleProfiles?.[styleTheme]?.themeIds;
+  const preferredThemeIds = paletteModeProfile(catalog, visualManifest, paletteMode).themeIds;
   const themePreference = Array.isArray(preferredThemeIds) && preferredThemeIds.includes(theme.id) ? 25 : 0;
   return {
     theme,
@@ -327,22 +400,21 @@ function scoreComposition(catalog, visualManifest, itemIds, theme, styleTheme, r
   };
 }
 
-function scoredThemes(catalog, visualManifest, styleTheme, themeId, itemIds) {
+function scoredThemes(catalog, visualManifest, paletteMode, themeId, itemIds) {
   if (themeId != null) {
     const explicit = catalog.themes.find((theme) => theme.id === themeId);
     if (!explicit) throw new Error(`Unknown theme: ${themeId}`);
-    return [scoreTheme(catalog, visualManifest, itemIds, explicit, styleTheme)];
+    return [scoreTheme(catalog, visualManifest, itemIds, explicit, paletteMode)];
   }
 
-  const configuredThemeIds = visualManifest.sourceStyleProfiles?.[styleTheme]?.themeIds;
+  const configuredThemeIds = paletteModeProfile(catalog, visualManifest, paletteMode).themeIds;
   const preferredThemes = Array.isArray(configuredThemeIds) && configuredThemeIds.length
     ? catalog.themes.filter((theme) => configuredThemeIds.includes(theme.id))
     : [];
   const themesToScore = preferredThemes.length > 0 ? preferredThemes : catalog.themes;
-  const scored = themesToScore
-    .map((theme) => scoreTheme(catalog, visualManifest, itemIds, theme, styleTheme));
-  const bestCoverage = scored[0] ? Math.max(...scored.map((candidate) => candidate.coverage)) : 0;
-  return scored.filter((candidate) => candidate.coverage === bestCoverage);
+  return themesToScore
+    .map((theme) => scoreTheme(catalog, visualManifest, itemIds, theme, paletteMode))
+    .sort((left, right) => right.score - left.score || left.theme.id.localeCompare(right.theme.id));
 }
 
 function visibleCompositionSignature(result) {
@@ -351,22 +423,24 @@ function visibleCompositionSignature(result) {
     .join('\u001f');
 }
 
-function buildLookCandidates(catalog, visualManifest, itemIds, styleTheme, themeId) {
+function buildLookCandidates(catalog, visualManifest, itemIds, paletteMode, themeId) {
   const candidates = [];
   const signatures = new Set();
-  const themes = scoredThemes(catalog, visualManifest, styleTheme, themeId, itemIds);
+  const themes = scoredThemes(catalog, visualManifest, paletteMode, themeId, itemIds);
 
   function addCandidate(theme, result) {
     const signature = visibleCompositionSignature(result);
     if (signatures.has(signature)) return;
     signatures.add(signature);
-    const scored = scoreComposition(catalog, visualManifest, itemIds, theme, styleTheme, result);
+    const scored = scoreComposition(catalog, visualManifest, itemIds, theme, paletteMode, result);
     candidates.push({ ...scored, signature });
   }
 
   for (const scoredTheme of themes) {
     addCandidate(scoredTheme.theme, scoredTheme.result);
   }
+
+  if (themeId != null) return candidates;
 
   // Complete theme compositions are the most coherent look cycle. Only fan out
   // individual item variants when the available themes render identically.
@@ -375,15 +449,16 @@ function buildLookCandidates(catalog, visualManifest, itemIds, styleTheme, theme
   for (const scoredTheme of themes) {
     for (const selection of scoredTheme.result.selections) {
       if (!selection.group) continue;
-      const alternatives = variantCandidates(selection.group, scoredTheme.theme, styleTheme)
+      const alternatives = variantCandidates(selection.group, scoredTheme.theme, paletteMode, catalog, visualManifest)
         .sort(compareCandidates);
       for (const alternative of alternatives) {
         if (alternative.variant.id === selection.chosen.variant?.id) continue;
         const result = chooseVariantsForTheme(
           catalog,
+          visualManifest,
           itemIds,
           scoredTheme.theme,
-          styleTheme,
+          paletteMode,
           new Map([[selection.index, alternative.variant.id]])
         );
         addCandidate(scoredTheme.theme, result);
@@ -400,10 +475,8 @@ function normalizedSeedOffset(visualSeed, candidateCount) {
   return stableHash(String(visualSeed)) % candidateCount;
 }
 
-export function selectVisualVariant({ catalog, assetGroupId, themeId, styleTheme = 'neutral', seedKey }) {
-  if (!PROFILE_STYLES.has(styleTheme)) {
-    throw new Error(`Unknown styleTheme: ${styleTheme}`);
-  }
+export function selectVisualVariant({ catalog, assetGroupId, themeId, paletteMode, styleTheme, seedKey }) {
+  const normalizedPaletteMode = normalizePaletteMode(paletteMode, styleTheme);
   const group = catalog.groupsById[assetGroupId];
   if (!group) {
     throw new Error(`Unknown asset group: ${assetGroupId}`);
@@ -420,9 +493,14 @@ export function selectVisualVariant({ catalog, assetGroupId, themeId, styleTheme
     });
   }
 
-  const themed = group.visualVariants.filter((variant) => variant.themeIds.includes(themeId));
+  const profile = paletteModeProfile(catalog, { sourceStyleProfiles: {} }, normalizedPaletteMode);
+  const rankedSources = Object.keys(profile.sourceStyleRank || {});
+  const eligible = rankedSources.length > 0
+    ? group.visualVariants.filter((variant) => rankedSources.includes(variant.sourceStyle))
+    : group.visualVariants;
+  const themed = eligible.filter((variant) => variant.themeIds.includes(themeId));
   const rankedThemed = themed
-    .map((variant) => ({ variant, rank: normalizeStyleRank(variant, styleTheme) }))
+    .map((variant) => ({ variant, rank: sourceStyleRank(variant, profile) }))
     .filter(({ rank }) => rank < 99);
 
   let pool = rankedThemed;
@@ -430,16 +508,17 @@ export function selectVisualVariant({ catalog, assetGroupId, themeId, styleTheme
   let usedFallback = false;
 
   if (pool.length === 0) {
-    const fallback = group.visualVariants.find((variant) => variant.isFallback)
+    const fallback = eligible.find((variant) => variant.isFallback)
+      || group.visualVariants.find((variant) => variant.isFallback)
       || group.visualVariants[0];
-    pool = [{ variant: fallback, rank: normalizeStyleRank(fallback, styleTheme) }];
+    pool = [{ variant: fallback, rank: sourceStyleRank(fallback, profile) }];
     usedFallback = true;
   } else {
     bestRank = Math.min(...pool.map(({ rank }) => rank));
-    pool = pool.filter(({ rank }) => rank <= bestRank + 1);
+    pool = pool.filter(({ rank }) => normalizedPaletteMode === 'all' ? rank <= bestRank + 1 : rank === bestRank);
   }
 
-  const weightedPool = styleTheme === 'neutral' || bestRank == null
+  const weightedPool = normalizedPaletteMode === 'neutral' || bestRank == null
     ? pool.map(({ variant }) => variant)
     : pool.flatMap(({ variant, rank }) => rank === bestRank ? [variant, variant] : [variant]);
   const chosen = pickStable(weightedPool, `${seedKey}|${assetGroupId}|${themeId}`);
@@ -461,7 +540,8 @@ export function selectVisualLook({
   recommendation,
   assetManifest,
   visualManifest,
-  styleTheme = 'neutral',
+  paletteMode,
+  styleTheme,
   visualSeed = 0,
   themeId = null
 }) {
@@ -469,13 +549,11 @@ export function selectVisualLook({
   if (!Array.isArray(recommendation.slots)) {
     throw new TypeError('recommendation.slots must be an array');
   }
-  if (!PROFILE_STYLES.has(styleTheme)) {
-    throw new Error(`Unknown styleTheme: ${styleTheme}`);
-  }
+  const normalizedPaletteMode = normalizePaletteMode(paletteMode, styleTheme);
 
   const catalog = buildVisualCatalog(assetManifest, visualManifest);
   const itemIds = recommendation.slots.map((slotResult) => slotResult?.selected?.itemId || null);
-  const lookCandidates = buildLookCandidates(catalog, visualManifest, itemIds, styleTheme, themeId);
+  const lookCandidates = buildLookCandidates(catalog, visualManifest, itemIds, normalizedPaletteMode, themeId);
   const lookIndex = normalizedSeedOffset(visualSeed, lookCandidates.length);
   const selectedLook = lookCandidates[lookIndex];
   const theme = selectedLook.theme;
@@ -510,10 +588,12 @@ export function selectVisualLook({
     recommendationId: recommendation.recommendationId || null,
     sessionId: recommendation.sessionId || null,
     visualSeed,
-    styleTheme,
+    paletteMode: normalizedPaletteMode,
+    styleTheme: normalizedPaletteMode,
     themeId: theme.id,
     themeLabel: theme.label,
     themePalette: theme.palette,
+    themeColors: theme.colors,
     lookIndex,
     availableLookCount: lookCandidates.length,
     hasAlternateLook: lookCandidates.length > 1,
@@ -526,7 +606,8 @@ export function composeOutfitVisuals({
   recommendation,
   assetManifest,
   visualManifest,
-  styleTheme = 'neutral',
+  paletteMode,
+  styleTheme,
   visualSeed = 0,
   themeId = null
 }) {
@@ -543,6 +624,7 @@ export function composeOutfitVisuals({
     recommendation: resolvedRecommendation,
     assetManifest,
     visualManifest,
+    paletteMode,
     styleTheme,
     visualSeed,
     themeId

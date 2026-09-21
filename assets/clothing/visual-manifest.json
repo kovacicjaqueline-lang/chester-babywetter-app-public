@@ -226,6 +226,58 @@
       }
     }
   ],
+  "paletteModeProfiles": {
+    "all": {
+      "themeIds": [
+        "sage_oat",
+        "dusty_blue_sand",
+        "clay_cream",
+        "terracotta_greige",
+        "ocher_taupe",
+        "petrol_warm_beige",
+        "mauve_cream",
+        "apricot_oat",
+        "slate_blue_greige",
+        "soft_lavender_sand"
+      ],
+      "sourceStyleRank": {
+        "neutral": 0,
+        "boy": 1,
+        "girl": 1
+      }
+    },
+    "neutral": {
+      "themeIds": [
+        "sage_oat",
+        "dusty_blue_sand",
+        "clay_cream",
+        "terracotta_greige",
+        "ocher_taupe",
+        "petrol_warm_beige",
+        "mauve_cream",
+        "apricot_oat",
+        "slate_blue_greige",
+        "soft_lavender_sand"
+      ],
+      "sourceStyleRank": {
+        "neutral": 0
+      }
+    },
+    "cool": {
+      "themeIds": ["sage_oat", "dusty_blue_sand", "petrol_warm_beige", "slate_blue_greige"],
+      "sourceStyleRank": {
+        "boy": 0,
+        "neutral": 1
+      }
+    },
+    "warm": {
+      "themeIds": ["clay_cream", "terracotta_greige", "ocher_taupe", "mauve_cream", "apricot_oat", "soft_lavender_sand"],
+      "sourceStyleRank": {
+        "girl": 0,
+        "neutral": 1
+      }
+    }
+  },
   "sourceStyleProfiles": {
     "neutral": {
       "themeIds": [

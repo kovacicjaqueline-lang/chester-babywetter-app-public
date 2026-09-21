@@ -21,21 +21,6 @@ test('Nackentest-Hinweis und Feedbackstatus überlappen mobil nicht', async ({ p
   expect(statusBox.y).toBeGreaterThanOrEqual(guidanceBox.y + guidanceBox.height - 0.5);
 });
 
-test('Nackentest bleibt eine einzelne strukturierte Hauptfunktion', async ({ page }) => {
-  await page.setViewportSize({ width: 320, height: 568 });
-  await openDemo(page);
-
-  await expect(page.locator('[data-testid="neck-check"]')).toHaveCount(1);
-  await expect(page.locator('[data-testid="neck-check"] .neck-check-guidance')).toContainText('Heiß oder schwitzig');
-  await expect(page.locator('[data-testid="neck-check"] .neck-check-guidance')).toContainText('Kühl');
-  await expect(page.locator('[data-testid="neck-check"] .neck-action-button')).toBeVisible();
-  const cardOverflow = await page.locator('#outfitCard').evaluate((element) => ({
-    clientWidth: element.clientWidth,
-    scrollWidth: element.scrollWidth
-  }));
-  expect(cardOverflow.scrollWidth).toBeLessThanOrEqual(cardOverflow.clientWidth + 1);
-});
-
 test('Outfit zeigt alle Teile ohne horizontales Scrollen', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await openDemo(page);

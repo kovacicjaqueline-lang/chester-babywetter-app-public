@@ -10,6 +10,7 @@ import {
 } from '../src/visual-outfit.js';
 
 const visualManifest = JSON.parse(readFileSync(new URL('../assets/clothing/visual-manifest.json', import.meta.url), 'utf8'));
+const realAssetManifest = JSON.parse(readFileSync(new URL('../assets/clothing/manifest.json', import.meta.url), 'utf8'));
 
 const assetManifest = {
   assetGroups: [
@@ -233,7 +234,7 @@ test('car safety and sleep recommendation payloads are left byte-for-byte unchan
   }
 });
 
-test('legacy theme-compatible style variants are actually explored across seeds', () => {
+test('all-color mode explores compatible legacy style variants across seeds', () => {
   const catalog = buildVisualCatalog(assetManifest, visualManifest);
   const observed = new Set();
   for (let seed = 0; seed < 40; seed += 1) {
@@ -241,7 +242,7 @@ test('legacy theme-compatible style variants are actually explored across seeds'
       catalog,
       assetGroupId: 'long_sleeve_bodysuit',
       themeId: 'dusty_blue_sand',
-      styleTheme: 'neutral',
+      paletteMode: 'all',
       seedKey: `variation-${seed}`
     }).sourceStyle);
   }
@@ -381,4 +382,73 @@ test('composer weights visible outer layers above small accessories', () => {
     visualManifest
   });
   assert.equal(result.themeId, 'jacket_theme');
+});
+
+test('palette modes select visual worlds without changing fachliche items', () => {
+  const rec = recommendation(['long_sleeve_bodysuit', 'trousers', 'thin_sweater']);
+  const expectedItemIds = rec.slots.map((slot) => slot.selected.itemId);
+  for (const [paletteMode, forbiddenSourceStyle] of [['neutral', 'boy'], ['cool', 'girl'], ['warm', 'boy']]) {
+    const look = selectVisualLook({ recommendation: rec, assetManifest, visualManifest, paletteMode, visualSeed: 0 });
+    const allowedThemes = new Set(visualManifest.paletteModeProfiles[paletteMode].themeIds);
+    assert.equal(allowedThemes.has(look.themeId), true);
+    assert.deepEqual(look.items.map((item) => item.itemId), expectedItemIds);
+    assert.equal(look.items.some((item) => item.sourceStyle === forbiddenSourceStyle), false);
+  }
+});
+
+test('real unisex mode is not restricted to beige-looking themes', () => {
+  const rec = recommendation(['long_sleeve_bodysuit', 'trousers', 'thin_sweater', 'thin_hat']);
+  const observedThemes = new Set();
+  for (let seed = 0; seed < 20; seed += 1) {
+    const look = selectVisualLook({
+      recommendation: rec,
+      assetManifest: realAssetManifest,
+      visualManifest,
+      paletteMode: 'neutral',
+      visualSeed: seed
+    });
+    observedThemes.add(look.themeId);
+    assert.equal(look.items.every((item) => item.sourceStyle === 'neutral'), true);
+  }
+  assert.equal(observedThemes.has('dusty_blue_sand'), true);
+  assert.equal(observedThemes.has('apricot_oat'), true);
+});
+
+test('theme selection uses whole-outfit composition score instead of manifest order', () => {
+  const composedAssetManifest = {
+    assetGroups: [
+      { id: 'top', slot: 'torso', variantPaths: { neutral: 'top-a.webp' } },
+      { id: 'bottom', slot: 'legs', variantPaths: { neutral: 'bottom-a.webp' } }
+    ]
+  };
+  const composedVisualManifest = {
+    fallbackSourceStyle: 'neutral',
+    themes: [
+      { id: 'theme_b', palette: ['red', 'cream'], colors: { primary: ['red'], secondary: [], neutral: ['cream'] } },
+      { id: 'theme_a', palette: ['blue', 'green', 'oat'], colors: { primary: ['blue'], secondary: ['green'], neutral: ['oat'] } }
+    ],
+    paletteModeProfiles: {
+      all: { themeIds: ['theme_b', 'theme_a'], sourceStyleRank: { neutral: 0 } }
+    },
+    sourceStyleProfiles: {
+      neutral: { themeIds: ['theme_b', 'theme_a'], stylePreferenceRank: { neutral: 0 } }
+    },
+    assetOverrides: {
+      top: { neutral: { themeIds: ['theme_a'], paletteTags: ['blue'], pattern: 'solid' } },
+      bottom: { neutral: { themeIds: ['theme_a'], paletteTags: ['green'], pattern: 'solid' } }
+    },
+    additionalVariants: {
+      top: [{ id: 'b', assetPath: 'top-b.webp', themeIds: ['theme_b'], paletteTags: ['red'], pattern: 'solid' }],
+      bottom: [{ id: 'b', assetPath: 'bottom-b.webp', themeIds: ['theme_b'], paletteTags: ['cream'], pattern: 'solid' }]
+    }
+  };
+  const result = composeOutfitVisuals({
+    items: ['top', 'bottom'],
+    assetManifest: composedAssetManifest,
+    visualManifest: composedVisualManifest,
+    paletteMode: 'all'
+  });
+
+  assert.equal(result.themeId, 'theme_a');
+  assert.deepEqual(result.items.map((item) => item.assetPath), ['top-a.webp', 'bottom-a.webp']);
 });

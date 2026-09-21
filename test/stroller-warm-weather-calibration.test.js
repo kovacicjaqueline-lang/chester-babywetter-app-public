@@ -107,6 +107,17 @@ test('stroller does not add state-based body insulation at 20 C or warmer', () =
   }
 });
 
+test('stroller transition at 10 C does not retain the cold 8 C body stack', () => {
+  const result = recommend(stroller({ strollerState:'awake', activity:'normal' }), weather(10));
+  assert.equal(item(result,'mid'),'thin_sweater');
+  assert.equal(item(result,'outer'),'light_transition_jacket');
+  assert.equal(item(result,'legs'),'light_trousers');
+  assert.equal(item(result,'feet'),'socks');
+  assert.equal(item(result,'head'),'thin_hat');
+  assert.equal(item(result,'hands'),null);
+  assert.equal(item(result,'stroller_thermal_accessory'),'stroller_light_footmuff');
+});
+
 test('very active stroller can be lighter than awake in warm weather', () => {
   const mildWeather = weather(23);
   const awakeMild = recommend(stroller({ strollerState:'awake', activity:'normal' }), mildWeather);

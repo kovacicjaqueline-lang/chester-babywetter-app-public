@@ -5,8 +5,10 @@ export const TEMPERATURE_BANDS = Object.freeze([
   Object.freeze({ id:'below_0', min:-Infinity, max:0, label:'< 0 °C' }),
   Object.freeze({ id:'0_to_3', min:0, max:3, label:'0 bis < 3 °C' }),
   Object.freeze({ id:'3_to_8', min:3, max:8, label:'3 bis < 8 °C' }),
-  Object.freeze({ id:'8_to_12', min:8, max:12, label:'8 bis < 12 °C' }),
-  Object.freeze({ id:'12_to_16', min:12, max:16, label:'12 bis < 16 °C' }),
+  Object.freeze({ id:'8_to_10', min:8, max:10, label:'8 bis < 10 °C' }),
+  Object.freeze({ id:'10_to_12', min:10, max:12, label:'10 bis < 12 °C' }),
+  Object.freeze({ id:'12_to_14', min:12, max:14, label:'12 bis < 14 °C' }),
+  Object.freeze({ id:'14_to_16', min:14, max:16, label:'14 bis < 16 °C' }),
   Object.freeze({ id:'16_to_20', min:16, max:20, label:'16 bis < 20 °C' }),
   Object.freeze({ id:'20_to_24', min:20, max:24, label:'20 bis < 24 °C' }),
   Object.freeze({ id:'24_to_28', min:24, max:28, label:'24 bis < 28 °C' }),
@@ -18,8 +20,10 @@ export const BASELINE = Object.freeze({
   below_0: Object.freeze({ base_torso:'long_sleeve_bodysuit', legs:'warm_trousers', mid:'fleece_jacket', outer:'winter_overall', feet:'warm_socks_booties', head:'warm_hat', hands:'gloves' }),
   '0_to_3': Object.freeze({ base_torso:'long_sleeve_bodysuit', legs:'warm_trousers', mid:'fleece_jacket', outer:'winter_overall', feet:'warm_socks_booties', head:'warm_hat', hands:'gloves' }),
   '3_to_8': Object.freeze({ base_torso:'long_sleeve_bodysuit', legs:'warm_trousers', mid:'fleece_jacket', outer:'transition_overall', feet:'warm_socks_booties', head:'warm_hat', hands:'gloves' }),
-  '8_to_12': Object.freeze({ base_torso:'long_sleeve_bodysuit', legs:'warm_trousers', mid:'fleece_jacket', outer:'softshell_jacket', feet:'warm_socks_booties', head:'warm_hat', hands:'gloves' }),
-  '12_to_16': Object.freeze({ base_torso:'long_sleeve_bodysuit', legs:'trousers', mid:'thin_sweater', feet:'socks', head:'thin_hat' }),
+  '8_to_10': Object.freeze({ base_torso:'long_sleeve_bodysuit', legs:'warm_trousers', mid:'fleece_jacket', outer:'softshell_jacket', feet:'warm_socks_booties', head:'warm_hat', hands:'gloves' }),
+  '10_to_12': Object.freeze({ base_torso:'long_sleeve_bodysuit', legs:'trousers', mid:'thin_sweater', outer:'light_transition_jacket', feet:'socks', head:'thin_hat' }),
+  '12_to_14': Object.freeze({ base_torso:'long_sleeve_bodysuit', legs:'trousers', mid:'thin_sweater', feet:'socks', head:'thin_hat' }),
+  '14_to_16': Object.freeze({ base_torso:'long_sleeve_bodysuit', legs:'trousers', mid:'thin_sweater', feet:'socks', head:'thin_hat' }),
   '16_to_20': Object.freeze({ base_torso:'long_sleeve_bodysuit', legs:'trousers', mid:'thin_sweater', feet:'socks' }),
   '20_to_24': Object.freeze({ base_torso:'long_sleeve_bodysuit', legs:'light_trousers', feet:'socks' }),
   '24_to_28': Object.freeze({ base_torso:'short_sleeve_bodysuit', legs:'light_trousers' }),
@@ -96,6 +100,37 @@ export function makeCarSafeBaseline(state) {
 export function applyCarrierTorsoReduction(state, credit, mode) {
   if (credit <= 0) return;
   applyThermalDelta(state,-credit,new Set(['legs','feet','head','hands']),mode,['mid','outer','base_torso']);
+}
+
+const STROLLER_COVERAGE_COOL_PRIORITY = Object.freeze(['legs','feet','base_torso','mid','outer']);
+
+export function applyCoveredThermalCredit(state, credit, locked, mode, bodyZones, priority = STROLLER_COVERAGE_COOL_PRIORITY) {
+  if (credit <= 0 || !bodyZones?.length) return null;
+  const coveredZones = new Set(bodyZones);
+  const coveredSlots = new Set(BODY_SLOTS.filter((slot) => {
+    const selected = state.map.get(slot);
+    if (!selected) return false;
+    const zones = CLOTHING_CATALOG[selected.itemId]?.bodyZones ?? [];
+    return zones.length > 0 && zones.every((zone) => coveredZones.has(zone));
+  }));
+  if (!coveredSlots.size) return null;
+
+  let remaining = credit;
+  let firstChanged = null;
+  while (remaining >= 0.49) {
+    let changedThisRound = false;
+    for (const slot of priority) {
+      if (!coveredSlots.has(slot)) continue;
+      const changed = applyThermalDelta(state,-1,locked,mode,[slot],true,coveredSlots);
+      if (!changed) continue;
+      firstChanged ??= changed;
+      remaining -= 1;
+      changedThisRound = true;
+      if (remaining < 0.49) break;
+    }
+    if (!changedThisRound) break;
+  }
+  return firstChanged;
 }
 
 export function protectCarrierExposedAreas(state,temp) {
@@ -359,7 +394,7 @@ export function applyQuickCorrection(state,result,offset,phase,mode,request) {
   addTrace(result,'quick.warmth',phase,offset > 0 ? 'thermal_up' : 'thermal_down',changed ?? null,offset,offset > 0 ? 'QUICK_WARMER' : 'QUICK_COOLER');
 }
 
-export function applyThermalDelta(state,delta,locked,mode,priority = null,stopAfterOne = false) {
+export function applyThermalDelta(state,delta,locked,mode,priority = null,stopAfterOne = false,eligibleSlots = null) {
   if (!delta) return null;
   const direction = delta > 0 ? 1 : -1;
   const magnitude = Math.abs(delta);
@@ -375,6 +410,7 @@ export function applyThermalDelta(state,delta,locked,mode,priority = null,stopAf
   const moveOnce = (order) => {
     for (const slot of order) {
       if (locked.has(slot)) continue;
+      if (eligibleSlots && !eligibleSlots.has(slot)) continue;
       const next = nextThermalItem(state.map.get(slot)?.itemId ?? null,slot,direction,mode);
       if (next === undefined) continue;
       if (next === null) state.map.delete(slot);
@@ -440,18 +476,13 @@ export function alternativeCandidateIds(slotResult,mode) {
 export function thermalSignature(result,phase) {
   let score = 0;
   for (const entry of result.slots.filter((slot) => slot.phase === phase)) {
-    score += thermalContributionForItem(entry.selected.itemId);
+    const def = CLOTHING_CATALOG[entry.selected.itemId];
+    if (!def) continue;
+    if (def.slot === 'sleep_bag' || def.slot === 'sleep_underlayer') score += def.sleepWarmthWeight ?? 0;
+    else if (['stroller_thermal_accessory','carrier_accessory','car_thermal_accessory'].includes(def.slot)) score += (def.thermalStepCredit ?? 0) * 2;
+    else if (BODY_SLOTS.includes(def.slot)) score += def.thermalWeight ?? 0;
   }
   return score;
-}
-
-export function thermalContributionForItem(itemId, { includeFootwear = false } = {}) {
-  const def = CLOTHING_CATALOG[itemId];
-  if (!def) return 0;
-  if (def.slot === 'sleep_bag' || def.slot === 'sleep_underlayer') return def.sleepWarmthWeight ?? 0;
-  if (['stroller_thermal_accessory','carrier_accessory','car_thermal_accessory'].includes(def.slot)) return (def.thermalStepCredit ?? 0) * 2;
-  if (BODY_SLOTS.includes(def.slot) || (includeFootwear && def.slot === 'footwear')) return def.thermalWeight ?? 0;
-  return 0;
 }
 
 export function diffRecommendations(before,after,phase) {

@@ -14,7 +14,7 @@ function validEnvelope(overrides = {}) {
     payload: {
       profile: {
         profileId: 'baby_import', displayName: 'Import Baby', birthDate: '2026-01-24',
-        warmthBias: 'neutral', styleTheme: 'boy', defaultMode: 'outdoor',
+        warmthBias: 'neutral', paletteMode: 'cool', defaultMode: 'outdoor',
         createdAt: '2026-01-24T08:00:00.000Z', updatedAt: '2026-08-27T10:00:00.000Z',
         injected: 'must-not-persist',
         ...overrides.profile
@@ -42,7 +42,7 @@ test('gültiger Import wird vollständig validiert und unbekannte Felder werden 
   await openDemo(page);
   await uploadJson(page, validEnvelope());
   await expect(page.locator('#toast')).toContainText('Einstellungen importiert');
-  await expect(page.locator('body')).toHaveAttribute('data-style-theme', 'boy');
+  await expect(page.locator('body')).toHaveAttribute('data-palette-mode', 'cool');
   await expect(page.locator('#situationLabel')).toHaveText('Draußen');
 
   const stored = await page.evaluate(() => ({
@@ -92,7 +92,7 @@ test('ungültiger Import überschreibt lokale Daten nicht teilweise', async ({ p
     ui: localStorage.getItem('babyweather.v1.uiState')
   }));
 
-  const invalid = validEnvelope({ profile: { styleTheme: 'pink' } });
+  const invalid = validEnvelope({ profile: { paletteMode: 'pink' } });
   await uploadJson(page, invalid);
   await expect(page.locator('#toast')).toContainText('konnte nicht importiert werden');
 

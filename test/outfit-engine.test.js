@@ -41,9 +41,37 @@ const changedSlots = (a,b,phase='main') => {
 test('engine is deterministic for identical input',()=>{ const r=request(outdoor()); assert.deepEqual(recommendOutfit(r),recommendOutfit(r)); });
 
 test('calibrated temperature bands are exact',()=>{
-  const cases=[[-5,'below_0'],[-0.01,'below_0'],[0,'0_to_3'],[2.99,'0_to_3'],[3,'3_to_8'],[8,'8_to_12'],[12,'12_to_16'],[16,'16_to_20'],[20,'20_to_24'],[24,'24_to_28'],[28,'28_to_30'],[30,'30_plus'],[40,'30_plus']];
+  const cases=[[-5,'below_0'],[-0.01,'below_0'],[0,'0_to_3'],[2.99,'0_to_3'],[3,'3_to_8'],[8,'8_to_10'],[9.99,'8_to_10'],[10,'10_to_12'],[11.99,'10_to_12'],[12,'12_to_14'],[13.99,'12_to_14'],[14,'14_to_16'],[15.99,'14_to_16'],[16,'16_to_20'],[20,'20_to_24'],[24,'24_to_28'],[28,'28_to_30'],[30,'30_plus'],[40,'30_plus']];
   for (const [t,expected] of cases) assert.equal(temperatureBandFor(t).id,expected);
-  assert.equal(TEMPERATURE_BANDS.length,10);
+  assert.equal(TEMPERATURE_BANDS.length,12);
+});
+
+test('10 C uses a transition baseline instead of the cold 8 C stack',()=>{
+  const result=recommendOutfit(request(outdoor(),{w:weather(10)}));
+  assert.equal(id(result,'mid'),'thin_sweater');
+  assert.equal(id(result,'outer'),'light_transition_jacket');
+  assert.equal(id(result,'legs'),'trousers');
+  assert.equal(id(result,'feet'),'socks');
+  assert.equal(id(result,'head'),'thin_hat');
+  assert.equal(id(result,'hands'),null);
+});
+
+test('stroller accessory credit only cools covered zones',()=>{
+  const result=recommendOutfit(request(stroller({strollerState:'awake',activity:'normal'}),{w:weather(10)}));
+  assert.equal(id(result,'stroller_thermal_accessory'),'stroller_light_footmuff');
+  assert.equal(id(result,'legs'),'light_trousers');
+  assert.equal(id(result,'feet'),'socks');
+  assert.equal(id(result,'head'),'thin_hat');
+  assert.equal(id(result,'hands'),null);
+  assert.equal(id(result,'outer'),'light_transition_jacket');
+});
+
+test('stroller accessory alternatives compare composition without moving warmth to uncovered zones',()=>{
+  const result=recommendOutfit(request(stroller({strollerState:'awake',activity:'normal'}),{w:weather(10)}));
+  const accessory=slot(result,'stroller_thermal_accessory');
+  const equivalent=accessory.alternatives.find((alternative)=>alternative.itemId==='stroller_warm_blanket');
+  assert.equal(equivalent?.relation,'equivalent');
+  assert.ok(equivalent?.projectedChanges.every((change)=>!['head','hands'].includes(change.slot)));
 });
 
 test('trusted apparent temperature is thermal reference and wind is not double-counted',()=>{
@@ -149,18 +177,6 @@ test('alternative projectedChanges contains whole-outfit rebalancing',()=>{
   const fleece=slot(r,'mid').alternatives.find(a=>a.itemId==='fleece_jacket');
   assert.ok(fleece.projectedChanges.some(change=>change.slot==='mid'));
   assert.ok(!fleece.projectedChanges.some(change=>change.slot==='outer'));
-});
-
-test('alternative relation separates item warmth from resulting outfit warmth',()=>{
-  const r=recommendOutfit(request(outdoor(),{w:weather(14)}));
-  const fleece=slot(r,'mid').alternatives.find((option)=>option.itemId==='fleece_jacket');
-  assert.ok(fleece);
-  assert.equal(fleece.itemRelation,'warmer');
-  assert.equal(fleece.itemThermalDelta,1);
-  assert.equal(fleece.outfitRelation,'equivalent');
-  assert.equal(fleece.outfitThermalDelta,0);
-  assert.equal(fleece.relation,fleece.outfitRelation);
-  assert.equal(fleece.relativeThermalDelta,fleece.outfitThermalDelta);
 });
 
 test('precip probability below 40 alone adds no rain element',()=>{

@@ -113,7 +113,7 @@ UV-/Sonnenregeln bleiben aktiv; Sonnenschutz wird durch leichte Bedeckung statt 
 - Socken,
 - bei Wind leichte windschützende Außenschicht.
 
-### `12 bis <16 °C` – deutlich kühl
+### `14 bis <16 °C` – deutlich kühl
 
 - Langarmbody,
 - Hose/wärmere Leggings,
@@ -122,7 +122,27 @@ UV-/Sonnenregeln bleiben aktiv; Sonnenschutz wird durch leichte Bedeckung statt 
 - dünne/warme Mütze je nach Wind und Exposition,
 - funktionale Übergangs-/Softshelljacke nur bei relevantem Wind oder Regen.
 
-### `8 bis <12 °C` – kalt
+### `12 bis <14 °C` – Übergang kühl
+
+- Langarmbody,
+- normale Hose/wärmere Leggings,
+- dünner Pullover,
+- Socken,
+- dünne Mütze je nach Wind und Exposition,
+- funktionale Außenschicht nur bei relevantem Wind oder Regen.
+
+### `10 bis <12 °C` – kühler Übergang
+
+- Langarmbody,
+- normale Hose,
+- dünner Pullover,
+- leichte Übergangs-/Windschicht,
+- Socken,
+- dünne Mütze.
+
+Die leichte Außenschicht in diesem Übergangsband verhindert einen Mehrfachsprung zwischen 8 und 12 °C. Im Kinderwagen kann sie durch zonengerechte externe Isolation teilweise entlastet werden.
+
+### `8 bis <10 °C` – kalt
 
 - Langarmbody,
 - warme Beinbekleidung bzw. Hose + zusätzliche dünne Beinlage nach Bedarf,
@@ -364,7 +384,7 @@ Externe Isolation erhält einen relativen Wärmekredit:
 - warme Decke: `+1`,
 - warmer Fußsack: `+2`.
 
-Der Wärmekredit ersetzt bei Bedarf Kleidung am Körper. Er darf nie funktionale Wind-/Regen-/UV-Schutzanforderungen entfernen.
+Der Wärmekredit ersetzt bei Bedarf Kleidung am Körper. Die Verrechnung erfolgt zonengerecht über `bodyZones`: Zuerst werden vollständig abgedeckte Körperbereiche wie Beine und Füße entlastet. Kopf, Hände und nur teilweise abgedeckte Arm-/Shell-Schichten werden nicht als pauschaler Ausgleich entfernt. Funktionale Wind-/Regen-/UV-Schutzanforderungen dürfen nie entfernt.
 
 ### 8.2 Standardempfehlung nach Temperatur und Zustand
 
@@ -637,6 +657,8 @@ Beispiele:
 - Regenverdeck → kein Regenverdeck bei Regen: Regenjacke wird erforderlich,
 - 2.5 TOG → 1.0 TOG: Schlaf-Unterkleidung wird wärmer.
 
+Alternativen werden als eigener Engine-Request mit einem manuellen Lock projiziert. Die ursprüngliche Empfehlung wird dabei nicht verändert. `relation` und `relativeThermalDelta` beschreiben die thermische Wirkung des gesamten projizierten Outfits; `projectedChanges` beschreibt separat, welche weiteren Slots für die gewählte Zusammensetzung angepasst würden.
+
 ### 14.4 Lock-Lebensdauer
 
 Ein manueller Lock gilt nur für die aktuelle Recommendation-Session. Bei komplett neuem Wetter/Ort/Modus darf eine neue Empfehlung ohne alten Lock gestartet werden.
@@ -729,7 +751,7 @@ Mindestens:
 19. Alle fünf TOGs plus `none` sind austauschbar.
 20. TOG-Tausch rebalanciert Unterkleidung.
 21. Schlafmodus empfiehlt nie lose Bettware – auch bei `sleep_bag_none`.
-22. `styleTheme` verändert keine Fachentscheidung.
+22. `paletteMode` verändert keine Fachentscheidung, Wärmeentscheidung oder Safety-Codes; das frühere `styleTheme` bleibt nur als Import-Kompatibilität lesbar.
 23. Manueller Item-Lock bleibt in derselben Session erhalten.
 24. Sicherheitsregel darf Lock überstimmen und muss einen strukturierten Grund liefern.
 25. `wärmer` / `dünner` verändert möglichst wenig Teile.

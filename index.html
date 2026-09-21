@@ -53,7 +53,6 @@
             <span class="chevron" aria-hidden="true">›</span>
           </button>
         </div>
-        <div id="primarySituationControl" class="primary-situation-host" hidden></div>
         <div class="warmth-control" role="group" aria-label="Outfit anpassen">
           <button type="button" data-warmth="cooler">Dünner</button>
           <button type="button" class="is-active" data-warmth="balanced" aria-pressed="true">Passend</button>
@@ -67,7 +66,7 @@
           <div class="neck-icon" aria-hidden="true">☁</div>
           <div>
             <h2>Nackentest</h2>
-            <p class="neck-check-guidance"><strong>Warm & trocken</strong> → passend<br><strong>Heiß oder schwitzig</strong> → eine Schicht weniger<br><strong>Kühl</strong> → eine Schicht mehr</p>
+            <p>Warm & trocken: passt. Heiß/schwitzig: dünner. Kühl: wärmer.</p>
             <div class="neck-action-row">
               <button type="button" class="neck-action-button" data-open-dialog="neckFeedbackDialog">Nackentest anwenden</button>
             </div>
@@ -179,7 +178,7 @@
   </dialog>
   <dialog id="settingsDialog" class="sheet-dialog" aria-labelledby="settingsTitle">
     <div class="sheet"><header class="sheet-header"><h2 id="settingsTitle">Einstellungen</h2><button class="icon-button" type="button" data-close-dialog="settingsDialog" aria-label="Einstellungen schließen">×</button></header>
-      <fieldset class="choice-fieldset"><legend>Kleidungsstil</legend><label><input type="radio" name="styleTheme" value="neutral"> Neutral</label><label><input type="radio" name="styleTheme" value="boy"> Blau-/Grünvarianten</label><label><input type="radio" name="styleTheme" value="girl"> Rosa-/Beerentöne</label></fieldset>
+      <fieldset class="choice-fieldset"><legend>Farbstil</legend><label><input type="radio" name="paletteMode" value="all"> Alle passenden Farben</label><label><input type="radio" name="paletteMode" value="neutral"> Unisex / ausgewogen</label><label><input type="radio" name="paletteMode" value="cool"> Kühl und gedeckt</label><label><input type="radio" name="paletteMode" value="warm"> Warm und weich</label></fieldset>
       <div class="settings-actions"><button class="secondary-button" type="button" id="exportSettingsButton">JSON exportieren</button><label class="secondary-button file-button">JSON importieren<input type="file" id="importSettingsInput" accept="application/json,.json"></label></div>
       <p class="version-line">Version <span id="appVersion">0.2.0</span></p>
     </div>

@@ -4,13 +4,13 @@ import {
   TEMPERATURE_BANDS, RELATION_ORDER, createSession, setWarmthOffset, lockItem, temperatureBandFor,
   createPhaseState, seedBaseline, activityAdjustmentFor, traceThermal, strollerStateAdjustment,
   evaluateWind, warmthBiasAdjustment, neckFeedbackAdjustment, selectStrollerThermalAccessory, selectCarrierAccessory, selectCarThermalAccessory,
-  setSelected, carrierThermalCredit, applyThermalDelta, applyCarrierTorsoReduction,
+  setSelected, carrierThermalCredit, applyThermalDelta, applyCoveredThermalCredit, applyCarrierTorsoReduction,
   protectCarrierExposedAreas, rainRequirement, sunRequirement, selectStrollerWeatherAccessory,
   addNotice, applyRainProtection, applyWindProtection, applySunProtection, applyGroundContact,
   applyBodyLocksAndRebalance, applyQuickCorrection, applyWeatherQuality, finalizePhase,
   phaseStatusFromResult, summarizeWeatherWindow, thermalEnvironment, makeCarSafeBaseline,
   enforceCarSafetyAfterLocks, findLock, nearestSleepUnderlayer, overrideUnsafeLock,
-  blockPhase, alternativeCandidateIds, thermalSignature, thermalContributionForItem, diffRecommendations, addTrace, roundHalf,
+  blockPhase, alternativeCandidateIds, thermalSignature, diffRecommendations, addTrace, roundHalf,
   ageMonths, isFiniteNumber, clamp
 } from './outfit-engine-support.js';
 
@@ -138,14 +138,15 @@ function evaluateOutdoorLike(result, request, phase, effectiveMode) {
   seedBaseline(state, band.id, effectiveMode);
 
   let adjustment = 0;
+  let strollerStateAdjustmentValue = 0;
   const activityAdjustment = activityAdjustmentFor(context, effectiveMode);
   adjustment += activityAdjustment;
   if (activityAdjustment) traceThermal(result,'activity.level',phase,activityAdjustment,activityAdjustment > 0 ? 'ACTIVITY_WARMER' : 'ACTIVITY_COOLER');
 
   if (effectiveMode === 'stroller') {
-    const strollerAdjustment = strollerStateAdjustment(context, thermal.thermalReferenceC);
-    adjustment += strollerAdjustment;
-    traceThermal(result,'situation.stroller.state',phase,strollerAdjustment,'STROLLER_STATE_THERMAL_ADJUSTMENT');
+    strollerStateAdjustmentValue = strollerStateAdjustment(context, thermal.thermalReferenceC);
+    adjustment += strollerStateAdjustmentValue;
+    traceThermal(result,'situation.stroller.state',phase,strollerStateAdjustmentValue,'STROLLER_STATE_THERMAL_ADJUSTMENT');
   }
 
   const wind = evaluateWind(weatherWindow, thermal, context, effectiveMode);
@@ -178,8 +179,26 @@ function evaluateOutdoorLike(result, request, phase, effectiveMode) {
     addTrace(result,'situation.carrier.body_heat',phase,'thermal_down',carrier.itemId,-carrierTorsoCredit,'CARRIER_BODY_HEAT');
   }
 
-  const bodyAdjustment = adjustment - accessoryCredit;
+  const bodyAdjustment = adjustment - strollerStateAdjustmentValue;
   applyThermalDelta(state, bodyAdjustment, new Set(), effectiveMode);
+  if (effectiveMode === 'stroller') {
+    const accessoryAdjustment = strollerStateAdjustmentValue - accessoryCredit;
+    if (!accessoryCredit) {
+      applyThermalDelta(state,strollerStateAdjustmentValue,new Set(),effectiveMode);
+    } else if (accessoryAdjustment < 0) {
+      const accessory = state.map.get('stroller_thermal_accessory');
+      const accessoryDefinition = CLOTHING_CATALOG[accessory?.itemId];
+      applyCoveredThermalCredit(
+        state,
+        -accessoryAdjustment,
+        new Set(),
+        effectiveMode,
+        accessoryDefinition?.bodyZones ?? []
+      );
+    } else if (accessoryAdjustment > 0) {
+      applyThermalDelta(state,accessoryAdjustment,new Set(),effectiveMode);
+    }
+  }
   if (effectiveMode === 'stroller') enforceAutomaticStrollerWarmWeatherLimits(state,result,phase,thermal.thermalReferenceC);
 
   if (effectiveMode === 'carrier') {
@@ -401,26 +420,13 @@ function attachAlternatives(result,request) {
       const projectedSelection = projected.slots.find((entry) => entry.phase === slotResult.phase && entry.slot === slotResult.slot);
       if (!projectedSelection || projectedSelection.selected.itemId !== itemId) continue;
       const projectedScore = thermalSignature(projected,slotResult.phase);
-      const outfitDelta = roundHalf(projectedScore - baselineScore);
-      const outfitRelation = Math.abs(outfitDelta) < 0.25 ? 'equivalent' : outfitDelta > 0 ? 'warmer' : 'cooler';
-      const itemDelta = roundHalf(thermalContributionForItem(itemId, { includeFootwear:true }) - thermalContributionForItem(slotResult.selected.itemId, { includeFootwear:true }));
-      const itemRelation = Math.abs(itemDelta) < 0.25 ? 'equivalent' : itemDelta > 0 ? 'warmer' : 'cooler';
+      const delta = roundHalf(projectedScore - baselineScore);
+      const relation = Math.abs(delta) < 0.25 ? 'equivalent' : delta > 0 ? 'warmer' : 'cooler';
       const projectedChanges = diffRecommendations(result,projected,slotResult.phase).map((change) => ({
         ...change,
         reasonCode:change.slot === slotResult.slot ? 'MANUAL_ITEM_LOCK' : 'OUTFIT_REBALANCED_AFTER_SWAP'
       }));
-      options.push({
-        itemId,
-        // relation/relativeThermalDelta remain compatibility aliases for consumers
-        // that have not migrated to the explicit outfit fields yet.
-        relation:outfitRelation,
-        relativeThermalDelta:outfitDelta,
-        itemRelation,
-        itemThermalDelta:itemDelta,
-        outfitRelation,
-        outfitThermalDelta:outfitDelta,
-        projectedChanges
-      });
+      options.push({ itemId, relation, relativeThermalDelta:delta, projectedChanges });
     }
     options.sort((a,b) => RELATION_ORDER[a.relation] - RELATION_ORDER[b.relation]
       || Math.abs(a.relativeThermalDelta) - Math.abs(b.relativeThermalDelta)
