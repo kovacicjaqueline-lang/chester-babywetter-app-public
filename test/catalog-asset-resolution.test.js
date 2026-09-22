@@ -48,6 +48,23 @@ function createStore() {
         stylePreferenceRank: { girl: 0, neutral: 1, boy: 2 }
       }
     },
+    paletteModeProfiles: {
+      cool: {
+        themeIds: ['dusty_blue_sand'],
+        sourceStyleRank: { neutral: 0, boy: 0, girl: 0 }
+      },
+      warm: {
+        themeIds: ['mauve_cream'],
+        sourceStyleRank: { neutral: 0, boy: 0, girl: 0 }
+      }
+    },
+    assetOverrides: {
+      short_sleeve_bodysuit: {
+        neutral: { themeIds: ['sage_oat'] },
+        boy: { themeIds: ['mauve_cream'] },
+        girl: { themeIds: ['dusty_blue_sand'] }
+      }
+    },
     additionalVariants: {
       leggings: [
         {
@@ -78,16 +95,28 @@ test('catalog prefers an available high-detail visual variant for the selected s
   assert.equal(girl.visualVariantId, 'mauve-knit-01');
 });
 
-test('catalog keeps the style-specific base image when no compatible visual variant exists', () => {
+test('catalog uses color metadata when no additional visual variant exists', () => {
   const store = createStore();
 
   const boyLeggings = store.resolveCatalog('leggings', 'boy');
   const girlBody = store.resolveCatalog('short_sleeve_bodysuit', 'girl');
 
   assert.equal(boyLeggings.assetPath, 'assets/clothing/leggings/neutral.webp');
-  assert.equal(boyLeggings.visualVariantId, null);
-  assert.equal(girlBody.assetPath, 'assets/clothing/short_sleeve_bodysuit/girl.webp');
-  assert.equal(girlBody.visualVariantId, null);
+  assert.equal(boyLeggings.visualVariantId, 'leggings::neutral');
+  assert.equal(girlBody.assetPath, 'assets/clothing/short_sleeve_bodysuit/boy.webp');
+  assert.equal(girlBody.visualVariantId, 'short_sleeve_bodysuit::boy');
+});
+
+test('catalog selects physical variants by color metadata, not boy/girl labels', () => {
+  const store = createStore();
+
+  const coolBody = store.resolveCatalog('short_sleeve_bodysuit', 'cool');
+  const warmBody = store.resolveCatalog('short_sleeve_bodysuit', 'warm');
+
+  assert.equal(coolBody.assetPath, 'assets/clothing/short_sleeve_bodysuit/girl.webp');
+  assert.equal(warmBody.assetPath, 'assets/clothing/short_sleeve_bodysuit/boy.webp');
+  assert.equal(coolBody.visualVariantId, 'short_sleeve_bodysuit::girl');
+  assert.equal(warmBody.visualVariantId, 'short_sleeve_bodysuit::boy');
 });
 
 test('standard resolve uses the high-detail catalog lookup when no active look exists', () => {
