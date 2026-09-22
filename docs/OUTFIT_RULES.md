@@ -66,6 +66,7 @@ Beispiele:
 - Regenjacke ohne Futter: 0–1,
 - Kurzarmbody/T-Shirt: 1,
 - Langarmbody/Hose/dünner Pullover: 2,
+- Gefütterte Übergangsjacke: 2,
 - Fleece/warme Hose/isolierende Softshell: 3,
 - Winteroverall/warmer Fußsack: 4.
 
@@ -139,22 +140,20 @@ UV-/Sonnenregeln bleiben aktiv; Sonnenschutz wird durch leichte Bedeckung statt 
 
 - Langarmbody,
 - normale Hose,
-- dünner Pullover,
-- leichte Übergangs-/Windschicht,
+- leichte Übergangsjacke als eigenständige leichte Außenschicht,
 - Socken,
 - dünne Mütze.
 
-Die leichte Außenschicht in diesem Übergangsband verhindert einen Mehrfachsprung zwischen 8 und 12 °C. Im Kinderwagen kann sie durch zonengerechte externe Isolation teilweise entlastet werden.
+Die leichte Außenschicht in diesem Übergangsband verhindert einen Mehrfachsprung zwischen 8 und 12 °C, ohne zusätzlich einen Mid-Layer zu stapeln. Im Kinderwagen kann sie durch zonengerechte externe Isolation teilweise entlastet werden.
 
 ### `8 bis <10 °C` – kalt
 
 - Langarmbody,
-- warme Beinbekleidung bzw. Hose + zusätzliche dünne Beinlage nach Bedarf,
-- Fleece/warmer Mid-Layer,
-- windschützende warme Außenschicht oder Übergangsoverall,
-- warme Socken/Booties,
+- normale Hose,
+- gefütterte Übergangsjacke als eigenständige warme Außenschicht,
+- Socken,
 - warme Mütze,
-- Handschuhe bei längerer Exposition.
+- Handschuhe nur bei längerer Exposition oder zusätzlichem Hand-Windschutzbedarf.
 
 ### `3 bis <8 °C` – sehr kalt
 
@@ -274,6 +273,8 @@ Die Schutzstufen orientieren sich an den Beaufort-Landbereichen. Sie sind eine P
 - `29–38 km/h` (fresh breeze): `windProtection >= 2`,
 - `39–49 km/h` (strong breeze): `windProtection >= 3`,
 - `>=50 km/h`: `windProtection >= 3` + `STRONG_WIND_CAUTION`.
+
+Die Windschutzstufen sind nicht automatisch mit einer zusätzlichen Wärmeschicht gleichzusetzen: Stufe 1 kann die leichte oder gefütterte Teddy-Übergangsjacke abdecken, Stufe 2 die Softshelljacke und Stufe 3 die Softshell-/Regenjacke mit hohem Schutz. Die thermische Wirkung wird anschließend separat gegen das übrige Outfit ausbalanciert.
 
 Böen:
 
@@ -790,3 +791,5 @@ Mindestens:
 41. Kinderwagen-Windschutz reduziert nur einen separat berechneten thermischen Windmodifikator, wenn Wind nicht bereits in der vertrauenswürdigen `apparentTempC` enthalten ist.
 42. Ab `24 °C` erzeugt eine automatische thermische Kinderwagen-Rebalance keine isolierende Mid-/Outer-Schicht; funktionale Wind-/Regenschutz-Shells bleiben zulässig.
 43. Neue Outdoor-, Kinderwagen- und Trage-Kontexte starten mit `sunExposure: unknown`; neue Kinderwagen-Kontexte zusätzlich mit `windProtection: unknown`. Alte unversionierte `shade`-/`partial`-Defaults werden einmalig auf `unknown` migriert; danach bleiben ausdrücklich gewählte versionierte Werte erhalten.
+44. Leichte und gefütterte Übergangsjacke belegen denselben `outer`-Slot; `mid` und `outer` werden bei einer passenden Übergangsjacke nicht unnötig doppelt gestapelt.
+45. Die gefütterte Teddy-Übergangsjacke liegt thermisch zwischen leichter Übergangsjacke und Softshelljacke, hat aber nur leichten Windschutz; ab Windschutzstufe 2 wird sie durch eine Softshell-/Regenjacke ersetzt bzw. ergänzt und bleibt unter Winteroverall und Übergangsoverall.

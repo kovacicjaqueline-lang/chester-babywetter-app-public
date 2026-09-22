@@ -20,8 +20,8 @@ export const BASELINE = Object.freeze({
   below_0: Object.freeze({ base_torso:'long_sleeve_bodysuit', legs:'warm_trousers', mid:'fleece_jacket', outer:'winter_overall', feet:'warm_socks_booties', head:'warm_hat', hands:'gloves' }),
   '0_to_3': Object.freeze({ base_torso:'long_sleeve_bodysuit', legs:'warm_trousers', mid:'fleece_jacket', outer:'winter_overall', feet:'warm_socks_booties', head:'warm_hat', hands:'gloves' }),
   '3_to_8': Object.freeze({ base_torso:'long_sleeve_bodysuit', legs:'warm_trousers', mid:'fleece_jacket', outer:'transition_overall', feet:'warm_socks_booties', head:'warm_hat', hands:'gloves' }),
-  '8_to_10': Object.freeze({ base_torso:'long_sleeve_bodysuit', legs:'warm_trousers', mid:'fleece_jacket', outer:'softshell_jacket', feet:'warm_socks_booties', head:'warm_hat', hands:'gloves' }),
-  '10_to_12': Object.freeze({ base_torso:'long_sleeve_bodysuit', legs:'trousers', mid:'thin_sweater', outer:'light_transition_jacket', feet:'socks', head:'thin_hat' }),
+  '8_to_10': Object.freeze({ base_torso:'long_sleeve_bodysuit', legs:'trousers', outer:'insulated_transition_jacket', feet:'socks', head:'warm_hat' }),
+  '10_to_12': Object.freeze({ base_torso:'long_sleeve_bodysuit', legs:'trousers', outer:'light_transition_jacket', feet:'socks', head:'thin_hat' }),
   '12_to_14': Object.freeze({ base_torso:'long_sleeve_bodysuit', legs:'trousers', mid:'thin_sweater', feet:'socks', head:'thin_hat' }),
   '14_to_16': Object.freeze({ base_torso:'long_sleeve_bodysuit', legs:'trousers', mid:'thin_sweater', feet:'socks', head:'thin_hat' }),
   '16_to_20': Object.freeze({ base_torso:'long_sleeve_bodysuit', legs:'trousers', mid:'thin_sweater', feet:'socks' }),
@@ -35,7 +35,7 @@ export const THERMAL_LADDERS = Object.freeze({
   base_torso: Object.freeze(['short_sleeve_bodysuit','long_sleeve_bodysuit']),
   legs: Object.freeze([null,'light_trousers','trousers','warm_trousers']),
   mid: Object.freeze([null,'thin_sweater','fleece_jacket']),
-  outer: Object.freeze([null,'light_transition_jacket','softshell_jacket','winter_overall']),
+  outer: Object.freeze([null,'light_transition_jacket','insulated_transition_jacket','softshell_jacket','winter_overall']),
   feet: Object.freeze([null,'socks','warm_socks_booties']),
   head: Object.freeze([null,'thin_hat','warm_hat']),
   hands: Object.freeze([null,'gloves'])
@@ -347,7 +347,8 @@ export function ensureFunctionalOuter(state,type,level) {
   const currentProtection = type === 'rain' ? def?.rainProtection ?? 0 : def?.windProtection ?? 0;
   if (currentProtection >= level) return;
   if (type === 'rain') setSelected(state,'outer','rain_jacket','engine','on_body',['RAIN_PROTECTION_REQUIRED']);
-  else setSelected(state,'outer',level >= 2 ? 'softshell_jacket' : 'light_transition_jacket','engine','on_body',['WIND_PROTECTION_REQUIRED']);
+  else if (level >= 2) setSelected(state,'outer','softshell_jacket','engine','on_body',['WIND_PROTECTION_REQUIRED']);
+  else setSelected(state,'outer','light_transition_jacket','engine','on_body',['WIND_PROTECTION_REQUIRED']);
 }
 
 export function applySunProtection(state,result,request,uv,temp,phase,mode) {

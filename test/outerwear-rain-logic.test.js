@@ -114,7 +114,7 @@ test('13 C stroller asleep keeps the warmer state without adding a body shell', 
 test('colder weather still receives a functional warm outer layer', () => {
   const result = recommendOutfit(request(context('outdoor'), weather(9)));
 
-  assert.equal(item(result, 'outer'), 'softshell_jacket');
+  assert.equal(item(result, 'outer'), 'insulated_transition_jacket');
 });
 
 test('strong wind still adds functional wind protection at 13 C', () => {

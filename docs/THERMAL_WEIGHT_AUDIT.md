@@ -8,7 +8,7 @@ Audit-Datum: 2026-08-28
 
 Die offene V1-Entscheidung zur finalen Katalogzuordnung einzelner Assets zu `thermalWeight` kann geschlossen werden.
 
-Es wurden keine fachlichen Fehler gefunden, die eine Änderung an `src/clothing-catalog.js` oder an der Outfit-Engine rechtfertigen. Die aktuellen Werte sind als relative Produktstufen intern konsistent. Sie sind ausdrücklich keine CLO-/TOG-Messwerte.
+Die Katalogtrennung der Übergangsjacken wurde als fachliche Ergänzung umgesetzt: `light_transition_jacket` bleibt die ungefütterte leichte Windschutzstufe, `insulated_transition_jacket` bildet die wärmere Teddy-/Cord-Zwischenstufe mit nur leichtem Windschutz. Die Werte sind als relative Produktstufen intern konsistent. Sie sind ausdrücklich keine CLO-/TOG-Messwerte.
 
 Die drei Wärmegrößen haben getrennte Aufgaben:
 
@@ -80,11 +80,12 @@ Keine widersprüchliche Reihenfolge.
 | --- | ---: | --- |
 | Regenjacke | 0 | hoher Regen-/Windschutz |
 | leichte Übergangsjacke | 1 | leichter Windschutz |
+| gefütterte Teddy-Übergangsjacke | 2 | leichter Windschutz, leichte Isolation |
 | Softshelljacke | 3 | hoher Windschutz, etwas Regenschutz |
 | Übergangsoverall | 3 | warme, stärker abdeckende Außenlage |
 | Winteroverall | 4 | stärkste Outdoor-Isolation |
 
-Die Regenjacke ist bewusst Schutzschicht statt Wärmeschicht. Übergangsoverall und Softshell liegen in derselben breiten Wärmeklasse; der Winteroverall bleibt eindeutig wärmer.
+Die Regenjacke ist bewusst Schutzschicht statt Wärmeschicht. Die gefütterte Teddy-Übergangsjacke schließt die Wärmelücke zwischen leichter Übergangsjacke und Softshell, ohne einen zusätzlichen Mid-Layer vorauszusetzen; ab Windschutzstufe 2 ersetzt die Softshell-/Regenjacke sie als funktionale Außenschicht. Übergangsoverall und Softshell liegen in derselben breiten Wärmeklasse; der Winteroverall bleibt eindeutig wärmer.
 
 ### Füße, Kopf, Hände und Schuhe
 
@@ -175,4 +176,4 @@ Damit gibt es für den aktuellen Assetbestand keinen Hinweis auf ein Item, das s
 
 ## Schlussfolgerung
 
-Für V1 ist keine weitere fachliche Kalibrierungsentscheidung zu `thermalWeight` erforderlich. Änderungen an diesen Werten sollten künftig als bewusste Produktlogikänderung behandelt und durch die Kataloginvarianten sowie die bestehenden Situation-/Alternativtests abgesichert werden.
+Für die Übergangsjacken ist die fachliche Kalibrierung mit zwei eigenen Katalogitems geschlossen: leichte Windschutzschicht `1`, gefütterte Teddy-Übergangsschicht `2` mit nur leichtem Windschutz. Weitere Änderungen an diesen Werten sollten als bewusste Produktlogikänderung behandelt und durch Kataloginvarianten sowie Situations-/Alternativtests abgesichert werden.

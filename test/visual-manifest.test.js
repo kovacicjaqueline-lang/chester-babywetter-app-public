@@ -25,12 +25,12 @@ function allReferencedPaths() {
   return assetManifest.assetGroups.flatMap((group) => [...manifestPaths(group), ...additionalPaths(group.id)]);
 }
 
-function allWebpFiles(directory) {
+function allRuntimeImageFiles(directory) {
   const result = [];
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
     const absolute = join(directory, entry.name);
-    if (entry.isDirectory()) result.push(...allWebpFiles(absolute));
-    else if (entry.isFile() && entry.name.endsWith('.webp')) result.push(absolute);
+    if (entry.isDirectory()) result.push(...allRuntimeImageFiles(absolute));
+    else if (entry.isFile() && /\.(?:webp|png)$/.test(entry.name)) result.push(absolute);
   }
   return result;
 }
@@ -72,6 +72,14 @@ function webpDimensions(buffer) {
   }
 
   throw new Error(`Unsupported WebP chunk: ${chunk}`);
+}
+
+function imageDimensions(filename, buffer) {
+  if (filename.endsWith('.png')) {
+    assert.equal(buffer.subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
+    return { width:buffer.readUInt32BE(16), height:buffer.readUInt32BE(20) };
+  }
+  return webpDimensions(buffer);
 }
 
 test('real manifests cover exactly the current catalog and expose neutral fallbacks', () => {
@@ -196,22 +204,35 @@ test('palette modes declare explicit theme and source-variant boundaries', () =>
   assert.deepEqual(visualManifest.paletteModeProfiles.neutral.sourceStyleRank, { neutral: 0 });
 });
 
-test('all referenced paths exist and no WebP is accidentally unreferenced', () => {
+test('insulated teddy jacket exposes the four planned colorways', () => {
+  const variants = visualManifest.additionalVariants.insulated_transition_jacket;
+  assert.deepEqual(variants.map((variant) => variant.id), ['dusty-blue-01', 'sand-greige-01', 'terracotta-olive-01']);
+  assert.deepEqual(variants.flatMap((variant) => variant.themeIds).sort(), [
+    'apricot_oat',
+    'clay_cream',
+    'dusty_blue_sand',
+    'ocher_taupe',
+    'slate_blue_greige',
+    'terracotta_greige'
+  ]);
+});
+
+test('all referenced paths exist and no runtime image is accidentally unreferenced', () => {
   const referenced = new Set(allReferencedPaths());
   for (const relativePath of referenced) {
     assert.equal(existsSync(join(repoRoot, relativePath)), true, `missing ${relativePath}`);
   }
 
-  const physical = new Set(allWebpFiles(clothingRoot).map((absolute) => absolute.slice(repoRoot.length).replaceAll('\\', '/')));
+  const physical = new Set(allRuntimeImageFiles(clothingRoot).map((absolute) => absolute.slice(repoRoot.length).replaceAll('\\', '/')));
   assert.deepEqual([...physical].sort(), [...referenced].sort());
 });
 
-test('physical images are valid square WebP files in supported legacy and high-resolution runtime sizes', () => {
-  const files = allWebpFiles(clothingRoot);
+test('physical images are valid square runtime files in supported sizes', () => {
+  const files = allRuntimeImageFiles(clothingRoot);
   const allowedSizes = new Set([128, 256, 512, 1024]);
   for (const filename of files) {
     const buffer = readFileSync(filename);
-    const { width, height } = webpDimensions(buffer);
+    const { width, height } = imageDimensions(filename, buffer);
     assert.equal(width, height, `${filename} must be square`);
     assert.ok(allowedSizes.has(width), `${filename} has unexpected ${width}x${height}; expected 128, 256, 512 or 1024 square runtime asset`);
   }
@@ -219,7 +240,7 @@ test('physical images are valid square WebP files in supported legacy and high-r
 
 test('physical files do not contain unexpected binary duplicates', () => {
   const hashToFiles = new Map();
-  for (const filename of allWebpFiles(clothingRoot)) {
+  for (const filename of allRuntimeImageFiles(clothingRoot)) {
     const hash = createHash('sha256').update(readFileSync(filename)).digest('hex');
     const list = hashToFiles.get(hash) || [];
     list.push(filename);

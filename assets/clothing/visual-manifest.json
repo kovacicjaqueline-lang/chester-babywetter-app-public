@@ -771,6 +771,27 @@
         "pattern": "solid"
       }
     },
+    "insulated_transition_jacket": {
+      "neutral": {
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "clay_cream",
+          "terracotta_greige",
+          "ocher_taupe",
+          "petrol_warm_beige",
+          "mauve_cream",
+          "apricot_oat",
+          "slate_blue_greige",
+          "soft_lavender_sand"
+        ],
+        "paletteTags": [
+          "sage",
+          "warm_beige"
+        ],
+        "pattern": "micro_texture"
+      }
+    },
     "softshell_jacket": {
       "neutral": {
         "themeIds": [
@@ -1980,6 +2001,49 @@
           "clay"
         ],
         "pattern": "fine_knit"
+      }
+    ],
+    "insulated_transition_jacket": [
+      {
+        "id": "dusty-blue-01",
+        "assetPath": "assets/clothing/insulated_transition_jacket/dusty-blue-01.png",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue",
+          "cream"
+        ],
+        "pattern": "micro_texture"
+      },
+      {
+        "id": "sand-greige-01",
+        "assetPath": "assets/clothing/insulated_transition_jacket/sand-greige-01.png",
+        "themeIds": [
+          "clay_cream",
+          "ocher_taupe",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "sand",
+          "greige",
+          "cream"
+        ],
+        "pattern": "micro_texture"
+      },
+      {
+        "id": "terracotta-olive-01",
+        "assetPath": "assets/clothing/insulated_transition_jacket/terracotta-olive-01.png",
+        "themeIds": [
+          "terracotta_greige"
+        ],
+        "paletteTags": [
+          "terracotta",
+          "sage",
+          "cream"
+        ],
+        "pattern": "micro_texture"
       }
     ],
     "light_shoes": [

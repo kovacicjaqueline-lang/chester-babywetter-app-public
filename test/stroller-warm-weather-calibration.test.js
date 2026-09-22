@@ -109,7 +109,7 @@ test('stroller does not add state-based body insulation at 20 C or warmer', () =
 
 test('stroller transition at 10 C does not retain the cold 8 C body stack', () => {
   const result = recommend(stroller({ strollerState:'awake', activity:'normal' }), weather(10));
-  assert.equal(item(result,'mid'),'thin_sweater');
+  assert.equal(item(result,'mid'),null);
   assert.equal(item(result,'outer'),'light_transition_jacket');
   assert.equal(item(result,'legs'),'light_trousers');
   assert.equal(item(result,'feet'),'socks');

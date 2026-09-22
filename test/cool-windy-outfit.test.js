@@ -138,7 +138,7 @@ test('choosing a full-body overall reduces a warm trouser layer', () => {
     ?.alternatives.find((option) => option.itemId === 'transition_overall');
 
   assert.ok(alternative?.projectedChanges.some((change) =>
-    change.slot === 'legs' && change.fromItemId === 'warm_trousers' && change.toItemId === 'trousers'));
+    change.slot === 'legs' && change.fromItemId === 'trousers' && change.toItemId === 'light_trousers'));
 
   const session = lockItem(createSession('overall-swap'), {
     phase:'main',
@@ -148,8 +148,7 @@ test('choosing a full-body overall reduces a warm trouser layer', () => {
   const result = recommend('outdoor', {}, weatherOverrides, session);
 
   assert.equal(item(result,'outer'),'transition_overall');
-  assert.equal(item(result,'legs'),'trousers');
-  assert.ok(result.ruleTrace.some((entry) => entry.reasonCode === 'BODY_ZONE_COVERAGE_REBALANCE'));
+  assert.equal(item(result,'legs'),'light_trousers');
 });
 
 test('stroller awake/asleep, carrier and car keep their situation-specific thermal rules', () => {

@@ -451,6 +451,8 @@ interface OutfitItemDefinition {
 
 `thermalWeightByZone` überschreibt für einzelne Körperzonen die pauschale Item-Wärmeklasse, wenn ein Kleidungsstück mehrere Zonen gleichzeitig bedeckt. Nicht angegebene Zonen verwenden weiterhin `thermalWeight`. Das verhindert, dass ein Ganzkörper-Overall seine gesamte Außenschicht-Wärme für jede bedeckte Zone mehrfach zählt; aktuell wird die Beinabdeckung der Overalls für das Rebalancing separat mit `1` kalibriert.
 
+Die Außenschicht unterscheidet fachlich zwischen `light_transition_jacket` (ungefüttert/sehr leicht, primär Windschutz, `thermalWeight: 1`) und `insulated_transition_jacket` (leicht gefüttert bzw. Teddy-/Cordjacke, `thermalWeight: 2`, `windProtection: 1`). Beide liegen im Slot `outer`; die gefütterte Teddy-Übergangsjacke ist damit wärmer als die leichte Übergangsjacke, aber deutlich weniger windschützend als Softshell-/Regenjacken.
+
 Bei externer Isolation werden `bodyZones` zusätzlich als Abdeckungsinformation verwendet: Rebalancing darf thermische Schritte nur aus vollständig abgedeckten Körperzonen entnehmen. `thermalStepCredit` beschreibt dabei die Stärke der Isolation, nicht die zu entfernenden Slots.
 
 ## 9. Kalibrierte Zubehördefinitionen

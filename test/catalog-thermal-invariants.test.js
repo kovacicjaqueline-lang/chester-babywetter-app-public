@@ -23,6 +23,7 @@ const EXPECTED_V1_IDS = Object.freeze([
   'sweatshirt',
   'fleece_jacket',
   'light_transition_jacket',
+  'insulated_transition_jacket',
   'softshell_jacket',
   'rain_jacket',
   'transition_overall',
@@ -96,6 +97,7 @@ test('body thermalWeight calibration stays monotonic within comparable slots', (
     fleece_jacket:3,
     rain_jacket:0,
     light_transition_jacket:1,
+    insulated_transition_jacket:2,
     softshell_jacket:3,
     transition_overall:3,
     winter_overall:4,
@@ -115,6 +117,8 @@ test('body thermalWeight calibration stays monotonic within comparable slots', (
   assert.ok(CLOTHING_CATALOG.trousers.thermalWeight < CLOTHING_CATALOG.warm_trousers.thermalWeight);
   assert.ok(CLOTHING_CATALOG.thin_sweater.thermalWeight < CLOTHING_CATALOG.fleece_jacket.thermalWeight);
   assert.ok(CLOTHING_CATALOG.light_transition_jacket.thermalWeight < CLOTHING_CATALOG.softshell_jacket.thermalWeight);
+  assert.ok(CLOTHING_CATALOG.light_transition_jacket.thermalWeight < CLOTHING_CATALOG.insulated_transition_jacket.thermalWeight);
+  assert.ok(CLOTHING_CATALOG.insulated_transition_jacket.thermalWeight < CLOTHING_CATALOG.softshell_jacket.thermalWeight);
   assert.ok(CLOTHING_CATALOG.softshell_jacket.thermalWeight < CLOTHING_CATALOG.winter_overall.thermalWeight);
   assert.equal(CLOTHING_CATALOG.transition_overall.thermalWeightByZone.legs,1);
   assert.equal(CLOTHING_CATALOG.winter_overall.thermalWeightByZone.legs,1);
@@ -192,6 +196,8 @@ test('car-seat safety attributes are independent of thermal class', () => {
   assert.equal(CLOTHING_CATALOG.long_sleeve_bodysuit.carSeatCompatibility,'allowed');
   assert.equal(CLOTHING_CATALOG.fleece_jacket.carSeatCompatibility,'conditional');
   assert.equal(CLOTHING_CATALOG.softshell_jacket.carSeatCompatibility,'conditional');
+  assert.equal(CLOTHING_CATALOG.insulated_transition_jacket.carSeatCompatibility,'conditional');
+  assert.equal(CLOTHING_CATALOG.insulated_transition_jacket.windProtection,1);
   assert.equal(CLOTHING_CATALOG.transition_overall.carSeatCompatibility,'prohibited');
   assert.equal(CLOTHING_CATALOG.winter_overall.carSeatCompatibility,'prohibited');
   assert.equal(CLOTHING_CATALOG.car_blanket_over_harness.carSeatCompatibility,'prohibited');
