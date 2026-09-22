@@ -1,4 +1,5 @@
 import { formatPrecipitation, formatTemperature, formatTemperatureC, formatUvIndex, precipitationLabelFor } from './weather-copy.js';
+import { isCompositeSleepVisualItem, visualPartsForItem } from './sleep-visual-parts.js';
 
 const MODE_COPY = Object.freeze({
   outdoor: { label: 'Draußen', icon: '☀', short: 'Wetter + Aktivität' },
@@ -84,16 +85,17 @@ function imageFallback(shell, label) {
   shell.append(fallback);
 }
 
-function clothingCard({ slotResult = null, itemId, asset, label, role = '', interactive = false, contextLabel = '' }) {
+function clothingCard({ slotResult = null, itemId, logicalItemId = null, asset, label, role = '', interactive = false, interactiveLabel = 'Alternativen anzeigen', contextLabel = '' }) {
   const element = document.createElement(interactive ? 'button' : 'article');
   if (interactive) element.type = 'button';
   element.className = `clothing-card${interactive ? ' clothing-card-button' : ''}`;
   element.dataset.itemId = itemId;
+  if (logicalItemId) element.dataset.logicalItemId = logicalItemId;
   if (slotResult) {
     element.dataset.slot = slotResult.slot;
     element.dataset.phase = slotResult.phase;
     const accessibleContext = [contextLabel, role].filter(Boolean).join(' · ');
-    element.setAttribute('aria-label', `${accessibleContext ? `${accessibleContext}: ` : ''}${label}${interactive ? ' – Alternativen anzeigen' : ''}`);
+    element.setAttribute('aria-label', `${accessibleContext ? `${accessibleContext}: ` : ''}${label}${interactive ? ` – ${interactiveLabel}` : ''}`);
     if (interactive) element.dataset.openAlternatives = 'true';
   }
 
@@ -198,18 +200,26 @@ function renderGroup(slots, { mode, phase, context, assetStore, paletteMode, vis
   const phaseLabel = phaseLabelFor(phase, context);
   let missingAssets = 0;
   for (const slotResult of slots) {
-    const itemGroup = assetStore.group(slotResult.selected.itemId);
-    const asset = assetStore.resolveSlot(slotResult, visual.bySlot);
-    if (!asset && itemGroup?.assetPath !== null) missingAssets += 1;
-    grid.append(clothingCard({
-      slotResult,
-      itemId: slotResult.selected.itemId,
-      asset,
-      label: itemGroup?.label ?? slotResult.selected.itemId.replaceAll('_', ' '),
-      role: slotRole(slotResult.slot),
-      interactive: slotResult.alternatives?.length > 0,
-      contextLabel: phaseLabel
-    }));
+    const logicalItemId = slotResult.selected.itemId;
+    const split = isCompositeSleepVisualItem(logicalItemId);
+    for (const part of visualPartsForItem(logicalItemId)) {
+      const itemGroup = assetStore.group(part.itemId);
+      const asset = part.itemId === logicalItemId
+        ? assetStore.resolveSlot(slotResult, visual.bySlot)
+        : assetStore.resolve(part.itemId, paletteMode);
+      if (!asset && itemGroup?.assetPath !== null) missingAssets += 1;
+      grid.append(clothingCard({
+        slotResult,
+        itemId: part.itemId,
+        logicalItemId: split ? logicalItemId : null,
+        asset,
+        label: itemGroup?.label ?? part.itemId.replaceAll('_', ' '),
+        role: part.role ?? slotRole(slotResult.slot),
+        interactive: slotResult.alternatives?.length > 0,
+        interactiveLabel: split ? 'Kombination austauschen' : 'Alternativen anzeigen',
+        contextLabel: phaseLabel
+      }));
+    }
   }
   group.append(heading, grid);
   return { element: group, missingAssets };
@@ -550,7 +560,7 @@ export function renderOutfit({ recommendation, context, warmthDirection, palette
 export function renderCatalog(assetStore, paletteMode) {
   const host = document.querySelector('#catalogGrid');
   host.replaceChildren();
-  for (const group of assetStore.listGroups().filter((entry) => entry.assetPath || entry.variantPaths)) {
+  for (const group of assetStore.listGroups().filter((entry) => !isCompositeSleepVisualItem(entry.id) && (entry.assetPath || entry.variantPaths))) {
     const asset = assetStore.resolveCatalog(group.id, paletteMode);
     host.append(clothingCard({ itemId: group.id, asset, label: group.label ?? group.id, role: slotRole(group.slot) }));
   }
@@ -564,7 +574,7 @@ export function renderAlternatives(slotResult, assetStore, paletteMode) {
   title.textContent = `${selectedGroup?.label ?? 'Kleidungsstück'} austauschen`;
   for (const alternative of slotResult.alternatives ?? []) {
     const group = assetStore.group(alternative.itemId);
-    const asset = assetStore.resolve(alternative.itemId, paletteMode);
+    const parts = visualPartsForItem(alternative.itemId);
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'alternative-option';
@@ -572,11 +582,14 @@ export function renderAlternatives(slotResult, assetStore, paletteMode) {
     button.dataset.alternativeSlot = slotResult.slot;
     button.dataset.alternativePhase = slotResult.phase;
     const image = document.createElement('div');
-    image.className = 'alternative-image';
-    if (asset) {
+    image.className = `alternative-image${parts.length > 1 ? ' alternative-image--parts' : ''}`;
+    for (const part of parts) {
+      const partGroup = assetStore.group(part.itemId);
+      const asset = assetStore.resolve(part.itemId, paletteMode);
+      if (!asset) continue;
       const img = document.createElement('img');
       img.src = asset.src;
-      img.alt = asset.alt || group?.label || alternative.itemId;
+      img.alt = asset.alt || partGroup?.label || part.itemId;
       img.dataset.clothingImage = 'true';
       image.append(img);
     }

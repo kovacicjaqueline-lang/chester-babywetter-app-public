@@ -1,7 +1,5 @@
-const CACHE_NAME = 'babywetter-shell-v0.2.0-assets24';
-// Keep this revision marker in the worker itself so deployed clients install the
-// refreshed shell even when the cache key remains compatible with assets24.
-const SHELL_REVISION = '2026-09-20-whole-number-rules';
+const CACHE_NAME = 'babywetter-shell-v0.2.0-assets25';
+const SHELL_REVISION = '2026-09-22-sleep-visual-parts';
 const ASSET_MANIFEST_PATH = '/assets/clothing/manifest.json';
 const VISUAL_MANIFEST_PATH = '/assets/clothing/visual-manifest.json';
 const SHELL = [
@@ -41,6 +39,7 @@ const SHELL = [
   '/src/weather/service.js',
   '/ui/asset-store.js',
   '/ui/render.js',
+  '/ui/sleep-visual-parts.js',
   '/ui/weather-copy.js',
   '/ui/render-situations.js',
   '/ui/background-scene.js',

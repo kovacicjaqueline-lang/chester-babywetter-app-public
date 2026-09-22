@@ -965,17 +965,9 @@
       "situations": [
         "sleep"
       ],
-      "styleVariants": [
-        "neutral",
-        "boy",
-        "girl"
-      ],
       "altText": "Kurzarmbody + leichter Schlafanzug.",
-      "variantPaths": {
-        "neutral": "assets/clothing/sleep_under_short_body_plus_light_pajamas/neutral.webp",
-        "boy": "assets/clothing/sleep_under_short_body_plus_light_pajamas/boy.webp",
-        "girl": "assets/clothing/sleep_under_short_body_plus_light_pajamas/girl.webp"
-      }
+      "styleVariants": [],
+      "assetPath": null
     },
     {
       "id": "sleep_under_long_body_plus_light_pajamas",
@@ -985,17 +977,9 @@
       "situations": [
         "sleep"
       ],
-      "styleVariants": [
-        "neutral",
-        "boy",
-        "girl"
-      ],
       "altText": "Langarmbody + leichter Schlafanzug.",
-      "variantPaths": {
-        "neutral": "assets/clothing/sleep_under_long_body_plus_light_pajamas/neutral.webp",
-        "boy": "assets/clothing/sleep_under_long_body_plus_light_pajamas/boy.webp",
-        "girl": "assets/clothing/sleep_under_long_body_plus_light_pajamas/girl.webp"
-      }
+      "styleVariants": [],
+      "assetPath": null
     }
   ]
 }
