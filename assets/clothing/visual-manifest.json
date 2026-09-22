@@ -266,15 +266,17 @@
     "cool": {
       "themeIds": ["sage_oat", "dusty_blue_sand", "petrol_warm_beige", "slate_blue_greige"],
       "sourceStyleRank": {
+        "neutral": 0,
         "boy": 0,
-        "neutral": 1
+        "girl": 0
       }
     },
     "warm": {
       "themeIds": ["clay_cream", "terracotta_greige", "ocher_taupe", "mauve_cream", "apricot_oat", "soft_lavender_sand"],
       "sourceStyleRank": {
-        "girl": 0,
-        "neutral": 1
+        "neutral": 0,
+        "boy": 0,
+        "girl": 0
       }
     }
   },

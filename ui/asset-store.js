@@ -18,14 +18,26 @@ function rootAssetUrl(path) {
 
 function variantPath(group, paletteMode) {
   if (group.variantPaths && typeof group.variantPaths === 'object') {
-    const legacySourceStyle = LEGACY_STYLE_TO_PALETTE_MODE[paletteMode] ? paletteMode : null;
     return group.variantPaths[paletteMode]
-      ?? (legacySourceStyle && group.variantPaths[legacySourceStyle])
       ?? group.variantPaths.neutral
       ?? Object.values(group.variantPaths).find(Boolean)
       ?? null;
   }
   return typeof group.assetPath === 'string' ? group.assetPath : null;
+}
+
+function selectCatalogVisualVariant(group, paletteMode, assetManifest, visualManifest) {
+  if (!group || !assetManifest || !visualManifest) return null;
+  const result = selectVisualLook({
+    recommendation: {
+      slots: [{ phase: 'catalog', slot: 'catalog', selected: { itemId: group.id } }]
+    },
+    assetManifest,
+    visualManifest,
+    paletteMode: normalizePaletteMode(paletteMode),
+    visualSeed: 0
+  });
+  return result.items[0]?.assetPath ? result.items[0] : null;
 }
 
 function preferredThemeIds(visualManifest, paletteMode) {
@@ -108,14 +120,19 @@ export class ClothingAssetStore {
     const group = this.group(itemId);
     if (!group) return null;
     const catalogVariant = pickCatalogVariant(group, paletteMode, this.visualManifest);
-    const assetPath = catalogVariant?.assetPath ?? variantPath(group, paletteMode);
+    const selectedVisual = catalogVariant
+      ? null
+      : selectCatalogVisualVariant(group, paletteMode, this.assetManifest, this.visualManifest);
+    const assetPath = catalogVariant?.assetPath
+      ?? selectedVisual?.assetPath
+      ?? variantPath(group, paletteMode);
     if (!assetPath) return null;
     return {
       src: rootAssetUrl(assetPath),
       alt: group.altText || group.label || itemId,
       label: group.label || itemId,
       assetPath,
-      visualVariantId: catalogVariant?.id ?? null
+      visualVariantId: catalogVariant?.id ?? selectedVisual?.variantId ?? null
     };
   }
 

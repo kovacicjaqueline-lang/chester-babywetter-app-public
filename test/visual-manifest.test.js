@@ -202,6 +202,12 @@ test('palette modes declare explicit theme and source-variant boundaries', () =>
   }
   assert.deepEqual(visualManifest.paletteModeProfiles.neutral.themeIds, visualManifest.themes.map((theme) => theme.id));
   assert.deepEqual(visualManifest.paletteModeProfiles.neutral.sourceStyleRank, { neutral: 0 });
+  for (const mode of ['cool', 'warm']) {
+    const ranks = visualManifest.paletteModeProfiles[mode].sourceStyleRank;
+    assert.equal(ranks.neutral, 0, `${mode} must not prefer a gendered legacy label`);
+    assert.equal(ranks.boy, 0, `${mode} must not prefer boy-labelled assets`);
+    assert.equal(ranks.girl, 0, `${mode} must not prefer girl-labelled assets`);
+  }
 });
 
 test('insulated teddy jacket exposes the four planned colorways', () => {

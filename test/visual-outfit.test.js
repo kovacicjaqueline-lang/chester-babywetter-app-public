@@ -189,7 +189,7 @@ test('boy/girl visual style never changes fachliche itemIds', () => {
   assert.deepEqual(girl.items.map((item) => item.itemId), expected);
 });
 
-test('composer prefers a compatible profile variant over a compatible neutral fallback', () => {
+test('composer prefers actual color compatibility over legacy source-style labels', () => {
   const rec = recommendation(['long_sleeve_bodysuit']);
   const boy = selectVisualLook({
     recommendation: rec,
@@ -209,7 +209,7 @@ test('composer prefers a compatible profile variant over a compatible neutral fa
   });
 
   assert.deepEqual(boy.items.map((item) => item.sourceStyle), ['boy']);
-  assert.deepEqual(girl.items.map((item) => item.sourceStyle), ['girl']);
+  assert.deepEqual(girl.items.map((item) => item.sourceStyle), ['neutral']);
   assert.deepEqual(boy.items.map((item) => item.itemId), rec.slots.map((slot) => slot.selected.itemId));
   assert.deepEqual(girl.items.map((item) => item.itemId), rec.slots.map((slot) => slot.selected.itemId));
 });
