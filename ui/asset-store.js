@@ -1,4 +1,5 @@
 import { selectVisualLook } from '../src/visual-outfit.js';
+import { visualRecommendationFor } from './sleep-visual-parts.js';
 
 const ROOT_URL = new URL('../', import.meta.url);
 const MANIFEST_URL = new URL('../assets/clothing/manifest.json', import.meta.url);
@@ -123,7 +124,7 @@ export class ClothingAssetStore {
       return { look: null, bySlot: new Map() };
     }
     const look = selectVisualLook({
-      recommendation,
+      recommendation: visualRecommendationFor(recommendation),
       assetManifest: this.assetManifest,
       visualManifest: this.visualManifest,
       paletteMode: normalizePaletteMode(paletteMode),

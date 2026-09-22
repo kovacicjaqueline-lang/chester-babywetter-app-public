@@ -35,6 +35,7 @@ test('PWA manifest and service worker reference the app shell', () => {
     '/src/integration/background-scene.js',
     '/src/integration/manual-weather-presets.js',
     '/ui/background-scene.js',
+    '/ui/sleep-visual-parts.js',
     '/assets/clothing/manifest.json'
   ]) {
     assert.match(sw, new RegExp(required.replaceAll('/', '\\/')));

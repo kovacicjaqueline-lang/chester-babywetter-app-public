@@ -1122,6 +1122,11 @@ code { font-size: .84em; }
   border-radius: 15px;
   background: #f8f3ee;
 }
+.alternative-image--parts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px;
+  padding: 4px;
+}
 .alternative-image img {
   width: 100%;
   height: 100%;

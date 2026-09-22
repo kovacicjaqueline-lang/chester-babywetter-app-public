@@ -49,3 +49,29 @@ test('18 bis unter 20 Grad deckt die Arme ohne zusätzliches Wärmegewicht ab', 
   await expect(page.locator('#outfitGrid [data-item-id="sleep_under_short_sleeve_bodysuit"]')).toHaveCount(0);
   await expect(page.getByTestId('neck-check')).toBeVisible();
 });
+
+test('kombinierte Schlaf-Unterkleidung wird visuell in Body und Schlafanzug aufgelöst', async ({ page }) => {
+  await openDemo(page);
+  await chooseSleep(page);
+
+  const underlayer = page.locator('#outfitGrid [data-slot="sleep_underlayer"]').first();
+  await expect(underlayer).toBeVisible();
+  await underlayer.click();
+  const option = page.locator('#alternativeOptions [data-alternative-item-id="sleep_under_short_body_plus_light_pajamas"]');
+  await expect(option).toBeVisible();
+  await expect(option.locator('img[data-clothing-image="true"]')).toHaveCount(2);
+  await option.click();
+
+  const cards = page.locator('#outfitGrid [data-slot="sleep_underlayer"]');
+  await expect(cards).toHaveCount(2);
+  await expect(cards.nth(0)).toHaveAttribute('data-item-id', 'sleep_under_short_sleeve_bodysuit');
+  await expect(cards.nth(1)).toHaveAttribute('data-item-id', 'sleep_under_light_pajamas');
+  await expect(cards.nth(0).locator('img')).toHaveAttribute('alt', /Kurzarmbody/);
+  await expect(cards.nth(1).locator('img')).toHaveAttribute('alt', /Schlafanzug/);
+  await expect(page.locator('#outfitGrid [data-item-id="sleep_under_short_body_plus_light_pajamas"]')).toHaveCount(0);
+
+  const beforeVisuals = await page.locator('#outfitGrid img[data-clothing-image="true"]').evaluateAll((images) => images.map((image) => image.currentSrc));
+  await expect(page.locator('#changeLookButton')).toBeEnabled();
+  await page.locator('#changeLookButton').click();
+  await expect.poll(() => page.locator('#outfitGrid img[data-clothing-image="true"]').evaluateAll((images) => images.map((image) => image.currentSrc))).not.toEqual(beforeVisuals);
+});
