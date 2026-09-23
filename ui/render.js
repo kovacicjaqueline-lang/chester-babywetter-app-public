@@ -43,10 +43,10 @@ const REDUNDANT_NOTICE_CODES = new Set([
   'WEATHER_DATA_STALE'
 ]);
 
-const BODY_LAYER_SLOTS = new Set(['base_torso', 'legs', 'mid', 'outer', 'sleep_underlayer']);
+const BODY_LAYER_SLOTS = new Set(['base_torso', 'top', 'legs', 'mid', 'outer', 'sleep_underlayer']);
 const BODY_EXTREMITY_SLOTS = new Set(['feet', 'footwear', 'head', 'hands']);
 const SLOT_ORDER = Object.freeze([
-  'base_torso', 'legs', 'mid', 'outer', 'sleep_underlayer',
+  'base_torso', 'top', 'legs', 'mid', 'outer', 'sleep_underlayer',
   'feet', 'footwear', 'head', 'hands', 'sleep_bag',
   'stroller_thermal_accessory', 'stroller_weather_accessory', 'carrier_accessory', 'car_thermal_accessory'
 ]);
@@ -127,7 +127,7 @@ function clothingCard({ slotResult = null, itemId, logicalItemId = null, asset, 
 
 function slotRole(slot) {
   const labels = {
-    base_torso: 'Basisschicht', legs: 'Beine', mid: 'Zwischenschicht', outer: 'Außenschicht', feet: 'Füße',
+    base_torso: 'Basisschicht', top: 'Oberteil', legs: 'Beine', mid: 'Zwischenschicht', outer: 'Außenschicht', feet: 'Füße',
     head: 'Kopf', hands: 'Hände', footwear: 'Schuhe', stroller_thermal_accessory: 'Kinderwagen',
     stroller_weather_accessory: 'Wetterschutz', carrier_accessory: 'Trage', car_thermal_accessory: 'Über dem Gurt', sleep_bag: 'Schlafsack', sleep_underlayer: 'Darunter'
   };
