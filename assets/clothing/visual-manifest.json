@@ -272,7 +272,7 @@
       }
     },
     "warm": {
-      "themeIds": ["clay_cream", "terracotta_greige", "ocher_taupe", "mauve_cream", "apricot_oat", "soft_lavender_sand"],
+      "themeIds": ["sage_oat", "clay_cream", "terracotta_greige", "ocher_taupe", "petrol_warm_beige", "mauve_cream", "apricot_oat"],
       "sourceStyleRank": {
         "neutral": 0,
         "boy": 0,

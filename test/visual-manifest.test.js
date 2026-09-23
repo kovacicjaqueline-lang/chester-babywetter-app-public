@@ -208,6 +208,16 @@ test('palette modes declare explicit theme and source-variant boundaries', () =>
     assert.equal(ranks.boy, 0, `${mode} must not prefer boy-labelled assets`);
     assert.equal(ranks.girl, 0, `${mode} must not prefer girl-labelled assets`);
   }
+  assert.deepEqual(visualManifest.paletteModeProfiles.warm.themeIds, [
+    'sage_oat',
+    'clay_cream',
+    'terracotta_greige',
+    'ocher_taupe',
+    'petrol_warm_beige',
+    'mauve_cream',
+    'apricot_oat'
+  ]);
+  assert.equal(visualManifest.paletteModeProfiles.warm.themeIds.includes('soft_lavender_sand'), false);
 });
 
 test('insulated teddy jacket exposes the four planned colorways', () => {
