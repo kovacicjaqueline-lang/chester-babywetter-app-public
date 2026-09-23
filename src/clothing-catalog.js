@@ -16,8 +16,8 @@ function def({ itemId, kind = 'clothing', slot, category = itemId, bodyZones = [
 const items = [
   def({ itemId:'short_sleeve_bodysuit', slot:'base_torso', bodyZones:['torso'], thermalWeight:1, sleepSafe:true }),
   def({ itemId:'long_sleeve_bodysuit', slot:'base_torso', bodyZones:['torso','arms'], thermalWeight:2, sleepSafe:true }),
-  def({ itemId:'t_shirt', slot:'base_torso', bodyZones:['torso'], thermalWeight:1, sleepSafe:false, allowedSituations:['outdoor','stroller','carrier','car'] }),
-  def({ itemId:'light_long_sleeve_shirt', slot:'base_torso', bodyZones:['torso','arms'], thermalWeight:1, sunCoverage:3, sleepSafe:false, allowedSituations:['outdoor','stroller','carrier','car'] }),
+  def({ itemId:'t_shirt', slot:'top', bodyZones:['torso'], thermalWeight:1, sleepSafe:false, allowedSituations:['outdoor','stroller','carrier','car'] }),
+  def({ itemId:'light_long_sleeve_shirt', slot:'top', bodyZones:['torso','arms'], thermalWeight:1, sunCoverage:3, sleepSafe:false, allowedSituations:['outdoor','stroller','carrier','car'] }),
 
   def({ itemId:'light_trousers', slot:'legs', bodyZones:['legs'], thermalWeight:1, sleepSafe:false, allowedSituations:['outdoor','stroller','carrier','car'] }),
   def({ itemId:'leggings', slot:'legs', bodyZones:['legs'], thermalWeight:2, sleepSafe:false, allowedSituations:['outdoor','stroller','carrier','car'] }),
