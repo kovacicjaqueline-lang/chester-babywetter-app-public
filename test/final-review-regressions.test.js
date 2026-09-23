@@ -106,6 +106,6 @@ test('global cooler correction does not strip UV body coverage', () => {
     })
   }));
   assert.ok(result.slots.some((entry) => entry.phase === 'main' && entry.slot === 'head' && entry.selected.itemId === 'sun_hat'));
-  assert.ok(result.slots.some((entry) => entry.phase === 'main' && entry.slot === 'base_torso' && entry.selected.itemId === 'light_long_sleeve_shirt'));
+  assert.ok(result.slots.some((entry) => entry.phase === 'main' && entry.slot === 'top' && entry.selected.itemId === 'light_long_sleeve_shirt'));
   assert.ok(result.slots.some((entry) => entry.phase === 'main' && entry.slot === 'legs'));
 });

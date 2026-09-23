@@ -396,6 +396,7 @@ type BodyZone = "torso" | "arms" | "legs" | "feet" | "hands" | "head" | "neck";
 
 type OutfitSlot =
   | "base_torso"
+  | "top"
   | "legs"
   | "mid"
   | "outer"
@@ -410,6 +411,8 @@ type OutfitSlot =
   | "sleep_bag"
   | "sleep_underlayer";
 ```
+
+`base_torso` enthält körpernahe Bodys. `top` ist die separate leichte Oberteilschicht für `t_shirt` und `light_long_sleeve_shirt`; der Slot darf leer bleiben. Dadurch können z. B. `long_sleeve_bodysuit` oder gleichwertig `short_sleeve_bodysuit + light_long_sleeve_shirt` modelliert werden. Bei warmer UV-Bedeckung darf ein `top` auch ohne `base_torso` verwendet werden.
 
 ### 8.2 Schlafsack-TOG
 
@@ -1367,7 +1370,7 @@ Statusregeln:
 
 Der Comparator darf ausschließlich von der Engine bereits als `equivalent` angebotene Alternativen zur Kontinuitätsoptimierung verwenden. `warmer`/`cooler` werden nicht aus Bequemlichkeit gleichgesetzt.
 
-Die unterste Kleidungsschicht bleibt während des gesamten Ausflugs unverändert. Das gilt für das Oberteil (`base_torso`) und das Unterteil (`legs`). Sie wird aus allen relevanten Checkpoints als jeweils kühlste dort benötigte, durchgehend tragbare Variante bestimmt und nicht einfach vom ersten Zeitpunkt übernommen. Bei 10 °C am Morgen und 25 °C später kann z. B. ein Kurzarmbody durchgehend getragen werden; die morgendliche Wärme kommt über darüberliegende Schichten. Für diese Slots erzeugt der Planer keine Wechsel-, Austausch- oder Repositionierungsaktion. Anpassungen erfolgen über darüberliegende Schichten, Zubehör oder notwendige Safety-Aktionen.
+Die unterste Kleidungsschicht bleibt während des gesamten Ausflugs unverändert. Das gilt für das Oberteil (`base_torso`) und das Unterteil (`legs`). Sie wird aus allen relevanten Checkpoints als jeweils kühlste dort benötigte, durchgehend tragbare Variante bestimmt und nicht einfach vom ersten Zeitpunkt übernommen. Bei 10 °C am Morgen und 25 °C später kann z. B. ein Kurzarmbody durchgehend getragen werden; die morgendliche Wärme kommt über darüberliegende Schichten. Für diese Slots erzeugt der Planer keine Wechsel-, Austausch- oder Repositionierungsaktion. Anpassungen erfolgen über `top`, darüberliegende Schichten, Zubehör oder notwendige Safety-Aktionen.
 
 Lexikographische Priorität:
 

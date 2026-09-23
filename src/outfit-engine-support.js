@@ -33,6 +33,7 @@ export const BASELINE = Object.freeze({
 
 export const THERMAL_LADDERS = Object.freeze({
   base_torso: Object.freeze(['short_sleeve_bodysuit','long_sleeve_bodysuit']),
+  top: Object.freeze([null,'light_long_sleeve_shirt']),
   legs: Object.freeze([null,'light_trousers','trousers','warm_trousers']),
   mid: Object.freeze([null,'thin_sweater','fleece_jacket']),
   outer: Object.freeze([null,'light_transition_jacket','insulated_transition_jacket','softshell_jacket','winter_overall']),
@@ -41,7 +42,7 @@ export const THERMAL_LADDERS = Object.freeze({
   hands: Object.freeze([null,'gloves'])
 });
 
-export const BODY_SLOTS = Object.freeze(['base_torso','legs','mid','outer','feet','head','hands']);
+export const BODY_SLOTS = Object.freeze(['base_torso','top','legs','mid','outer','feet','head','hands']);
 const LOCKABLE_ITEM_SLOTS = Object.freeze([...BODY_SLOTS,'footwear']);
 export const QUICK_WARM_PRIORITY = Object.freeze(['mid','outer','base_torso','legs','feet','head','hands']);
 export const QUICK_COOL_PRIORITY = Object.freeze(['outer','mid','legs','base_torso','feet','head','hands']);
@@ -362,7 +363,8 @@ export function applySunProtection(state,result,request,uv,temp,phase,mode) {
   addNotice(result,'UV_SHADE_AND_COVERAGE','caution',phase,['UV_SHADE_AND_COVERAGE'],{ uvIndex:uv.uvIndex ?? null });
   if (mode !== 'sleep' && !state.map.has('head')) setSelected(state,'head','sun_hat','engine','on_body',['UV_SHADE_AND_COVERAGE']);
   if (temp >= 24) {
-    setSelected(state,'base_torso','light_long_sleeve_shirt','engine','on_body',['UV_LIGHT_COVERAGE']);
+    setSelected(state,'top','light_long_sleeve_shirt','engine','on_body',['UV_LIGHT_COVERAGE']);
+    if (!findLock(request.session,phase,'base_torso')) state.map.delete('base_torso');
     if (!state.map.has('legs')) setSelected(state,'legs','light_trousers','engine','on_body',['UV_LIGHT_COVERAGE']);
   }
 }
@@ -402,7 +404,10 @@ export function applyBodyLocksAndRebalance(state,result,request,phase,mode) {
     if (phase === 'in_car' && definition.carSeatCompatibility === 'conditional') {
       addNotice(result,'CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT','caution',phase,['CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT'],{ itemId:lock.itemId });
     }
-    if (delta && lock.slot !== 'head') rebalanceOtherSlots(state,-delta,lockedThermalSlots,mode,lock.slot);
+    const rebalancePriority = lock.slot === 'base_torso' && delta < 0
+      ? ['top','mid','outer','legs','feet','head','hands']
+      : null;
+    if (delta && lock.slot !== 'head') rebalanceOtherSlots(state,-delta,lockedThermalSlots,mode,lock.slot,rebalancePriority);
     rebalanceNewlyCoveredLegs(state,result,before,definition,legsBeforeLock,lockedThermalSlots,phase,mode,lock.slot);
   }
 }
@@ -489,9 +494,9 @@ export function applyThermalDelta(state,delta,locked,mode,priority = null,stopAf
   return firstChanged;
 }
 
-export function rebalanceOtherSlots(state,delta,locked,mode,excludeSlot) {
+export function rebalanceOtherSlots(state,delta,locked,mode,excludeSlot,priority = null) {
   const localLocks = new Set([...locked,excludeSlot]);
-  applyThermalDelta(state,delta,localLocks,mode);
+  applyThermalDelta(state,delta,localLocks,mode,priority);
 }
 
 export function nextThermalItem(current,slot,direction,mode) {

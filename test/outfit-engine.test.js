@@ -252,7 +252,7 @@ test('unknown age direct sun uses conservative notice',()=>{
 
 test('UV >=3 uses light coverage, not heavy extra insulation in warmth',()=>{
   const r=recommendOutfit(request(outdoor({sunExposure:'direct'}),{w:weather(27,{uvIndex:6})}));
-  assert.equal(id(r,'base_torso'),'light_long_sleeve_shirt');
+  assert.equal(id(r,'top'),'light_long_sleeve_shirt');
   assert.equal(id(r,'head'),'sun_hat');
   assert.notEqual(id(r,'mid'),'fleece_jacket');
 });
