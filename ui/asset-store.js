@@ -140,18 +140,26 @@ export class ClothingAssetStore {
     if (this.status !== 'ready' || !this.assetManifest || !this.visualManifest) {
       return { look: null, bySlot: new Map() };
     }
-    const look = selectVisualLook({
-      recommendation: visualRecommendationFor(recommendation),
-      assetManifest: this.assetManifest,
-      visualManifest: this.visualManifest,
-      paletteMode: normalizePaletteMode(paletteMode),
-      visualSeed,
-      themeId
-    });
+    const normalizedPaletteMode = normalizePaletteMode(paletteMode);
     const sessionAnchor = recommendation?.sessionId
       || recommendation?.recommendationId
       || recommendation?.requestId
       || 'visual-session';
+    const stableThemeId = themeId ?? (
+      this.currentVisualContext?.sessionAnchor === sessionAnchor
+      && this.currentVisualContext?.paletteMode === normalizedPaletteMode
+      && this.currentVisualContext?.visualSeed === visualSeed
+        ? this.currentVisualContext.themeId
+        : null
+    );
+    const look = selectVisualLook({
+      recommendation: visualRecommendationFor(recommendation),
+      assetManifest: this.assetManifest,
+      visualManifest: this.visualManifest,
+      paletteMode: normalizedPaletteMode,
+      visualSeed,
+      themeId: stableThemeId
+    });
     this.currentVisualContext = {
       sessionAnchor,
       paletteMode: look.paletteMode,

@@ -148,11 +148,17 @@ test('all configured themes produce a fully compatible representative outfit', (
   }
 });
 
-test('same session keeps theme and unchanged item assets stable across fachliche recomputation', () => {
+test('explicit theme anchor keeps theme and unchanged item assets stable across fachliche recomputation', () => {
   const firstRecommendation = recommendation(['long_sleeve_bodysuit', 'trousers', 'thin_sweater']);
   const changedRecommendation = recommendation(['long_sleeve_bodysuit', 'trousers'], { recommendationId: 'rec_2' });
   const first = selectVisualLook({ recommendation: firstRecommendation, assetManifest, visualManifest, visualSeed: 6 });
-  const changed = selectVisualLook({ recommendation: changedRecommendation, assetManifest, visualManifest, visualSeed: 6 });
+  const changed = selectVisualLook({
+    recommendation: changedRecommendation,
+    assetManifest,
+    visualManifest,
+    visualSeed: 6,
+    themeId: first.themeId
+  });
   assert.equal(changed.themeId, first.themeId);
   assert.deepEqual(changed.items.map((item) => item.variantId), first.items.slice(0, 2).map((item) => item.variantId));
 });
