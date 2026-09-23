@@ -140,6 +140,15 @@ export class ClothingAssetStore {
 
   resolve(itemId, paletteMode = 'all') {
     const normalizedPaletteMode = normalizePaletteMode(paletteMode);
+    const recommendation = this.currentVisualContext?.recommendation;
+    if (recommendation && Array.isArray(recommendation.slots)) {
+      for (const slotResult of recommendation.slots) {
+        const alternative = slotResult.alternatives?.find((entry) => entry.itemId === itemId);
+        if (!alternative) continue;
+        const projectedAsset = this.resolveAlternativePart(slotResult, alternative, itemId, 0, normalizedPaletteMode);
+        if (projectedAsset) return projectedAsset;
+      }
+    }
     const currentLookAsset = this.resolveCurrentLookAsset(itemId, normalizedPaletteMode);
     return currentLookAsset ?? this.resolveCatalog(itemId, paletteMode);
   }
