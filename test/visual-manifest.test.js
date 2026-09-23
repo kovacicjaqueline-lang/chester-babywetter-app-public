@@ -220,6 +220,22 @@ test('palette modes declare explicit theme and source-variant boundaries', () =>
   assert.equal(visualManifest.paletteModeProfiles.warm.themeIds.includes('soft_lavender_sand'), false);
 });
 
+test('warm palette has physical variants for the first completed missing groups', () => {
+  const expected = {
+    short_sleeve_bodysuit: 'sage-oat-01',
+    long_sleeve_bodysuit: 'terracotta-greige-01',
+    t_shirt: 'petrol-warm-beige-01',
+    light_long_sleeve_shirt: 'sage-oat-01',
+    warm_trousers: 'ocher-taupe-01',
+    fleece_jacket: 'sage-oat-01'
+  };
+  for (const [groupId, variantId] of Object.entries(expected)) {
+    const variant = visualManifest.additionalVariants[groupId].find((item) => item.id === variantId);
+    assert.ok(variant, `missing generated warm variant for ${groupId}`);
+    assert.ok(variant.themeIds.some((themeId) => visualManifest.paletteModeProfiles.warm.themeIds.includes(themeId)));
+  }
+});
+
 test('insulated teddy jacket exposes the four planned colorways', () => {
   const variants = visualManifest.additionalVariants.insulated_transition_jacket;
   assert.deepEqual(variants.map((variant) => variant.id), ['dusty-blue-01', 'sand-greige-01', 'terracotta-olive-01']);
