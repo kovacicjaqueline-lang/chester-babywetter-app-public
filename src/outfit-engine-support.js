@@ -360,7 +360,7 @@ export function applySunProtection(state,result,request,uv,temp,phase,mode) {
   }
   if (!uv.active || mode === 'car') return;
   addNotice(result,'UV_SHADE_AND_COVERAGE','caution',phase,['UV_SHADE_AND_COVERAGE'],{ uvIndex:uv.uvIndex ?? null });
-  if (mode !== 'sleep') setSelected(state,'head','sun_hat','engine','on_body',['UV_SHADE_AND_COVERAGE']);
+  if (mode !== 'sleep' && !state.map.has('head')) setSelected(state,'head','sun_hat','engine','on_body',['UV_SHADE_AND_COVERAGE']);
   if (temp >= 24) {
     setSelected(state,'base_torso','light_long_sleeve_shirt','engine','on_body',['UV_LIGHT_COVERAGE']);
     if (!state.map.has('legs')) setSelected(state,'legs','light_trousers','engine','on_body',['UV_LIGHT_COVERAGE']);
@@ -402,7 +402,7 @@ export function applyBodyLocksAndRebalance(state,result,request,phase,mode) {
     if (phase === 'in_car' && definition.carSeatCompatibility === 'conditional') {
       addNotice(result,'CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT','caution',phase,['CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT'],{ itemId:lock.itemId });
     }
-    if (delta) rebalanceOtherSlots(state,-delta,lockedThermalSlots,mode,lock.slot);
+    if (delta && lock.slot !== 'head') rebalanceOtherSlots(state,-delta,lockedThermalSlots,mode,lock.slot);
     rebalanceNewlyCoveredLegs(state,result,before,definition,legsBeforeLock,lockedThermalSlots,phase,mode,lock.slot);
   }
 }
