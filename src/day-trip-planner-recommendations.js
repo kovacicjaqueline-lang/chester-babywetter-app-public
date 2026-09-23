@@ -6,7 +6,7 @@ const FALSE_BOUNDED_COVERAGE_FIELD = 'weather.hourly.coverage';
 const CAR_SEAT_COMPATIBILITY_RANK = Object.freeze({ prohibited:0, conditional:1, allowed:2 });
 const FIXED_TRIP_UNDERLAYER_SLOTS = new Set(['base_torso', 'legs']);
 const FIXED_UNDERLAYER_PREFERENCE = Object.freeze({
-  base_torso: Object.freeze(['short_sleeve_bodysuit', 't_shirt', 'light_long_sleeve_shirt', 'long_sleeve_bodysuit']),
+  base_torso: Object.freeze(['short_sleeve_bodysuit', 'long_sleeve_bodysuit']),
   legs: Object.freeze(['light_trousers', 'trousers', 'leggings', 'tights', 'warm_trousers'])
 });
 
