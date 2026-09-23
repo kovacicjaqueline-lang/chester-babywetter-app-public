@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createSession, recommendOutfit } from '../src/index.js';
+import { createSession, lockItem, recommendOutfit } from '../src/index.js';
 
 const PROFILE = Object.freeze({
   profileId:'baby_stroller_warm',
@@ -59,14 +59,26 @@ function stroller(overrides={}) {
   };
 }
 
-function recommend(context, w) {
+function outdoor(overrides={}) {
+  return {
+    mode:'outdoor',
+    plannedMinutes:60,
+    activity:'normal',
+    activitySource:'user',
+    sunExposure:'shade',
+    groundContact:'none',
+    ...overrides
+  };
+}
+
+function recommend(context, w, session=createSession('session_stroller_warm')) {
   return recommendOutfit({
     requestId:'req_stroller_warm',
     requestedAt:'2026-08-25T12:00:00.000Z',
     profile:{...PROFILE},
     context,
     weather:w,
-    session:createSession('session_stroller_warm'),
+    session,
     neckFeedback:null
   });
 }
@@ -95,9 +107,10 @@ test('stroller does not add state-based body insulation at 20 C or warmer', () =
     assert.deepEqual(body(asleep), body(awake), `asleep body at ${temp} C`);
     assert.equal(awake.phases[0].thermalAdjustment,0);
     assert.equal(asleep.phases[0].thermalAdjustment,0);
-    assert.equal(active.phases[0].thermalAdjustment,-0.5);
+    assert.equal(active.phases[0].thermalAdjustment,-1);
     assert.equal(item(awake,'stroller_thermal_accessory'),'stroller_thermal_none');
     assert.equal(item(asleep,'stroller_thermal_accessory'),'stroller_thermal_none');
+    assert.equal(item(active,'stroller_thermal_accessory'),'stroller_thermal_none');
     assert.equal(item(awake,'mid'),null);
     assert.equal(item(asleep,'mid'),null);
     if (temp >= 24) {
@@ -118,12 +131,56 @@ test('stroller transition at 10 C does not retain the cold 8 C body stack', () =
   assert.equal(item(result,'stroller_thermal_accessory'),'stroller_light_footmuff');
 });
 
+test('very active stroller uses the same body activity correction as outdoor active', () => {
+  for (const temp of [5,9,11,15,19,23,26]) {
+    const w = weather(temp);
+    const activeStroller = recommend(stroller({ strollerState:'awake', activity:'active' }), w);
+    const activeOutdoor = recommend(outdoor({ activity:'active' }), w);
+
+    assert.equal(activeStroller.phases[0].thermalAdjustment,-1, `stroller adjustment at ${temp} C`);
+    assert.equal(activeOutdoor.phases[0].thermalAdjustment,-1, `outdoor adjustment at ${temp} C`);
+    assert.deepEqual(body(activeStroller), body(activeOutdoor), `active body at ${temp} C`);
+    assert.equal(item(activeStroller,'stroller_thermal_accessory'),'stroller_thermal_none', `stroller accessory at ${temp} C`);
+  }
+});
+
+test('11 C air / 9 C apparent very active stroller keeps warmth on body without a footmuff', () => {
+  const w = weather(11, {
+    apparentTempC:9,
+    apparentTempTrusted:true,
+    apparentTempIncludes:['wind','humidity','sun']
+  });
+  const result = recommend(stroller({ strollerState:'awake', activity:'active' }), w);
+
+  assert.equal(result.phases[0].thermalReferenceC,9);
+  assert.equal(result.phases[0].thermalAdjustment,-1);
+  assert.equal(item(result,'base_torso'),'long_sleeve_bodysuit');
+  assert.equal(item(result,'legs'),'trousers');
+  assert.equal(item(result,'outer'),'light_transition_jacket');
+  assert.equal(item(result,'feet'),'socks');
+  assert.equal(item(result,'head'),'warm_hat');
+  assert.equal(item(result,'stroller_thermal_accessory'),'stroller_thermal_none');
+});
+
+test('very active stroller still respects a manually selected thermal accessory', () => {
+  const session = lockItem(createSession('session_stroller_active_lock'), {
+    slot:'stroller_thermal_accessory',
+    itemId:'stroller_light_footmuff'
+  });
+  const result = recommend(stroller({ strollerState:'awake', activity:'active' }), weather(9), session);
+
+  assert.equal(item(result,'stroller_thermal_accessory'),'stroller_light_footmuff');
+  const accessory = result.slots.find((entry) => entry.phase === 'main' && entry.slot === 'stroller_thermal_accessory');
+  assert.equal(accessory.selected.selectionSource,'manual_lock');
+});
+
 test('very active stroller can be lighter than awake in warm weather', () => {
   const mildWeather = weather(23);
   const awakeMild = recommend(stroller({ strollerState:'awake', activity:'normal' }), mildWeather);
   const activeMild = recommend(stroller({ strollerState:'awake', activity:'active' }), mildWeather);
-  assert.equal(item(awakeMild,'feet'),'socks');
-  assert.equal(item(activeMild,'feet'),null);
+  assert.equal(item(awakeMild,'legs'),'light_trousers');
+  assert.equal(item(activeMild,'legs'),null);
+  assert.equal(item(activeMild,'feet'),'socks');
 
   const warmWeather = weather(26);
   const awakeWarm = recommend(stroller({ strollerState:'awake', activity:'normal' }), warmWeather);
