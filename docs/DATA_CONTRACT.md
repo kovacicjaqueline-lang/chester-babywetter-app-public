@@ -345,7 +345,7 @@ interface LegacyCarContextV2 {
 }
 ```
 
-`LegacyCarContextV2` wird ausschließlich beim Lesen alter `babyweather.v1.uiState`-Daten toleriert. Die vier alten Auto-Felder werden dabei verworfen.
+`LegacyCarContextV2` wird ausschließlich beim Lesen alter `babyweather.v1.uiState`-Daten toleriert. Die vier alten Fachfelder werden nicht in den aktiven V3-Kontext übernommen. Der Engine-Einstieg ignoriert zusätzliche Legacy-Felder ebenfalls. Profil-/Settings-Importe enthalten weiterhin keinen Situationskontext.
 
 ### 7.5 Drinnen
 
