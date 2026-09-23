@@ -1,5 +1,5 @@
 import { selectVisualLook } from '../src/visual-outfit.js';
-import { visualRecommendationFor } from './sleep-visual-parts.js';
+import { visualPartsForItem, visualRecommendationFor } from './sleep-visual-parts.js';
 
 const ROOT_URL = new URL('../', import.meta.url);
 const MANIFEST_URL = new URL('../assets/clothing/manifest.json', import.meta.url);
@@ -63,6 +63,34 @@ function pickCatalogVariant(group, paletteMode, visualManifest) {
   );
   if (compatible) return compatible;
   return normalizedPaletteMode === 'all' || normalizedPaletteMode === 'neutral' ? additional[0] ?? null : null;
+}
+
+function projectedRecommendation(recommendation, slotResult, alternative) {
+  if (!recommendation || !Array.isArray(recommendation.slots)) return null;
+  const changes = Array.isArray(alternative?.projectedChanges) ? alternative.projectedChanges : [];
+  const byKey = new Map(recommendation.slots.map((entry) => [`${entry.phase}|${entry.slot}`, {
+    ...entry,
+    selected: { ...entry.selected }
+  }]));
+
+  const effectiveChanges = changes.some((change) => change.phase === slotResult.phase && change.slot === slotResult.slot)
+    ? changes
+    : [...changes, { phase: slotResult.phase, slot: slotResult.slot, toItemId: alternative?.itemId ?? null }];
+
+  for (const change of effectiveChanges) {
+    if (!change?.phase || !change?.slot) continue;
+    const key = `${change.phase}|${change.slot}`;
+    if (!change.toItemId) {
+      byKey.delete(key);
+      continue;
+    }
+    const current = byKey.get(key);
+    byKey.set(key, current
+      ? { ...current, selected: { ...current.selected, itemId: change.toItemId } }
+      : { phase: change.phase, slot: change.slot, selected: { itemId: change.toItemId }, alternatives: [] });
+  }
+
+  return { ...recommendation, slots: [...byKey.values()] };
 }
 
 export class ClothingAssetStore {
@@ -140,39 +168,54 @@ export class ClothingAssetStore {
     if (this.status !== 'ready' || !this.assetManifest || !this.visualManifest) {
       return { look: null, bySlot: new Map() };
     }
-    const normalizedPaletteMode = normalizePaletteMode(paletteMode);
-    const sessionAnchor = recommendation?.sessionId
-      || recommendation?.recommendationId
-      || recommendation?.requestId
-      || 'visual-session';
-    const previous = this.currentVisualContext;
-    const anchoredThemeId = themeId ?? (
-      previous
-      && previous.sessionAnchor === sessionAnchor
-      && previous.paletteMode === normalizedPaletteMode
-      && previous.visualSeed === visualSeed
-        ? previous.themeId
-        : null
-    );
     const look = selectVisualLook({
       recommendation: visualRecommendationFor(recommendation),
       assetManifest: this.assetManifest,
       visualManifest: this.visualManifest,
-      paletteMode: normalizedPaletteMode,
+      paletteMode: normalizePaletteMode(paletteMode),
       visualSeed,
-      themeId: anchoredThemeId
+      themeId
     });
+    const sessionAnchor = recommendation?.sessionId
+      || recommendation?.recommendationId
+      || recommendation?.requestId
+      || 'visual-session';
     this.currentVisualContext = {
       sessionAnchor,
       paletteMode: look.paletteMode,
       visualSeed: look.visualSeed,
-      themeId: look.themeId
+      themeId: look.themeId,
+      recommendation
     };
     const bySlot = new Map();
     for (const item of look.items) {
       bySlot.set(`${item.phase}|${item.slot}`, item);
     }
     return { look, bySlot };
+  }
+
+  resolveAlternativePart(slotResult, alternative, partItemId, partIndex = 0, paletteMode = 'all') {
+    const context = this.currentVisualContext;
+    const normalizedPaletteMode = normalizePaletteMode(paletteMode);
+    if (!context?.recommendation || context.paletteMode !== normalizedPaletteMode || this.status !== 'ready' || !this.assetManifest || !this.visualManifest) {
+      return null;
+    }
+
+    const projected = projectedRecommendation(context.recommendation, slotResult, alternative);
+    if (!projected) return null;
+    const visualRecommendation = visualRecommendationFor(projected);
+    const look = selectVisualLook({
+      recommendation: visualRecommendation,
+      assetManifest: this.assetManifest,
+      visualManifest: this.visualManifest,
+      paletteMode: normalizedPaletteMode,
+      visualSeed: context.visualSeed
+    });
+    const parts = visualPartsForItem(alternative.itemId);
+    const visualSlot = parts.length > 1 ? `${slotResult.slot}__visual_${partIndex + 1}` : slotResult.slot;
+    const selectedVisual = look.items.find((item) => item.phase === slotResult.phase && item.slot === visualSlot && item.itemId === partItemId) ?? null;
+    if (!selectedVisual) return null;
+    return this.assetFromVisual(partItemId, selectedVisual);
   }
 
   resolveCurrentLookAsset(itemId, paletteMode = 'all') {
@@ -196,16 +239,12 @@ export class ClothingAssetStore {
       themeId: context.themeId
     });
     const selectedVisual = look.items[0] ?? null;
-    const bySlot = new Map(selectedVisual ? [['preview|preview', selectedVisual]] : []);
-    return this.resolveSlot(slotResult, bySlot);
+    return selectedVisual ? this.assetFromVisual(itemId, selectedVisual) : null;
   }
 
-  resolveSlot(slotResult, visualLookup) {
-    const itemId = slotResult?.selected?.itemId;
-    if (!itemId) return null;
+  assetFromVisual(itemId, selectedVisual) {
     const group = this.group(itemId);
     if (!group) return null;
-    const selectedVisual = visualLookup?.get(`${slotResult.phase}|${slotResult.slot}`) ?? null;
     const assetPath = selectedVisual?.assetPath ?? variantPath(group, 'neutral');
     if (!assetPath) return null;
     return {
@@ -215,5 +254,14 @@ export class ClothingAssetStore {
       assetPath,
       visualVariantId: selectedVisual?.variantId ?? null
     };
+  }
+
+  resolveSlot(slotResult, visualLookup) {
+    const itemId = slotResult?.selected?.itemId;
+    if (!itemId) return null;
+    const group = this.group(itemId);
+    if (!group) return null;
+    const selectedVisual = visualLookup?.get(`${slotResult.phase}|${slotResult.slot}`) ?? null;
+    return this.assetFromVisual(itemId, selectedVisual);
   }
 }
