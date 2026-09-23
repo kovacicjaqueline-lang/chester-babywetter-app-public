@@ -164,12 +164,15 @@ export function selectStrollerThermalAccessory(request,temp,phase) {
   const lock = findLock(request.session,phase,'stroller_thermal_accessory');
   if (lock && CLOTHING_CATALOG[lock.itemId]?.slot === 'stroller_thermal_accessory') return { itemId:lock.itemId, source:'manual_lock', reasons:['MANUAL_ITEM_LOCK'] };
   const { strollerState, activity } = request.context;
+  if (strollerState === 'awake' && activity === 'active') {
+    return { itemId:'stroller_thermal_none', source:'engine', reasons:['STROLLER_ACTIVE_BODY_WARMTH_PREFERRED'] };
+  }
   let itemId = 'stroller_thermal_none';
   if (temp >= 20) itemId = 'stroller_thermal_none';
   else if (temp >= 18) itemId = strollerState === 'asleep' ? 'stroller_light_blanket' : 'stroller_thermal_none';
-  else if (temp >= 14) itemId = strollerState === 'asleep' || activity !== 'active' ? 'stroller_light_blanket' : 'stroller_thermal_none';
-  else if (temp >= 10) itemId = strollerState === 'awake' && activity === 'active' ? 'stroller_light_blanket' : 'stroller_light_footmuff';
-  else if (temp >= 5) itemId = strollerState === 'awake' && activity === 'active' ? 'stroller_light_footmuff' : 'stroller_warm_footmuff';
+  else if (temp >= 14) itemId = 'stroller_light_blanket';
+  else if (temp >= 10) itemId = 'stroller_light_footmuff';
+  else if (temp >= 5) itemId = 'stroller_warm_footmuff';
   else itemId = 'stroller_warm_footmuff';
   return { itemId, source:'engine', reasons:['STROLLER_EXTERNAL_INSULATION'] };
 }
@@ -206,6 +209,9 @@ export function carrierThermalCredit(context,coverCredit) {
 }
 
 export function activityAdjustmentFor(context,mode) {
+  if (mode === 'stroller') {
+    return context.strollerState === 'awake' && context.activity === 'active' ? -1 : 0;
+  }
   if (mode !== 'outdoor') return 0;
   if (context.activity === 'calm') return 0.5;
   if (context.activity === 'active') return -1;
@@ -213,18 +219,12 @@ export function activityAdjustmentFor(context,mode) {
 }
 
 export function strollerStateAdjustment(context,temp) {
-  if (isFiniteNumber(temp) && temp >= 20) {
-    if (context.strollerState === 'asleep') return 0;
-    if (context.activity === 'active') return -0.5;
-    return 0;
-  }
+  if (context.strollerState === 'awake' && context.activity === 'active') return 0;
+  if (isFiniteNumber(temp) && temp >= 20) return 0;
   if (isFiniteNumber(temp) && temp >= 18) {
-    if (context.strollerState === 'asleep') return 0.5;
-    if (context.activity === 'active') return -0.5;
-    return 0;
+    return context.strollerState === 'asleep' ? 0.5 : 0;
   }
   if (context.strollerState === 'asleep') return 1;
-  if (context.activity === 'active') return 0;
   return 0.5;
 }
 
