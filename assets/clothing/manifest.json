@@ -53,7 +53,7 @@
       "id": "t_shirt",
       "label": "T-Shirt",
       "category": "t_shirt",
-      "slot": "base_torso",
+      "slot": "top",
       "situations": [
         "outdoor",
         "stroller",
@@ -76,7 +76,7 @@
       "id": "light_long_sleeve_shirt",
       "label": "Leichtes Langarmshirt",
       "category": "light_long_sleeve_shirt",
-      "slot": "base_torso",
+      "slot": "top",
       "situations": [
         "outdoor",
         "stroller",
