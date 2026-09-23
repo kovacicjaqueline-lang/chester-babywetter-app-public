@@ -121,10 +121,10 @@ test('outdoor calm adds +0.5 and active adds -1',()=>{
   assert.equal(active.phases[0].thermalAdjustment,-1);
 });
 
-test('stroller does not force activity to passive/calm',()=>{
+test('stroller active uses outdoor activity rather than passive/calm',()=>{
   const r=recommendOutfit(request(stroller({strollerState:'awake',activity:'active'}),{w:weather(12)}));
-  assert.equal(r.phases[0].thermalAdjustment,-0.5);
-  assert.equal(id(r,'stroller_thermal_accessory'),'stroller_light_blanket');
+  assert.equal(r.phases[0].thermalAdjustment,-1);
+  assert.equal(id(r,'stroller_thermal_accessory'),'stroller_thermal_none');
 });
 
 test('awake active stroller differs from asleep stroller at same weather',()=>{
@@ -132,7 +132,7 @@ test('awake active stroller differs from asleep stroller at same weather',()=>{
   const awake=recommendOutfit(request(stroller({strollerState:'awake',activity:'active'}),{w}));
   const asleep=recommendOutfit(request(stroller({strollerState:'asleep',activity:'active'}),{w}));
   assert.notEqual(id(awake,'stroller_thermal_accessory'),id(asleep,'stroller_thermal_accessory'));
-  assert.equal(id(awake,'stroller_thermal_accessory'),'stroller_light_blanket');
+  assert.equal(id(awake,'stroller_thermal_accessory'),'stroller_thermal_none');
   assert.equal(id(asleep,'stroller_thermal_accessory'),'stroller_light_footmuff');
 });
 
@@ -252,7 +252,7 @@ test('unknown age direct sun uses conservative notice',()=>{
 
 test('UV >=3 uses light coverage, not heavy extra insulation in warmth',()=>{
   const r=recommendOutfit(request(outdoor({sunExposure:'direct'}),{w:weather(27,{uvIndex:6})}));
-  assert.equal(id(r,'base_torso'),'light_long_sleeve_shirt');
+  assert.equal(id(r,'top'),'light_long_sleeve_shirt');
   assert.equal(id(r,'head'),'sun_hat');
   assert.notEqual(id(r,'mid'),'fleece_jacket');
 });
