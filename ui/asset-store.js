@@ -152,25 +152,42 @@ export class ClothingAssetStore {
         ? this.currentVisualContext.themeId
         : null
     );
+    const visualRecommendation = visualRecommendationFor(recommendation);
     const look = selectVisualLook({
-      recommendation: visualRecommendationFor(recommendation),
+      recommendation: visualRecommendation,
       assetManifest: this.assetManifest,
       visualManifest: this.visualManifest,
       paletteMode: normalizedPaletteMode,
       visualSeed,
       themeId: stableThemeId
     });
+    const lookAvailability = stableThemeId == null || look.hasAlternateLook
+      ? look
+      : selectVisualLook({
+        recommendation: visualRecommendation,
+        assetManifest: this.assetManifest,
+        visualManifest: this.visualManifest,
+        paletteMode: normalizedPaletteMode,
+        visualSeed
+      });
+    const resolvedLook = lookAvailability === look
+      ? look
+      : Object.freeze({
+        ...look,
+        availableLookCount: lookAvailability.availableLookCount,
+        hasAlternateLook: lookAvailability.hasAlternateLook
+      });
     this.currentVisualContext = {
       sessionAnchor,
-      paletteMode: look.paletteMode,
-      visualSeed: look.visualSeed,
-      themeId: look.themeId
+      paletteMode: resolvedLook.paletteMode,
+      visualSeed: resolvedLook.visualSeed,
+      themeId: resolvedLook.themeId
     };
     const bySlot = new Map();
-    for (const item of look.items) {
+    for (const item of resolvedLook.items) {
       bySlot.set(`${item.phase}|${item.slot}`, item);
     }
-    return { look, bySlot };
+    return { look: resolvedLook, bySlot };
   }
 
   resolveCurrentLookAsset(itemId, paletteMode = 'all') {
