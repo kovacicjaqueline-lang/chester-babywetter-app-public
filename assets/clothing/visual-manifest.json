@@ -1,1 +1,30 @@
-placeholder
+{
+  "schemaVersion": 1,
+  "fallbackSourceStyle": "neutral",
+  "paletteTags": [
+    "sage",
+    "oat",
+    "cream",
+    "dusty_blue",
+    "sand",
+    "clay",
+    "warm_beige",
+    "terracotta",
+    "greige",
+    "ocher",
+    "taupe",
+    "petrol",
+    "mauve",
+    "apricot",
+    "slate_blue",
+    "soft_lavender",
+    "soft_rose",
+    "transparent",
+    "light_neutral",
+    "cool_muted",
+    "warm_soft"
+  ],
+  "themes": [
+    {"id":"sage_oat","label":"Sage / Oat","palette":["sage","oat","cream"],"colors":{"primary":["sage"],"secondary":["oat"],"neutral":["cream"]}}
+  ]
+}
