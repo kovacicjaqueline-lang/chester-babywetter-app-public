@@ -159,7 +159,7 @@ test('every selectable legacy variant has explicit visual metadata', () => {
       assert.ok(metadata, `${group.id}::${sourceStyle} needs visual metadata`);
       assert.deepEqual(Object.keys(metadata).sort(), [...visualOnlyFields].sort(), `${group.id}::${sourceStyle} visual fields`);
       assert.ok(metadata.themeIds.length > 0, `${group.id}::${sourceStyle} needs themeIds`);
-      assert.ok(metadata.paletteTags.length > 0, `${groupId}::${sourceStyle} needs paletteTags`);
+      assert.ok(metadata.paletteTags.length > 0, `${group.id}::${sourceStyle} needs paletteTags`);
       assert.notEqual(metadata.pattern, 'unspecified', `${group.id}::${sourceStyle} needs an observed pattern`);
       for (const themeId of metadata.themeIds) assert.ok(themeIds.has(themeId), `unknown theme ${themeId}`);
       for (const paletteTag of metadata.paletteTags) assert.ok(paletteTags.has(paletteTag), `unknown palette tag ${paletteTag}`);
