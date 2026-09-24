@@ -159,7 +159,7 @@ test('every selectable legacy variant has explicit visual metadata', () => {
       assert.ok(metadata, `${group.id}::${sourceStyle} needs visual metadata`);
       assert.deepEqual(Object.keys(metadata).sort(), [...visualOnlyFields].sort(), `${group.id}::${sourceStyle} visual fields`);
       assert.ok(metadata.themeIds.length > 0, `${group.id}::${sourceStyle} needs themeIds`);
-      assert.ok(metadata.paletteTags.length > 0, `${group.id}::${sourceStyle} needs paletteTags`);
+      assert.ok(metadata.paletteTags.length > 0, `${groupId}::${sourceStyle} needs paletteTags`);
       assert.notEqual(metadata.pattern, 'unspecified', `${group.id}::${sourceStyle} needs an observed pattern`);
       for (const themeId of metadata.themeIds) assert.ok(themeIds.has(themeId), `unknown theme ${themeId}`);
       for (const paletteTag of metadata.paletteTags) assert.ok(paletteTags.has(paletteTag), `unknown palette tag ${paletteTag}`);
@@ -227,6 +227,7 @@ test('warm palette has physical variants for the first completed missing groups'
     t_shirt: 'petrol-warm-beige-01',
     light_long_sleeve_shirt: 'sage-oat-01',
     warm_trousers: 'ocher-taupe-01',
+    thin_sweater: 'terracotta-knit-01',
     fleece_jacket: 'sage-oat-01'
   };
   for (const [groupId, variantId] of Object.entries(expected)) {
