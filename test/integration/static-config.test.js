@@ -49,10 +49,8 @@ function reachableRuntimeModules(entries) {
 
 function serviceWorkerRuntimeModules() {
   const sw = read('sw.js');
-  return new Set(
-    [...sw.matchAll(/["']\/((?:src|ui)\/[^"']+\.js|app\.js)["']/g)]
-      .map((match) => match[1])
-  );
+  return [...sw.matchAll(/["']\/((?:src|ui)\/[^"']+\.js|app\.js)["']/g)]
+    .map((match) => match[1]);
 }
 
 test('package and app version stay aligned', () => {
@@ -98,8 +96,10 @@ test('all runtime JavaScript modules are reachable and cached exactly once', () 
   const unreachable = runtimeModules.filter((path) => !reachable.has(path));
   assert.deepEqual(unreachable, [], `Unreachable runtime modules: ${unreachable.join(', ')}`);
 
-  const shellModules = [...serviceWorkerRuntimeModules()].sort();
-  assert.deepEqual(shellModules, runtimeModules);
+  const shellModules = serviceWorkerRuntimeModules();
+  const duplicateShellModules = shellModules.filter((path, index) => shellModules.indexOf(path) !== index);
+  assert.deepEqual(duplicateShellModules, [], `Duplicate service-worker modules: ${duplicateShellModules.join(', ')}`);
+  assert.deepEqual([...shellModules].sort(), runtimeModules);
 });
 
 test('asset ignore keeps runtime modules deployable', () => {
