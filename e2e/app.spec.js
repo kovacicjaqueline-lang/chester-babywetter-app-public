@@ -177,6 +177,7 @@ test('Stale-Wettercache bleibt bis 120 Minuten nutzbar und wird nur einmal promi
 test('Zu alter Wettercache wird nicht als aktuelles Wetter verwendet; Schlaf bleibt wetterunabhängig', async ({ page, context }) => {
   await openDemo(page);
   const offlinePage = await restartFromPersistedCacheOffline(page, context, 121);
+
   await expect(offlinePage.locator('#temperatureValue')).toHaveText('–');
   await expect(offlinePage.locator('#weatherDescription')).toHaveText('Gespeichertes Wetter zu alt');
   await expect(offlinePage.locator('#connectionBanner')).toContainText('älter als 120 Minuten');
