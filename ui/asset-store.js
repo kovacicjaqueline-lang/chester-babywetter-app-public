@@ -177,30 +177,55 @@ export class ClothingAssetStore {
     if (this.status !== 'ready' || !this.assetManifest || !this.visualManifest) {
       return { look: null, bySlot: new Map() };
     }
-    const look = selectVisualLook({
-      recommendation: visualRecommendationFor(recommendation),
-      assetManifest: this.assetManifest,
-      visualManifest: this.visualManifest,
-      paletteMode: normalizePaletteMode(paletteMode),
-      visualSeed,
-      themeId
-    });
+    const normalizedPaletteMode = normalizePaletteMode(paletteMode);
     const sessionAnchor = recommendation?.sessionId
       || recommendation?.recommendationId
       || recommendation?.requestId
       || 'visual-session';
+    const stableThemeId = themeId ?? (
+      this.currentVisualContext?.sessionAnchor === sessionAnchor
+      && this.currentVisualContext?.paletteMode === normalizedPaletteMode
+      && this.currentVisualContext?.visualSeed === visualSeed
+        ? this.currentVisualContext.themeId
+        : null
+    );
+    const visualRecommendation = visualRecommendationFor(recommendation);
+    const look = selectVisualLook({
+      recommendation: visualRecommendation,
+      assetManifest: this.assetManifest,
+      visualManifest: this.visualManifest,
+      paletteMode: normalizedPaletteMode,
+      visualSeed,
+      themeId: stableThemeId
+    });
+    const lookAvailability = stableThemeId == null || look.hasAlternateLook
+      ? look
+      : selectVisualLook({
+        recommendation: visualRecommendation,
+        assetManifest: this.assetManifest,
+        visualManifest: this.visualManifest,
+        paletteMode: normalizedPaletteMode,
+        visualSeed
+      });
+    const resolvedLook = lookAvailability === look
+      ? look
+      : Object.freeze({
+        ...look,
+        availableLookCount: lookAvailability.availableLookCount,
+        hasAlternateLook: lookAvailability.hasAlternateLook
+      });
     this.currentVisualContext = {
       sessionAnchor,
-      paletteMode: look.paletteMode,
-      visualSeed: look.visualSeed,
-      themeId: look.themeId,
+      paletteMode: resolvedLook.paletteMode,
+      visualSeed: resolvedLook.visualSeed,
+      themeId: resolvedLook.themeId,
       recommendation
     };
     const bySlot = new Map();
-    for (const item of look.items) {
+    for (const item of resolvedLook.items) {
       bySlot.set(`${item.phase}|${item.slot}`, item);
     }
-    return { look, bySlot };
+    return { look: resolvedLook, bySlot };
   }
 
   resolveAlternativePart(slotResult, alternative, partItemId, partIndex = 0, paletteMode = 'all') {
@@ -218,7 +243,8 @@ export class ClothingAssetStore {
       assetManifest: this.assetManifest,
       visualManifest: this.visualManifest,
       paletteMode: normalizedPaletteMode,
-      visualSeed: context.visualSeed
+      visualSeed: context.visualSeed,
+      themeId: context.themeId
     });
     const parts = visualPartsForItem(alternative.itemId);
     const visualSlot = parts.length > 1 ? `${slotResult.slot}__visual_${partIndex + 1}` : slotResult.slot;
