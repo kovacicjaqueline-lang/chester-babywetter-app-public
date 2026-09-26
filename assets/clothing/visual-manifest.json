@@ -264,7 +264,12 @@
       }
     },
     "cool": {
-      "themeIds": ["sage_oat", "dusty_blue_sand", "petrol_warm_beige", "slate_blue_greige"],
+      "themeIds": [
+        "sage_oat",
+        "dusty_blue_sand",
+        "petrol_warm_beige",
+        "slate_blue_greige"
+      ],
       "sourceStyleRank": {
         "neutral": 0,
         "boy": 0,
@@ -272,7 +277,15 @@
       }
     },
     "warm": {
-      "themeIds": ["sage_oat", "clay_cream", "terracotta_greige", "ocher_taupe", "petrol_warm_beige", "mauve_cream", "apricot_oat"],
+      "themeIds": [
+        "sage_oat",
+        "clay_cream",
+        "terracotta_greige",
+        "ocher_taupe",
+        "petrol_warm_beige",
+        "mauve_cream",
+        "apricot_oat"
+      ],
       "sourceStyleRank": {
         "neutral": 0,
         "boy": 0,
@@ -2043,6 +2056,103 @@
           "cream"
         ],
         "pattern": "fine_knit"
+      }
+    ],
+    "short_sleeve_bodysuit": [
+      {
+        "id": "sage-oat-01",
+        "assetPath": "assets/clothing/short_sleeve_bodysuit/sage-oat-01.webp",
+        "themeIds": [
+          "sage_oat"
+        ],
+        "paletteTags": [
+          "sage",
+          "oat"
+        ],
+        "pattern": "solid"
+      }
+    ],
+    "long_sleeve_bodysuit": [
+      {
+        "id": "terracotta-greige-01",
+        "assetPath": "assets/clothing/long_sleeve_bodysuit/terracotta-greige-01.webp",
+        "themeIds": [
+          "terracotta_greige"
+        ],
+        "paletteTags": [
+          "terracotta",
+          "greige"
+        ],
+        "pattern": "solid"
+      }
+    ],
+    "t_shirt": [
+      {
+        "id": "petrol-warm-beige-01",
+        "assetPath": "assets/clothing/t_shirt/petrol-warm-beige-01.webp",
+        "themeIds": [
+          "petrol_warm_beige"
+        ],
+        "paletteTags": [
+          "petrol",
+          "warm_beige"
+        ],
+        "pattern": "solid"
+      }
+    ],
+    "light_long_sleeve_shirt": [
+      {
+        "id": "sage-oat-01",
+        "assetPath": "assets/clothing/light_long_sleeve_shirt/sage-oat-01.webp",
+        "themeIds": [
+          "sage_oat"
+        ],
+        "paletteTags": [
+          "oat",
+          "sage"
+        ],
+        "pattern": "solid"
+      }
+    ],
+    "warm_trousers": [
+      {
+        "id": "ocher-taupe-01",
+        "assetPath": "assets/clothing/warm_trousers/ocher-taupe-01.webp",
+        "themeIds": [
+          "ocher_taupe"
+        ],
+        "paletteTags": [
+          "ocher",
+          "taupe"
+        ],
+        "pattern": "solid"
+      }
+    ],
+    "thin_sweater": [
+      {
+        "id": "terracotta-knit-01",
+        "assetPath": "assets/clothing/thin_sweater/terracotta-knit-01.webp",
+        "themeIds": [
+          "terracotta_greige"
+        ],
+        "paletteTags": [
+          "terracotta"
+        ],
+        "pattern": "fine_knit"
+      }
+    ],
+    "fleece_jacket": [
+      {
+        "id": "sage-oat-01",
+        "assetPath": "assets/clothing/fleece_jacket/sage-oat-01.webp",
+        "themeIds": [
+          "sage_oat"
+        ],
+        "paletteTags": [
+          "sage",
+          "oat"
+        ],
+        "pattern": "solid"
       }
     ]
   }
