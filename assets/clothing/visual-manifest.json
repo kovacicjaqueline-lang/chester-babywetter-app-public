@@ -2154,6 +2154,49 @@
         ],
         "pattern": "solid"
       }
+    ],
+    "tights": [
+      {
+        "id": "sage-oat-01",
+        "assetPath": "assets/clothing/tights/sage-oat-01.webp",
+        "themeIds": [
+          "sage_oat"
+        ],
+        "paletteTags": [
+          "sage",
+          "oat"
+        ],
+        "pattern": "fine_rib"
+      }
+    ],
+    "winter_overall": [
+      {
+        "id": "ocher-taupe-01",
+        "assetPath": "assets/clothing/winter_overall/ocher-taupe-01.webp",
+        "themeIds": [
+          "ocher_taupe"
+        ],
+        "paletteTags": [
+          "ocher",
+          "taupe",
+          "oat"
+        ],
+        "pattern": "micro_quilt"
+      }
+    ],
+    "warm_hat": [
+      {
+        "id": "terracotta-oat-01",
+        "assetPath": "assets/clothing/warm_hat/terracotta-oat-01.webp",
+        "themeIds": [
+          "terracotta_greige"
+        ],
+        "paletteTags": [
+          "terracotta",
+          "oat"
+        ],
+        "pattern": "chunky_knit"
+      }
     ]
   }
 }

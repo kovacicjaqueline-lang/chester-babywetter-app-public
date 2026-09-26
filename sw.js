@@ -1,5 +1,5 @@
-const CACHE_NAME = 'babywetter-shell-v0.2.0-assets26';
-const SHELL_REVISION = '2026-09-25-temperature-interaction';
+const CACHE_NAME = 'babywetter-shell-v0.2.0-assets27';
+const SHELL_REVISION = '2026-09-26-warm-clothing-variants';
 const ASSET_MANIFEST_PATH = '/assets/clothing/manifest.json';
 const VISUAL_MANIFEST_PATH = '/assets/clothing/visual-manifest.json';
 const SHELL = [

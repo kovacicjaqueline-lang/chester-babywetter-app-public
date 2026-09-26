@@ -220,7 +220,7 @@ test('palette modes declare explicit theme and source-variant boundaries', () =>
   assert.equal(visualManifest.paletteModeProfiles.warm.themeIds.includes('soft_lavender_sand'), false);
 });
 
-test('warm palette has physical variants for the first completed missing groups', () => {
+test('warm palette has physical variants across the completed and remaining clothing groups', () => {
   const expected = {
     short_sleeve_bodysuit: 'sage-oat-01',
     long_sleeve_bodysuit: 'terracotta-greige-01',
@@ -228,7 +228,10 @@ test('warm palette has physical variants for the first completed missing groups'
     light_long_sleeve_shirt: 'sage-oat-01',
     warm_trousers: 'ocher-taupe-01',
     thin_sweater: 'terracotta-knit-01',
-    fleece_jacket: 'sage-oat-01'
+    fleece_jacket: 'sage-oat-01',
+    tights: 'sage-oat-01',
+    winter_overall: 'ocher-taupe-01',
+    warm_hat: 'terracotta-oat-01'
   };
   for (const [groupId, variantId] of Object.entries(expected)) {
     const variant = visualManifest.additionalVariants[groupId].find((item) => item.id === variantId);
