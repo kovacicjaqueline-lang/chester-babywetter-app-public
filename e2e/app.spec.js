@@ -1,309 +1,217 @@
-import { test, expect } from '@playwright/test';
-import { readFileSync } from 'node:fs';
+YªçŠx-®éÜj×¢ëiºÚ+Š§j[h‘éÜ¢éíçÎ8N‹Z–‹­¦ëeŠw¬Õ¥µÁ½ÉĞìÑ•ÍĞ°•áÁ•Ğô™É½´€Á±…åİÉ¥¡Ğ½Ñ•ÍĞœì)¥µÁ½ÉĞìÉ•…‘¥±•Må¹Œô™É½´€¹½‘”é™Ìœì()½¹ÍĞAA}M!11}!€ô€‰…‰åİ•ÑÑ•ÈµÍ¡•±°µØÀ¸È¸Àµ…ÍÍ•ÑÌÈÜœì()…Íå¹Œ™Õ¹Ñ¥½¸½Á•¹•µ¼¡Á…”¤ì(€…İ…¥ĞÁ…”¹½Ñ¼ œ¼ı‘•µ¼ôÄœ¤ì(€…İ…¥Ğ•áÁ•Ğ¡Á…”¹±½…Ñ½È œ½¹™¥‘•¹•A¥±°œ¤¤¹¹½Ğ¹Ñ½!…Ù•Q•áĞ 3‘‘ĞƒŠ˜œ¤ì(€…İ…¥Ğ•áÁ•Ğ¡Á…”¹±½…Ñ½È œ½ÕÑ™¥ÑÉ¥m‘…Ñ„µ¥Ñ•´µ¥‘tœ¤¹™¥ÉÍĞ ¤¤¹Ñ½	•Y¥Í¥‰±” ¤ì)ô)…Íå¹Œ™Õ¹Ñ¥½¸¡½½Í•M¥ÑÕ…Ñ¥½¸¡Á…”°µ½‘”¤ì(€…İ…¥ĞÁ…”¹±½…Ñ½È m‘…Ñ„µ½Á•¸µ‘¥…±½œô‰Í¥ÑÕ…Ñ¥½¹¥…±½œ‰tœ¤¹™¥ÉÍĞ ¤¹±¥¬ ¤ì(€…İ…¥ĞÁ…”¹±½…Ñ½È¡m‘…Ñ„µÍ¥ÑÕ…Ñ¥½¸ôˆ‘íµ½‘•ô‰u€¤¹±¥¬ ¤ì(€…İ…¥ĞÁ…”¹±½…Ñ½È œ…ÁÁ±åM¥ÑÕ…Ñ¥½¹	ÕÑÑ½¸œ¤¹±¥¬ ¤ì(€…İ…¥Ğ•áÁ•Ğ¡Á…”¹±½…Ñ½È œÍ¥ÑÕ…Ñ¥½¹1…‰•°œ¤¤¹Ñ½!…Ù•Q•áĞ¡ì½ÕÑ‘½½ÈèÉ…×}•¸œ°ÍÑÉ½±±•Èè-¥¹‘•Éİ…•¸œ°…ÉÉ¥•ÈèQÉ…”œ°…ÈèÕÑ½Í¥Ñèœ°¥¹‘½½ÈèÉ¥¹¹•¸œ°Í±••ÀèM¡±…™•¸œõmµ½‘•t¤ì)ô)…Íå¹Œ™Õ¹Ñ¥½¸Í•±•Ñ•‘%‘Ì¡Á…”¤ìÉ•ÑÕÉ¸Á…”¹±½…Ñ½È œ½ÕÑ™¥ÑÉ¥m‘…Ñ„µ¥Ñ•´µ¥‘tœ¤¹•Ù…±Õ…Ñ•±° ¡¹½‘•Ì¤€ôø¹½‘•Ì¹µ…À ¡¹½‘”¤€ôø¹½‘”¹‘…Ñ…Í•Ğ¹¥Ñ•µ%¤¤ìô)…Íå¹Œ™Õ¹Ñ¥½¸Í•±•Ñ•‘Y¥ÍÕ…±Ì¡Á…”¤ì(€É•ÑÕÉ¸Á…”¹±½…Ñ½È œ½ÕÑ™¥ÑÉ¥¥µm‘…Ñ„µ±½Ñ¡¥¹œµ¥µ…”ô‰ÑÉÕ”‰tœ¤¹•Ù…±Õ…Ñ•±° ¡¹½‘•Ì¤€ôø¹½‘•Ì¹µ…À ¡¥µ…”¤€ôø€¡ì(€€€ÍÉŒè¥µ…”¹ÕÉÉ•¹ÑMÉŒ°(€€€Ù…É¥…¹Ñ%è¥µ…”¹‘…Ñ…Í•Ğ¹Ù¥ÍÕ…±Y…É¥…¹Ñ%€üü¹Õ±°(€ô¤¤¤ì)ô()…Íå¹Œ™Õ¹Ñ¥½¸Í•Ñ]•…Ñ¡•É…¡•”¡Á…”°µ¥¹ÕÑ•Ì¤ì(€…İ…¥ĞÁ…”¹•Ù…±Õ…Ñ” ¡…•5¥¹ÕÑ•Ì¤€ôøì(€€€½¹ÍĞ­•ä€ô€‰…‰åİ•…Ñ¡•È¹ØÄ¹İ•…Ñ¡•É…¡”œì(€€€½¹ÍĞ…¡•€ô)M=8¹Á…ÉÍ”¡±½…±MÑ½É…”¹•Ñ%Ñ•´¡­•ä¤ñğ€¹Õ±°œ¤ì(€€€¥˜€ ……¡•¤Ñ¡É½Ü¹•ÜÉÉ½È İ•…Ñ¡•È…¡”µ¥ÍÍ¥¹œœ¤ì(€€€…¡•¹™•Ñ¡•‘Ğ€ô¹•Ü…Ñ”¡…Ñ”¹¹½Ü ¤€´…•5¥¹ÕÑ•Ì€¨€ØÁ|ÀÀÀ¤¹Ñ½%M=MÑÉ¥¹œ ¤ì(€€€±½…±MÑ½É…”¹Í•Ñ%Ñ•´¡­•ä°)M=8¹ÍÑÉ¥¹¥™ä¡…¡•¤¤ì(€ô°µ¥¹ÕÑ•Ì¤ì)ô()…Íå¹Œ™Õ¹Ñ¥½¸É•ÍÑ…ÉÑÉ½µA•ÉÍ¥ÍÑ•‘…¡•=™™±¥¹”¡Á…”°½¹Ñ•áĞ°…•5¥¹ÕÑ•Ì¤ì(€…İ…¥ĞÁ…”¹•Ù…±Õ…Ñ”  ¤€ôø¹…Ù¥…Ñ½È¹Í•ÉÙ¥•]½É­•È¹É•…‘ä¤ì(€…İ…¥Ğ•áÁ•Ğ¹Á½±°  ¤€ôøÁ…”¹•Ù…±Õ…Ñ”  ¤€ôø	½½±•…¸¡¹…Ù¥…Ñ½È¹Í•ÉÙ¥•]½É­•È¹½¹ÑÉ½±±•È¤¤¤¹Ñ½	”¡ÑÉÕ”¤ì(€…İ…¥Ğ•áÁ•Ğ¹Á½±°  ¤€ôøÁ…”¹•Ù…±Õ…Ñ” ¡…¡•9…µ”¤€ôø…¡•Ì¹¡…Ì¡…¡•9…µ”¤°AA}M!11}!¤¤¹Ñ½	”¡ÑÉÕ”¤ì(€…İ…¥ĞÍ•Ñ]•…Ñ¡•É…¡•”¡Á…”°…•5¥¹ÕÑ•Ì¤ì(€…İ…¥ĞÁ…”¹±½Í” ¤ì(€…İ…¥Ğ½¹Ñ•áĞ¹…‘‘%¹¥ÑMÉ¥ÁĞ  ¤€ôøì(€€€=‰©•Ğ¹‘•™¥¹•AÉ½Á•ÉÑä¡9…Ù¥…Ñ½È¹ÁÉ½Ñ½ÑåÁ”°€½¹1¥¹”œ°ì½¹™¥ÕÉ…‰±”éÑÉÕ”°•Ğè ¤€ôø™…±Í”ô¤ì(€ô¤ì(€…İ…¥Ğ½¹Ñ•áĞ¹Í•Ñ=™™±¥¹”¡ÑÉÕ”¤ì(€½¹ÍĞ½™™±¥¹•A…”€ô…İ…¥Ğ½¹Ñ•áĞ¹¹•İA…” ¤ì(€…İ…¥Ğ•áÁ•Ğ¹Á½±°  ¤€ôø½™™±¥¹•A…”¹•Ù…±Õ…Ñ”  ¤€ôø¹…Ù¥…Ñ½È¹½¹1¥¹”¤¤¹Ñ½	”¡™…±Í”¤ì(€…İ…¥Ğ½™™±¥¹•A…”¹½Ñ¼ œ¼ı‘•µ¼ôÄœ¤ì(€…İ…¥Ğ•áÁ•Ğ¡½™™±¥¹•A…”¹±½…Ñ½È œ½¹™¥‘•¹•A¥±°œ¤¤¹¹½Ğ¹Ñ½!…Ù•Q•áĞ 3‘‘ĞƒŠ˜œ¤ì(€…İ…¥Ğ•áÁ•Ğ¡½™™±¥¹•A…”¹±½…Ñ½È œİ•…Ñ¡•É•ÍÉ¥ÁÑ¥½¸œ¤¤¹¹½Ğ¹Ñ½!…Ù•Q•áĞ ]•ÑÑ•Èİ¥É•±…‘•¸ƒŠ˜œ¤ì(€É•ÑÕÉ¸½™™±¥¹•A…”ì)ô()Ñ•ÍĞ ÁÀÍÑ…ÉÑ•Ğ½¡¹”½¹Í½±”µ•¡±•ÈÕ¹é•¥Ğ•¥¸MÑ…¹‘…Éµ=ÕÑ™¥Ğœ°…Íå¹Œ€¡ìÁ…”ô¤€ôøì(€½¹ÍĞ•ÉÉ½ÉÌ€ômtì(€Á…”¹½¸ ½¹Í½±”œ°€¡µ•ÍÍ…”¤€ôøì¥˜€¡µ•ÍÍ…”¹ÑåÁ” ¤€ôôô€•ÉÉ½Èœ¤•ÉÉ½ÉÌ¹ÁÕÍ ¡µ•ÍÍ…”¹Ñ•áĞ ¤¤ìô¤ì(€Á…”¹½¸ Á…••ÉÉ½Èœ°€¡•ÉÉ½È¤€ôø•ÉÉ½ÉÌ¹ÁÕÍ ¡•ÉÉ½È¹µ•ÍÍ…”¤¤ì(€…İ…¥Ğ½Á•¹•µ¼¡Á…”¤ì(€•áÁ•Ğ¡…İ…¥ĞÁ…”¹±½…Ñ½È œ½ÕÑ™¥ÑÉ¥m‘…Ñ„µ¥Ñ•´µ¥‘tœ¤¹½Õ¹Ğ ¤¤¹Ñ½	•É•…Ñ•ÉQ¡…¸ Ä¤ì(€•áÁ•Ğ¡•ÉÉ½ÉÌ¤¹Ñ½ÅÕ…°¡mt¤ì)ô¤ì()Ñ•ÍĞ -¥¹‘•Éİ…•¸Ù•Ë‘¹‘•ÉĞ‘¥”µÁ™•¡±Õ¹œœ°…Íå¹Œ€¡ìÁ…”ô¤€ôøì(€…İ…¥Ğ½Á•¹•µ¼¡Á…”¤ì(€…İ…¥Ğ¡½½Í•M¥ÑÕ…Ñ¥½¸¡Á…”°€½ÕÑ‘½½Èœ¤ì(€½¹ÍĞ½ÕÑ‘½½È€ô…İ…¥ĞÍ•±•Ñ•‘%‘Ì¡Á…”¤ì(€…İ…¥Ğ¡½½Í•M¥ÑÕ…Ñ¥½¸¡Á…”°€ÍÑÉ½±±•Èœ¤ì(€…İ…¥ĞÁ…”¹±½…Ñ½È m‘…Ñ„µ½Á•¸µ‘¥…±½œô‰Í¥ÑÕ…Ñ¥½¹¥…±½œ‰tœ¤¹™¥ÉÍĞ ¤¹±¥¬ ¤ì(€…İ…¥ĞÁ…”¹±½…Ñ½È œÍ¥ÑÕ…Ñ¥½¹¥…±½œm‘…Ñ„µ½¹Ñ•áĞµ™¥•±ô‰ÍÑÉ½±±•É	•¡…Ù¥½È‰tœ¤¹Í•±•Ñ=ÁÑ¥½¸ …Í±••Àœ¤ì(€…İ…¥ĞÁ…”¹±½…Ñ½È œ…ÁÁ±åM¥ÑÕ…Ñ¥½¹	ÕÑÑ½¸œ¤¹±¥¬ ¤ì(€½¹ÍĞÍÑÉ½±±•È€ô…İ…¥ĞÍ•±•Ñ•‘%‘Ì¡Á…”¤ì(€•áÁ•Ğ¡ÍÑÉ½±±•È¤¹¹½Ğ¹Ñ½ÅÕ…°¡½ÕÑ‘½½È¤ì(€…İ…¥Ğ•áÁ•Ğ¡Á…”¹±½…Ñ½È œ½ÕÑ™¥ÑI•…Í½¸œ¤¤¹Ñ½½¹Ñ…¥¹Q•áĞ M¡±…™•¸¥´-¥¹‘•Éİ…•¸œ¤ì)ô¤ì()Ñ•ÍĞ QÉ…”‰•Ëñ­Í¥¡Ñ¥Ğ/ÙÉÁ•Éß‘Éµ”œ°…Íå¹Œ€¡ìÁ…”ô¤€ôøì(€…İ…¥Ğ½Á•¹•µ¼¡Á…”¤ì(€…İ…¥Ğ¡½½Í•M¥ÑÕ…Ñ¥½¸¡Á…”°€½ÕÑ‘½½Èœ¤ì(€½¹ÍĞ½ÕÑ‘½½È€ô…İ…¥ĞÍ•±•Ñ•‘%‘Ì¡Á…”¤ì(€…İ…¥Ğ¡½½Í•M¥ÑÕ…Ñ¥½¸¡Á…”°€…ÉÉ¥•Èœ¤ì(€½¹ÍĞ…ÉÉ¥•È€ô…İ…¥ĞÍ•±•Ñ•‘%‘Ì¡Á…”¤ì(€•áÁ•Ğ¡…ÉÉ¥•È¤¹¹½Ğ¹Ñ½ÅÕ…°¡½ÕÑ‘½½È¤ì(€…İ…¥Ğ•áÁ•Ğ¡Á…”¹±½…Ñ½È œ½ÕÑ™¥ÑI•…Í½¸œ¤¤¹Ñ½½¹Ñ…¥¹Q•áĞ /ÙÉÁ•É­½¹Ñ…­Ğœ¤ì)ô¤ì()Ñ•ÍĞ ÕÑ½Í¥Ñèé•¥Ğ]…É¹Õ¹œÙ½È‘¥­•È-±•¥‘Õ¹œœ°…Íå¹Œ€¡ìÁ…”ô¤€ôøì(€…İ…¥Ğ½Á•¹•µ¼¡Á…”¤ì(€…İ…¥Ğ¡½½Í•M¥ÑÕ…Ñ¥½¸¡Á…”°€…Èœ¤ì(€½¹ÍĞÍ…™•Ñå9½Ñ¥”€ôÁ…”¹±½…Ñ½È m‘…Ñ„µ¹½Ñ¥”µ½‘”ô‰I}MQ}9=}	U1-e}1eIL‰tœ¤ì(€…İ…¥Ğ•áÁ•Ğ¡Í…™•Ñå9½Ñ¥”¤¹Ñ½	•Y¥Í¥‰±” ¤ì(€…İ…¥Ğ•áÁ•Ğ¡Í…™•Ñå9½Ñ¥”¤¹Ñ½½¹Ñ…¥¹Q•áĞ ]¥¹Ñ•É½Ù•É…±°œ¤ì)ô¤ì()Ñ•ÍĞ -±•¥‘Õ¹œ‰•Í¥ÑéĞ•¡Ñ”	¥±‘•ÈÕ¹Í¥¹¹Ù½±±”±ĞµQ•áÑ”œ°…Íå¹Œ€¡ìÁ…”ô¤€ôøì(€…İ…¥Ğ½Á•¹•µ¼¡Á…”¤ì(€½¹ÍĞ¥µ…•Ì€ôÁ…”¹±½…Ñ½È œ½ÕÑ™¥ÑÉ¥¥µm‘…Ñ„µ±½Ñ¡¥¹œµ¥µ…”ô‰ÑÉÕ”‰tœ¤ì(€•áÁ•Ğ¡…İ…¥Ğ¥µ…•Ì¹½Õ¹Ğ ¤¤¹Ñ½	•É•…Ñ•ÉQ¡…¸ Ä¤ì(€½¹ÍĞ¡•­Ì€ô…İ…¥Ğ¥µ…•Ì¹•Ù…±Õ…Ñ•±° ¡¹½‘•Ì¤€ôø¹½‘•Ì¹µ…À ¡¥µ…”¤€ôø€¡ì…±Ğé¥µ…”¹…±Ğ°½µÁ±•Ñ”é¥µ…”¹½µÁ±•Ñ”°¹…ÑÕÉ…±]¥‘Ñ é¥µ…”¹¹…ÑÕÉ…±]¥‘Ñ °ÍÉŒé¥µ…”¹ÕÉÉ•¹ÑMÉŒô¤¤¤ì(€™½È€¡½¹ÍĞ¥Ñ•´½˜¡•­Ì¤ì•áÁ•Ğ¡¥Ñ•´¹½µÁ±•Ñ”¤¹Ñ½	”¡ÑÉÕ”¤ì•áÁ•Ğ¡¥Ñ•´¹¹…ÑÕÉ…±]¥‘Ñ ¤¹Ñ½	•É•…Ñ•ÉQ¡…¸ À¤ì•áÁ•Ğ¡¥Ñ•´¹…±Ğ¹ÑÉ¥´ ¤¹±•¹Ñ ¤¹Ñ½	•É•…Ñ•ÉQ¡…¸ Ì¤ì•áÁ•Ğ¡¥Ñ•´¹ÍÉŒ¤¹Ñ½½¹Ñ…¥¸ œ½…ÍÍ•ÑÌ½±½Ñ¡¥¹œ¼œ¤ìô)ô¤ì()Ñ•ÍĞ ±Ñ•É¹…Ñ¥Ù•¸Í¥¹µ½‰¥°É¿|Õ¹±•Í‰…È‘…É•ÍÑ•±±Ğœ°…Íå¹Œ€¡ìÁ…”ô¤€ôøì(€…İ…¥ĞÁ…”¹Í•ÑY¥•İÁ½ÉÑM¥é”¡ìİ¥‘Ñ è€ÌÜÔ°¡•¥¡Ğè€àÄÈô¤ì(€…İ…¥Ğ½Á•¹•µ¼¡Á…”¤ì(€½¹ÍĞÑÉ¥•È€ôÁ…”¹±½…Ñ½È œ½ÕÑ™¥ÑÉ¥m‘…Ñ„µ½Á•¸µ…±Ñ•É¹…Ñ¥Ù•Ìô‰ÑÉÕ”‰tœ¤¹™¥ÉÍĞ ¤ì(€…İ…¥Ğ•áÁ•Ğ¡ÑÉ¥•È¤¹Ñ½	•Y¥Í¥‰±” ¤ì(€…İ…¥ĞÑÉ¥•È¹±¥¬ ¤ì((€½¹ÍĞ½ÁÑ¥½¹Ì€ôÁ…”¹±½…Ñ½È œ…±Ñ•É¹…Ñ¥Ù•=ÁÑ¥½¹Ì€¹…±Ñ•É¹…Ñ¥Ù”µ½ÁÑ¥½¸œ¤ì(€…İ…¥Ğ•áÁ•Ğ¡½ÁÑ¥½¹Ì¹™¥ÉÍĞ ¤¤¹Ñ½	•Y¥Í¥‰±” ¤ì(€½¹ÍĞ½ÁÑ¥½¹	½à€ô…İ…¥Ğ½ÁÑ¥½¹Ì¹™¥ÉÍĞ ¤¹‰½Õ¹‘¥¹	½à ¤ì(€•áÁ•Ğ¡½ÁÑ¥½¹	½à¤¹¹½Ğ¹Ñ½	•9Õ±° ¤ì(€•áÁ•Ğ¡½ÁÑ¥½¹	½à¹¡•¥¡Ğ¤¹Ñ½	•É•…Ñ•ÉQ¡…¹=ÉÅÕ…° ÄÀĞ¤ì(€½¹ÍĞÑåÁ½É…Á¡ä€ô…İ…¥Ğ½ÁÑ¥½¹Ì¹™¥ÉÍĞ ¤¹•Ù…±Õ…Ñ” ¡½ÁÑ¥½¸¤€ôø€¡ì(€€€Ñ¥Ñ±”è•Ñ½µÁÕÑ•‘MÑå±”¡½ÁÑ¥½¸¹ÅÕ•ÉåM•±•Ñ½È ÍÑÉ½¹œœ¤¤¹™½¹ÑM¥é”°(€€€‘•Ñ…¥°è•Ñ½µÁÕÑ•‘MÑå±”¡½ÁÑ¥½¸¹ÅÕ•ÉåM•±•Ñ½È Íµ…±°œ¤¤¹™½¹ÑM¥é”°(€€€¥µ…”è½ÁÑ¥½¸¹ÅÕ•ÉåM•±•Ñ½È œ¹…±Ñ•É¹…Ñ¥Ù”µ¥µ…”œ¤¹•Ñ	½Õ¹‘¥¹±¥•¹ÑI•Ğ ¤¹İ¥‘Ñ (€ô¤¤ì(€•áÁ•Ğ¡9Õµ‰•È¹Á…ÉÍ•±½…Ğ¡ÑåÁ½É…Á¡ä¹Ñ¥Ñ±”¤¤¹Ñ½	•É•…Ñ•ÉQ¡…¹=ÉÅÕ…° ÄÔ¤ì(€•áÁ•Ğ¡9Õµ‰•È¹Á…ÉÍ•±½…Ğ¡ÑåÁ½É…Á¡ä¹‘•Ñ…¥°¤¤¹Ñ½	•É•…Ñ•ÉQ¡…¹=ÉÅÕ…° ÄÈ¤ì(€•áÁ•Ğ¡ÑåÁ½É…Á¡ä¹¥µ…”¤¹Ñ½	•É•…Ñ•ÉQ¡…¹=ÉÅÕ…° àà¤ì)ô¤ì()Ñ•ÍĞ ¹‘•É•È1½½¬ƒ‘¹‘•ÉĞÍ¥¡Ñ‰…È‘¥”Y¥ÍÕ…±Ì°¹¥”‘¥”™…¡±¥¡•¸%Ñ•µÌ°Õ¹‰±•¥‰Ğ¹… I•±½…ÍÑ…‰¥°œ°…Íå¹Œ€¡ìÁ…”ô¤€ôøì(€…İ…¥Ğ½Á•¹•µ¼¡Á…”¤ì(€½¹ÍĞ‰•™½É•%Ñ•µÌ€ô…İ…¥ĞÍ•±•Ñ•‘%‘Ì¡Á…”¤ì(€½¹ÍĞ‰•™½É•Y¥ÍÕ…±Ì€ô…İ…¥ĞÍ•±•Ñ•‘Y¥ÍÕ…±Ì¡Á…”¤ì(€½¹ÍĞ‰•™½É•M••€ô…İ…¥ĞÁ…”¹•Ù…±Õ…Ñ”  ¤€ôø)M=8¹Á…ÉÍ”¡±½…±MÑ½É…”¹•Ñ%Ñ•´ ‰…‰åİ•…Ñ¡•È¹ØÄ¹Õ¥MÑ…Ñ”œ¤ñğ€íôœ¤¹Ù¥ÍÕ…±M••€üü€À¤ì(€…İ…¥Ğ•áÁ•Ğ¡Á…”¹±½…Ñ½È œ¡…¹•1½½­	ÕÑÑ½¸œ¤¤¹Ñ½	•¹…‰±• ¤ì(€…İ…¥ĞÁ…”¹±½…Ñ½È œ¡…¹•1½½­	ÕÑÑ½¸œ¤¹±¥¬ ¤ì(€…İ…¥Ğ•áÁ•Ğ¹Á½±°¡…Íå¹Œ€ ¤€ôø)M=8¹ÍÑÉ¥¹¥™ä¡…İ…¥ĞÍ•±•Ñ•‘Y¥ÍÕ…±Ì¡Á…”¤¤¤¹¹½Ğ¹Ñ½	”¡)M=8¹ÍÑÉ¥¹¥™ä¡‰•™½É•Y¥ÍÕ…±Ì¤¤ì(€½¹ÍĞ…™Ñ•É%Ñ•µÌ€ô…İ…¥ĞÍ•±•Ñ•‘%‘Ì¡Á…”¤ì(€½¹ÍĞ…™Ñ•ÉY¥ÍÕ…±Ì€ô…İ…¥ĞÍ•±•Ñ•‘Y¥ÍÕ…±Ì¡Á…”¤ì(€½¹ÍĞ…™Ñ•ÉM••€ô…İ…¥ĞÁ…”¹•Ù…±Õ…Ñ”  ¤€ôø)M=8¹Á…ÉÍ”¡±½…±MÑ½É…”¹•Ñ%Ñ•´ ‰…‰åİ•…Ñ¡•È¹ØÄ¹Õ¥MÑ…Ñ”œ¤ñğ€íôœ¤¹Ù¥ÍÕ…±M••¤ì(€•áÁ•Ğ¡…™Ñ•É%Ñ•µÌ¤¹Ñ½ÅÕ…°¡‰•™½É•%Ñ•µÌ¤ì(€•áÁ•Ğ¡…™Ñ•ÉM••¤¹Ñ½	”¡‰•™½É•M••€¬€Ä¤ì(€•áÁ•Ğ¡…™Ñ•ÉY¥ÍÕ…±Ì¤¹¹½Ğ¹Ñ½ÅÕ…°¡‰•™½É•Y¥ÍÕ…±Ì¤ì((€…İ…¥ĞÁ…”¹É•±½… ¤ì(€…İ…¥Ğ•áÁ•Ğ¡Á…”¹±½…Ñ½È œ½¹™¥‘•¹•A¥±°œ¤¤¹¹½Ğ¹Ñ½!…Ù•Q•áĞ 3‘‘ĞƒŠ˜œ¤ì(€…İ…¥Ğ•áÁ•Ğ¡Á…”¹±½…Ñ½È œ½ÕÑ™¥ÑÉ¥m‘…Ñ„µ¥Ñ•´µ¥‘tœ¤¹™¥ÉÍĞ ¤¤¹Ñ½	•Y¥Í¥‰±” ¤ì(€•áÁ•Ğ¡…İ…¥ĞÍ•±•Ñ•‘%‘Ì¡Á…”¤¤¹Ñ½ÅÕ…°¡…™Ñ•É%Ñ•µÌ¤ì(€•áÁ•Ğ¡…İ…¥ĞÍ•±•Ñ•‘Y¥ÍÕ…±Ì¡Á…”¤¤¹Ñ½ÅÕ…°¡…™Ñ•ÉY¥ÍÕ…±Ì¤ì)ô¤ì()Ñ•ÍĞ MÑ…¹‘½ÉĞ­…¹¸•İ•¡Í•±Ğİ•É‘•¸œ°…Íå¹Œ€¡ìÁ…”ô¤€ôøì(€…İ…¥Ğ½Á•¹•µ¼¡Á…”¤ì(€…İ…¥ĞÁ…”¹±½…Ñ½È m‘…Ñ„µ½Á•¸µ‘¥…±½ŸÎ8¶‰Ëkºwµç[J
+NÂˆ]ØZ]^Xİ
+Ù™›[™TYÙK›ØØ]ÜŠ	ÖÙ]K[›İXÙKXÛÙOH”ÓQTÓ“×ÒU—IÊJKĞ™Uš\ÚX›J
+NÂˆ]ØZ]^Xİ
+Ù™›[™TYÙK›ØØ]ÜŠ	ÈÛİ]š]™X\ÛÛ‰ÊJKĞÛÛZ[•^
+	Ô˜][][\\˜]\‰ÊNÂˆ]ØZ]ÛÛ^œÙ]Ù™›[™J˜[ÙJNÂŸJNÂ‚\İ
+	ÒÛZY[™ÜØš[\ˆ›ZX™[ˆ˜XÚÙ™›[™KT™[ØY™\™°ïØ˜\‰Ë\Ş[˜È
+ÈYÙKÛÛ^JHOˆÂˆ]ØZ]Ü[‘[[ÊYÙJNÂˆ]ØZ]YÙK™]˜[X]J
 
-const APP_SHELL_CACHE = 'babywetter-shell-v0.2.0-assets26';
+HOˆ˜]šYØ]Ü‹œÙ\šXÙUÛÜšÙ\‹œ™XYJNÂˆ]ØZ]^XİœÛ
 
-async function openDemo(page) {
-  await page.goto('/?demo=1');
-  await expect(page.locator('#confidencePill')).not.toHaveText('LÃ¤dt â€¦');
-  await expect(page.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
-}
-async function chooseSituation(page, mode) {
-  await page.locator('[data-open-dialog="situationDialog"]').first().click();
-  await page.locator(`[data-situation="${mode}"]`).click();
-  await page.locator('#applySituationButton').click();
-  await expect(page.locator('#situationLabel')).toHaveText({ outdoor:'DrauÃŸen', stroller:'Kinderwagen', carrier:'Trage', car:'Autositz', indoor:'Drinnen', sleep:'Schlafen' }[mode]);
-}
-async function selectedIds(page) { return page.locator('#outfitGrid [data-item-id]').evaluateAll((nodes) => nodes.map((node) => node.dataset.itemId)); }
-async function selectedVisuals(page) {
-  return page.locator('#outfitGrid img[data-clothing-image="true"]').evaluateAll((nodes) => nodes.map((image) => ({
-    src: image.currentSrc,
-    variantId: image.dataset.visualVariantId ?? null
-  })));
-}
 
-async function setWeatherCacheAge(page, minutes) {
-  await page.evaluate((ageMinutes) => {
-    const key = 'babyweather.v1.weatherCache';
-    const cached = JSON.parse(localStorage.getItem(key) || 'null');
-    if (!cached) throw new Error('weather cache missing');
-    cached.fetchedAt = new Date(Date.now() - ageMinutes * 60_000).toISOString();
-    localStorage.setItem(key, JSON.stringify(cached));
-  }, minutes);
-}
+HOˆYÙK™]˜[X]J
 
-async function restartFromPersistedCacheOffline(page, context, ageMinutes) {
-  await page.evaluate(() => navigator.serviceWorker.ready);
-  await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
-  await expect.poll(() => page.evaluate((cacheName) => caches.has(cacheName), APP_SHELL_CACHE)).toBe(true);
-  await setWeatherCacheAge(page, ageMinutes);
-  await page.close();
-  await context.addInitScript(() => {
-    Object.defineProperty(Navigator.prototype, 'onLine', { configurable:true, get:() => false });
-  });
-  await context.setOffline(true);
-  const offlinePage = await context.newPage();
-  await expect.poll(() => offlinePage.evaluate(() => navigator.onLine)).toBe(false);
-  await offlinePage.goto('/?demo=1');
-  await expect(offlinePage.locator('#confidencePill')).not.toHaveText('LÃ¤dt â€¦');
-  await expect(offlinePage.locator('#weatherDescription')).not.toHaveText('Wetter wird geladen â€¦');
-  return offlinePage;
-}
+HOˆ›ÛÛX[Š˜]šYØ]Ü‹œÙ\šXÙUÛÜšÙ\‹˜ÛÛ›Û\ŠJJKĞ™JYJNÂ‚ˆÛÛœİØXÚP]Y]H]ØZ]YÙK™]˜[X]J\Ş[˜È
 
-test('App startet ohne Console-Fehler und zeigt ein Standard-Outfit', async ({ page }) => {
-  const errors = [];
-  page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
-  page.on('pageerror', (error) => errors.push(error.message));
-  await openDemo(page);
-  expect(await page.locator('#outfitGrid [data-item-id]').count()).toBeGreaterThan(1);
-  expect(errors).toEqual([]);
-});
+HOˆÂˆÛÛœİØ\ÜÙ]X[šY™\İš\İX[X[šY™\İHH]ØZ]›ÛZ\ÙK˜[
+Âˆ™]Ú
+	ËØ\ÜÙ]ËØÛİ[™ËÛX[šY™\İšœÛÛ‰ÊK[Š
+™\ÜÛœÙJHOˆ™\ÜÛœÙKšœÛÛŠ
+JKˆ™]Ú
+	ËØ\ÜÙ]ËØÛİ[™Ëİš\İX[[X[šY™\İšœÛÛ‰ÊK[Š
+™\ÜÛœÙJHOˆ™\ÜÛœÙKšœÛÛŠ
+JBˆJNÂˆÛÛœİ›Ü›X[^™HH
+]
+HOˆÂˆYˆ
+\[Ùˆ]OOH	Üİš[™ÉÊH™]\›ˆ[ÂˆÛÛœİ›Ü›X[^™YH]œ™\XÙJ×—ÊËË	ÉÊNÂˆYˆ
+[›Ü›X[^™Yœİ\ÕÚ]
+	Ø\ÜÙ]ËØÛİ[™ËÉÊH[›Ü›X[^™YÓİÙ\Ø\ÙJ
+K™[™ÕÚ]
+	ËÙXœ	ÊJH™]\›ˆ[Âˆ™]\›ˆÉÛ›Ü›X[^™YXÂˆNÂˆÛÛœİ^XİYH™]ÈÙ]
 
-test('Kinderwagen verÃ¤ndert die Empfehlung', async ({ page }) => {
-  await openDemo(page);
-  await chooseSituation(page, 'outdoor');
-  const outdoor = await selectedIds(page);
-  await chooseSituation(page, 'stroller');
-  await page.locator('[data-open-dialog="situationDialog"]').first().click();
-  await page.locator('#situationDialog [data-context-field="strollerBehavior"]').selectOption('asleep');
-  await page.locator('#applySituationButton').click();
-  const stroller = await selectedIds(page);
-  expect(stroller).not.toEqual(outdoor);
-  await expect(page.locator('#outfitReason')).toContainText('Schlafen im Kinderwagen');
-});
+NÂˆÛÛœİYH
+]
+HOˆÈÛÛœİ›Ü›X[^™YH›Ü›X[^™J]
+NÈYˆ
+›Ü›X[^™Y
+H^XİY˜Y
+›Ü›X[^™Y
+NÈNÂˆ›Üˆ
+ÛÛœİÜ›İ\Ùˆ\ÜÙ]X[šY™\İ˜\ÜÙ]Ü›İ\È×JHÂˆY
+Ü›İ\˜\ÜÙ]]
+NÂˆ›Üˆ
+ÛÛœİ]ÙˆØš™Xİ˜[Y\ÊÜ›İ\˜\šX[]ÈßJJHY
+]
+NÂˆBˆ›Üˆ
+ÛÛœİ˜\šX[ÈÙˆØš™Xİ˜[Y\Êš\İX[X[šY™\İ˜Y][Û˜[˜\šX[ÈßJJHÂˆ›Üˆ
+ÛÛœİ˜\šX[Ùˆ\œ˜^Kš\Ğ\œ˜^J˜\šX[ÊHÈ˜\šX[Èˆ×JHY
+˜\šX[˜\ÜÙ]]
+NÂˆBˆÛÛœİZ\ÜÚ[™ÈH×NÂˆ›Üˆ
+ÛÛœİ]Ùˆ^XİY
+HÂˆYˆ
+J]ØZ]ØXÚ\Ë›X]Ú
+]
+JJHZ\ÜÚ[™Ëœ\Ú
+]
+NÂˆBˆ™]\›ˆÈ^XİYÛİ[ˆ^XİYœÚ^™KZ\ÜÚ[™ÈNÂˆJNÂˆ^Xİ
+ØXÚP]Y]™^XİYÛİ[
+KĞ™QÜ™X]\•[ŠL
+NÂˆ^Xİ
+ØXÚP]Y]›Z\ÜÚ[™ÊKÑ\]X[
+×JNÂˆ^Xİ
+]ØZ]YÙK›ØØ]ÜŠ	ÈÛİ]š]ÜšY[YÖÙ]KXÛİ[™ËZ[XYÙOHYH—IÊK˜Ûİ[
 
-test('Trage berÃ¼cksichtigt KÃ¶rperwÃ¤rme', async ({ page }) => {
-  await openDemo(page);
-  await chooseSituation(page, 'outdoor');
-  const outdoor = await selectedIds(page);
-  await chooseSituation(page, 'carrier');
-  const carrier = await selectedIds(page);
-  expect(carrier).not.toEqual(outdoor);
-  await expect(page.locator('#outfitReason')).toContainText('KÃ¶rperkontakt');
-});
+JKĞ™QÜ™X]\•[ŠJNÂ‚ˆ]ØZ]ÛÛ^œÙ]Ù™›[™JYJNÂˆ]ØZ]^XİœÛ
 
-test('Autositz zeigt Warnung vor dicker Kleidung', async ({ page }) => {
-  await openDemo(page);
-  await chooseSituation(page, 'car');
-  const safetyNotice = page.locator('[data-notice-code="CAR_SEAT_NO_BULKY_LAYERS"]');
-  await expect(safetyNotice).toBeVisible();
-  await expect(safetyNotice).toContainText('Winteroverall');
-});
 
-test('Kleidung besitzt echte Bilder und sinnvolle Alt-Texte', async ({ page }) => {
-  await openDemo(page);
-  const images = page.locator('#outfitGrid img[data-clothing-image="true"]');
-  expect(await images.count()).toBeGreaterThan(1);
-  const checks = await images.evaluateAll((nodes) => nodes.map((image) => ({ alt:image.alt, complete:image.complete, naturalWidth:image.naturalWidth, src:image.currentSrc })));
-  for (const item of checks) { expect(item.complete).toBe(true); expect(item.naturalWidth).toBeGreaterThan(0); expect(item.alt.trim().length).toBeGreaterThan(3); expect(item.src).toContain('/assets/clothing/'); }
-});
+HOˆYÙK™]˜[X]J
 
-test('Alternativen sind mobil groÃŸ und lesbar dargestellt', async ({ page }) => {
-  await page.setViewportSize({ width: 375, height: 812 });
-  await openDemo(page);
-  const trigger = page.locator('#outfitGrid [data-open-alternatives="true"]').first();
-  await expect(trigger).toBeVisible();
-  await trigger.click();
+HOˆ˜]šYØ]Ü‹›Û“[™JJKĞ™J˜[ÙJNÂˆ]ØZ]YÙKœ™[ØY
 
-  const options = page.locator('#alternativeOptions .alternative-option');
-  await expect(options.first()).toBeVisible();
-  const optionBox = await options.first().boundingBox();
-  expect(optionBox).not.toBeNull();
-  expect(optionBox.height).toBeGreaterThanOrEqual(104);
-  const typography = await options.first().evaluate((option) => ({
-    title: getComputedStyle(option.querySelector('strong')).fontSize,
-    detail: getComputedStyle(option.querySelector('small')).fontSize,
-    image: option.querySelector('.alternative-image').getBoundingClientRect().width
-  }));
-  expect(Number.parseFloat(typography.title)).toBeGreaterThanOrEqual(15);
-  expect(Number.parseFloat(typography.detail)).toBeGreaterThanOrEqual(12);
-  expect(typography.image).toBeGreaterThanOrEqual(88);
-});
+NÂˆ]ØZ]^Xİ
+YÙK›ØØ]ÜŠ	ÈØÛÛ™šY[˜ÙT[	ÊJK››İÒ]™U^
+	Ó0é8 )‰ÊNÂˆ]ØZ]^Xİ
+YÙK›ØØ]ÜŠ	ÈÛİ]š]ÜšYÙ]KZ][KZYIÊK™š\œİ
 
-test('Anderer Look Ã¤ndert sichtbar die Visuals, nie die fachlichen Items, und bleibt nach Reload stabil', async ({ page }) => {
-  await openDemo(page);
-  const beforeItems = await selectedIds(page);
-  const beforeVisuals = await selectedVisuals(page);
-  const beforeSeed = await page.evaluate(() => JSON.parse(localStorage.getItem('babyweather.v1.uiState') || '{}').visualSeed ?? 0);
-  await expect(page.locator('#changeLookButton')).toBeEnabled();
-  await page.locator('#changeLookButton').click();
-  await expect.poll(async () => JSON.stringify(await selectedVisuals(page))).not.toBe(JSON.stringify(beforeVisuals));
-  const afterItems = await selectedIds(page);
-  const afterVisuals = await selectedVisuals(page);
-  const afterSeed = await page.evaluate(() => JSON.parse(localStorage.getItem('babyweather.v1.uiState') || '{}').visualSeed);
-  expect(afterItems).toEqual(beforeItems);
-  expect(afterSeed).toBe(beforeSeed + 1);
-  expect(afterVisuals).not.toEqual(beforeVisuals);
+JKĞ™Uš\ÚX›J
+NÂ‚ˆÛÛœİ[XYÙ\ÈHYÙK›ØØ]ÜŠ	ÈÛİ]š]ÜšY[YÖÙ]KXÛİ[™ËZ[XYÙOHYH—IÊNÂˆ^Xİ
+]ØZ][XYÙ\Ë˜Ûİ[
 
-  await page.reload();
-  await expect(page.locator('#confidencePill')).not.toHaveText('LÃ¤dt â€¦');
-  await expect(page.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
-  expect(await selectedIds(page)).toEqual(afterItems);
-  expect(await selectedVisuals(page)).toEqual(afterVisuals);
-});
+JKĞ™QÜ™X]\•[ŠJNÂˆÛÛœİÚXÚÜÈH]ØZ][XYÙ\Ë™]˜[X]P[
 
-test('Standort kann gewechselt werden', async ({ page }) => {
-  await openDemo(page);
-  await page.locator('[data-open-dialog="locationDialog"]').first().click();
-  await page.locator('#locationInput').fill('Wien');
-  await page.locator('#saveLocationButton').click();
-  await expect(page.locator('#locationLabel')).toContainText('Wien');
-});
+›Ù\ÊHOˆ›Ù\Ë›X\
 
-test('Offline-Zustand bleibt verstÃ¤ndlich und verwendet frischen Cache', async ({ page, context }) => {
-  await openDemo(page);
-  await page.evaluate(() => navigator.serviceWorker.ready);
-  await context.setOffline(true);
-  await expect(page.locator('#connectionBanner')).toBeVisible();
-  await expect(page.locator('#connectionBanner')).toContainText('Offline');
-  await expect(page.locator('#weatherDescription')).not.toContainText('gespeichert');
-  await expect(page.locator('#weatherFacts')).not.toContainText('Stand');
-  await expect(page.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
-  await context.setOffline(false);
-});
+[XYÙJHOˆ
+ÈÛÛ\]Nš[XYÙK˜ÛÛ\]K˜]\˜[ÚYš[XYÙK›˜]\˜[ÚYJJJNÂˆ›Üˆ
+ÛÛœİ][HÙˆÚXÚÜÊHÈ^Xİ
+][K˜ÛÛ\]JKĞ™JYJNÈ^Xİ
+][K›˜]\˜[ÚY
+KĞ™QÜ™X]\•[Š
+NÈBˆ]ØZ]^Xİ
+YÙK›ØØ]ÜŠ	ÈÛİ]š]ÜšY˜\ÜÙ]\XÙZÛ\‰ÊJKÒ]™PÛİ[
+
+NÂˆ]ØZ]ÛÛ^œÙ]Ù™›[™J˜[ÙJNÂŸJNÂ‚\İ
+	ÑZ[œİ[[™Ù[ˆ›ZX™[ˆ˜XÚ™[ØY\š[[‰Ë\Ş[˜È
+ÈYÙHJHOˆÂˆ]ØZ]Ü[‘[[ÊYÙJNÂˆ]ØZ]YÙK›ØØ]ÜŠ	ÖÙ]K[Ü[‹YX[ÙÏHœÙ][™ÜÑX[ÙÈ—IÊK™š\œİ
 
-test('Stale-Wettercache bleibt bis 120 Minuten nutzbar und wird nur einmal prominent markiert', async ({ page, context }) => {
-  await openDemo(page);
-  const offlinePage = await restartFromPersistedCacheOffline(page, context, 60);
+K˜ÛXÚÊ
+NÂˆ]ØZ]YÙK›ØØ]ÜŠ	Ú[œ]Û˜[YOHœ[]S[ÙH—Vİ˜[YOH˜ÛÛÛ—IÊK˜ÚXÚÊ
+NÂˆ]ØZ]^Xİ
+YÙK›ØØ]ÜŠ	Ø›ÙIÊJKÒ]™P]šX]J	Ù]K\[]K[[ÙIË	ØÛÛÛ	ÊNÂˆ]ØZ]YÙKœ™[ØY
 
-  await expect(offlinePage.locator('#weatherDescription')).not.toContainText('gespeichert');
-  await expect(offlinePage.locator('#connectionBanner')).toContainText('Ã¤ltere gespeicherte Wetterdaten');
-  await expect(offlinePage.locator('[data-notice-code="WEATHER_DATA_STALE"]')).toHaveCount(0);
-  await expect(offlinePage.locator('#confidencePill')).toHaveText('Teilweise');
-  await expect(offlinePage.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
-  await context.setOffline(false);
-});
+NÂˆ]ØZ]^Xİ
+YÙK›ØØ]ÜŠ	Ø›ÙIÊJKÒ]™P]šX]J	Ù]K\[]K[[ÙIË	ØÛÛÛ	ÊNÂˆ]ØZ]YÙK›ØØ]ÜŠ	ÖÙ]K[Ü[‹YX[ÙÏHœÙ][™ÜÑX[ÙÈ—IÊK™š\œİ
 
-test('Zu alter Wettercache wird nicht als aktuelles Wetter verwendet; Schlaf bleibt wetterunabhÃ¤ngig', async ({ page, context }) => {
-  await openDemo(page);
-  const offlinePage = await restartFromPersistedCacheOffline(page, context, 121);
+K˜ÛXÚÊ
+NÂˆ]ØZ]^Xİ
+YÙK›ØØ]ÜŠ	Ú[œ]Û˜[YOHœ[]S[ÙH—Vİ˜[YOH˜ÛÛÛ—IÊJKĞ™PÚXÚÙY
 
-  await expect(offlinePage.locator('#temperatureValue')).toHaveText('â€“');
-  await expect(offlinePage.locator('#weatherDescription')).toHaveText('Gespeichertes Wetter zu alt');
-  await expect(offlinePage.locator('#connectionBanner')).toContainText('Ã¤lter als 120 Minuten');
-  await expect(offlinePage.locator('#confidencePill')).toHaveText('Angaben fehlen');
-  await expect(offlinePage.locator('#outfitGrid [data-item-id]')).toHaveCount(0);
-  await expect(offlinePage.locator('#outfitGrid .outfit-empty')).toContainText('Noch keine sichere Empfehlung');
+NÂŸJNÂ‚\İ
+	Ó^[İ][šİ[ÛšY\™ZHÍÍHLˆ[™\™]YİØÜ™Y[œÚİ	Ë\Ş[˜È
+ÈYÙHK\İ[™›ÊHOˆÂˆ]ØZ]YÙKœÙ]šY]ÜÜÚ^™JÈÚYŒÍÍKZYÚLˆJNÂˆ]ØZ]Ü[‘[[ÊYÙJNÂˆÛÛœİ^[İ]H]ØZ]YÙK™]˜[X]J
 
-  await chooseSituation(offlinePage, 'sleep');
-  await expect(offlinePage.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
-  await expect(offlinePage.locator('[data-notice-code="SLEEP_NO_HAT"]')).toBeVisible();
-  await expect(offlinePage.locator('#outfitReason')).toContainText('Raumtemperatur');
-  await context.setOffline(false);
-});
+HOˆÈÛÛœİİ]š]HØİ[Y[œ]Y\TÙ[XİÜŠ	Ë›İ]š]XØ\™	ÊK™Ù]›İ[™[™ĞÛY[™Xİ
 
-test('Kleidungsbilder bleiben nach Offline-Reload verfÃ¼gbar', async ({ page, context }) => {
-  await openDemo(page);
-  await page.evaluate(() => navigator.serviceWorker.ready);
-  await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
+NÈ™]\›ˆÈšY]ÜÜš[›™\•ÚYØÜ›ÛÚY™Øİ[Y[™Øİ[Y[[[Y[œØÜ›ÛÚYİ]š]Y›İ]š]›Yİ]š]šYÚ›İ]š]œšYÚNÈJNÂˆ^Xİ
+^[İ]œØÜ›ÛÚY
+KĞ™S\ÜÕ[“Ü‘\]X[
+^[İ]šY]ÜÜ
+NÂˆ^Xİ
+^[İ]›İ]š]Y
+KĞ™QÜ™X]\•[“Ü‘\]X[
+
+NÂˆ^Xİ
+^[İ]›İ]š]šYÚ
+KĞ™S\ÜÕ[“Ü‘\]X[
+^[İ]šY]ÜÜ
+NÂˆÛÛœİØÜ™Y[œÚİ]H\İ[™›Ë›İ]]]
+	Û[Øš[KLÍÍ^L‹šœÉÊNÂˆ]ØZ]YÙKœØÜ™Y[œÚİ
+È]œØÜ™Y[œÚİ]\N‰ÚœYÉË]X[]NMK[YÙN™˜[ÙHJNÂˆÛÛœÛÛK›ÙÊ’TÕPSÔĞÔ‘QS”ÒÕĞTÑM‰Ü™XYš[TŞ[˜ÊØÜ™Y[œÚİ]
+KÔİš[™Ê	Ø˜\ÙM	Ê_X
+NÂŸJNÂ‚\İ
+	ÒÛZY[™ÜØš[\ˆÙ\™[ˆšXÚX™Ù\ØÚš][‰Ë\Ş[˜È
+ÈYÙHJHOˆÂˆ]ØZ]Ü[‘[[ÊYÙJNÂˆÛÛœİÚXÚÜÈH]ØZ]YÙK›ØØ]ÜŠ	ÈÛİ]š]ÜšY[YÖÙ]KXÛİ[™ËZ[XYÙOHYH—IÊK™]˜[X]P[
 
-  const cacheAudit = await page.evaluate(async () => {
-    const [assetManifest, visualManifest] = await Promise.all([
-      fetch('/assets/clothing/manifest.json').then((response) => response.json()),
-      fetch('/assets/clothing/visual-manifest.json').then((response) => response.json())
-    ]);
-    const normalize = (path) => {
-      if (typeof path !== 'string') return null;
-      const normalized = path.replace(/^\/+/, '');
-      if (!normalized.startsWith('assets/clothing/') || !normalized.toLowerCase().endsWith('.webp')) return null;
-      return `/${normalized}`;
-    };
-    const expected = new Set();
-    const add = (path) => { const normalized = normalize(path); if (normalized) expected.add(normalized); };
-    for (const group of assetManifest.assetGroups || []) {
-      add(group.assetPath);
-      for (const path of Object.values(group.variantPaths || {})) add(path);
-    }
-    for (const variants of Object.values(visualManifest.additionalVariants || {})) {
-      for (const variant of Array.isArray(variants) ? variants : []) add(variant.assetPath);
-    }
-    const missing = [];
-    for (const path of expected) {
-      if (!(await caches.match(path))) missing.push(path);
-    }
-    return { expectedCount: expected.size, missing };
-  });
-  expect(cacheAudit.expectedCount).toBeGreaterThan(50);
-  expect(cacheAudit.missing).toEqual([]);
-  expect(await page.locator('#outfitGrid img[data-clothing-image="true"]').count()).toBeGreaterThan(1);
+›Ù\ÊHOˆ›Ù\Ë›X\
 
-  await context.setOffline(true);
-  await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);
-  await page.reload();
-  await expect(page.locator('#confidencePill')).not.toHaveText('LÃ¤dt â€¦');
-  await expect(page.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
+[XYÙJHOˆÈÛÛœİİ[OYÙ]ÛÛ\]Yİ[J[XYÙJNÈÛÛœİ[XYÙT™XİZ[XYÙK™Ù]›İ[™[™ĞÛY[™Xİ
 
-  const images = page.locator('#outfitGrid img[data-clothing-image="true"]');
-  expect(await images.count()).toBeGreaterThan(1);
-  const checks = await images.evaluateAll((nodes) => nodes.map((image) => ({ complete:image.complete, naturalWidth:image.naturalWidth })));
-  for (const item of checks) { expect(item.complete).toBe(true); expect(item.naturalWidth).toBeGreaterThan(0); }
-  await expect(page.locator('#outfitGrid .asset-placeholder')).toHaveCount(0);
-  await context.setOffline(false);
-});
+NÈÛÛœİÚ[™XİZ[XYÙKœ\™[[[Y[™Ù]›İ[™[™ĞÛY[™Xİ
 
-test('Einstellungen bleiben nach Reload erhalten', async ({ page }) => {
-  await openDemo(page);
-  await page.locator('[data-open-dialog="settingsDialog"]').first().click();
-  await page.locator('input[name="paletteMode"][value="cool"]').check();
-  await expect(page.locator('body')).toHaveAttribute('data-palette-mode', 'cool');
-  await page.reload();
-  await expect(page.locator('body')).toHaveAttribute('data-palette-mode', 'cool');
-  await page.locator('[data-open-dialog="settingsDialog"]').first().click();
-  await expect(page.locator('input[name="paletteMode"][value="cool"]')).toBeChecked();
-});
+NÈ™]\›ˆÈØš™Xİš]œİ[K›Øš™Xİš]Ú][”Ú[š[XYÙT™Xİ›Y\Ú[™Xİ›YKH	‰ˆ[XYÙT™XİœšYÚ\Ú[™XİœšYÚ
+ËH	‰ˆ[XYÙT™XİÜ\Ú[™XİÜKH	‰ˆ[XYÙT™Xİ˜›İÛO\Ú[™Xİ˜›İÛJËHNÈJJNÂˆ^Xİ
+ÚXÚÜË›[™İ
+KĞ™QÜ™X]\•[ŠJNÂˆ›Üˆ
+ÛÛœİ][HÙˆÚXÚÜÊHÈ^Xİ
+][K›Øš™Xİš]
+KĞ™J	ØÛÛZ[‰ÊNÈ^Xİ
+][KÚ][”Ú[
+KĞ™JYJNÈBŸJNÂ‚\İ
+	ÒÛZY[™ÜØš[\ˆÚ[™[Hš[™[ÛÜœ™Zİ™[šY\	Ë\Ş[˜È
+ÈYÙHJHOˆÂˆ]ØZ]Ü[‘[[ÊYÙJNÂˆÛÛœİÙ™œÙ]ÈH]ØZ]YÙK›ØØ]ÜŠ	ÈÛİ]š]ÜšY[YÖÙ]KXÛİ[™ËZ[XYÙOHYH—IÊK™]˜[X]P[
 
-test('Layout funktioniert bei 375 x 812 und erzeugt Screenshot', async ({ page }, testInfo) => {
-  await page.setViewportSize({ width:375, height:812 });
-  await openDemo(page);
-  const layout = await page.evaluate(() => { const outfit = document.querySelector('.outfit-card').getBoundingClientRect(); return { viewport:innerWidth, scrollWidth:document.documentElement.scrollWidth, outfitLeft:outfit.left, outfitRight:outfit.right }; });
-  expect(layout.scrollWidth).toBeLessThanOrEqual(layout.viewport);
-  expect(layout.outfitLeft).toBeGreaterThanOrEqual(0);
-  expect(layout.outfitRight).toBeLessThanOrEqual(layout.viewport);
-  const screenshotPath = testInfo.outputPath('mobile-375x812.jpg');
-  await page.screenshot({ path:screenshotPath, type:'jpeg', quality:55, fullPage:false });
-  console.log(`VISUAL_SCREENSHOT_BASE64:${readFileSync(screenshotPath).toString('base64')}`);
-});
+›Ù\ÊHOˆ›Ù\Ë›X\
 
-test('Kleidungsbilder werden nicht abgeschnitten', async ({ page }) => {
-  await openDemo(page);
-  const checks = await page.locator('#outfitGrid img[data-clothing-image="true"]').evaluateAll((nodes) => nodes.map((image) => { const style=getComputedStyle(image); const imageRect=image.getBoundingClientRect(); const shellRect=image.parentElement.getBoundingClientRect(); return { objectFit:style.objectFit, withinShell:imageRect.left>=shellRect.left-.5 && imageRect.right<=shellRect.right+.5 && imageRect.top>=shellRect.top-.5 && imageRect.bottom<=shellRect.bottom+.5 }; }));
-  expect(checks.length).toBeGreaterThan(1);
-  for (const item of checks) { expect(item.objectFit).toBe('contain'); expect(item.withinShell).toBe(true); }
-});
+[XYÙJHOˆÈÛÛœİ[XYÙT™XİZ[XYÙK™Ù]›İ[™[™ĞÛY[™Xİ
 
-test('Kleidungsbilder sind im Bildfeld korrekt zentriert', async ({ page }) => {
-  await openDemo(page);
-  const offsets = await page.locator('#outfitGrid img[data-clothing-image="true"]').evaluateAll((nodes) => nodes.map((image) => { const imageRect=image.getBoundingClientRect(); const shellRect=image.parentElement.getBoundingClientRect(); return { dx:Math.abs((imageRect.left+imageRect.width/2)-(shellRect.left+shellRect.width/2)), dy:Math.abs((imageRect.top+imageRect.height/2)-(shellRect.top+shellRect.height/2)), objectPosition:getComputedStyle(image).objectPosition }; }));
-  for (const item of offsets) { expect(item.dx).toBeLessThanOrEqual(1); expect(item.dy).toBeLessThanOrEqual(1); expect(item.objectPosition).toContain('50%'); }
-});
+NÈÛÛœİÚ[™XİZ[XYÙKœ\™[[[Y[™Ù]›İ[™[™ĞÛY[™Xİ
 
-test('Schlafmodus verwendet Raumtemperatur', async ({ page }) => {
-  await openDemo(page);
-  await chooseSituation(page, 'sleep');
-  const at185 = await selectedIds(page);
-  await page.locator('[data-open-dialog="situationDialog"]').first().click();
-  const room = page.locator('#situationDialog [data-context-field="roomTempC"]');
-  await room.fill('24'); await room.blur(); await page.locator('#applySituationButton').click();
-  const at24 = await selectedIds(page);
-  expect(at24).not.toEqual(at185);
-  await expect(page.locator('#outfitReason')).toContainText('24 Â°C Raumtemperatur');
-  await expect(page.locator('[data-notice-code="SLEEP_NO_HAT"]')).toBeVisible();
-});
+NÈ™]\›ˆÈ“X]˜XœÊ
+[XYÙT™Xİ›Y
+Ú[XYÙT™XİÚYÌŠKJÚ[™Xİ›Y
+ÜÚ[™XİÚYÌŠJKN“X]˜XœÊ
+[XYÙT™XİÜ
+Ú[XYÙT™XİšZYÚÌŠKJÚ[™XİÜ
+ÜÚ[™XİšZYÚÌŠJKØš™XİÜÚ][Û™Ù]ÛÛ\]Yİ[J[XYÙJK›Øš™XİÜÚ][ÛˆNÈJJNÂˆ›Üˆ
+ÛÛœİ][HÙˆÙ™œÙ]ÊHÈ^Xİ
+][K™
+KĞ™S\ÜÕ[“Ü‘\]X[
+JNÈ^Xİ
+][K™JKĞ™S\ÜÕ[“Ü‘\]X[
+JNÈ^Xİ
+][K›Øš™XİÜÚ][ÛŠKĞÛÛZ[Š	ÍL	IÊNÈBŸJNÂ‚\İ
+	ÔØÚY›[Ù\È™\Ù[™]˜][][\\˜]\‰Ë\Ş[˜È
+ÈYÙHJHOˆÂˆ]ØZ]Ü[‘[[ÊYÙJNÂˆ]ØZ]ÚÛÜÙTÚ]X][ÛŠYÙK	ÜÛY\	ÊNÂˆÛÛœİ]NHH]ØZ]Ù[XİYYÊYÙJNÂˆ]ØZ]YÙK›ØØ]ÜŠ	ÖÙ]K[Ü[‹YX[ÙÏHœÚ]X][Û‘X[ÙÈ—IÊK™š\œİ
 
-test('Nackentest bleibt kurz sichtbar; Detailhinweis steht in Hilfe', async ({ page }) => {
-  await openDemo(page);
-  await expect(page.getByTestId('neck-check')).toBeVisible();
-  await expect(page.getByTestId('neck-check')).toContainText('Warm & trocken');
-  await expect(page.getByTestId('neck-check')).not.toContainText('Kalte HÃ¤nde oder FÃ¼ÃŸe');
-  await page.locator('[data-open-dialog="helpDialog"]').click();
-  await expect(page.locator('#helpDialog')).toBeVisible();
-  await expect(page.locator('#helpDialog')).toContainText('Kalte HÃ¤nde oder FÃ¼ÃŸe');
-});
+K˜ÛXÚÊ
+NÂˆÛÛœİ›ÛÛHHYÙK›ØØ]ÜŠ	ÈÜÚ]X][Û‘X[ÙÈÙ]KXÛÛ^YšY[Hœ›ÛÛU[\È—IÊNÂˆ]ØZ]›ÛÛK™š[
+	Ì	ÊNÈ]ØZ]›ÛÛK˜›\Š
+NÈ]ØZ]YÙK›ØØ]ÜŠ	ÈØ\TÚ]X][Û]Û‰ÊK˜ÛXÚÊ
+NÂˆÛÛœİ]H]ØZ]Ù[XİYYÊYÙJNÂˆ^Xİ
+]
+K››İÑ\]X[
+]NJNÂˆ]ØZ]^Xİ
+YÙK›ØØ]ÜŠ	ÈÛİ]š]™X\ÛÛ‰ÊJKĞÛÛZ[•^
+	Ì0¬È˜][][\\˜]\‰ÊNÂˆ]ØZ]^Xİ
+YÙK›ØØ]ÜŠ	ÖÙ]K[›İXÙKXÛÙOH”ÓQTÓ“×ÒU—IÊJKĞ™Uš\ÚX›J
+NÂŸJNÂ‚\İ
+	Ó˜XÚÙ[\İ›ZXİ\ˆÚXÚ˜\È]Z[[ÙZ\ÈİZ[ˆ[™IË\Ş[˜È
+ÈYÙHJHOˆÂˆ]ØZ]Ü[‘[[ÊYÙJNÂˆ]ØZ]^Xİ
+YÙK™Ù]U\İY
+	Û™XÚËXÚXÚÉÊJKĞ™Uš\ÚX›J
+NÂˆ]ØZ]^Xİ
+YÙK™Ù]U\İY
+	Û™XÚËXÚXÚÉÊJKĞÛÛZ[•^
+	ÕØ\›H	ˆ›ØÚÙ[‰ÊNÂˆ]ØZ]^Xİ
+YÙK™Ù]U\İY
+	Û™XÚËXÚXÚÉÊJK››İĞÛÛZ[•^
+	ÒØ[H0é™HÙ\ˆ°ï0çÙIÊNÂˆ]ØZ]YÙK›ØØ]ÜŠ	ÖÙ]K[Ü[‹YX[ÙÏHš[X[ÙÈ—IÊK˜ÛXÚÊ
+NÂˆ]ØZ]^Xİ
+YÙK›ØØ]ÜŠ	ÈÚ[X[ÙÉÊJKĞ™Uš\ÚX›J
+NÂˆ]ØZ]^Xİ
+YÙK›ØØ]ÜŠ	ÈÚ[X[ÙÉÊJKĞÛÛZ[•^
+	ÒØ[H0é™HÙ\ˆ°ï0çÙIÊNÂŸJNÂ‚\İ
+	İ\›Z\ØÚ[™\™HÛZY[™ÜØ[\›˜]]™H0íœİ™]X™]Ù\[™È]\ÉË\Ş[˜È
+ÈYÙHJHOˆÂˆ]ØZ]Ü[‘[[ÊYÙJNÂˆ]ØZ]YÙK›ØØ]ÜŠ	ÈÛİ]š]ÜšYÙ]K[Ü[‹X[\›˜]]™\ÏHYH—IÊK™š\œİ
 
-test('thermisch andere Kleidungsalternative lÃ¶st Neubewertung aus', async ({ page }) => {
-  await openDemo(page);
-  await page.locator('#outfitGrid [data-open-alternatives="true"]').first().click();
-  await expect(page.locator('#alternativeDialog')).toBeVisible();
-  const option = page.locator('[data-alternative-item-id]').first(); const itemId = await option.getAttribute('data-alternative-item-id'); await option.click();
-  await expect(page.locator(`#outfitGrid [data-item-id="${itemId}"]`)).toBeVisible();
-});
+K˜ÛXÚÊ
+NÂˆ]ØZ]^Xİ
+YÙK›ØØ]ÜŠ	ÈØ[\›˜]]™QX[ÙÉÊJKĞ™Uš\ÚX›J
+NÂˆÛÛœİÜ[ÛˆHYÙK›ØØ]ÜŠ	ÖÙ]KX[\›˜]]™KZ][KZYIÊK™š\œİ
+
+NÈÛÛœİ][RYH]ØZ]Ü[Û‹™Ù]]šX]J	Ù]KX[\›˜]]™KZ][KZY	ÊNÈ]ØZ]Ü[Û‹˜ÛXÚÊ
+NÂˆ]ØZ]^Xİ
+YÙK›ØØ]ÜŠÛİ]š]ÜšYÙ]KZ][KZYH‰Ú][RYH—X
+JKĞ™Uš\ÚX›J
+NÂŸJNÂ
