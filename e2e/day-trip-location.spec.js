@@ -23,7 +23,7 @@ test('Tagesausflug nutzt einen eigenen Ausflugsort ohne den normalen Wetterort z
   expect(inputHeight).toBeGreaterThanOrEqual(44);
 
   await page.locator('#tripLocationInput').fill('Wien');
-  await expect(page.locator('#tripGenerateButton')).toHaveAttribute('aria-disabled', 'true');
+  await expect(page.locator('#tripGenerateButton')).toHaveAttribute('data-location-pending', 'true');
   await page.locator('#tripGenerateButton').click();
   await expect(page.locator('#tripLocationStatus')).toContainText('Bitte zuerst Wetter');
   await expect(page.locator('#tripResultView')).not.toBeVisible();
@@ -31,7 +31,7 @@ test('Tagesausflug nutzt einen eigenen Ausflugsort ohne den normalen Wetterort z
   await page.locator('#tripLocationApplyButton').click();
   await expect(page.locator('#tripLocationInput')).toHaveValue('Wien, Österreich');
   await expect(page.locator('#tripLocationStatus')).toHaveText('Wetter für Wien, Österreich geladen.');
-  await expect(page.locator('#tripGenerateButton')).toHaveAttribute('aria-disabled', 'false');
+  await expect(page.locator('#tripGenerateButton')).toHaveAttribute('data-location-pending', 'false');
 
   await page.locator('#tripGenerateButton').click();
   await expect(page.locator('#tripResultView')).toBeVisible();
@@ -52,5 +52,5 @@ test('Tagesausflug kann wieder auf den normalen Wetterort zurückgesetzt werden'
   await page.locator('#tripLocationCurrentButton').click();
   await expect(page.locator('#tripLocationInput')).toHaveValue('Salzburg, Österreich');
   await expect(page.locator('#tripLocationStatus')).toContainText('Aktueller Wetterort: Salzburg, Österreich');
-  await expect(page.locator('#tripGenerateButton')).toHaveAttribute('aria-disabled', 'false');
+  await expect(page.locator('#tripGenerateButton')).toHaveAttribute('data-location-pending', 'false');
 });
