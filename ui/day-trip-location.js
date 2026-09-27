@@ -3,7 +3,7 @@ function ensureStyles() {
   const style = document.createElement('style');
   style.id = 'dayTripLocationStyles';
   style.textContent = `
-    .trip-location-form{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:8px}.trip-location-field input{width:100%;min-height:44px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);padding:0 11px;font:inherit;font-size:.9rem}.trip-location-apply,.trip-location-reset{min-height:44px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--accent);padding:0 12px;font-weight:800}.trip-location-apply{background:#fff7f1;border-color:rgba(155,109,85,.36)}.trip-location-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:7px}.trip-location-status{margin:0;color:var(--muted);font-size:.78rem;line-height:1.35}.trip-location-status[data-tone="error"]{color:#8a3d32}.trip-location-status[data-tone="success"]{color:#5b6541}.trip-location-reset{flex:0 0 auto;min-height:36px;padding:0 9px;font-size:.76rem}.trip-location-help{margin:6px 0 0}.trip-result-location{margin:4px 0 0;color:var(--muted);font-size:.78rem;font-weight:700}.trip-generate[aria-disabled="true"]{opacity:.68}
+    .trip-location-form{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:8px}.trip-location-field input{width:100%;min-height:44px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);padding:0 11px;font:inherit;font-size:.9rem}.trip-location-apply,.trip-location-reset{min-height:44px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--accent);padding:0 12px;font-weight:800}.trip-location-apply{background:#fff7f1;border-color:rgba(155,109,85,.36)}.trip-location-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:7px}.trip-location-status{margin:0;color:var(--muted);font-size:.78rem;line-height:1.35}.trip-location-status[data-tone="error"]{color:#8a3d32}.trip-location-status[data-tone="success"]{color:#5b6541}.trip-location-reset{flex:0 0 auto;min-height:36px;padding:0 9px;font-size:.76rem}.trip-location-help{margin:6px 0 0}.trip-result-location{margin:4px 0 0;color:var(--muted);font-size:.78rem;font-weight:700}.trip-generate[data-location-pending="true"]{opacity:.68}
     @media(max-width:430px){.trip-location-form{grid-template-columns:1fr}.trip-location-apply{width:100%}.trip-location-meta{align-items:flex-start;flex-direction:column}.trip-location-reset{min-height:44px}}
   `;
   document.head.append(style);
@@ -88,7 +88,7 @@ export function bindDayTripLocation({
     else delete ui.status.dataset.tone;
   };
   const syncGenerateGuard = () => {
-    ui.generate.setAttribute('aria-disabled', String(dirty || loading));
+    ui.generate.dataset.locationPending = String(dirty || loading);
   };
   const syncLocationUi = ({ preserveInput = false, statusText = null, statusTone = '' } = {}) => {
     activeLocation = getActiveLocation() ?? getBaseLocation();
