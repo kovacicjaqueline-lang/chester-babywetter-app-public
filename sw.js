@@ -1,5 +1,5 @@
-const CACHE_NAME = 'babywetter-shell-v0.2.0-assets27';
-const SHELL_REVISION = '2026-09-26-warm-clothing-variants';
+const CACHE_NAME = 'babywetter-shell-v0.2.0-assets28';
+const SHELL_REVISION = '2026-09-27-day-trip-location';
 const ASSET_MANIFEST_PATH = '/assets/clothing/manifest.json';
 const VISUAL_MANIFEST_PATH = '/assets/clothing/visual-manifest.json';
 const SHELL = [
@@ -44,6 +44,7 @@ const SHELL = [
   '/ui/render-situations.js',
   '/ui/background-scene.js',
   '/ui/swipe-controller.js',
+  '/ui/day-trip-location.js',
   '/ui/day-trip-planner.js'
 ];
 
