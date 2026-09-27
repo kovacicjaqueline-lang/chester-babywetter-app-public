@@ -570,10 +570,13 @@ function appendTimelineWeather(meta, snapshot, at, index) {
   weather.className = 'trip-weather-chip';
   weather.setAttribute('aria-expanded', 'false');
   weather.setAttribute('aria-controls', detailsId);
-  weather.setAttribute('aria-label', `Wetterdetails für ${formatTime(at)} anzeigen`);
   const precipitation = Number.isFinite(point.precipProbabilityPct)
     ? ` · ${Math.round(point.precipProbabilityPct)}%`
     : '';
+  const accessibleWeather = `Temperatur ${formatTemperature(point.airTempC)}${Number.isFinite(point.precipProbabilityPct)
+    ? `, Niederschlagswahrscheinlichkeit ${Math.round(point.precipProbabilityPct)} Prozent`
+    : ''}`;
+  weather.setAttribute('aria-label', `Wetterdetails für ${formatTime(at)} anzeigen. ${accessibleWeather}`);
   weather.textContent = `${formatTemperature(point.airTempC)}${precipitation}`;
 
   const details = document.createElement('dl');
@@ -610,7 +613,7 @@ function appendTimelineWeather(meta, snapshot, at, index) {
   weather.addEventListener('click', () => {
     const expanded = weather.getAttribute('aria-expanded') !== 'true';
     weather.setAttribute('aria-expanded', String(expanded));
-    weather.setAttribute('aria-label', `Wetterdetails für ${formatTime(at)} ${expanded ? 'schließen' : 'anzeigen'}`);
+    weather.setAttribute('aria-label', `Wetterdetails für ${formatTime(at)} ${expanded ? 'schließen' : 'anzeigen'}. ${accessibleWeather}`);
     details.hidden = !expanded;
   });
   meta.append(weather);
