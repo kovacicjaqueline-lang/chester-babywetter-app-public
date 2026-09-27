@@ -270,3 +270,31 @@ test('Reiner Drinnen-Plan bleibt auch ohne Wetterdaten planbar', async ({ page }
   await expect(page.getByTestId('trip-start-outfit').locator('[data-trip-item-id]').first()).toBeVisible();
   await expect(page.locator('#tripCoverageNotice')).toBeHidden();
 });
+
+test('Wetterchip im Tagesverlauf zeigt kompakte Niederschlagsangabe und auf Tipp Wetterdetails', async ({ page }) => {
+  await openDemo(page);
+  await openPlanner(page);
+  await chooseFullForecastWindow(page, { moveStartForward: true });
+
+  await page.locator('#tripAddSegmentButton').click();
+  await page.locator('.trip-segment-card').nth(1).locator('[data-trip-segment-mode="carrier"]').click();
+  await page.locator('#tripGenerateButton').click();
+  await expect(page.getByTestId('trip-timeline')).toBeVisible();
+
+  const weather = page.getByTestId('trip-timeline').locator('.trip-weather-chip').first();
+  await expect(weather).toBeVisible();
+  await expect(weather).toContainText(/°/);
+  await expect(weather).not.toContainText('Niederschlag');
+  await expect(weather).toHaveAttribute('aria-expanded', 'false');
+
+  const details = page.locator(`#${await weather.getAttribute('aria-controls')}`);
+  await weather.click();
+  await expect(weather).toHaveAttribute('aria-expanded', 'true');
+  await expect(details).toBeVisible();
+  await expect(details).toContainText('Temperatur');
+  await expect(details).toContainText('Wind');
+  await expect(details).toContainText('Niederschlag');
+  await expect(details).toContainText('UV-Index');
+  await weather.click();
+  await expect(details).toBeHidden();
+});

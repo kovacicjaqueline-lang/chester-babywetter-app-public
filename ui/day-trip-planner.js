@@ -321,7 +321,7 @@ function ensureStyles() {
     .trip-safety-list{display:grid;gap:8px;margin:0 0 16px}.trip-safety-notice{border-left:4px solid #c77f4c;border-radius:12px;background:#fff6e9;padding:10px 12px}.trip-safety-notice strong{display:block;font-size:.875rem}.trip-safety-notice p{margin:3px 0 0;color:#6b574a;font-size:.75rem;line-height:1.4}.trip-safety-notice[data-severity="hard_rule"]{border-left-color:#b24b3d;background:#fff0ed}.trip-notice-summary{margin:0 0 18px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.62);overflow:hidden}.trip-notice-toggle{width:100%;min-height:48px;display:flex;align-items:center;gap:8px;border:0;background:transparent;color:var(--accent);padding:0 13px;text-align:left;font:inherit;font-size:.875rem;font-weight:800}.trip-notice-toggle::after{content:'⌄';margin-left:auto;font-size:1rem}.trip-notice-toggle[aria-expanded="true"]::after{content:'⌃'}.trip-notice-details{padding:0 10px 10px}.trip-notice-details[hidden]{display:none!important}.trip-notice-details .trip-safety-list{margin:0}.trip-notice-details .trip-safety-notice{background:#fff;border-left-color:#c9ad99}.trip-notice-details .trip-safety-notice[data-severity="caution"]{background:#fff6e9}
     .trip-result-section{margin:0 0 18px}.trip-result-section h4{margin:0 0 9px;font-size:.98rem}.trip-outfit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(94px,1fr));gap:8px}.trip-item-card{min-width:0;border:1px solid var(--line);border-radius:15px;background:#fff;padding:8px;text-align:center}.trip-item-image{height:78px;display:grid;place-items:center;overflow:hidden}.trip-item-image img{max-width:100%;max-height:100%;object-fit:contain}.trip-item-card strong{display:block;margin-top:5px;font-size:.875rem;line-height:1.2}.trip-item-card small{display:block;margin-top:2px;color:var(--muted);font-size:.75rem}
     .trip-pack-list{display:grid;gap:7px}.trip-pack-item{display:grid;grid-template-columns:44px minmax(0,1fr);align-items:start;gap:10px;min-height:58px;border:1px solid var(--line);border-radius:14px;background:#fff;padding:7px 10px}.trip-pack-thumb{width:44px;height:44px;display:grid;place-items:center;overflow:hidden}.trip-pack-thumb img{max-width:100%;max-height:100%;object-fit:contain}.trip-pack-copy{min-width:0;padding:2px 0}.trip-pack-item strong{display:block;font-size:.875rem;line-height:1.25;overflow-wrap:anywhere;word-break:break-word}.trip-pack-item small{display:block;margin-top:3px;color:var(--muted);font-size:.75rem;line-height:1.25}.trip-empty{margin:0;border:1px dashed var(--line);border-radius:14px;padding:12px;color:var(--muted);font-size:.875rem}
-    .trip-timeline{display:grid;gap:10px}.trip-transition{min-width:0;border:1px solid var(--line);border-radius:16px;background:#fff;padding:11px 12px}.trip-transition[data-has-safety="true"]{border-color:#e1a28b}.trip-transition-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}.trip-transition-head>div:first-child{min-width:0}.trip-transition-title{margin:0;color:var(--accent);font-size:.9rem;line-height:1.3;overflow-wrap:anywhere}.trip-transition-title time{font-weight:900}.trip-transition-subtitle{margin:3px 0 0;color:var(--muted);font-size:.75rem;line-height:1.3}.trip-transition-weather{flex:0 0 auto}.trip-transition-safety{display:grid;gap:6px;margin-top:10px}.trip-transition-safety .trip-safety-notice{margin:0}.trip-transition-groups{display:grid;gap:8px;margin-top:10px}.trip-transition-group{margin:0}.trip-transition-group h6{margin:0 0 2px;color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.04em}.trip-transition-group ul{display:grid;gap:2px;margin:0;padding-left:18px}.trip-transition-group li{font-size:.84rem;line-height:1.3;overflow-wrap:anywhere}.trip-transition-unchanged{margin:9px 0 0;color:var(--muted);font-size:.76rem;line-height:1.35}.trip-transition-state{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}.trip-transition-state summary{cursor:pointer;color:var(--accent);font-size:.78rem;font-weight:800}.trip-transition-state .trip-outfit-grid{margin-top:8px}.trip-transition-state[open] summary{margin-bottom:2px}.trip-weather-chip{border-radius:999px;background:#f4eee9;padding:2px 7px}.trip-neck-reminder{border:1px solid #d8c3a8;border-radius:14px;background:#fff9ef;padding:10px 12px;margin:0 0 18px}.trip-neck-reminder strong{display:block;font-size:.875rem}.trip-neck-reminder p{margin:3px 0 0;color:#6b574a;font-size:.76rem;line-height:1.4}.trip-coverage{border-radius:13px;background:#fff4df;color:#74531e;padding:10px 12px;margin-bottom:14px;font-size:.875rem;font-weight:700}.trip-result-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}.trip-result-actions button{min-height:48px}
+    .trip-timeline{display:grid;gap:10px}.trip-transition{min-width:0;border:1px solid var(--line);border-radius:16px;background:#fff;padding:11px 12px}.trip-transition[data-has-safety="true"]{border-color:#e1a28b}.trip-transition-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}.trip-transition-head>div:first-child{min-width:0}.trip-transition-title{margin:0;color:var(--accent);font-size:.9rem;line-height:1.3;overflow-wrap:anywhere}.trip-transition-title time{font-weight:900}.trip-transition-subtitle{margin:3px 0 0;color:var(--muted);font-size:.75rem;line-height:1.3}.trip-transition-weather{flex:0 0 auto}.trip-transition-safety{display:grid;gap:6px;margin-top:10px}.trip-transition-safety .trip-safety-notice{margin:0}.trip-transition-groups{display:grid;gap:8px;margin-top:10px}.trip-transition-group{margin:0}.trip-transition-group h6{margin:0 0 2px;color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.04em}.trip-transition-group ul{display:grid;gap:2px;margin:0;padding-left:18px}.trip-transition-group li{font-size:.84rem;line-height:1.3;overflow-wrap:anywhere}.trip-transition-unchanged{margin:9px 0 0;color:var(--muted);font-size:.76rem;line-height:1.35}.trip-transition-state{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}.trip-transition-state summary{cursor:pointer;color:var(--accent);font-size:.78rem;font-weight:800}.trip-transition-state .trip-outfit-grid{margin-top:8px}.trip-transition-state[open] summary{margin-bottom:2px}.trip-weather-chip{min-height:30px;border:0;border-radius:999px;background:#f4eee9;padding:2px 9px;color:var(--ink);font:inherit;font-size:.8rem;white-space:nowrap;cursor:pointer}.trip-weather-chip[aria-expanded="true"]{background:#eee4dc}.trip-weather-details{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 14px;margin:9px 0 0;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;font-size:.78rem;line-height:1.35}.trip-weather-details[hidden]{display:none!important}.trip-weather-details dt{color:var(--muted)}.trip-weather-details dd{margin:0;text-align:right;font-weight:700}.trip-neck-reminder{border:1px solid #d8c3a8;border-radius:14px;background:#fff9ef;padding:10px 12px;margin:0 0 18px}.trip-neck-reminder strong{display:block;font-size:.875rem}.trip-neck-reminder p{margin:3px 0 0;color:#6b574a;font-size:.76rem;line-height:1.4}.trip-coverage{border-radius:13px;background:#fff4df;color:#74531e;padding:10px 12px;margin-bottom:14px;font-size:.875rem;font-weight:700}.trip-result-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}.trip-result-actions button{min-height:48px}
     @media(max-width:430px){.trip-sheet{max-height:96dvh}.trip-time-grid{grid-template-columns:1fr 1fr}.trip-mode-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.trip-outfit-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.trip-result-actions{grid-template-columns:1fr}.trip-entry-row{justify-content:stretch}.trip-entry-button{width:100%}}
   `;
   document.head.append(style);
@@ -560,14 +560,64 @@ function renderNeckReminder(result) {
   setHidden(host, !hasNeckNotice);
 }
 
-function appendTimelineWeather(meta, snapshot, at) {
+function appendTimelineWeather(meta, snapshot, at, index) {
   const point = weatherAt(snapshot, at);
-  if (!point) return;
-  const weather = document.createElement('span');
+  if (!point) return null;
+
+  const detailsId = `trip-weather-details-${index}`;
+  const weather = document.createElement('button');
+  weather.type = 'button';
   weather.className = 'trip-weather-chip';
-  const precipitation = Number.isFinite(point.precipProbabilityPct) ? ` · ${formatPrecipitation(point)}` : '';
+  weather.setAttribute('aria-expanded', 'false');
+  weather.setAttribute('aria-controls', detailsId);
+  const precipitation = Number.isFinite(point.precipProbabilityPct)
+    ? ` · ${Math.round(point.precipProbabilityPct)}%`
+    : '';
+  const accessibleWeather = `Temperatur ${formatTemperature(point.airTempC)}${Number.isFinite(point.precipProbabilityPct)
+    ? `, Niederschlagswahrscheinlichkeit ${Math.round(point.precipProbabilityPct)} Prozent`
+    : ''}`;
+  weather.setAttribute('aria-label', `Wetterdetails für ${formatTime(at)} anzeigen. ${accessibleWeather}`);
   weather.textContent = `${formatTemperature(point.airTempC)}${precipitation}`;
+
+  const details = document.createElement('dl');
+  details.className = 'trip-weather-details';
+  details.id = detailsId;
+  details.dataset.tripWeatherDetails = '';
+  details.hidden = true;
+
+  const addDetail = (label, value) => {
+    const term = document.createElement('dt');
+    term.textContent = label;
+    const description = document.createElement('dd');
+    description.textContent = value;
+    details.append(term, description);
+  };
+  const unavailable = 'Keine Angabe';
+  const wind = Number.isFinite(point.windSpeedKmh) ? `${Math.round(point.windSpeedKmh)} km/h` : unavailable;
+  const windWithGusts = Number.isFinite(point.windGustKmh)
+    ? `${wind} · Böen ${Math.round(point.windGustKmh)} km/h`
+    : wind;
+  const precipitationAmount = Number.isFinite(point.precipMm)
+    ? `${point.precipMm.toLocaleString('de-AT', { maximumFractionDigits: 1 })} mm`
+    : unavailable;
+
+  addDetail('Temperatur', formatTemperature(point.airTempC));
+  if (Number.isFinite(point.apparentTempC)) {
+    addDetail(point.apparentTempTrusted ? 'Gefühlt' : 'Gefühlt (unsicher)', formatTemperature(point.apparentTempC));
+  }
+  addDetail('Wind', windWithGusts);
+  addDetail('Niederschlag', `${formatPrecipitation(point)} · Menge ${precipitationAmount}`);
+  addDetail('UV-Index', Number.isFinite(point.uvIndex) ? String(Math.round(point.uvIndex)) : unavailable);
+  addDetail('Bewölkung', Number.isFinite(point.cloudCoverPct) ? `${Math.round(point.cloudCoverPct)}%` : unavailable);
+
+  weather.addEventListener('click', () => {
+    const expanded = weather.getAttribute('aria-expanded') !== 'true';
+    weather.setAttribute('aria-expanded', String(expanded));
+    weather.setAttribute('aria-label', `Wetterdetails für ${formatTime(at)} ${expanded ? 'schließen' : 'anzeigen'}. ${accessibleWeather}`);
+    details.hidden = !expanded;
+  });
   meta.append(weather);
+  return details;
 }
 
 function transitionLabel(mode) {
@@ -627,9 +677,10 @@ function transitionRow(transition, snapshot, assetStore, styleTheme, index) {
   header.append(copy);
   const weather = document.createElement('div');
   weather.className = 'trip-transition-weather';
-  appendTimelineWeather(weather, snapshot, transition.at);
+  const weatherDetails = appendTimelineWeather(weather, snapshot, transition.at, index);
   header.append(weather);
   row.append(header);
+  if (weatherDetails) row.append(weatherDetails);
 
   const notices = [];
   const seenNoticeCodes = new Set();
