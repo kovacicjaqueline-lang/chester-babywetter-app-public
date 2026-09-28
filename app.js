@@ -9,6 +9,7 @@ import { ClothingAssetStore } from './ui/asset-store.js';
 import { renderAlternatives, renderCatalog, renderHourly, renderOutfit, renderWeather } from './ui/render.js';
 import { renderSituation, renderSituationContext, renderSituationOptions } from './ui/render-situations.js';
 import { bindDayTripPlanner } from './ui/day-trip-planner.js';
+import { bindDayTripLocation } from './ui/day-trip-location.js';
 
 const PROFILE_KEY = 'babyweather.v1.profile';
 const SETTINGS_KEY = 'babyweather.v1.settings';
@@ -78,7 +79,7 @@ const profile = loadProfile(); const settings = loadSettings(profile); const sto
 const storedUiVersion = Number.isInteger(storedUi?.uiStateVersion) ? storedUi.uiStateVersion : 1;
 const migrateLegacyUiDefaults = Boolean(storedUi && typeof storedUi === 'object' && storedUiVersion < UI_STATE_VERSION);
 const state = { profile, settings, mode: MODES.has(storedUi?.mode) ? storedUi.mode : settings.defaultMode, contexts: sanitizeContexts(storedUi?.contexts, { migrateLegacyDefaults:migrateLegacyUiDefaults }), visualSeed: Number.isSafeInteger(storedUi?.visualSeed) ? storedUi.visualSeed : 0, location: null, weather: null, runtime: { weatherLoading: true, weatherError: null, weatherCacheStatus: null, weatherCacheAgeMinutes: null, weatherCacheOrigin: null }, warmthDirection: 'balanced', neckFeedback: null };
-let session = createSession(`ui:${Date.now()}`); let lastRecommendation = null; let alternativeSlot = null; let toastTimer = null; let weatherRefreshInFlight = false; let situationDraft = null;
+let session = createSession(`ui:${Date.now()}`); let lastRecommendation = null; let alternativeSlot = null; let toastTimer = null; let weatherRefreshInFlight = false; let situationDraft = null; let tripPlannerOverride = null;
 const situationDialogReturnFocus = new WeakMap();
 const assetStore = new ClothingAssetStore(); const weatherService = createWeatherService({ onStorageError: () => showToast('Standort konnte lokal nicht gespeichert werden.') });
 function persistProfile() { state.profile.defaultMode = state.settings.defaultMode; state.profile.updatedAt = nowIso(); localStorage.setItem(PROFILE_KEY, JSON.stringify(state.profile)); }
@@ -144,12 +145,15 @@ function renderRecommendation() {
   renderCurrentRecommendation();
 }
 function tripPlannerSnapshot() {
-  syncActiveWeatherFreshness();
+  if (!tripPlannerOverride) syncActiveWeatherFreshness();
+  const tripLocation = tripPlannerOverride?.location ?? state.location;
+  const tripWeather = tripPlannerOverride?.weather ?? state.weather;
   return {
     profile: structuredClone(state.profile),
     mode: state.mode,
     contexts: structuredClone(state.contexts),
-    weather: state.weather ? structuredClone(state.weather) : null
+    location: tripLocation ? structuredClone(tripLocation) : null,
+    weather: tripWeather ? structuredClone(tripWeather) : null
   };
 }
 function cacheAgeLabel() {
@@ -310,10 +314,36 @@ async function refreshCurrentLocation({ successMessage = 'Aktuelles Wetter und S
     else showToast('Aktueller Standort oder Wetter konnte nicht geladen werden.');
   }
 }
+async function resolveLocationQuery(query) {
+  const normalized = String(query ?? '').trim();
+  if (normalized.length < 2) throw new Error('Bitte mindestens zwei Zeichen für den Ort eingeben.');
+  if (DEMO_MODE) {
+    const key = normalized.toLowerCase().split(',')[0].trim();
+    return DEMO_LOCATIONS[key] ?? { ...DEFAULT_LOCATION, locationId: `demo:${key}`, label: normalized };
+  }
+  const results = await weatherService.search(normalized, { language: 'de', count: 8 });
+  const locationResult = results[0] ?? null;
+  if (!locationResult) throw new Error('Kein passender Ort gefunden.');
+  return locationResult;
+}
 async function changeLocation(query) {
-  const normalized = String(query ?? '').trim(); if (normalized.length < 2) { showToast('Bitte mindestens zwei Zeichen für den Ort eingeben.'); return false; }
-  try { let locationResult; if (DEMO_MODE) { const key = normalized.toLowerCase().split(',')[0].trim(); locationResult = DEMO_LOCATIONS[key] ?? { ...DEFAULT_LOCATION, locationId: `demo:${key}`, label: normalized }; } else { const results = await weatherService.search(normalized, { language: 'de', count: 8 }); locationResult = results[0] ?? null; } if (!locationResult) throw new Error('Kein passender Ort gefunden.'); await refreshWeather(locationResult); showToast(`Wetterort: ${state.location?.label ?? normalized}`); return true; }
-  catch (error) { showToast(error?.message || 'Standort konnte nicht geladen werden.'); return false; }
+  const normalized = String(query ?? '').trim();
+  try {
+    const locationResult = await resolveLocationQuery(normalized);
+    await refreshWeather(locationResult);
+    showToast(`Wetterort: ${state.location?.label ?? normalized}`);
+    return true;
+  } catch (error) {
+    showToast(error?.message || 'Standort konnte nicht geladen werden.');
+    return false;
+  }
+}
+async function loadTripWeatherForLocation(query) {
+  const locationResult = await resolveLocationQuery(query);
+  if (!navigator.onLine && !DEMO_MODE) throw new Error('Für den Ausflugsort kann offline kein neues Wetter geladen werden.');
+  const bundle = await weatherService.loadWeather(locationResult, { demoMode: DEMO_MODE });
+  const weather = normalizeWeatherBundle(bundle, locationResult);
+  return { location: weather.location, weather };
 }
 function bindGlobalActions() {
   document.addEventListener('click', (event) => {
@@ -440,7 +470,18 @@ async function refreshWeatherIfNeeded() {
 }
 async function init() {
   if (migrateLegacyUiDefaults) persistSettings();
-  bindGlobalActions(); bindSituationContext(); bindProfile(); bindLocation(); bindWeatherOverride(); bindPaletteSettings(); bindImportExport(); bindDayTripPlanner({ getSnapshot: tripPlannerSnapshot, assetStore, showToast }); bindDialogs();
+  bindGlobalActions(); bindSituationContext(); bindProfile(); bindLocation(); bindWeatherOverride(); bindPaletteSettings(); bindImportExport();
+  bindDayTripPlanner({ getSnapshot: tripPlannerSnapshot, assetStore, showToast });
+  bindDayTripLocation({
+    loadWeatherForLocation: loadTripWeatherForLocation,
+    getActiveLocation: () => tripPlannerOverride?.location ? structuredClone(tripPlannerOverride.location) : (state.location ? structuredClone(state.location) : null),
+    getBaseLocation: () => state.location ? structuredClone(state.location) : null,
+    setTripWeatherOverride: ({ location, weather }) => {
+      tripPlannerOverride = { location: structuredClone(location), weather: structuredClone(weather) };
+    },
+    clearTripWeatherOverride: () => { tripPlannerOverride = null; }
+  });
+  bindDialogs();
   window.addEventListener('babyweather:recalculate-recommendation', () => { resetSession(); renderRecommendation(); syncNeckFeedbackStatus(); });
   window.addEventListener('babyweather:pull-to-refresh', () => { if (weatherRefreshInFlight) return; showToast('Aktuelles Wetter und Standort werden geladen …'); void refreshCurrentLocation(); });
   window.addEventListener('online', () => refreshWeather(state.location ?? DEFAULT_LOCATION));
