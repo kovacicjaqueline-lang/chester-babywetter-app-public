@@ -387,6 +387,9 @@ export function applyGroundContact(state,rain,temp,context,mode) {
 export function applyBodyLocksAndRebalance(state,result,request,phase,mode) {
   const locks = request.session.manualLocks.filter((lock) => lock.phase === phase && LOCKABLE_ITEM_SLOTS.includes(lock.slot));
   const lockedThermalSlots = new Set(locks.filter((lock) => BODY_SLOTS.includes(lock.slot)).map((lock) => lock.slot));
+  for (const [slot,selection] of state.map.entries()) {
+    if (slot !== 'top' && selection.reasonCodes?.includes('UV_LIGHT_COVERAGE')) lockedThermalSlots.add(slot);
+  }
   for (const lock of locks) {
     const definition = CLOTHING_CATALOG[lock.itemId];
     if (!definition || definition.slot !== lock.slot || !definition.allowedSituations.includes(mode)) continue;
@@ -403,7 +406,14 @@ export function applyBodyLocksAndRebalance(state,result,request,phase,mode) {
     const before = state.map.get(lock.slot)?.itemId ?? null;
     const legsBeforeLock = state.map.get('legs')?.itemId ?? null;
     const beforeWeight = before ? CLOTHING_CATALOG[before]?.thermalWeight ?? 0 : 0;
-    const delta = definition.thermalWeight - beforeWeight;
+    let replacedCrossSlotWeight = 0;
+    if (lock.itemId === 'long_sleeve_bodysuit'
+      && state.map.get('top')?.itemId === 'light_long_sleeve_shirt'
+      && !findLock(request.session,phase,'top')) {
+      replacedCrossSlotWeight = CLOTHING_CATALOG.light_long_sleeve_shirt.thermalWeight ?? 0;
+      state.map.delete('top');
+    }
+    const delta = definition.thermalWeight - beforeWeight - replacedCrossSlotWeight;
     const wearPosition = phase === 'in_car' ? 'under_harness' : 'on_body';
     setSelected(state,lock.slot,lock.itemId,'manual_lock',wearPosition,['MANUAL_ITEM_LOCK']);
     addTrace(result,'swap.manual_lock',phase,'lock',lock.itemId,delta,'MANUAL_ITEM_LOCK');
