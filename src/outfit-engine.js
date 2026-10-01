@@ -417,17 +417,22 @@ function attachAlternatives(result,request) {
     const options = [];
     for (const itemId of candidates) {
       if (itemId === slotResult.selected.itemId) continue;
+      const candidateSlot = CLOTHING_CATALOG[itemId]?.slot ?? slotResult.slot;
       const session = lockItem(request.session,{ phase:slotResult.phase, slot:slotResult.slot, itemId, lockedAt:request.requestedAt });
       const projected = recommendCore({ ...request, session });
       if (projected.status === 'blocked') continue;
-      const projectedSelection = projected.slots.find((entry) => entry.phase === slotResult.phase && entry.slot === slotResult.slot);
+      const projectedSelection = projected.slots.find((entry) => entry.phase === slotResult.phase && entry.slot === candidateSlot);
       if (!projectedSelection || projectedSelection.selected.itemId !== itemId) continue;
+      if (candidateSlot !== slotResult.slot) {
+        const originalStillSelected = projected.slots.some((entry) => entry.phase === slotResult.phase && entry.selected.itemId === slotResult.selected.itemId);
+        if (originalStillSelected) continue;
+      }
       const projectedScore = thermalSignature(projected,slotResult.phase);
       const delta = roundHalf(projectedScore - baselineScore);
       const relation = Math.abs(delta) < 0.25 ? 'equivalent' : delta > 0 ? 'warmer' : 'cooler';
       const projectedChanges = diffRecommendations(result,projected,slotResult.phase).map((change) => ({
         ...change,
-        reasonCode:change.slot === slotResult.slot ? 'MANUAL_ITEM_LOCK' : 'OUTFIT_REBALANCED_AFTER_SWAP'
+        reasonCode:change.slot === candidateSlot ? 'MANUAL_ITEM_LOCK' : 'OUTFIT_REBALANCED_AFTER_SWAP'
       }));
       options.push({ itemId, relation, relativeThermalDelta:delta, projectedChanges });
     }
