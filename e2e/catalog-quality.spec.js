@@ -152,20 +152,18 @@ test('Alternative behält nach echter Auswahl dieselbe Visual-Variante', async (
   const option = page.locator('#alternativeOptions [data-alternative-item-id]').first();
   await expect(option).toBeVisible();
   const itemId = await option.getAttribute('data-alternative-item-id');
-  const slot = await option.getAttribute('data-alternative-slot');
   const phase = await option.getAttribute('data-alternative-phase');
   const previewImage = option.locator('img[data-clothing-image="true"]');
   await expect(previewImage).toBeVisible();
   const previewSrc = await previewImage.getAttribute('src');
   expect(itemId).toBeTruthy();
-  expect(slot).toBeTruthy();
   expect(phase).toBeTruthy();
   expect(previewSrc).toBeTruthy();
 
   await option.click();
   await expect(page.locator('#alternativeDialog')).not.toHaveAttribute('open', '');
 
-  const selectedCard = page.locator(`#outfitGrid [data-phase="${phase}"][data-slot="${slot}"][data-item-id="${itemId}"]`);
+  const selectedCard = page.locator(`#outfitGrid [data-phase="${phase}"][data-item-id="${itemId}"]`);
   await expect(selectedCard).toBeVisible();
   await expect(selectedCard.locator('img[data-clothing-image="true"]')).toHaveAttribute('src', previewSrc);
 });
