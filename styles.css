@@ -557,6 +557,12 @@ code { font-size: .84em; }
   font-weight: 300;
 }
 .clothing-card-addable .clothing-name { color: #46516a; }
+.clothing-card-addable .clothing-name,
+.clothing-card-addable .clothing-role {
+  display: block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
 .clothing-image-shell img {
   width: 100%;
   height: 100%;
@@ -1239,7 +1245,7 @@ body[data-style-theme="mixed"] { --sage: #dfe7df; }
   .card { padding-inline: 11px; }
   .outfit-card { padding: 14px; }
   .outfit-group-grid {
-    grid-template-columns: repeat(auto-fit, minmax(84px, 96px));
+    grid-template-columns: repeat(auto-fit, minmax(min(84px, 100%), 1fr));
     gap: 10px;
   }
 }

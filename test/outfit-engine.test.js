@@ -152,6 +152,32 @@ test('manual jacket and stroller-accessory changes do not accumulate thermal reb
   assert.equal(toSlots(noAccessoryThenJacket).find(([slot])=>slot==='base_torso')?.[1],'long_sleeve_bodysuit');
 });
 
+test('repeatedly removing and restoring stroller warmth does not leave a colder outfit behind',()=>{
+  const context=stroller({strollerState:'asleep',activity:'normal'});
+  const w=weather(10);
+  let session=createSession('stroller_repeated_toggles');
+  session=lockItem(session,{slot:'stroller_thermal_accessory',itemId:'stroller_thermal_none'});
+  session=lockItem(session,{slot:'outer',itemId:'light_transition_jacket'});
+  session=lockItem(session,{slot:'stroller_thermal_accessory',itemId:'stroller_light_footmuff'});
+  session=lockItem(session,{slot:'stroller_thermal_accessory',itemId:'stroller_thermal_none'});
+  session=lockItem(session,{slot:'stroller_thermal_accessory',itemId:'stroller_light_footmuff'});
+
+  const finalResult=recommendOutfit(request(context,{w,session}));
+  const directSession=lockItem(lockItem(createSession('stroller_repeated_toggles'),{
+    slot:'outer',itemId:'light_transition_jacket'
+  }),{slot:'stroller_thermal_accessory',itemId:'stroller_light_footmuff'});
+  const directResult=recommendOutfit(request(context,{w,session:directSession}));
+  const selections=(result)=>result.slots.filter((entry)=>entry.phase==='main')
+    .map((entry)=>[entry.slot,entry.selected.itemId]).sort(([a],[b])=>a.localeCompare(b));
+
+  assert.equal(id(finalResult,'stroller_thermal_accessory'),'stroller_light_footmuff');
+  assert.deepEqual(selections(finalResult),selections(directResult));
+  assert.deepEqual(session.manualLocks.map(({slot,itemId})=>[slot,itemId]).sort(([a],[b])=>a.localeCompare(b)),[
+    ['outer','light_transition_jacket'],
+    ['stroller_thermal_accessory','stroller_light_footmuff']
+  ]);
+});
+
 test('trusted apparent temperature is thermal reference and wind is not double-counted',()=>{
   const w=weather(22,{ apparentTempC:17,apparentTempTrusted:true,apparentTempIncludes:['wind','humidity','sun'],windSpeedKmh:35 });
   const r=recommendOutfit(request(outdoor(),{w}));

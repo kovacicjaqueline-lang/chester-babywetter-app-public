@@ -38,6 +38,7 @@ test('indoor recommendation uses room temperature without outdoor weather', () =
   assert.equal(selected(result, 'outer'), null);
   assert.equal(selected(result, 'head'), null);
   assert.equal(selected(result, 'hands'), null);
+  assert.equal(result.addableSlots.some((entry) => ['outer','head','hands','footwear'].includes(entry.slot)), false);
 });
 
 test('very active indoor baby is evaluated lighter than normal', () => {
@@ -53,4 +54,5 @@ test('missing indoor room temperature blocks instead of using outside weather', 
   assert.equal(result.status, 'blocked');
   assert.deepEqual(result.dataQuality.missingFields, ['context.roomTempC']);
   assert.equal(result.phases[0].thermalReferenceSource, null);
+  assert.deepEqual(result.addableSlots, []);
 });
