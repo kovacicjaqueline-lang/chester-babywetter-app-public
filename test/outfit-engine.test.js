@@ -93,6 +93,65 @@ test('stroller accessory alternatives compare composition without moving warmth 
   assert.ok(equivalent?.projectedChanges.every((change)=>!['head','hands'].includes(change.slot)));
 });
 
+test('a removed stroller footmuff remains addable and restores the selected accessory',()=>{
+  const context=stroller({strollerState:'awake',activity:'normal'});
+  const w=weather(10);
+  const withoutAccessory=lockItem(createSession('stroller_readd'),{
+    slot:'stroller_thermal_accessory',itemId:'stroller_thermal_none'
+  });
+  const removed=recommendOutfit(request(context,{w,session:withoutAccessory}));
+  const addable=removed.addableSlots.find((entry)=>entry.slot==='stroller_thermal_accessory');
+  assert.equal(addable?.addLabel,'Wärmezubehör hinzufügen');
+  assert.ok(addable?.alternatives.some((entry)=>entry.itemId==='stroller_light_footmuff'));
+
+  const restoredSession=lockItem(withoutAccessory,{
+    slot:'stroller_thermal_accessory',itemId:'stroller_light_footmuff'
+  });
+  const restored=recommendOutfit(request(context,{w,session:restoredSession}));
+  assert.equal(id(restored,'stroller_thermal_accessory'),'stroller_light_footmuff');
+  assert.deepEqual(
+    restored.slots.filter((entry)=>entry.phase==='main').map((entry)=>[entry.slot,entry.selected.itemId]),
+    recommendOutfit(request(context,{w,session:lockItem(createSession('stroller_readd'),{
+      slot:'stroller_thermal_accessory',itemId:'stroller_light_footmuff'
+    })})).slots.filter((entry)=>entry.phase==='main').map((entry)=>[entry.slot,entry.selected.itemId])
+  );
+});
+
+test('an omitted outer layer can be added without removing the base layer',()=>{
+  const base=request(outdoor(),{w:weather(18)});
+  const recommendation=recommendOutfit(base);
+  assert.equal(id(recommendation,'outer'),null);
+  const addable=recommendation.addableSlots.find((entry)=>entry.slot==='outer');
+  assert.equal(addable?.addLabel,'Außenschicht hinzufügen');
+  assert.ok(addable?.alternatives.some((entry)=>entry.itemId==='light_transition_jacket'));
+
+  const session=lockItem(base.session,{slot:'outer',itemId:'light_transition_jacket'});
+  const layered=recommendOutfit({...base,session});
+  assert.equal(id(layered,'outer'),'light_transition_jacket');
+  assert.equal(id(layered,'base_torso'),'long_sleeve_bodysuit');
+  assert.equal(id(layered,'mid'),null);
+});
+
+test('manual jacket and stroller-accessory changes do not accumulate thermal rebalance by tap order',()=>{
+  const context=stroller({strollerState:'awake',activity:'normal'});
+  const w=weather(15);
+  const baseSession=createSession('stroller_order');
+  const noAccessoryThenJacket=lockItem(lockItem(baseSession,{
+    slot:'stroller_thermal_accessory',itemId:'stroller_thermal_none'
+  }),{slot:'outer',itemId:'light_transition_jacket'});
+  const jacketThenNoAccessory=lockItem(lockItem(baseSession,{
+    slot:'outer',itemId:'light_transition_jacket'
+  }),{slot:'stroller_thermal_accessory',itemId:'stroller_thermal_none'});
+  const toSlots=(session)=>recommendOutfit(request(context,{w,session})).slots
+    .filter((entry)=>entry.phase==='main')
+    .map((entry)=>[entry.slot,entry.selected.itemId])
+    .sort(([left],[right])=>left.localeCompare(right));
+
+  assert.deepEqual(toSlots(noAccessoryThenJacket),toSlots(jacketThenNoAccessory));
+  assert.equal(toSlots(noAccessoryThenJacket).find(([slot])=>slot==='outer')?.[1],'light_transition_jacket');
+  assert.equal(toSlots(noAccessoryThenJacket).find(([slot])=>slot==='base_torso')?.[1],'long_sleeve_bodysuit');
+});
+
 test('trusted apparent temperature is thermal reference and wind is not double-counted',()=>{
   const w=weather(22,{ apparentTempC:17,apparentTempTrusted:true,apparentTempIncludes:['wind','humidity','sun'],windSpeedKmh:35 });
   const r=recommendOutfit(request(outdoor(),{w}));

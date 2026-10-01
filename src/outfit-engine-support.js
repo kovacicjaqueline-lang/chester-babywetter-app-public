@@ -547,7 +547,7 @@ export function nearestSleepUnderlayer(target, preferredId = null) {
 }
 
 export function alternativeCandidateIds(slotResult,mode) {
-  const crossSlot = CROSS_SLOT_ALTERNATIVES[slotResult.selected.itemId] ?? [];
+  const crossSlot = CROSS_SLOT_ALTERNATIVES[slotResult.selected?.itemId] ?? [];
   return unique([...(SLOT_ITEMS[slotResult.slot] ?? []),...crossSlot]).filter((itemId) => {
     const def = CLOTHING_CATALOG[itemId];
     if (!def.allowedSituations.includes(mode)) return false;

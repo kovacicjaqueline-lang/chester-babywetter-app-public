@@ -550,6 +550,13 @@ code { font-size: .84em; }
   border-radius: 18px;
   background: #faf7f4;
 }
+.clothing-card-addable .clothing-image-shell-addable {
+  border: 1px dashed rgba(87, 101, 128, .4);
+  color: #66728a;
+  font-size: 2.4rem;
+  font-weight: 300;
+}
+.clothing-card-addable .clothing-name { color: #46516a; }
 .clothing-image-shell img {
   width: 100%;
   height: 100%;
