@@ -132,6 +132,14 @@ test('entferntes Kinderwagen-Wärmezubehör kann wieder hinzugefügt werden', as
   await expect(page.locator('#alternativeTitle')).toHaveText('Wärmezubehör hinzufügen');
   await page.locator('#alternativeOptions [data-alternative-item-id="stroller_light_footmuff"]').click();
   await expect(page.locator('#outfitGrid [data-item-id="stroller_light_footmuff"]')).toBeVisible();
+
+  await page.locator('#outfitGrid [data-slot="stroller_thermal_accessory"][data-open-alternatives="true"]').click();
+  await page.locator('#alternativeOptions [data-alternative-item-id="stroller_thermal_none"]').click();
+  await expect(page.locator('#outfitGrid [data-addable-slot="true"][data-slot="stroller_thermal_accessory"]')).toBeVisible();
+  await page.locator('#outfitGrid [data-addable-slot="true"][data-slot="stroller_thermal_accessory"]').click();
+  await page.locator('#alternativeOptions [data-alternative-item-id="stroller_light_footmuff"]').click();
+  await expect(page.locator('#outfitGrid [data-item-id="stroller_light_footmuff"]')).toBeVisible();
+  await expect(page.locator('#outfitGrid [data-item-id="stroller_thermal_none"]')).toHaveCount(0);
 });
 
 test('fehlende Außenschicht kann ergänzend über der Basisschicht gewählt werden', async ({ page }) => {
