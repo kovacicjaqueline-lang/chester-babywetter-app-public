@@ -120,12 +120,14 @@ test('Langarmshirt can be swapped back to Langarmbody and replaces the old cross
   assert.equal(selected(swappedBack,'top'),null);
 });
 
-test('sun-covering Langarmshirt can be replaced by Langarmbody without keeping both torso layers', () => {
+test('sun-covering Langarmshirt can be replaced by Langarmbody while preserving UV leg coverage', () => {
   const sunny = recommendOutfit(request(26,createSession('sunny_swap'),{ sunExposure:'partial' },6));
   assert.equal(selected(sunny,'top'),'light_long_sleeve_shirt');
+  assert.equal(selected(sunny,'legs'),'light_trousers');
 
   const bodyAlternative = alternative(sunny,'top','long_sleeve_bodysuit');
   assert.ok(bodyAlternative);
+  assert.equal(bodyAlternative.relation,'warmer');
 
   const session = lockItem(createSession('sunny_swap'),{
     slot:'top',
@@ -134,5 +136,6 @@ test('sun-covering Langarmshirt can be replaced by Langarmbody without keeping b
   const swapped = recommendOutfit(request(26,session,{ sunExposure:'partial' },6));
   assert.equal(selected(swapped,'base_torso'),'long_sleeve_bodysuit');
   assert.equal(selected(swapped,'top'),null);
+  assert.equal(selected(swapped,'legs'),'light_trousers');
   assert.ok(swapped.notices.some((notice) => notice.code === 'UV_SHADE_AND_COVERAGE'));
 });
