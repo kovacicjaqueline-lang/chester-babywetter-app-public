@@ -49,6 +49,10 @@ export const QUICK_COOL_PRIORITY = Object.freeze(['outer','mid','legs','base_tor
 const HALF_WARM_PRIORITY = Object.freeze(['feet','legs','outer','mid','base_torso','head','hands']);
 const HALF_COOL_PRIORITY = Object.freeze(['hands','head','feet','outer','legs','mid','base_torso']);
 export const RELATION_ORDER = Object.freeze({ equivalent:0, warmer:1, cooler:2 });
+const CROSS_SLOT_ALTERNATIVES = Object.freeze({
+  long_sleeve_bodysuit: Object.freeze(['light_long_sleeve_shirt']),
+  light_long_sleeve_shirt: Object.freeze(['long_sleeve_bodysuit'])
+});
 
 export function createSession(sessionId = 'session') {
   return { sessionId, manualLocks: [], warmthOffset: 0 };
@@ -61,8 +65,10 @@ export function setWarmthOffset(session, direction) {
 
 export function lockItem(session, { phase = 'main', slot, itemId, lockedAt = '1970-01-01T00:00:00.000Z' }) {
   if (!slot || !itemId) throw new TypeError('slot and itemId are required');
-  const locks = (session?.manualLocks ?? []).filter((lock) => !(lock.phase === phase && lock.slot === slot));
-  locks.push({ phase, slot, itemId, lockedAt });
+  const targetSlot = CLOTHING_CATALOG[itemId]?.slot ?? slot;
+  const replacedSlots = new Set([slot,targetSlot]);
+  const locks = (session?.manualLocks ?? []).filter((lock) => !(lock.phase === phase && replacedSlots.has(lock.slot)));
+  locks.push({ phase, slot:targetSlot, itemId, lockedAt });
   return { ...(session ?? createSession()), manualLocks:locks };
 }
 
@@ -404,9 +410,11 @@ export function applyBodyLocksAndRebalance(state,result,request,phase,mode) {
     if (phase === 'in_car' && definition.carSeatCompatibility === 'conditional') {
       addNotice(result,'CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT','caution',phase,['CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT'],{ itemId:lock.itemId });
     }
-    const rebalancePriority = lock.slot === 'base_torso' && delta < 0
+    const rebalancePriority = lock.slot === 'base_torso' && delta !== 0
       ? ['top','mid','outer','legs','feet','head','hands']
-      : null;
+      : lock.slot === 'top' && delta > 0
+        ? ['base_torso','mid','outer','legs','feet','head','hands']
+        : null;
     if (delta && lock.slot !== 'head') rebalanceOtherSlots(state,-delta,lockedThermalSlots,mode,lock.slot,rebalancePriority);
     rebalanceNewlyCoveredLegs(state,result,before,definition,legsBeforeLock,lockedThermalSlots,phase,mode,lock.slot);
   }
@@ -529,10 +537,11 @@ export function nearestSleepUnderlayer(target, preferredId = null) {
 }
 
 export function alternativeCandidateIds(slotResult,mode) {
-  return (SLOT_ITEMS[slotResult.slot] ?? []).filter((itemId) => {
+  const crossSlot = CROSS_SLOT_ALTERNATIVES[slotResult.selected.itemId] ?? [];
+  return unique([...(SLOT_ITEMS[slotResult.slot] ?? []),...crossSlot]).filter((itemId) => {
     const def = CLOTHING_CATALOG[itemId];
     if (!def.allowedSituations.includes(mode)) return false;
-    if (slotResult.phase === 'in_car' && BODY_SLOTS.includes(slotResult.slot) && def.carSeatCompatibility === 'prohibited') return false;
+    if (slotResult.phase === 'in_car' && BODY_SLOTS.includes(def.slot) && def.carSeatCompatibility === 'prohibited') return false;
     if (mode === 'sleep' && !def.sleepSafe) return false;
     return true;
   });
