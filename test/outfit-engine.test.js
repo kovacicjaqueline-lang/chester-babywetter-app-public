@@ -276,6 +276,24 @@ test('alternatives are ordered equivalent then warmer then cooler',()=>{
   for(let i=1;i<alternatives.length;i++) assert.ok(order[alternatives[i-1].relation] <= order[alternatives[i].relation]);
 });
 
+test('thin sweater and normal sweatshirt are mutually similar alternatives; fleece is warmer',()=>{
+  const w=weather(14);
+  const sweater=recommendOutfit(request(outdoor(),{w}));
+  const sweatshirtOption=slot(sweater,'mid').alternatives.find((entry)=>entry.itemId==='sweatshirt');
+  const fleeceOption=slot(sweater,'mid').alternatives.find((entry)=>entry.itemId==='fleece_jacket');
+  assert.equal(id(sweater,'mid'),'thin_sweater');
+  assert.equal(sweatshirtOption?.relation,'equivalent');
+  assert.equal(fleeceOption?.relation,'warmer');
+
+  const session=lockItem(createSession('sweatshirt-reverse-alternative'),{slot:'mid',itemId:'sweatshirt'});
+  const sweatshirt=recommendOutfit(request(outdoor(),{w,session}));
+  assert.equal(id(sweatshirt,'mid'),'sweatshirt');
+  assert.equal(slot(sweatshirt,'mid').alternatives.find((entry)=>entry.itemId==='thin_sweater')?.relation,'equivalent');
+  assert.equal(CLOTHING_CATALOG.thin_sweater.thermalWeight,2);
+  assert.equal(CLOTHING_CATALOG.sweatshirt.thermalWeight,2);
+  assert.equal(CLOTHING_CATALOG.fleece_jacket.thermalWeight,3);
+});
+
 test('alternative projectedChanges contains whole-outfit rebalancing',()=>{
   const r=recommendOutfit(request(outdoor(),{w:weather(14)}));
   const fleece=slot(r,'mid').alternatives.find(a=>a.itemId==='fleece_jacket');

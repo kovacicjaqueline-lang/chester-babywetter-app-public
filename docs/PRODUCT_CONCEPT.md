@@ -90,6 +90,8 @@ Wird `dünner Pullover` durch `Fleecejacke` ersetzt, bleibt dieser Wechsel für 
 
 Optionale Zubehörteile und eine derzeit nicht empfohlene Außenschicht müssen ebenfalls hinzugefügt werden können. Die Auswahl wird wie ein Austausch manuell fixiert und löst die vollständige thermische Neubewertung aus.
 
+Sichtbare Kleidungsstücke und Zubehörbegriffe besitzen nutzerverständliche Definitionen. Sie erklären, welches reale Kleidungsstück oder Zubehör gemeint ist. Diese Beschreibungen sind zentrale Produktbegriffe und werden in Empfehlungskarten und auswählbaren Alternativen konsistent verwendet.
+
 ### 4.3 Schnellkorrektur
 
 `etwas wärmer` und `etwas dünner` verändern das Gesamtoutfit um eine kleine sinnvolle thermische Stufe. Die App hebt die Änderung hervor, etwa `Fleece ergänzt` oder `Pullover entfernt`.
