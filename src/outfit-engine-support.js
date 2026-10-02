@@ -52,7 +52,7 @@ export const RELATION_ORDER = Object.freeze({ equivalent:0, warmer:1, cooler:2 }
 const REBALANCE_SLOTS_BY_LOCK = Object.freeze({
   base_torso:Object.freeze(['top','mid','outer']),
   top:Object.freeze(['base_torso','mid','outer']),
-  mid:Object.freeze(['base_torso','top','outer']),
+  mid:Object.freeze(['top','outer']),
   outer:Object.freeze(['mid','base_torso','top']),
   legs:Object.freeze(['legs']),
   feet:Object.freeze(['feet']),

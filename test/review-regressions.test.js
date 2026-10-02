@@ -98,10 +98,12 @@ test('projected swap changes identify the locked slot without inventing an outer
   const result = recommendOutfit(request({
     mode:'outdoor', plannedMinutes:60, activity:'normal', activitySource:'user', sunExposure:'shade', groundContact:'none'
   }, { w:weather(14) }));
-  const fleece = slot(result,'mid').alternatives.find((option) => option.itemId === 'fleece_jacket');
-  assert.ok(fleece);
-  assert.equal(fleece.projectedChanges.find((change) => change.slot === 'mid')?.reasonCode,'MANUAL_ITEM_LOCK');
-  assert.equal(fleece.projectedChanges.find((change) => change.slot === 'outer'),undefined);
+  const alternatives = slot(result,'mid').alternatives;
+  assert.equal(alternatives.some((option) => option.itemId === 'fleece_jacket'),false);
+  const sweatshirt = alternatives.find((option) => option.itemId === 'sweatshirt');
+  assert.ok(sweatshirt);
+  assert.equal(sweatshirt.projectedChanges.find((change) => change.slot === 'mid')?.reasonCode,'MANUAL_ITEM_LOCK');
+  assert.equal(sweatshirt.projectedChanges.some((change) => ['outer','legs'].includes(change.slot)),false);
 });
 
 test('half thermal step is a smaller distinct outfit change than a full step', () => {
