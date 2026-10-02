@@ -19,6 +19,15 @@ test('Drinnen ist eine eigene Situation mit Raumtemperatur und Aktivität', asyn
   const roomTemp = page.locator('#situationDialog [data-context-field="roomTempC"]');
   const activity = page.locator('#situationDialog [data-context-field="activity"]');
   await expect(roomTemp).toHaveValue('20');
+  await roomTemp.focus();
+  await expect(roomTemp).toBeFocused();
+  const focusStyle = await roomTemp.evaluate((input) => ({
+    outlineStyle: getComputedStyle(input).outlineStyle,
+    boxShadow: getComputedStyle(input).boxShadow
+  }));
+  expect(focusStyle.outlineStyle).toBe('none');
+  expect(focusStyle.boxShadow).toContain('inset');
+  expect(focusStyle.boxShadow).toContain('rgb(77, 101, 145)');
   await expect(activity.locator('option')).toHaveText(['Normal', 'Sehr aktiv']);
   await expect(page.locator('#situationDialog [data-context-field="sunExposure"]')).toHaveCount(0);
   await expect(page.locator('#situationDialog [data-context-field="windProtection"]')).toHaveCount(0);
