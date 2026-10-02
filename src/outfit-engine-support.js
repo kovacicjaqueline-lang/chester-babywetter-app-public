@@ -49,6 +49,16 @@ export const QUICK_COOL_PRIORITY = Object.freeze(['outer','mid','legs','base_tor
 const HALF_WARM_PRIORITY = Object.freeze(['feet','legs','outer','mid','base_torso','head','hands']);
 const HALF_COOL_PRIORITY = Object.freeze(['hands','head','feet','outer','legs','mid','base_torso']);
 export const RELATION_ORDER = Object.freeze({ equivalent:0, warmer:1, cooler:2 });
+const REBALANCE_SLOTS_BY_LOCK = Object.freeze({
+  base_torso:Object.freeze(['top','mid','outer']),
+  top:Object.freeze(['base_torso','mid','outer']),
+  mid:Object.freeze(['base_torso','top','outer']),
+  outer:Object.freeze(['mid','base_torso','top']),
+  legs:Object.freeze(['legs']),
+  feet:Object.freeze(['feet']),
+  head:Object.freeze(['head']),
+  hands:Object.freeze(['hands'])
+});
 const CROSS_SLOT_ALTERNATIVES = Object.freeze({
   long_sleeve_bodysuit: Object.freeze(['light_long_sleeve_shirt']),
   light_long_sleeve_shirt: Object.freeze(['long_sleeve_bodysuit'])
@@ -420,11 +430,7 @@ export function applyBodyLocksAndRebalance(state,result,request,phase,mode) {
     if (phase === 'in_car' && definition.carSeatCompatibility === 'conditional') {
       addNotice(result,'CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT','caution',phase,['CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT'],{ itemId:lock.itemId });
     }
-    const rebalancePriority = lock.slot === 'base_torso' && delta !== 0
-      ? ['top','mid','outer','legs','feet','head','hands']
-      : lock.slot === 'top' && delta > 0
-        ? ['base_torso','mid','outer','legs','feet','head','hands']
-        : null;
+    const rebalancePriority = delta !== 0 ? REBALANCE_SLOTS_BY_LOCK[lock.slot] ?? null : null;
     if (delta && lock.slot !== 'head') rebalanceOtherSlots(state,-delta,lockedThermalSlots,mode,lock.slot,rebalancePriority);
     rebalanceNewlyCoveredLegs(state,result,before,definition,legsBeforeLock,lockedThermalSlots,phase,mode,lock.slot);
   }
@@ -551,6 +557,7 @@ export function alternativeCandidateIds(slotResult,mode) {
   return unique([...(SLOT_ITEMS[slotResult.slot] ?? []),...crossSlot]).filter((itemId) => {
     const def = CLOTHING_CATALOG[itemId];
     if (!def.allowedSituations.includes(mode)) return false;
+    if (itemId === 'fleece_jacket' && ['thin_sweater','sweatshirt','thin_cardigan'].includes(slotResult.selected?.itemId)) return false;
     if (slotResult.phase === 'in_car' && BODY_SLOTS.includes(def.slot) && def.carSeatCompatibility === 'prohibited') return false;
     if (mode === 'sleep' && !def.sleepSafe) return false;
     return true;

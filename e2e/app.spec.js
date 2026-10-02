@@ -120,6 +120,20 @@ test('Alternativen sind mobil groß und lesbar dargestellt', async ({ page }) =>
   expect(typography.image).toBeGreaterThanOrEqual(88);
 });
 
+test('dünner Pullover bietet Sweatshirt und dünne Strickjacke, aber keine Fleecejacke als normale Alternative', async ({ page }) => {
+  await openDemo(page);
+  const sweater = page.locator('#outfitGrid [data-item-id="thin_sweater"][data-open-alternatives="true"]');
+  await expect(sweater).toBeVisible();
+  const trousersBefore = await page.locator('#outfitGrid [data-item-id="trousers"]').count();
+  await sweater.click();
+  await expect(page.locator('#alternativeOptions [data-alternative-item-id="sweatshirt"]')).toBeVisible();
+  await expect(page.locator('#alternativeOptions [data-alternative-item-id="thin_cardigan"]')).toBeVisible();
+  await expect(page.locator('#alternativeOptions [data-alternative-item-id="fleece_jacket"]')).toHaveCount(0);
+  await page.locator('#alternativeOptions [data-alternative-item-id="thin_cardigan"]').click();
+  await expect(page.locator('#outfitGrid [data-item-id="thin_cardigan"]')).toBeVisible();
+  await expect(page.locator('#outfitGrid [data-item-id="trousers"]')).toHaveCount(trousersBefore);
+});
+
 test('entferntes Kinderwagen-Wärmezubehör kann wieder hinzugefügt werden', async ({ page }) => {
   await openDemo(page);
   await chooseSituation(page, 'stroller');
