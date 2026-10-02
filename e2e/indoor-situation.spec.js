@@ -30,5 +30,6 @@ test('Drinnen ist eine eigene Situation mit Raumtemperatur und Aktivität', asyn
   await expect(page.locator('#confidencePill')).not.toHaveText('Lädt …');
   await expect(page.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
   await expect(page.locator('#outfitGrid [data-slot="outer"]')).toHaveCount(0);
+  await expect(page.locator('#outfitGrid [data-addable-slot="true"][data-slot="outer"]')).toHaveCount(0);
   await expect(page.locator('#outfitGrid [data-slot="head"]')).toHaveCount(0);
 });

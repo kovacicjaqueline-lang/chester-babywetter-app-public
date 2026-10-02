@@ -701,9 +701,17 @@ interface RecommendationSlotResult {
   selected: RecommendedItem;
   alternatives: AlternativeOption[];
 }
+
+interface AddableSlotResult {
+  phase: RecommendationPhase;
+  slot: OutfitSlot;
+  addLabel: string;
+  alternatives: AlternativeOption[];
+}
 ```
 
 Die UI zeigt pro Slot das Bild des ausgewählten Items und öffnet `alternatives` beim Tap.
+`addableSlots` enthält optionale, derzeit leere Zubehör-Slots sowie eine noch nicht empfohlene Außenschicht, wenn dort passende Jacken angeboten werden können. Die UI zeigt dafür einen Hinzufügen-Eintrag und verwendet dieselben projizierten Alternativen und dieselbe Outfit-Neubewertung wie bei vorhandenen Slots.
 
 ## 16. Phasenweise Auswertung
 
@@ -799,6 +807,7 @@ interface OutfitRecommendation {
   status: RecommendationStatus;
   phases: RecommendationPhaseEvaluation[];
   slots: RecommendationSlotResult[];
+  addableSlots: AddableSlotResult[];
   notices: RecommendationNotice[];
   ruleTrace: RuleTraceEntry[];
   dataQuality: {

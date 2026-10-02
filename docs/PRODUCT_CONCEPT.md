@@ -88,6 +88,8 @@ Beim Tap auf `dünner Pullover` werden z. B. angezeigt:
 
 Wird `dünner Pullover` durch `Fleecejacke` ersetzt, bleibt dieser Wechsel für die aktuelle Empfehlung fixiert. Die Engine darf daraufhin z. B. die Softshelljacke leichter machen oder entfernen.
 
+Optionale Zubehörteile und eine derzeit nicht empfohlene Außenschicht müssen ebenfalls hinzugefügt werden können. Die Auswahl wird wie ein Austausch manuell fixiert und löst die vollständige thermische Neubewertung aus.
+
 ### 4.3 Schnellkorrektur
 
 `etwas wärmer` und `etwas dünner` verändern das Gesamtoutfit um eine kleine sinnvolle thermische Stufe. Die App hebt die Änderung hervor, etwa `Fleece ergänzt` oder `Pullover entfernt`.

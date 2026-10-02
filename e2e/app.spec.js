@@ -120,6 +120,40 @@ test('Alternativen sind mobil groß und lesbar dargestellt', async ({ page }) =>
   expect(typography.image).toBeGreaterThanOrEqual(88);
 });
 
+test('entferntes Kinderwagen-Wärmezubehör kann wieder hinzugefügt werden', async ({ page }) => {
+  await openDemo(page);
+  await chooseSituation(page, 'stroller');
+  await page.locator('#outfitGrid [data-slot="stroller_thermal_accessory"][data-open-alternatives="true"]').click();
+  await page.locator('#alternativeOptions [data-alternative-item-id="stroller_thermal_none"]').click();
+
+  const addAccessory = page.locator('#outfitGrid [data-addable-slot="true"][data-slot="stroller_thermal_accessory"]');
+  await expect(addAccessory).toBeVisible();
+  await addAccessory.click();
+  await expect(page.locator('#alternativeTitle')).toHaveText('Wärmezubehör hinzufügen');
+  await page.locator('#alternativeOptions [data-alternative-item-id="stroller_light_footmuff"]').click();
+  await expect(page.locator('#outfitGrid [data-item-id="stroller_light_footmuff"]')).toBeVisible();
+
+  await page.locator('#outfitGrid [data-slot="stroller_thermal_accessory"][data-open-alternatives="true"]').click();
+  await page.locator('#alternativeOptions [data-alternative-item-id="stroller_thermal_none"]').click();
+  await expect(page.locator('#outfitGrid [data-addable-slot="true"][data-slot="stroller_thermal_accessory"]')).toBeVisible();
+  await page.locator('#outfitGrid [data-addable-slot="true"][data-slot="stroller_thermal_accessory"]').click();
+  await page.locator('#alternativeOptions [data-alternative-item-id="stroller_light_footmuff"]').click();
+  await expect(page.locator('#outfitGrid [data-item-id="stroller_light_footmuff"]')).toBeVisible();
+  await expect(page.locator('#outfitGrid [data-item-id="stroller_thermal_none"]')).toHaveCount(0);
+});
+
+test('fehlende Außenschicht kann ergänzend über der Basisschicht gewählt werden', async ({ page }) => {
+  await openDemo(page);
+  await chooseSituation(page, 'outdoor');
+  const addOuter = page.locator('#outfitGrid [data-addable-slot="true"][data-slot="outer"]');
+  await expect(addOuter).toBeVisible();
+  await addOuter.click();
+  await expect(page.locator('#alternativeTitle')).toHaveText('Außenschicht hinzufügen');
+  await page.locator('#alternativeOptions [data-alternative-item-id="light_transition_jacket"]').click();
+  await expect(page.locator('#outfitGrid [data-item-id="light_transition_jacket"]')).toBeVisible();
+  await expect(page.locator('#outfitGrid [data-item-id="long_sleeve_bodysuit"]')).toBeVisible();
+});
+
 test('Anderer Look ändert sichtbar die Visuals, nie die fachlichen Items, und bleibt nach Reload stabil', async ({ page }) => {
   await openDemo(page);
   const beforeItems = await selectedIds(page);

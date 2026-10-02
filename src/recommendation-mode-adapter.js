@@ -33,6 +33,7 @@ function indoorBlockedResult(input) {
     }],
     slots:[],
     items:[],
+    addableSlots:[],
     notices:[],
     ruleTrace:[],
     dataQuality:{
@@ -75,6 +76,15 @@ function syntheticIndoorWeather(roomTempC, requestedAt) {
 function adaptIndoorResult(result, roomTempC) {
   result.mode = 'indoor';
   result.slots = result.slots
+    .filter((entry) => !INDOOR_HIDDEN_SLOTS.has(entry.slot))
+    .map((entry) => ({
+      ...entry,
+      alternatives:entry.alternatives.map((alternative) => ({
+        ...alternative,
+        projectedChanges:alternative.projectedChanges.filter((change) => !INDOOR_HIDDEN_SLOTS.has(change.slot))
+      }))
+    }));
+  result.addableSlots = (result.addableSlots ?? [])
     .filter((entry) => !INDOOR_HIDDEN_SLOTS.has(entry.slot))
     .map((entry) => ({
       ...entry,

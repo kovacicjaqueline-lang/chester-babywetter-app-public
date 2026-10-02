@@ -125,6 +125,29 @@ function clothingCard({ slotResult = null, itemId, logicalItemId = null, asset, 
   return element;
 }
 
+function addableSlotCard(slotResult, contextLabel) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'clothing-card clothing-card-button clothing-card-addable';
+  button.dataset.slot = slotResult.slot;
+  button.dataset.phase = slotResult.phase;
+  button.dataset.addableSlot = 'true';
+  button.dataset.openAlternatives = 'true';
+  button.setAttribute('aria-label', `${contextLabel}: ${slotResult.addLabel} – Optionen anzeigen`);
+  const shell = document.createElement('span');
+  shell.className = 'clothing-image-shell clothing-image-shell-addable';
+  shell.setAttribute('aria-hidden', 'true');
+  shell.textContent = '+';
+  const name = document.createElement('span');
+  name.className = 'clothing-name';
+  name.textContent = slotResult.addLabel;
+  const role = document.createElement('span');
+  role.className = 'clothing-role';
+  role.textContent = 'Outfit wird neu bewertet';
+  button.append(shell, name, role);
+  return button;
+}
+
 function slotRole(slot) {
   const labels = {
     base_torso: 'Basisschicht', top: 'Oberteil', legs: 'Beine', mid: 'Zwischenschicht', outer: 'Außenschicht', feet: 'Füße',
@@ -186,9 +209,9 @@ function phaseLabelFor(phase, context) {
   return PHASE_COPY[phase] ?? phase;
 }
 
-function renderGroup(slots, { mode, phase, context, assetStore, paletteMode, visual }) {
-  if (!slots.length) return null;
-  const groupKey = groupKeyForSlot(slots[0].slot);
+function renderGroup(slots, { addableSlots = [], mode, phase, context, assetStore, paletteMode, visual }) {
+  if (!slots.length && !addableSlots.length) return null;
+  const groupKey = groupKeyForSlot((slots[0] ?? addableSlots[0]).slot);
   const group = document.createElement('div');
   group.className = 'outfit-group';
   group.dataset.outfitGroup = groupKey;
@@ -221,6 +244,7 @@ function renderGroup(slots, { mode, phase, context, assetStore, paletteMode, vis
       }));
     }
   }
+  for (const slotResult of addableSlots) grid.append(addableSlotCard(slotResult, phaseLabel));
   group.append(heading, grid);
   return { element: group, missingAssets };
 }
@@ -244,6 +268,7 @@ function renderPhase(recommendation, phaseEvaluation, context, assetStore, palet
   }
 
   const slots = phaseSlots(recommendation, phase);
+  const addableSlots = (recommendation?.addableSlots ?? []).filter((slot) => slot.phase === phase);
   const grouped = new Map();
   for (const slot of slots) {
     const key = groupKeyForSlot(slot.slot);
@@ -252,12 +277,13 @@ function renderPhase(recommendation, phaseEvaluation, context, assetStore, palet
   }
   let missingAssets = 0;
   for (const groupKey of ['body', 'extremities', 'situational']) {
-    const rendered = renderGroup(grouped.get(groupKey) ?? [], { mode: context?.mode, phase, context, assetStore, paletteMode, visual });
+    const groupAddable = addableSlots.filter((slot) => groupKeyForSlot(slot.slot) === groupKey);
+    const rendered = renderGroup(grouped.get(groupKey) ?? [], { addableSlots:groupAddable, mode: context?.mode, phase, context, assetStore, paletteMode, visual });
     if (!rendered) continue;
     missingAssets += rendered.missingAssets;
     section.append(rendered.element);
   }
-  if (!slots.length) {
+  if (!slots.length && !addableSlots.length) {
     const empty = document.createElement('div');
     empty.className = 'outfit-empty outfit-phase-empty';
     empty.innerHTML = phaseEvaluation.status === 'blocked'
@@ -570,8 +596,9 @@ export function renderAlternatives(slotResult, assetStore, paletteMode) {
   const host = document.querySelector('#alternativeOptions');
   const title = document.querySelector('#alternativeTitle');
   host.replaceChildren();
-  const selectedGroup = assetStore.group(slotResult.selected.itemId);
-  title.textContent = `${selectedGroup?.label ?? 'Kleidungsstück'} austauschen`;
+  const selectedItemId = slotResult.selected?.itemId;
+  const selectedGroup = selectedItemId ? assetStore.group(selectedItemId) : null;
+  title.textContent = slotResult.addLabel ?? (selectedGroup?.label?.includes('Kein ') ? `${slotRole(slotResult.slot)} hinzufügen` : `${selectedGroup?.label ?? 'Kleidungsstück'} austauschen`);
   for (const alternative of slotResult.alternatives ?? []) {
     const group = assetStore.group(alternative.itemId);
     const parts = visualPartsForItem(alternative.itemId);

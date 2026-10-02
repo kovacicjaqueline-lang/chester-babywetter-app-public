@@ -1,4 +1,4 @@
-import { CLOTHING_CATALOG } from './clothing-catalog.js';
+import { CLOTHING_CATALOG, SLOT_ITEMS } from './clothing-catalog.js';
 import { SLEEP_BAG_IDS, genericTogGuidanceForRoomTemp } from './sleep-tog-rules.js';
 import {
   TEMPERATURE_BANDS, RELATION_ORDER, createSession, setWarmthOffset, lockItem, temperatureBandFor,
@@ -111,6 +111,7 @@ function createResult(request) {
     status:'ready',
     phases:[],
     slots:[],
+    addableSlots:[],
     notices:[],
     ruleTrace:[],
     dataQuality:{
@@ -412,31 +413,61 @@ function evaluateSleep(result, request) {
 
 function attachAlternatives(result,request) {
   for (const slotResult of result.slots) {
-    const candidates = alternativeCandidateIds(slotResult,request.context.mode);
-    const baselineScore = thermalSignature(result,slotResult.phase);
-    const options = [];
-    for (const itemId of candidates) {
-      if (itemId === slotResult.selected.itemId) continue;
-      const session = lockItem(request.session,{ phase:slotResult.phase, slot:slotResult.slot, itemId, lockedAt:request.requestedAt });
-      const projected = recommendCore({ ...request, session });
-      if (projected.status === 'blocked') continue;
-      const projectedSelection = projected.slots.find((entry) => entry.phase === slotResult.phase && entry.slot === slotResult.slot);
-      if (!projectedSelection || projectedSelection.selected.itemId !== itemId) continue;
-      const projectedScore = thermalSignature(projected,slotResult.phase);
-      const delta = roundHalf(projectedScore - baselineScore);
-      const relation = Math.abs(delta) < 0.25 ? 'equivalent' : delta > 0 ? 'warmer' : 'cooler';
-      const projectedChanges = diffRecommendations(result,projected,slotResult.phase).map((change) => ({
-        ...change,
-        reasonCode:change.slot === slotResult.slot ? 'MANUAL_ITEM_LOCK' : 'OUTFIT_REBALANCED_AFTER_SWAP'
-      }));
-      options.push({ itemId, relation, relativeThermalDelta:delta, projectedChanges });
+    slotResult.alternatives = projectedAlternatives(result,request,slotResult,alternativeCandidateIds(slotResult,request.context.mode));
+    if (slotResult.selected.itemId.endsWith('_none') && slotResult.alternatives.length) {
+      result.addableSlots.push({ phase:slotResult.phase, slot:slotResult.slot, addLabel:addableLabelFor(slotResult.slot), alternatives:slotResult.alternatives });
     }
-    options.sort((a,b) => RELATION_ORDER[a.relation] - RELATION_ORDER[b.relation]
-      || Math.abs(a.relativeThermalDelta) - Math.abs(b.relativeThermalDelta)
-      || a.projectedChanges.length - b.projectedChanges.length
-      || a.itemId.localeCompare(b.itemId));
-    slotResult.alternatives = options;
   }
+
+  const outer = result.slots.find((entry) => entry.phase === 'main' && entry.slot === 'outer');
+  const temperature = result.phases.find((entry) => entry.phase === 'main')?.thermalReferenceC;
+  if (!outer && ['outdoor','stroller','carrier'].includes(request.context.mode) && temperature < 24) {
+    const slotResult = { phase:'main', slot:'outer', selected:{ itemId:null }, alternatives:[] };
+    const jacketIds = (SLOT_ITEMS.outer ?? []).filter((itemId) => itemId.endsWith('_jacket'));
+    const alternatives = projectedAlternatives(result,request,slotResult,jacketIds);
+    if (alternatives.length) result.addableSlots.push({ phase:slotResult.phase, slot:slotResult.slot, addLabel:'Außenschicht hinzufügen', alternatives });
+  }
+}
+
+function projectedAlternatives(result,request,slotResult,candidates) {
+  const baselineScore = thermalSignature(result,slotResult.phase);
+  const options = [];
+  for (const itemId of candidates) {
+    if (itemId === slotResult.selected.itemId) continue;
+    const candidateSlot = CLOTHING_CATALOG[itemId]?.slot ?? slotResult.slot;
+    const session = lockItem(request.session,{ phase:slotResult.phase, slot:slotResult.slot, itemId, lockedAt:request.requestedAt });
+    const projected = recommendCore({ ...request, session });
+    if (projected.status === 'blocked') continue;
+    const projectedSelection = projected.slots.find((entry) => entry.phase === slotResult.phase && entry.slot === candidateSlot);
+    if (!projectedSelection || projectedSelection.selected.itemId !== itemId) continue;
+    if (candidateSlot !== slotResult.slot && slotResult.selected.itemId) {
+      const originalStillSelected = projected.slots.some((entry) => entry.phase === slotResult.phase && entry.selected.itemId === slotResult.selected.itemId);
+      if (originalStillSelected) continue;
+    }
+    const projectedScore = thermalSignature(projected,slotResult.phase);
+    const delta = roundHalf(projectedScore - baselineScore);
+    const relation = Math.abs(delta) < 0.25 ? 'equivalent' : delta > 0 ? 'warmer' : 'cooler';
+    const projectedChanges = diffRecommendations(result,projected,slotResult.phase).map((change) => ({
+      ...change,
+      reasonCode:change.slot === candidateSlot ? 'MANUAL_ITEM_LOCK' : 'OUTFIT_REBALANCED_AFTER_SWAP'
+    }));
+    options.push({ itemId, relation, relativeThermalDelta:delta, projectedChanges });
+  }
+  options.sort((a,b) => RELATION_ORDER[a.relation] - RELATION_ORDER[b.relation]
+    || Math.abs(a.relativeThermalDelta) - Math.abs(b.relativeThermalDelta)
+    || a.projectedChanges.length - b.projectedChanges.length
+    || a.itemId.localeCompare(b.itemId));
+  return options;
+}
+
+function addableLabelFor(slot) {
+  return ({
+    stroller_thermal_accessory:'Wärmezubehör hinzufügen',
+    stroller_weather_accessory:'Wetterschutz hinzufügen',
+    carrier_accessory:'Tragecover hinzufügen',
+    car_thermal_accessory:'Decke über dem Gurt hinzufügen',
+    sleep_bag:'Schlafsack hinzufügen'
+  })[slot] ?? `${slot} hinzufügen`;
 }
 
 function bodyThermalWeight(state) {
