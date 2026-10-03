@@ -2181,6 +2181,75 @@
           "taupe"
         ],
         "pattern": "solid"
+      },
+      {
+        "id": "terracotta-cord-01",
+        "assetPath": "assets/clothing/warm_trousers/terracotta-cord-01.webp",
+        "themeIds": [
+          "clay_cream",
+          "terracotta_greige",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "terracotta",
+          "clay"
+        ],
+        "pattern": "fine_rib"
+      },
+      {
+        "id": "cocoa-cord-01",
+        "assetPath": "assets/clothing/warm_trousers/cocoa-cord-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "terracotta_greige",
+          "ocher_taupe"
+        ],
+        "paletteTags": [
+          "ocher",
+          "taupe",
+          "warm_beige"
+        ],
+        "pattern": "fine_rib"
+      },
+      {
+        "id": "moss-cord-01",
+        "assetPath": "assets/clothing/warm_trousers/moss-cord-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "ocher_taupe"
+        ],
+        "paletteTags": [
+          "sage",
+          "oat",
+          "ocher"
+        ],
+        "pattern": "fine_rib"
+      },
+      {
+        "id": "dusty-blue-cord-01",
+        "assetPath": "assets/clothing/warm_trousers/dusty-blue-cord-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue",
+          "sand",
+          "greige"
+        ],
+        "pattern": "fine_rib"
+      },
+      {
+        "id": "petrol-cord-01",
+        "assetPath": "assets/clothing/warm_trousers/petrol-cord-01.webp",
+        "themeIds": [
+          "petrol_warm_beige"
+        ],
+        "paletteTags": [
+          "petrol",
+          "warm_beige"
+        ],
+        "pattern": "fine_rib"
       }
     ],
     "thin_sweater": [

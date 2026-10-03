@@ -205,6 +205,11 @@ test('new blue and warm colorways compose distinct compatible outfits across pal
       label: 'terracotta stroller outfit',
       itemIds: ['long_sleeve_bodysuit', 'trousers', 'stroller_warm_footmuff'],
       modes: ['all', 'neutral', 'warm']
+    },
+    {
+      label: 'cord warm-trousers outfit',
+      itemIds: ['long_sleeve_bodysuit', 'warm_trousers', 'thin_sweater'],
+      modes: ['all', 'neutral', 'cool', 'warm']
     }
   ];
 
@@ -242,7 +247,12 @@ test('new blue and warm colorways compose distinct compatible outfits across pal
     ['sun_hat', 'dusty_blue_sand', 'dusty-blue-sand-01', ['all', 'neutral', 'cool']],
     ['light_shoes', 'dusty_blue_sand', 'dusty-blue-sand-01', ['all', 'neutral', 'cool']],
     ['stroller_warm_footmuff', 'terracotta_greige', 'clay-oat-01', ['all', 'neutral', 'warm']],
-    ['trousers', 'ocher_taupe', 'olive-straight-01', ['all', 'neutral', 'warm']]
+    ['trousers', 'ocher_taupe', 'olive-straight-01', ['all', 'neutral', 'warm']],
+    ['warm_trousers', 'terracotta_greige', 'terracotta-cord-01', ['all', 'neutral', 'warm']],
+    ['warm_trousers', 'ocher_taupe', 'cocoa-cord-01', ['all', 'neutral', 'warm']],
+    ['warm_trousers', 'sage_oat', 'moss-cord-01', ['all', 'neutral', 'cool', 'warm']],
+    ['warm_trousers', 'dusty_blue_sand', 'dusty-blue-cord-01', ['all', 'neutral', 'cool']],
+    ['warm_trousers', 'petrol_warm_beige', 'petrol-cord-01', ['all', 'neutral', 'cool', 'warm']]
   ];
   for (const [assetGroupId, themeId, variantId, modes] of expectedVariants) {
     for (const paletteMode of modes) {
