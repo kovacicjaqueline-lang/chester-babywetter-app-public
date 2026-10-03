@@ -197,6 +197,11 @@ test('new blue and warm colorways compose distinct compatible outfits across pal
       modes: ['all', 'neutral', 'cool']
     },
     {
+      label: 'dusty-blue layered outfit',
+      itemIds: ['long_sleeve_bodysuit', 'warm_trousers', 'sweatshirt'],
+      modes: ['all', 'neutral', 'cool']
+    },
+    {
       label: 'terracotta layered outfit',
       itemIds: ['short_sleeve_bodysuit', 'trousers', 'thin_sweater', 'warm_hat', 'warm_shoes'],
       modes: ['all', 'neutral', 'warm']
@@ -252,7 +257,8 @@ test('new blue and warm colorways compose distinct compatible outfits across pal
     ['warm_trousers', 'ocher_taupe', 'cocoa-cord-01', ['all', 'neutral', 'warm']],
     ['warm_trousers', 'sage_oat', 'moss-cord-01', ['all', 'neutral', 'cool', 'warm']],
     ['warm_trousers', 'dusty_blue_sand', 'dusty-blue-cord-01', ['all', 'neutral', 'cool']],
-    ['warm_trousers', 'petrol_warm_beige', 'petrol-cord-01', ['all', 'neutral', 'cool', 'warm']]
+    ['warm_trousers', 'petrol_warm_beige', 'petrol-cord-01', ['all', 'neutral', 'cool', 'warm']],
+    ['long_sleeve_bodysuit', 'dusty_blue_sand', 'dusty-blue-greige-01', ['all', 'neutral', 'cool']]
   ];
   for (const [assetGroupId, themeId, variantId, modes] of expectedVariants) {
     for (const paletteMode of modes) {

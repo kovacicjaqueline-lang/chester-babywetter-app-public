@@ -2139,6 +2139,19 @@
           "greige"
         ],
         "pattern": "solid"
+      },
+      {
+        "id": "dusty-blue-greige-01",
+        "assetPath": "assets/clothing/long_sleeve_bodysuit/dusty-blue-greige-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue",
+          "greige"
+        ],
+        "pattern": "solid"
       }
     ],
     "t_shirt": [
