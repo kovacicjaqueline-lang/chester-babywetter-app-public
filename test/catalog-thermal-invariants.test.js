@@ -21,6 +21,7 @@ const EXPECTED_V1_IDS = Object.freeze([
   'warm_socks_booties',
   'thin_sweater',
   'sweatshirt',
+  'thin_cardigan',
   'fleece_jacket',
   'light_transition_jacket',
   'insulated_transition_jacket',
@@ -94,6 +95,7 @@ test('body thermalWeight calibration stays monotonic within comparable slots', (
     warm_trousers:3,
     thin_sweater:2,
     sweatshirt:2,
+    thin_cardigan:2,
     fleece_jacket:3,
     rain_jacket:0,
     light_transition_jacket:1,
@@ -115,6 +117,9 @@ test('body thermalWeight calibration stays monotonic within comparable slots', (
   assert.ok(CLOTHING_CATALOG.short_sleeve_bodysuit.thermalWeight < CLOTHING_CATALOG.long_sleeve_bodysuit.thermalWeight);
   assert.ok(CLOTHING_CATALOG.light_trousers.thermalWeight < CLOTHING_CATALOG.trousers.thermalWeight);
   assert.ok(CLOTHING_CATALOG.trousers.thermalWeight < CLOTHING_CATALOG.warm_trousers.thermalWeight);
+  assert.equal(CLOTHING_CATALOG.thin_cardigan.slot, 'mid');
+  assert.deepEqual(CLOTHING_CATALOG.thin_cardigan.bodyZones, ['torso','arms']);
+  assert.equal(CLOTHING_CATALOG.thin_cardigan.thermalWeight, CLOTHING_CATALOG.thin_sweater.thermalWeight);
   assert.ok(CLOTHING_CATALOG.thin_sweater.thermalWeight < CLOTHING_CATALOG.fleece_jacket.thermalWeight);
   assert.ok(CLOTHING_CATALOG.light_transition_jacket.thermalWeight < CLOTHING_CATALOG.softshell_jacket.thermalWeight);
   assert.ok(CLOTHING_CATALOG.light_transition_jacket.thermalWeight < CLOTHING_CATALOG.insulated_transition_jacket.thermalWeight);

@@ -137,7 +137,7 @@ test('unchanged weather produces no artificial outfit change and does not mutate
   assert.deepEqual(input,before);
 });
 
-test('cool morning, warm midday, cool later removes and reuses upper layers instead of changing the underlayer', () => {
+test('cool morning, warm midday, cool later removes and reuses the same thin upper layer without changing the underlayer', () => {
   const w = weather([
     point('2026-08-31T10:00:00.000Z',18),
     point('2026-08-31T11:00:00.000Z',22),
@@ -148,9 +148,10 @@ test('cool morning, warm midday, cool later removes and reuses upper layers inst
   const start = new Set(startIds(result));
 
   assert.equal(result.status,'ready');
-  assert.ok(actionAt(result,'2026-08-31T11:00:00.000Z').some((action) => action.kind === 'remove' && action.fromItemId === 'fleece_jacket'));
-  assert.ok(actionAt(result,'2026-08-31T12:00:00.000Z').some((action) => action.kind === 'add' && action.toItemId === 'fleece_jacket'));
-  assert.ok(!result.packList.some((item) => item.itemId === 'fleece_jacket'));
+  assert.ok(start.has('thin_sweater'));
+  assert.ok(actionAt(result,'2026-08-31T11:00:00.000Z').some((action) => action.kind === 'remove' && action.fromItemId === 'thin_sweater'));
+  assert.ok(actionAt(result,'2026-08-31T12:00:00.000Z').some((action) => action.kind === 'add' && action.toItemId === 'thin_sweater'));
+  assert.ok(!result.packList.some((item) => ['thin_sweater','fleece_jacket'].includes(item.itemId)));
   assert.ok(result.packList.every((item) => !start.has(item.itemId)));
   assert.equal(new Set(result.packList.map((item) => item.itemId)).size,result.packList.length);
 });
