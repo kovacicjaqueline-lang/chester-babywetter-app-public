@@ -1855,6 +1855,19 @@
           "greige"
         ],
         "pattern": "solid"
+      },
+      {
+        "id": "terracotta-oat-01",
+        "assetPath": "assets/clothing/trousers/terracotta-oat-01.webp",
+        "themeIds": [
+          "terracotta_greige",
+          "ocher_taupe"
+        ],
+        "paletteTags": [
+          "terracotta",
+          "oat"
+        ],
+        "pattern": "solid"
       }
     ],
     "sweatshirt": [
@@ -2019,6 +2032,20 @@
           "cream"
         ],
         "pattern": "solid"
+      },
+      {
+        "id": "dusty-blue-sand-01",
+        "assetPath": "assets/clothing/light_shoes/dusty-blue-sand-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue",
+          "sand",
+          "cream"
+        ],
+        "pattern": "solid"
       }
     ],
     "warm_socks_booties": [
@@ -2068,6 +2095,20 @@
         "paletteTags": [
           "sage",
           "oat"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "terracotta-clay-01",
+        "assetPath": "assets/clothing/short_sleeve_bodysuit/terracotta-clay-01.webp",
+        "themeIds": [
+          "clay_cream",
+          "terracotta_greige",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "terracotta",
+          "clay"
         ],
         "pattern": "solid"
       }
@@ -2228,6 +2269,19 @@
           "oat"
         ],
         "pattern": "solid"
+      },
+      {
+        "id": "dusty-blue-sand-01",
+        "assetPath": "assets/clothing/sun_hat/dusty-blue-sand-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue",
+          "sand"
+        ],
+        "pattern": "solid"
       }
     ],
     "weatherproof_shoes": [
@@ -2279,6 +2333,37 @@
           "cream"
         ],
         "pattern": "solid"
+      }
+    ],
+    "light_trousers": [
+      {
+        "id": "dusty-blue-stripe-01",
+        "assetPath": "assets/clothing/light_trousers/dusty-blue-stripe-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue",
+          "sand"
+        ],
+        "pattern": "fine_stripe"
+      }
+    ],
+    "stroller_warm_footmuff": [
+      {
+        "id": "clay-oat-01",
+        "assetPath": "assets/clothing/stroller_warm_footmuff/clay-oat-01.webp",
+        "themeIds": [
+          "clay_cream",
+          "terracotta_greige",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "terracotta",
+          "cream"
+        ],
+        "pattern": "micro_quilt"
       }
     ]
   }

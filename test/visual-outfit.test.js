@@ -189,6 +189,77 @@ test('representative outfit compositions have a second asset-path look in every 
   }
 });
 
+test('new blue and warm colorways compose distinct compatible outfits across palette modes', () => {
+  const combinations = [
+    {
+      label: 'dusty-blue sun outfit',
+      itemIds: ['short_sleeve_bodysuit', 'light_trousers', 'sun_hat', 'light_shoes'],
+      modes: ['all', 'neutral', 'cool']
+    },
+    {
+      label: 'terracotta layered outfit',
+      itemIds: ['short_sleeve_bodysuit', 'trousers', 'thin_sweater', 'warm_hat', 'warm_shoes'],
+      modes: ['all', 'neutral', 'warm']
+    },
+    {
+      label: 'terracotta stroller outfit',
+      itemIds: ['long_sleeve_bodysuit', 'trousers', 'stroller_warm_footmuff'],
+      modes: ['all', 'neutral', 'warm']
+    }
+  ];
+
+  for (const combination of combinations) {
+    for (const paletteMode of combination.modes) {
+      const rec = recommendation(combination.itemIds);
+      const first = selectVisualLook({
+        recommendation:rec,
+        assetManifest:realAssetManifest,
+        visualManifest,
+        paletteMode,
+        visualSeed:0
+      });
+      const second = selectVisualLook({
+        recommendation:rec,
+        assetManifest:realAssetManifest,
+        visualManifest,
+        paletteMode,
+        visualSeed:1
+      });
+
+      assert.ok(visualManifest.paletteModeProfiles[paletteMode].themeIds.includes(first.themeId), `${paletteMode} / ${combination.label} picks an allowed theme`);
+      assert.ok(first.availableLookCount >= 2, `${paletteMode} / ${combination.label} has ${first.availableLookCount} looks`);
+      assert.notDeepEqual(first.items.map((item) => item.assetPath), second.items.map((item) => item.assetPath), `${paletteMode} / ${combination.label}`);
+      assert.deepEqual(first.items.map((item) => item.itemId), combination.itemIds);
+      assert.equal(first.items.every((item) => item.compatibleWithTheme), true, `${paletteMode} / ${combination.label} uses only matching variants`);
+    }
+  }
+
+  const catalog = buildVisualCatalog(realAssetManifest, visualManifest);
+  const expectedVariants = [
+    ['short_sleeve_bodysuit', 'terracotta_greige', 'terracotta-clay-01', ['all', 'neutral', 'warm']],
+    ['trousers', 'terracotta_greige', 'terracotta-oat-01', ['all', 'neutral', 'warm']],
+    ['light_trousers', 'dusty_blue_sand', 'dusty-blue-stripe-01', ['all', 'neutral', 'cool']],
+    ['sun_hat', 'dusty_blue_sand', 'dusty-blue-sand-01', ['all', 'neutral', 'cool']],
+    ['light_shoes', 'dusty_blue_sand', 'dusty-blue-sand-01', ['all', 'neutral', 'cool']],
+    ['stroller_warm_footmuff', 'terracotta_greige', 'clay-oat-01', ['all', 'neutral', 'warm']]
+  ];
+  for (const [assetGroupId, themeId, variantId, modes] of expectedVariants) {
+    for (const paletteMode of modes) {
+      const observed = new Set();
+      for (let seed = 0; seed < 80; seed += 1) {
+        observed.add(selectVisualVariant({
+          catalog,
+          assetGroupId,
+          themeId,
+          paletteMode,
+          seedKey:`${paletteMode}-${seed}`
+        }).variantId);
+      }
+      assert.ok(observed.has(`${assetGroupId}::${variantId}`), `${paletteMode} resolves ${assetGroupId}::${variantId} in ${themeId}`);
+    }
+  }
+});
+
 test('explicit theme anchor keeps theme and unchanged item assets stable across fachliche recomputation', () => {
   const firstRecommendation = recommendation(['long_sleeve_bodysuit', 'trousers', 'thin_sweater']);
   const changedRecommendation = recommendation(['long_sleeve_bodysuit', 'trousers'], { recommendationId: 'rec_2' });
@@ -299,7 +370,7 @@ test('all-color mode explores compatible legacy style variants across seeds', ()
 test('additional physical variants are explored without replacing the neutral fallback', () => {
   const catalog = buildVisualCatalog(assetManifest, visualManifest);
   const trousers = catalog.groupsById.trousers;
-  assert.equal(trousers.visualVariants.length, 3);
+  assert.equal(trousers.visualVariants.length, 4);
   assert.equal(trousers.visualVariants.filter((variant) => variant.isFallback).length, 1);
   const observed = new Set();
   for (let seed = 0; seed < 80; seed += 1) {
