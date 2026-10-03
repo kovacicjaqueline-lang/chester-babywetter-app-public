@@ -1868,6 +1868,20 @@
           "oat"
         ],
         "pattern": "solid"
+      },
+      {
+        "id": "olive-straight-01",
+        "assetPath": "assets/clothing/trousers/olive-straight-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "ocher_taupe"
+        ],
+        "paletteTags": [
+          "sage",
+          "ocher",
+          "taupe"
+        ],
+        "pattern": "solid"
       }
     ],
     "sweatshirt": [

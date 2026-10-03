@@ -241,7 +241,8 @@ test('new blue and warm colorways compose distinct compatible outfits across pal
     ['light_trousers', 'dusty_blue_sand', 'dusty-blue-stripe-01', ['all', 'neutral', 'cool']],
     ['sun_hat', 'dusty_blue_sand', 'dusty-blue-sand-01', ['all', 'neutral', 'cool']],
     ['light_shoes', 'dusty_blue_sand', 'dusty-blue-sand-01', ['all', 'neutral', 'cool']],
-    ['stroller_warm_footmuff', 'terracotta_greige', 'clay-oat-01', ['all', 'neutral', 'warm']]
+    ['stroller_warm_footmuff', 'terracotta_greige', 'clay-oat-01', ['all', 'neutral', 'warm']],
+    ['trousers', 'ocher_taupe', 'olive-straight-01', ['all', 'neutral', 'warm']]
   ];
   for (const [assetGroupId, themeId, variantId, modes] of expectedVariants) {
     for (const paletteMode of modes) {
@@ -370,7 +371,7 @@ test('all-color mode explores compatible legacy style variants across seeds', ()
 test('additional physical variants are explored without replacing the neutral fallback', () => {
   const catalog = buildVisualCatalog(assetManifest, visualManifest);
   const trousers = catalog.groupsById.trousers;
-  assert.equal(trousers.visualVariants.length, 4);
+  assert.equal(trousers.visualVariants.length, 5);
   assert.equal(trousers.visualVariants.filter((variant) => variant.isFallback).length, 1);
   const observed = new Set();
   for (let seed = 0; seed < 80; seed += 1) {
