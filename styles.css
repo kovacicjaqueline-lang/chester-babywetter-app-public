@@ -586,6 +586,14 @@ code { font-size: .84em; }
   font-weight: 740;
   line-height: 1.16;
 }
+.clothing-description {
+  margin: 3px 1px 0;
+  color: var(--muted);
+  font-size: .56rem;
+  font-weight: 450;
+  line-height: 1.22;
+  overflow-wrap: anywhere;
+}
 .clothing-role {
   margin: 1px 0 0;
   color: var(--muted);
@@ -1151,7 +1159,14 @@ code { font-size: .84em; }
   font-size: .98rem;
   line-height: 1.2;
 }
-.alternative-option small {
+.alternative-description {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: .72rem;
+  line-height: 1.28;
+}
+.alternative-option small.alternative-relation {
   margin-top: 5px;
   color: var(--muted);
   font-size: .8rem;
@@ -1183,6 +1198,7 @@ code { font-size: .84em; }
   margin-top: 8px;
   font-size: .74rem;
 }
+.catalog-grid .clothing-description { font-size: .62rem; }
 .catalog-grid .clothing-role { font-size: .63rem; }
 
 .status-card {

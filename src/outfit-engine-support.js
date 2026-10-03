@@ -557,7 +557,6 @@ export function alternativeCandidateIds(slotResult,mode) {
   return unique([...(SLOT_ITEMS[slotResult.slot] ?? []),...crossSlot]).filter((itemId) => {
     const def = CLOTHING_CATALOG[itemId];
     if (!def.allowedSituations.includes(mode)) return false;
-    if (itemId === 'fleece_jacket' && ['thin_sweater','sweatshirt','thin_cardigan'].includes(slotResult.selected?.itemId)) return false;
     if (slotResult.phase === 'in_car' && BODY_SLOTS.includes(def.slot) && def.carSeatCompatibility === 'prohibited') return false;
     if (mode === 'sleep' && !def.sleepSafe) return false;
     return true;

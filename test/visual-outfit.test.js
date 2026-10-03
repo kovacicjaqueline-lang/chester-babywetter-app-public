@@ -148,6 +148,47 @@ test('all configured themes produce a fully compatible representative outfit', (
   }
 });
 
+test('every pictured asset group has two distinct looks in every palette mode', () => {
+  const modes = ['all', 'neutral', 'cool', 'warm'];
+  const picturedGroups = realAssetManifest.assetGroups.filter((group) =>
+    (group.variantPaths && Object.values(group.variantPaths).some(Boolean)) || group.assetPath
+  );
+
+  for (const paletteMode of modes) {
+    for (const group of picturedGroups) {
+      const rec = recommendation([group.id]);
+      const first = selectVisualLook({ recommendation:rec, assetManifest:realAssetManifest, visualManifest, paletteMode, visualSeed:0 });
+      const second = selectVisualLook({ recommendation:rec, assetManifest:realAssetManifest, visualManifest, paletteMode, visualSeed:1 });
+
+      assert.ok(first.availableLookCount >= 2, `${paletteMode} / ${group.id} only has ${first.availableLookCount} look(s)`);
+      assert.notDeepEqual(first.items.map((item) => item.assetPath), second.items.map((item) => item.assetPath), `${paletteMode} / ${group.id}`);
+      assert.deepEqual(second.items.map((item) => item.itemId), [group.id]);
+    }
+  }
+});
+
+test('representative outfit compositions have a second asset-path look in every palette mode', () => {
+  const outfits = [
+    ['short_sleeve_bodysuit', 'light_trousers', 'sun_hat', 'light_shoes'],
+    ['long_sleeve_bodysuit', 'trousers', 'thin_sweater', 'softshell_jacket', 'socks', 'warm_hat', 'warm_shoes'],
+    ['long_sleeve_bodysuit', 'trousers', 'stroller_warm_footmuff', 'stroller_sunshade'],
+    ['long_sleeve_bodysuit', 'light_trousers', 'carrier_cover_light'],
+    ['short_sleeve_bodysuit', 'trousers', 'car_blanket_over_harness'],
+    ['sleep_under_long_sleeve_bodysuit', 'sleep_bag_1_0']
+  ];
+
+  for (const paletteMode of ['all', 'neutral', 'cool', 'warm']) {
+    for (const itemIds of outfits) {
+      const rec = recommendation(itemIds);
+      const first = selectVisualLook({ recommendation:rec, assetManifest:realAssetManifest, visualManifest, paletteMode, visualSeed:0 });
+      const second = selectVisualLook({ recommendation:rec, assetManifest:realAssetManifest, visualManifest, paletteMode, visualSeed:1 });
+      assert.ok(first.availableLookCount >= 2, `${paletteMode} / ${itemIds.join(', ')} has ${first.availableLookCount} looks`);
+      assert.notDeepEqual(first.items.map((item) => item.assetPath), second.items.map((item) => item.assetPath), `${paletteMode} / ${itemIds.join(', ')}`);
+      assert.deepEqual(second.items.map((item) => item.itemId), itemIds);
+    }
+  }
+});
+
 test('explicit theme anchor keeps theme and unchanged item assets stable across fachliche recomputation', () => {
   const firstRecommendation = recommendation(['long_sleeve_bodysuit', 'trousers', 'thin_sweater']);
   const changedRecommendation = recommendation(['long_sleeve_bodysuit', 'trousers'], { recommendationId: 'rec_2' });
@@ -390,21 +431,27 @@ test('composer weights visible outer layers above small accessories', () => {
   assert.equal(result.themeId, 'jacket_theme');
 });
 
-test('palette modes select visual worlds without changing fachliche items', () => {
+test('palette modes select palette-compatible visual worlds without changing fachliche items', () => {
   const rec = recommendation(['long_sleeve_bodysuit', 'trousers', 'thin_sweater']);
   const expectedItemIds = rec.slots.map((slot) => slot.selected.itemId);
-  for (const [paletteMode, forbiddenSourceStyle] of [['neutral', 'boy'], ['cool', 'girl'], ['warm', 'boy']]) {
+  const catalog = buildVisualCatalog(realAssetManifest, visualManifest);
+  for (const paletteMode of ['all', 'neutral', 'cool', 'warm']) {
     const look = selectVisualLook({ recommendation: rec, assetManifest, visualManifest, paletteMode, visualSeed: 0 });
     const allowedThemes = new Set(visualManifest.paletteModeProfiles[paletteMode].themeIds);
     assert.equal(allowedThemes.has(look.themeId), true);
     assert.deepEqual(look.items.map((item) => item.itemId), expectedItemIds);
-    assert.equal(look.items.some((item) => item.sourceStyle === forbiddenSourceStyle), false);
+    for (const item of look.items) {
+      const variant = catalog.groupsById[item.itemId].visualVariants.find((entry) => entry.assetPath === item.assetPath);
+      assert.ok(variant, `${paletteMode} / ${item.itemId} should resolve to a catalog image`);
+      assert.equal(variant.themeIds.includes(look.themeId) || variant.isFallback, true, `${paletteMode} / ${item.itemId} must fit ${look.themeId}`);
+    }
   }
 });
 
-test('real unisex mode is not restricted to beige-looking themes', () => {
+test('neutral palette mode includes color-compatible assets with legacy boy/girl labels', () => {
   const rec = recommendation(['long_sleeve_bodysuit', 'trousers', 'thin_sweater', 'thin_hat']);
   const observedThemes = new Set();
+  const observedLegacyLabels = new Set();
   for (let seed = 0; seed < 20; seed += 1) {
     const look = selectVisualLook({
       recommendation: rec,
@@ -414,10 +461,11 @@ test('real unisex mode is not restricted to beige-looking themes', () => {
       visualSeed: seed
     });
     observedThemes.add(look.themeId);
-    assert.equal(look.items.every((item) => item.sourceStyle === 'neutral'), true);
+    for (const item of look.items) if (item.sourceStyle === 'boy' || item.sourceStyle === 'girl') observedLegacyLabels.add(item.sourceStyle);
   }
   assert.equal(observedThemes.has('dusty_blue_sand'), true);
   assert.equal(observedThemes.has('apricot_oat'), true);
+  assert.ok(observedLegacyLabels.size > 0, 'neutral palette mode should reuse palette-compatible legacy assets');
 });
 
 test('theme selection uses whole-outfit composition score instead of manifest order', () => {

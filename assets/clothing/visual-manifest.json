@@ -1810,9 +1810,9 @@
           "soft_lavender_sand"
         ],
         "paletteTags": [
-          "cream"
+          "dusty_blue"
         ],
-        "pattern": "solid"
+        "pattern": "fine_knit"
       }
     }
   },
@@ -2216,6 +2216,111 @@
           "oat"
         ],
         "pattern": "chunky_knit"
+      }
+    ],
+    "transition_overall": [
+      {
+        "id": "sand-greige-01",
+        "assetPath": "assets/clothing/transition_overall/sand-greige-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "terracotta_greige",
+          "ocher_taupe",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "sand",
+          "greige",
+          "taupe"
+        ],
+        "pattern": "micro_quilt"
+      }
+    ],
+    "sun_hat": [
+      {
+        "id": "sage-canvas-01",
+        "assetPath": "assets/clothing/sun_hat/sage-canvas-01.webp",
+        "themeIds": [
+          "sage_oat"
+        ],
+        "paletteTags": [
+          "sage",
+          "oat"
+        ],
+        "pattern": "solid"
+      }
+    ],
+    "weatherproof_shoes": [
+      {
+        "id": "taupe-sage-01",
+        "assetPath": "assets/clothing/weatherproof_shoes/taupe-sage-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "ocher_taupe"
+        ],
+        "paletteTags": [
+          "taupe",
+          "sage",
+          "cream"
+        ],
+        "pattern": "solid"
+      }
+    ],
+    "stroller_rain_cover": [
+      {
+        "id": "sand-trim-01",
+        "assetPath": "assets/clothing/stroller_rain_cover/sand-trim-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "terracotta_greige",
+          "ocher_taupe",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "transparent",
+          "sand",
+          "greige"
+        ],
+        "pattern": "solid"
+      }
+    ],
+    "stroller_sunshade": [
+      {
+        "id": "sand-sage-01",
+        "assetPath": "assets/clothing/stroller_sunshade/sand-sage-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand"
+        ],
+        "paletteTags": [
+          "sand",
+          "sage",
+          "cream"
+        ],
+        "pattern": "solid"
+      }
+    ],
+    "thin_cardigan": [
+      {
+        "id": "clay-terracotta-01",
+        "assetPath": "assets/clothing/thin_cardigan/clay-terracotta-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "clay_cream",
+          "terracotta_greige",
+          "ocher_taupe",
+          "petrol_warm_beige",
+          "mauve_cream",
+          "apricot_oat",
+          "slate_blue_greige",
+          "soft_lavender_sand"
+        ],
+        "paletteTags": [
+          "terracotta"
+        ],
+        "pattern": "fine_knit"
       }
     ]
   }

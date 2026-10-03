@@ -1,5 +1,6 @@
 import { formatPrecipitation, formatTemperature, formatTemperatureC, formatUvIndex, precipitationLabelFor } from './weather-copy.js';
 import { isCompositeSleepVisualItem, visualPartsForItem } from './sleep-visual-parts.js';
+import { getClothingDescription } from '../src/clothing-catalog.js';
 
 const MODE_COPY = Object.freeze({
   outdoor: { label: 'Draußen', icon: '☀', short: 'Wetter + Aktivität' },
@@ -85,7 +86,7 @@ function imageFallback(shell, label) {
   shell.append(fallback);
 }
 
-function clothingCard({ slotResult = null, itemId, logicalItemId = null, asset, label, role = '', interactive = false, interactiveLabel = 'Alternativen anzeigen', contextLabel = '' }) {
+function clothingCard({ slotResult = null, itemId, logicalItemId = null, asset, label, description = getClothingDescription(itemId), role = '', interactive = false, interactiveLabel = 'Alternativen anzeigen', contextLabel = '' }) {
   const element = document.createElement(interactive ? 'button' : 'article');
   if (interactive) element.type = 'button';
   element.className = `clothing-card${interactive ? ' clothing-card-button' : ''}`;
@@ -95,7 +96,7 @@ function clothingCard({ slotResult = null, itemId, logicalItemId = null, asset, 
     element.dataset.slot = slotResult.slot;
     element.dataset.phase = slotResult.phase;
     const accessibleContext = [contextLabel, role].filter(Boolean).join(' · ');
-    element.setAttribute('aria-label', `${accessibleContext ? `${accessibleContext}: ` : ''}${label}${interactive ? ` – ${interactiveLabel}` : ''}`);
+    element.setAttribute('aria-label', `${accessibleContext ? `${accessibleContext}: ` : ''}${label}${description ? `. ${description}` : ''}${interactive ? ` – ${interactiveLabel}` : ''}`);
     if (interactive) element.dataset.openAlternatives = 'true';
   }
 
@@ -118,10 +119,13 @@ function clothingCard({ slotResult = null, itemId, logicalItemId = null, asset, 
   const name = document.createElement('p');
   name.className = 'clothing-name';
   name.textContent = label;
+  const descriptionText = document.createElement('p');
+  descriptionText.className = 'clothing-description';
+  descriptionText.textContent = description;
   const roleText = document.createElement('p');
   roleText.className = 'clothing-role';
   roleText.textContent = role;
-  element.append(shell, name, roleText);
+  element.append(shell, name, descriptionText, roleText);
   return element;
 }
 
@@ -623,11 +627,15 @@ export function renderAlternatives(slotResult, assetStore, paletteMode) {
     const copy = document.createElement('span');
     const strong = document.createElement('strong');
     strong.textContent = group?.label ?? alternative.itemId.replaceAll('_', ' ');
+    const description = document.createElement('span');
+    description.className = 'alternative-description';
+    description.textContent = getClothingDescription(alternative.itemId);
     const small = document.createElement('small');
+    small.className = 'alternative-relation';
     const relation = alternative.relation === 'warmer' ? 'wärmer' : alternative.relation === 'cooler' ? 'kühler' : 'ähnlich warm';
     const changed = Math.max(0, (alternative.projectedChanges?.length ?? 1) - 1);
     small.textContent = changed ? `${relation} · Outfit wird in ${changed} weiter${changed === 1 ? 'em Bereich' : 'en Bereichen'} angepasst` : relation;
-    copy.append(strong, small);
+    copy.append(strong, description, small);
     button.append(image, copy, document.createTextNode('›'));
     host.append(button);
   }

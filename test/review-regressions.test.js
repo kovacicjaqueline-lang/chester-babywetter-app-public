@@ -99,7 +99,7 @@ test('projected swap changes identify the locked slot without inventing an outer
     mode:'outdoor', plannedMinutes:60, activity:'normal', activitySource:'user', sunExposure:'shade', groundContact:'none'
   }, { w:weather(14) }));
   const alternatives = slot(result,'mid').alternatives;
-  assert.equal(alternatives.some((option) => option.itemId === 'fleece_jacket'),false);
+  assert.equal(alternatives.find((option) => option.itemId === 'fleece_jacket')?.relation,'warmer');
   const sweatshirt = alternatives.find((option) => option.itemId === 'sweatshirt');
   assert.ok(sweatshirt);
   assert.equal(sweatshirt.projectedChanges.find((change) => change.slot === 'mid')?.reasonCode,'MANUAL_ITEM_LOCK');

@@ -191,7 +191,7 @@ test('theme color roles preserve the existing palette and partition it cleanly',
   }
 });
 
-test('palette modes declare explicit theme and source-variant boundaries', () => {
+test('palette modes declare explicit theme sets and legacy source-style ranks', () => {
   const themeIds = new Set(visualManifest.themes.map((theme) => theme.id));
   assert.deepEqual(Object.keys(visualManifest.paletteModeProfiles).sort(), ['all', 'cool', 'neutral', 'warm']);
   for (const [mode, profile] of Object.entries(visualManifest.paletteModeProfiles)) {

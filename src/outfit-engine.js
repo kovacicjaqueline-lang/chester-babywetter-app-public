@@ -445,8 +445,14 @@ function projectedAlternatives(result,request,slotResult,candidates) {
       if (originalStillSelected) continue;
     }
     const projectedScore = thermalSignature(projected,slotResult.phase);
-    const delta = roundHalf(projectedScore - baselineScore);
-    const relation = Math.abs(delta) < 0.25 ? 'equivalent' : delta > 0 ? 'warmer' : 'cooler';
+    let delta = roundHalf(projectedScore - baselineScore);
+    let relation = Math.abs(delta) < 0.25 ? 'equivalent' : delta > 0 ? 'warmer' : 'cooler';
+    if (slotResult.slot === 'mid' && candidateSlot === slotResult.slot) {
+      const currentWeight = CLOTHING_CATALOG[slotResult.selected.itemId]?.thermalWeight ?? 0;
+      const candidateWeight = CLOTHING_CATALOG[itemId]?.thermalWeight ?? currentWeight;
+      delta = candidateWeight - currentWeight;
+      relation = delta === 0 ? 'equivalent' : delta > 0 ? 'warmer' : 'cooler';
+    }
     const projectedChanges = diffRecommendations(result,projected,slotResult.phase).map((change) => ({
       ...change,
       reasonCode:change.slot === candidateSlot ? 'MANUAL_ITEM_LOCK' : 'OUTFIT_REBALANCED_AFTER_SWAP'
