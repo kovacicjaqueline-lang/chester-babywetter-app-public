@@ -675,9 +675,17 @@ Beispiele:
 
 Alternativen werden als eigener Engine-Request mit einem manuellen Lock projiziert. Die ursprüngliche Empfehlung wird dabei nicht verändert. `relation` und `relativeThermalDelta` beschreiben die thermische Wirkung des gesamten projizierten Outfits; `projectedChanges` beschreibt separat, welche weiteren Slots für die gewählte Zusammensetzung angepasst würden.
 
+Für Alternativen im `mid`-Slot zeigen `relation` und `relativeThermalDelta` den Wärmeunterschied der gewählten Mittelschicht anhand ihres `thermalWeight`; ein Rebalancing anderer Slots ändert diese Einordnung nicht. Die angepassten Teile bleiben separat unter `projectedChanges` sichtbar.
+
 ### 14.4 Lock-Lebensdauer
 
 Ein manueller Lock gilt nur für die aktuelle Recommendation-Session. Bei komplett neuem Wetter/Ort/Modus darf eine neue Empfehlung ohne alten Lock gestartet werden.
+
+### 14.5 Kleidungsbeschreibung und Wärmebewertung
+
+Die nutzerverständliche `description` eines Kleidungs- oder Zubehörbegriffs erklärt das reale Kleidungsstück. Sie ist von seiner thermischen Bewertung getrennt und erzeugt keine eigene Wärmeberechnung; `thermalWeight` und die bestehenden Outfit-Regeln bleiben maßgeblich.
+
+`Dünner Pullover` (`thin_sweater`) und `Sweatshirt` (`sweatshirt`) sind normale, ungefütterte Mid-Layer mit `thermalWeight: 2` und gelten beim Austausch als ähnlich warm. Dick gefütterte oder stark angeraute Sweat-Oberteile fallen nicht unter die hier definierte Sweatshirt-Kategorie. Fleece (`fleece_jacket`) ist mit `thermalWeight: 3` die wärmere Stufe.
 
 ## 15. Nackentest
 
