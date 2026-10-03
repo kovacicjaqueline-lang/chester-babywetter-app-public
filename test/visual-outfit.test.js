@@ -215,6 +215,16 @@ test('new clothing colorways compose distinct compatible outfits across all pale
       label: 'terracotta tee and sage knit outfit',
       itemIds: ['t_shirt', 'trousers', 'thin_sweater'],
       modes: ['all', 'neutral', 'cool', 'warm']
+    },
+    {
+      label: 'sage striped light-trouser outfit',
+      itemIds: ['short_sleeve_bodysuit', 'light_trousers', 'thin_sweater'],
+      modes: ['all', 'neutral', 'cool', 'warm']
+    },
+    {
+      label: 'mauve corduroy outfit',
+      itemIds: ['long_sleeve_bodysuit', 'warm_trousers', 'thin_sweater'],
+      modes: ['all', 'neutral', 'cool', 'warm']
     }
   ];
 
@@ -266,7 +276,16 @@ test('new clothing colorways compose distinct compatible outfits across all pale
     ['sweatshirt', 'terracotta_greige', 'terracotta-quilt-01', ['all', 'neutral', 'warm']],
     ['light_trousers', 'terracotta_greige', 'terracotta-sand-stripe-01', ['all', 'neutral', 'warm']],
     ['leggings', 'terracotta_greige', 'terracotta-rib-01', ['all', 'neutral', 'warm']],
-    ['tights', 'dusty_blue_sand', 'dusty-blue-oat-01', ['all', 'neutral', 'cool']]
+    ['tights', 'dusty_blue_sand', 'dusty-blue-oat-01', ['all', 'neutral', 'cool']],
+    ['t_shirt', 'dusty_blue_sand', 'dusty-blue-oat-02', ['all', 'neutral', 'cool']],
+    ['light_long_sleeve_shirt', 'terracotta_greige', 'terracotta-greige-01', ['all', 'neutral', 'warm']],
+    ['thin_sweater', 'dusty_blue_sand', 'dusty-blue-oat-01', ['all', 'neutral', 'cool']],
+    ['fleece_jacket', 'terracotta_greige', 'terracotta-oat-01', ['all', 'neutral', 'warm']],
+    ['sweatshirt', 'ocher_taupe', 'ocher-taupe-01', ['all', 'neutral', 'warm']],
+    ['light_trousers', 'sage_oat', 'sage-oat-stripe-01', ['all', 'neutral', 'cool', 'warm']],
+    ['leggings', 'dusty_blue_sand', 'dusty-blue-rib-01', ['all', 'neutral', 'cool']],
+    ['tights', 'terracotta_greige', 'terracotta-oat-01', ['all', 'neutral', 'warm']],
+    ['warm_trousers', 'mauve_cream', 'plum-cord-camel-tie-01', ['all', 'neutral', 'warm']]
   ];
   for (const [assetGroupId, themeId, variantId, modes] of expectedVariants) {
     for (const paletteMode of modes) {
