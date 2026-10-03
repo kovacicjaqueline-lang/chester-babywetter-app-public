@@ -289,6 +289,7 @@ test('Einstellungen bleiben nach Reload erhalten', async ({ page }) => {
 test('warme Farbwelt erlaubt einen sichtbar anderen Look', async ({ page }) => {
   await openDemo(page);
   await page.locator('[data-open-dialog="settingsDialog"]').first().click();
+  await expect(page.locator('#settingsDialog')).toContainText('Ausgewogene Farben');
   await expect(page.locator('#settingsDialog')).toContainText('Warme, gedämpfte Naturfarben');
   await expect(page.locator('#settingsDialog')).toContainText('Beeinflusst nur die Bildfarben');
   await page.locator('input[name="paletteMode"][value="warm"]').check();
