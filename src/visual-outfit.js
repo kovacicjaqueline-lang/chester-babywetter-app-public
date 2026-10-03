@@ -270,11 +270,9 @@ function roleTags(variant, theme, role) {
 
 function variantCandidates(group, theme, paletteMode, catalog, visualManifest) {
   const profile = paletteModeProfile(catalog, visualManifest, paletteMode);
-  const rankedSources = Object.keys(profile.sourceStyleRank || {});
-  const eligible = rankedSources.length > 0
-    ? group.visualVariants.filter((variant) => rankedSources.includes(variant.sourceStyle))
-    : group.visualVariants;
-  const themed = eligible.filter((variant) => variant.themeIds.includes(theme.id));
+  // Legacy sourceStyle labels describe old asset naming, not palette intent.
+  // Theme metadata decides whether an image fits; sourceStyle only ranks it.
+  const themed = group.visualVariants.filter((variant) => variant.themeIds.includes(theme.id));
   const rankedThemed = themed
     .map((variant) => ({ variant, rank: sourceStyleRank(variant, profile) }))
     .filter(({ rank }) => rank < 99);
@@ -286,7 +284,7 @@ function variantCandidates(group, theme, paletteMode, catalog, visualManifest) {
     : rankedThemed
       .filter(({ rank }) => rank <= bestRank + 1)
       .map(({ variant }) => variant);
-  const fallbackPool = eligible.filter((variant) => variant.isFallback);
+  const fallbackPool = group.visualVariants.filter((variant) => variant.isFallback);
   const candidates = compatibleThemed.length > 0
     ? compatibleThemed
       : fallbackPool.length > 0
@@ -494,11 +492,7 @@ export function selectVisualVariant({ catalog, assetGroupId, themeId, paletteMod
   }
 
   const profile = paletteModeProfile(catalog, { sourceStyleProfiles: {} }, normalizedPaletteMode);
-  const rankedSources = Object.keys(profile.sourceStyleRank || {});
-  const eligible = rankedSources.length > 0
-    ? group.visualVariants.filter((variant) => rankedSources.includes(variant.sourceStyle))
-    : group.visualVariants;
-  const themed = eligible.filter((variant) => variant.themeIds.includes(themeId));
+  const themed = group.visualVariants.filter((variant) => variant.themeIds.includes(themeId));
   const rankedThemed = themed
     .map((variant) => ({ variant, rank: sourceStyleRank(variant, profile) }))
     .filter(({ rank }) => rank < 99);
@@ -508,7 +502,7 @@ export function selectVisualVariant({ catalog, assetGroupId, themeId, paletteMod
   let usedFallback = false;
 
   if (pool.length === 0) {
-    const fallback = eligible.find((variant) => variant.isFallback)
+    const fallback = group.visualVariants.find((variant) => variant.isFallback)
       || group.visualVariants.find((variant) => variant.isFallback)
       || group.visualVariants[0];
     pool = [{ variant: fallback, rank: sourceStyleRank(fallback, profile) }];
