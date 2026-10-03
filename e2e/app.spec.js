@@ -286,6 +286,23 @@ test('Einstellungen bleiben nach Reload erhalten', async ({ page }) => {
   await expect(page.locator('input[name="paletteMode"][value="cool"]')).toBeChecked();
 });
 
+test('warme Farbwelt erlaubt einen sichtbar anderen Look', async ({ page }) => {
+  await openDemo(page);
+  await page.locator('[data-open-dialog="settingsDialog"]').first().click();
+  await expect(page.locator('#settingsDialog')).toContainText('Warme, gedämpfte Naturfarben');
+  await expect(page.locator('#settingsDialog')).toContainText('Beeinflusst nur die Bildfarben');
+  await page.locator('input[name="paletteMode"][value="warm"]').check();
+  await page.locator('[data-close-dialog="settingsDialog"]').click();
+
+  const button = page.locator('#changeLookButton');
+  await expect(button).toBeEnabled();
+  const itemIds = await selectedIds(page);
+  const before = await selectedVisuals(page);
+  await button.click();
+  await expect.poll(() => selectedVisuals(page)).not.toEqual(before);
+  expect(await selectedIds(page)).toEqual(itemIds);
+});
+
 test('Layout funktioniert bei 375 x 812 und erzeugt Screenshot', async ({ page }, testInfo) => {
   await page.setViewportSize({ width:375, height:812 });
   await openDemo(page);
