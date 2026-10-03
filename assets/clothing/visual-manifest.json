@@ -1794,6 +1794,26 @@
         ],
         "pattern": "mini_motif"
       }
+    },
+    "thin_cardigan": {
+      "neutral": {
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "clay_cream",
+          "terracotta_greige",
+          "ocher_taupe",
+          "petrol_warm_beige",
+          "mauve_cream",
+          "apricot_oat",
+          "slate_blue_greige",
+          "soft_lavender_sand"
+        ],
+        "paletteTags": [
+          "dusty_blue"
+        ],
+        "pattern": "fine_knit"
+      }
     }
   },
   "additionalVariants": {
@@ -1823,6 +1843,20 @@
           "greige"
         ],
         "pattern": "micro_texture"
+      },
+      {
+        "id": "terracotta-rib-01",
+        "assetPath": "assets/clothing/leggings/terracotta-rib-01.webp",
+        "themeIds": [
+          "clay_cream",
+          "terracotta_greige",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "terracotta",
+          "clay"
+        ],
+        "pattern": "fine_rib"
       }
     ],
     "trousers": [
@@ -1886,6 +1920,19 @@
     ],
     "sweatshirt": [
       {
+        "id": "sage-quilt-01",
+        "assetPath": "assets/clothing/sweatshirt/sage-quilt-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "petrol_warm_beige"
+        ],
+        "paletteTags": [
+          "sage",
+          "oat"
+        ],
+        "pattern": "micro_quilt"
+      },
+      {
         "id": "dusty-blue-quilt-01",
         "assetPath": "assets/clothing/sweatshirt/dusty-blue-quilt-01.webp",
         "themeIds": [
@@ -1898,15 +1945,16 @@
         "pattern": "micro_quilt"
       },
       {
-        "id": "sage-quilt-01",
-        "assetPath": "assets/clothing/sweatshirt/sage-quilt-01.webp",
+        "id": "terracotta-quilt-01",
+        "assetPath": "assets/clothing/sweatshirt/terracotta-quilt-01.webp",
         "themeIds": [
-          "sage_oat",
-          "petrol_warm_beige"
+          "clay_cream",
+          "terracotta_greige",
+          "apricot_oat"
         ],
         "paletteTags": [
-          "sage",
-          "oat"
+          "terracotta",
+          "clay"
         ],
         "pattern": "micro_quilt"
       }
@@ -2166,6 +2214,20 @@
           "warm_beige"
         ],
         "pattern": "solid"
+      },
+      {
+        "id": "terracotta-clay-01",
+        "assetPath": "assets/clothing/t_shirt/terracotta-clay-01.webp",
+        "themeIds": [
+          "clay_cream",
+          "terracotta_greige",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "terracotta",
+          "clay"
+        ],
+        "pattern": "solid"
       }
     ],
     "light_long_sleeve_shirt": [
@@ -2178,6 +2240,19 @@
         "paletteTags": [
           "oat",
           "sage"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "dusty-blue-greige-01",
+        "assetPath": "assets/clothing/light_long_sleeve_shirt/dusty-blue-greige-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue",
+          "greige"
         ],
         "pattern": "solid"
       }
@@ -2276,6 +2351,18 @@
           "terracotta"
         ],
         "pattern": "fine_knit"
+      },
+      {
+        "id": "sage-oat-01",
+        "assetPath": "assets/clothing/thin_sweater/sage-oat-01.webp",
+        "themeIds": [
+          "sage_oat"
+        ],
+        "paletteTags": [
+          "sage",
+          "oat"
+        ],
+        "pattern": "fine_knit"
       }
     ],
     "fleece_jacket": [
@@ -2288,6 +2375,19 @@
         "paletteTags": [
           "sage",
           "oat"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "dusty-blue-greige-01",
+        "assetPath": "assets/clothing/fleece_jacket/dusty-blue-greige-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue",
+          "greige"
         ],
         "pattern": "solid"
       }
@@ -2304,6 +2404,48 @@
           "oat"
         ],
         "pattern": "fine_rib"
+      },
+      {
+        "id": "dusty-blue-oat-01",
+        "assetPath": "assets/clothing/tights/dusty-blue-oat-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue",
+          "oat"
+        ],
+        "pattern": "fine_rib"
+      }
+    ],
+    "light_trousers": [
+      {
+        "id": "dusty-blue-stripe-01",
+        "assetPath": "assets/clothing/light_trousers/dusty-blue-stripe-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue",
+          "sand"
+        ],
+        "pattern": "fine_stripe"
+      },
+      {
+        "id": "terracotta-sand-stripe-01",
+        "assetPath": "assets/clothing/light_trousers/terracotta-sand-stripe-01.webp",
+        "themeIds": [
+          "clay_cream",
+          "terracotta_greige",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "terracotta",
+          "sand"
+        ],
+        "pattern": "fine_stripe"
       }
     ],
     "winter_overall": [
@@ -2431,21 +2573,6 @@
         "pattern": "solid"
       }
     ],
-    "light_trousers": [
-      {
-        "id": "dusty-blue-stripe-01",
-        "assetPath": "assets/clothing/light_trousers/dusty-blue-stripe-01.webp",
-        "themeIds": [
-          "dusty_blue_sand",
-          "slate_blue_greige"
-        ],
-        "paletteTags": [
-          "dusty_blue",
-          "sand"
-        ],
-        "pattern": "fine_stripe"
-      }
-    ],
     "stroller_warm_footmuff": [
       {
         "id": "clay-oat-01",
@@ -2460,6 +2587,28 @@
           "cream"
         ],
         "pattern": "micro_quilt"
+      }
+    ],
+    "thin_cardigan": [
+      {
+        "id": "clay-terracotta-01",
+        "assetPath": "assets/clothing/thin_cardigan/clay-terracotta-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "clay_cream",
+          "terracotta_greige",
+          "ocher_taupe",
+          "petrol_warm_beige",
+          "mauve_cream",
+          "apricot_oat",
+          "slate_blue_greige",
+          "soft_lavender_sand"
+        ],
+        "paletteTags": [
+          "terracotta"
+        ],
+        "pattern": "fine_knit"
       }
     ]
   }

@@ -4,7 +4,7 @@ import { CLOTHING_CATALOG, getClothingDescription } from '../src/index.js';
 
 test('every clothing and accessory metadata entry has a resolvable description', () => {
   const itemIds = Object.keys(CLOTHING_CATALOG);
-  assert.equal(itemIds.length, 53);
+  assert.equal(itemIds.length, 54);
   for (const itemId of itemIds) {
     const description = getClothingDescription(itemId);
     assert.equal(description, CLOTHING_CATALOG[itemId].description, itemId);

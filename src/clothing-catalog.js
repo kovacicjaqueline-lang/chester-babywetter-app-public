@@ -27,6 +27,7 @@ const items = [
 
   def({ itemId:'thin_sweater', description:'Leichter Strick- oder Jersey-Pullover, ungefüttert.', slot:'mid', bodyZones:['torso','arms'], thermalWeight:2, carSeatCompatibility:'allowed', allowedSituations:['outdoor','stroller','carrier','car'] }),
   def({ itemId:'sweatshirt', description:'Pullover aus normalem Sweatstoff, nicht dick gefüttert oder stark angeraut.', slot:'mid', bodyZones:['torso','arms'], thermalWeight:2, carSeatCompatibility:'allowed', allowedSituations:['outdoor','stroller','carrier','car'] }),
+  def({ itemId:'thin_cardigan', description:'Dünne, leichte Strickjacke ohne starke Isolierung.', slot:'mid', bodyZones:['torso','arms'], thermalWeight:2, carSeatCompatibility:'allowed', allowedSituations:['outdoor','stroller','carrier','car'] }),
   def({ itemId:'fleece_jacket', description:'Deutlich wärmere, isolierende Mittelschicht aus Fleece.', slot:'mid', bodyZones:['torso','arms'], thermalWeight:3, windProtection:1, carSeatCompatibility:'conditional', allowedSituations:['outdoor','stroller','carrier','car'] }),
 
   def({ itemId:'light_transition_jacket', description:'Leichte ungefütterte Übergangsjacke mit geringer Wärmeleistung und etwas Windschutz.', slot:'outer', bodyZones:['torso','arms'], thermalWeight:1, windProtection:1, carSeatCompatibility:'conditional', allowedSituations:['outdoor','stroller','carrier','car'] }),

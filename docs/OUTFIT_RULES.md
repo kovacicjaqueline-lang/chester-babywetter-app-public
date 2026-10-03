@@ -74,6 +74,8 @@ Bei Kleidungsstücken mit mehreren Körperzonen kann `thermalWeightByZone` die W
 
 Das gleiche Prinzip gilt für situative Außenwärme: Ein Tragecover darf seinen eigenen Wärmeanteil gegen Oberkörper und bedeckte Beine verrechnen. Die Körperwärme der tragenden Person bleibt dagegen torso-orientiert; ohne Cover wird deshalb nicht automatisch die Hose dünner gewählt.
 
+Manuelle Kleidungsalternativen werden primär innerhalb desselben Slots und derselben Körperzone rebalanceiert. Ein wärmeres Oberteil darf Wärme mit anderen Oberkörperschichten verrechnen, aber nicht automatisch mit der Beinbekleidung. Beinbekleidung wird nur reduziert, wenn die zusätzliche Isolation die Beine tatsächlich bedeckt, etwa durch Overall, Fußsack, Decke oder Tragecover mit entsprechender `bodyZones`-Abdeckung. Der dünne Cardigan liegt wie dünner Pullover und Sweatshirt im Mid-Layer-Slot bei `thermalWeight: 2`; Fleece bleibt eine wärmere Stufe (`3`) und wird nicht als normale gleichwarme Pullover-Alternative angeboten.
+
 ## 3. Outdoor-Temperaturbaseline
 
 Baseline: Modus `outdoor`, Aktivität `normal`, trocken, keine starke Windexposition, kein zusätzlicher Wärmekredit.

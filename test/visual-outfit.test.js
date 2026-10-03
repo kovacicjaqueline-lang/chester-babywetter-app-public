@@ -189,31 +189,31 @@ test('representative outfit compositions have a second asset-path look in every 
   }
 });
 
-test('new blue and warm colorways compose distinct compatible outfits across palette modes', () => {
+test('new clothing colorways compose distinct compatible outfits across all palette modes', () => {
   const combinations = [
     {
-      label: 'dusty-blue sun outfit',
-      itemIds: ['short_sleeve_bodysuit', 'light_trousers', 'sun_hat', 'light_shoes'],
-      modes: ['all', 'neutral', 'cool']
+      label: 'dusty-blue shirt and fleece',
+      itemIds: ['light_long_sleeve_shirt', 'trousers', 'fleece_jacket'],
+      modes: ['all', 'neutral', 'cool', 'warm']
     },
     {
-      label: 'dusty-blue layered outfit',
+      label: 'terracotta quilted sweatshirt outfit',
       itemIds: ['long_sleeve_bodysuit', 'warm_trousers', 'sweatshirt'],
-      modes: ['all', 'neutral', 'cool']
+      modes: ['all', 'neutral', 'cool', 'warm']
     },
     {
-      label: 'terracotta layered outfit',
-      itemIds: ['short_sleeve_bodysuit', 'trousers', 'thin_sweater', 'warm_hat', 'warm_shoes'],
-      modes: ['all', 'neutral', 'warm']
+      label: 'terracotta leggings and sage knit outfit',
+      itemIds: ['long_sleeve_bodysuit', 'leggings', 'thin_sweater'],
+      modes: ['all', 'neutral', 'cool', 'warm']
     },
     {
-      label: 'terracotta stroller outfit',
-      itemIds: ['long_sleeve_bodysuit', 'trousers', 'stroller_warm_footmuff'],
-      modes: ['all', 'neutral', 'warm']
+      label: 'dusty-blue tights and fleece outfit',
+      itemIds: ['long_sleeve_bodysuit', 'tights', 'fleece_jacket'],
+      modes: ['all', 'neutral', 'cool', 'warm']
     },
     {
-      label: 'cord warm-trousers outfit',
-      itemIds: ['long_sleeve_bodysuit', 'warm_trousers', 'thin_sweater'],
+      label: 'terracotta tee and sage knit outfit',
+      itemIds: ['t_shirt', 'trousers', 'thin_sweater'],
       modes: ['all', 'neutral', 'cool', 'warm']
     }
   ];
@@ -258,7 +258,15 @@ test('new blue and warm colorways compose distinct compatible outfits across pal
     ['warm_trousers', 'sage_oat', 'moss-cord-01', ['all', 'neutral', 'cool', 'warm']],
     ['warm_trousers', 'dusty_blue_sand', 'dusty-blue-cord-01', ['all', 'neutral', 'cool']],
     ['warm_trousers', 'petrol_warm_beige', 'petrol-cord-01', ['all', 'neutral', 'cool', 'warm']],
-    ['long_sleeve_bodysuit', 'dusty_blue_sand', 'dusty-blue-greige-01', ['all', 'neutral', 'cool']]
+    ['long_sleeve_bodysuit', 'dusty_blue_sand', 'dusty-blue-greige-01', ['all', 'neutral', 'cool']],
+    ['t_shirt', 'terracotta_greige', 'terracotta-clay-01', ['all', 'neutral', 'warm']],
+    ['light_long_sleeve_shirt', 'dusty_blue_sand', 'dusty-blue-greige-01', ['all', 'neutral', 'cool']],
+    ['thin_sweater', 'sage_oat', 'sage-oat-01', ['all', 'neutral', 'cool', 'warm']],
+    ['fleece_jacket', 'dusty_blue_sand', 'dusty-blue-greige-01', ['all', 'neutral', 'cool']],
+    ['sweatshirt', 'terracotta_greige', 'terracotta-quilt-01', ['all', 'neutral', 'warm']],
+    ['light_trousers', 'terracotta_greige', 'terracotta-sand-stripe-01', ['all', 'neutral', 'warm']],
+    ['leggings', 'terracotta_greige', 'terracotta-rib-01', ['all', 'neutral', 'warm']],
+    ['tights', 'dusty_blue_sand', 'dusty-blue-oat-01', ['all', 'neutral', 'cool']]
   ];
   for (const [assetGroupId, themeId, variantId, modes] of expectedVariants) {
     for (const paletteMode of modes) {

@@ -258,15 +258,42 @@ test('manual stroller accessory lock remains in same session',()=>{
   assert.equal(slot(b,'stroller_thermal_accessory').selected.selectionSource,'manual_lock');
 });
 
-test('thin sweater to fleece lock keeps dry calm weather free of an automatic outer layer',()=>{
-  const w=weather(14);
+test('thin sweater to sweatshirt is an equivalent alternative at 16°C and leaves trousers unchanged',()=>{
+  const w=weather(16);
   const base=recommendOutfit(request(outdoor(),{w}));
-  const session=lockItem(createSession('s'),{slot:'mid',itemId:'fleece_jacket'});
-  const swapped=recommendOutfit(request(outdoor(),{w,session}));
   assert.equal(id(base,'mid'),'thin_sweater');
+  assert.equal(id(base,'legs'),'trousers');
+  const option=slot(base,'mid').alternatives.find((entry)=>entry.itemId==='sweatshirt');
+  assert.equal(option?.relation,'equivalent');
+  const swapped=recommendOutfit(request(outdoor(),{w,session:lockItem(createSession('sweatshirt'),{slot:'mid',itemId:'sweatshirt'})}));
+  assert.equal(id(swapped,'mid'),'sweatshirt');
+  assert.equal(id(swapped,'legs'),'trousers');
+});
+
+test('thin sweater to thin cardigan is an equivalent alternative at 16°C and leaves trousers unchanged',()=>{
+  const w=weather(16);
+  const base=recommendOutfit(request(outdoor(),{w}));
+  const option=slot(base,'mid').alternatives.find((entry)=>entry.itemId==='thin_cardigan');
+  assert.equal(option?.relation,'equivalent');
+  const swapped=recommendOutfit(request(outdoor(),{w,session:lockItem(createSession('cardigan'),{slot:'mid',itemId:'thin_cardigan'})}));
+  assert.equal(id(swapped,'mid'),'thin_cardigan');
+  assert.equal(id(swapped,'legs'),'trousers');
+});
+
+test('fleece jacket is offered only as a warmer alternative to thin mid-layers',()=>{
+  const r=recommendOutfit(request(outdoor(),{w:weather(16)}));
+  assert.equal(id(r,'mid'),'thin_sweater');
+  assert.equal(slot(r,'mid').alternatives.find((entry)=>entry.itemId==='fleece_jacket')?.relation,'warmer');
+});
+
+test('a warmer upper-body swap never automatically reduces leg clothing',()=>{
+  const w=weather(16);
+  const base=recommendOutfit(request(outdoor(),{w}));
+  const session=lockItem(createSession('warm-mid'),{slot:'mid',itemId:'fleece_jacket'});
+  const swapped=recommendOutfit(request(outdoor(),{w,session}));
   assert.equal(id(swapped,'mid'),'fleece_jacket');
-  assert.equal(id(base,'outer'),null);
-  assert.equal(id(swapped,'outer'),null);
+  assert.equal(id(swapped,'legs'),id(base,'legs'));
+  assert.equal(id(swapped,'legs'),'trousers');
 });
 
 test('alternatives are ordered equivalent then warmer then cooler',()=>{
@@ -296,9 +323,10 @@ test('thin sweater and normal sweatshirt are mutually similar alternatives; flee
 
 test('alternative projectedChanges contains whole-outfit rebalancing',()=>{
   const r=recommendOutfit(request(outdoor(),{w:weather(14)}));
-  const fleece=slot(r,'mid').alternatives.find(a=>a.itemId==='fleece_jacket');
-  assert.ok(fleece.projectedChanges.some(change=>change.slot==='mid'));
-  assert.ok(!fleece.projectedChanges.some(change=>change.slot==='outer'));
+  const sweatshirt=slot(r,'mid').alternatives.find(a=>a.itemId==='sweatshirt');
+  assert.ok(sweatshirt.projectedChanges.some(change=>change.slot==='mid'));
+  assert.ok(!sweatshirt.projectedChanges.some(change=>['outer','legs'].includes(change.slot)));
+  assert.equal(slot(r,'mid').alternatives.find(a=>a.itemId==='fleece_jacket')?.relation,'warmer');
 });
 
 test('precip probability below 40 alone adds no rain element',()=>{
