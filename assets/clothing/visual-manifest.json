@@ -22,7 +22,13 @@
     "transparent",
     "light_neutral",
     "cool_muted",
-    "warm_soft"
+    "warm_soft",
+    "pebble_greige",
+    "mushroom_taupe",
+    "slate_mist_grey_blue",
+    "sage_grey",
+    "stone_greige",
+    "graphite_greige"
   ],
   "themes": [
     {
@@ -1942,6 +1948,24 @@
           "taupe"
         ],
         "pattern": "solid"
+      },
+      {
+        "id": "mushroom-taupe-01",
+        "assetPath": "assets/clothing/trousers/mushroom-taupe-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "terracotta_greige",
+          "ocher_taupe",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "mushroom_taupe",
+          "taupe",
+          "greige",
+          "cool_muted"
+        ],
+        "pattern": "solid"
       }
     ],
     "sweatshirt": [
@@ -2239,6 +2263,22 @@
           "dusty_blue"
         ],
         "pattern": "solid"
+      },
+      {
+        "id": "stone-greige-01",
+        "assetPath": "assets/clothing/short_sleeve_bodysuit/stone-greige-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "ocher_taupe",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "stone_greige",
+          "greige",
+          "cool_muted"
+        ],
+        "pattern": "solid"
       }
     ],
     "long_sleeve_bodysuit": [
@@ -2276,6 +2316,23 @@
         ],
         "paletteTags": [
           "mauve"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "pebble-greige-01",
+        "assetPath": "assets/clothing/long_sleeve_bodysuit/pebble-greige-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "terracotta_greige",
+          "ocher_taupe",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "pebble_greige",
+          "greige",
+          "cool_muted"
         ],
         "pattern": "solid"
       }
@@ -2370,6 +2427,23 @@
         "paletteTags": [
           "ocher",
           "taupe"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "slate-mist-grey-blue-01",
+        "assetPath": "assets/clothing/light_long_sleeve_shirt/slate-mist-grey-blue-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "petrol_warm_beige",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "slate_mist_grey_blue",
+          "slate_blue",
+          "dusty_blue",
+          "cool_muted"
         ],
         "pattern": "solid"
       }
@@ -2516,6 +2590,23 @@
           "oat"
         ],
         "pattern": "fine_knit"
+      },
+      {
+        "id": "sage-grey-01",
+        "assetPath": "assets/clothing/thin_sweater/sage-grey-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "terracotta_greige",
+          "ocher_taupe",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "sage_grey",
+          "sage",
+          "cool_muted"
+        ],
+        "pattern": "fine_knit"
       }
     ],
     "fleece_jacket": [
@@ -2555,6 +2646,22 @@
         "paletteTags": [
           "terracotta",
           "oat"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "olive-stone-grey-01",
+        "assetPath": "assets/clothing/fleece_jacket/olive-stone-grey-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "ocher_taupe",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "sage_grey",
+          "sage",
+          "cool_muted"
         ],
         "pattern": "solid"
       }
@@ -2660,6 +2767,22 @@
         ],
         "paletteTags": [
           "sage"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "graphite-greige-01",
+        "assetPath": "assets/clothing/light_trousers/graphite-greige-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "ocher_taupe",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "graphite_greige",
+          "greige",
+          "cool_muted"
         ],
         "pattern": "solid"
       }
@@ -2823,6 +2946,24 @@
         ],
         "paletteTags": [
           "terracotta"
+        ],
+        "pattern": "fine_knit"
+      },
+      {
+        "id": "mushroom-taupe-02",
+        "assetPath": "assets/clothing/thin_cardigan/mushroom-taupe-02.webp",
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "terracotta_greige",
+          "ocher_taupe",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "mushroom_taupe",
+          "taupe",
+          "greige",
+          "cool_muted"
         ],
         "pattern": "fine_knit"
       }
