@@ -225,6 +225,31 @@ test('new clothing colorways compose distinct compatible outfits across all pale
       label: 'mauve corduroy outfit',
       itemIds: ['long_sleeve_bodysuit', 'warm_trousers', 'thin_sweater'],
       modes: ['all', 'neutral', 'cool', 'warm']
+    },
+    {
+      label: 'sage solid outfit',
+      itemIds: ['short_sleeve_bodysuit', 'light_trousers', 'thin_sweater'],
+      modes: ['all', 'neutral', 'cool', 'warm']
+    },
+    {
+      label: 'ochre solid outfit',
+      itemIds: ['light_long_sleeve_shirt', 'trousers', 'sweatshirt'],
+      modes: ['all', 'neutral', 'cool', 'warm']
+    },
+    {
+      label: 'dusty-blue tights outfit',
+      itemIds: ['long_sleeve_bodysuit', 'tights', 'thin_sweater'],
+      modes: ['all', 'neutral', 'cool', 'warm']
+    },
+    {
+      label: 'cocoa leggings outfit',
+      itemIds: ['long_sleeve_bodysuit', 'leggings', 'thin_sweater'],
+      modes: ['all', 'neutral', 'cool', 'warm']
+    },
+    {
+      label: 'terracotta sweatshirt outfit',
+      itemIds: ['long_sleeve_bodysuit', 'warm_trousers', 'sweatshirt'],
+      modes: ['all', 'neutral', 'cool', 'warm']
     }
   ];
 
@@ -285,7 +310,15 @@ test('new clothing colorways compose distinct compatible outfits across all pale
     ['light_trousers', 'sage_oat', 'sage-oat-stripe-01', ['all', 'neutral', 'cool', 'warm']],
     ['leggings', 'dusty_blue_sand', 'dusty-blue-rib-01', ['all', 'neutral', 'cool']],
     ['tights', 'terracotta_greige', 'terracotta-oat-01', ['all', 'neutral', 'warm']],
-    ['warm_trousers', 'mauve_cream', 'plum-cord-camel-tie-01', ['all', 'neutral', 'warm']]
+    ['warm_trousers', 'mauve_cream', 'plum-cord-camel-tie-01', ['all', 'neutral', 'warm']],
+    ['short_sleeve_bodysuit', 'dusty_blue_sand', 'dusty-blue-solid-01', ['all', 'neutral', 'cool']],
+    ['long_sleeve_bodysuit', 'mauve_cream', 'mauve-solid-01', ['all', 'neutral', 'warm']],
+    ['light_trousers', 'sage_oat', 'sage-solid-01', ['all', 'neutral', 'cool', 'warm']],
+    ['light_long_sleeve_shirt', 'ocher_taupe', 'ocher-solid-01', ['all', 'neutral', 'warm']],
+    ['leggings', 'ocher_taupe', 'cocoa-solid-01', ['all', 'neutral', 'warm']],
+    ['tights', 'dusty_blue_sand', 'dusty-blue-solid-01', ['all', 'neutral', 'cool']],
+    ['warm_trousers', 'petrol_warm_beige', 'petrol-solid-01', ['all', 'neutral', 'cool', 'warm']],
+    ['sweatshirt', 'terracotta_greige', 'terracotta-solid-01', ['all', 'neutral', 'warm']]
   ];
   for (const [assetGroupId, themeId, variantId, modes] of expectedVariants) {
     for (const paletteMode of modes) {
@@ -327,6 +360,7 @@ test('missing theme variant falls back cleanly to the original neutral fallback'
   restrictiveVisualManifest.assetOverrides.long_sleeve_bodysuit.neutral.themeIds = ['sage_oat'];
   restrictiveVisualManifest.assetOverrides.long_sleeve_bodysuit.boy.themeIds = ['dusty_blue_sand'];
   restrictiveVisualManifest.assetOverrides.long_sleeve_bodysuit.girl.themeIds = ['clay_cream'];
+  restrictiveVisualManifest.additionalVariants.long_sleeve_bodysuit = [];
   const catalog = buildVisualCatalog(assetManifest, restrictiveVisualManifest);
 
   const result = selectVisualVariant({

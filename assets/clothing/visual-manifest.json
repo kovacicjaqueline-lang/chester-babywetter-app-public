@@ -1870,6 +1870,19 @@
           "sand"
         ],
         "pattern": "fine_rib"
+      },
+      {
+        "id": "cocoa-solid-01",
+        "assetPath": "assets/clothing/leggings/cocoa-solid-01.webp",
+        "themeIds": [
+          "ocher_taupe",
+          "terracotta_greige"
+        ],
+        "paletteTags": [
+          "taupe",
+          "warm_beige"
+        ],
+        "pattern": "solid"
       }
     ],
     "trousers": [
@@ -1982,6 +1995,20 @@
           "ocher",
           "taupe",
           "sage"
+        ],
+        "pattern": "micro_quilt"
+      },
+      {
+        "id": "terracotta-solid-01",
+        "assetPath": "assets/clothing/sweatshirt/terracotta-solid-01.webp",
+        "themeIds": [
+          "clay_cream",
+          "terracotta_greige",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "terracotta",
+          "clay"
         ],
         "pattern": "micro_quilt"
       }
@@ -2200,6 +2227,18 @@
           "clay"
         ],
         "pattern": "solid"
+      },
+      {
+        "id": "dusty-blue-solid-01",
+        "assetPath": "assets/clothing/short_sleeve_bodysuit/dusty-blue-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue"
+        ],
+        "pattern": "solid"
       }
     ],
     "long_sleeve_bodysuit": [
@@ -2225,6 +2264,18 @@
         "paletteTags": [
           "dusty_blue",
           "greige"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "mauve-solid-01",
+        "assetPath": "assets/clothing/long_sleeve_bodysuit/mauve-solid-01.webp",
+        "themeIds": [
+          "mauve_cream",
+          "soft_lavender_sand"
+        ],
+        "paletteTags": [
+          "mauve"
         ],
         "pattern": "solid"
       }
@@ -2309,6 +2360,18 @@
           "greige"
         ],
         "pattern": "mini_motif"
+      },
+      {
+        "id": "ocher-solid-01",
+        "assetPath": "assets/clothing/light_long_sleeve_shirt/ocher-solid-01.webp",
+        "themeIds": [
+          "ocher_taupe"
+        ],
+        "paletteTags": [
+          "ocher",
+          "taupe"
+        ],
+        "pattern": "solid"
       }
     ],
     "warm_trousers": [
@@ -2404,6 +2467,17 @@
           "warm_beige"
         ],
         "pattern": "fine_rib"
+      },
+      {
+        "id": "petrol-solid-01",
+        "assetPath": "assets/clothing/warm_trousers/petrol-solid-01.webp",
+        "themeIds": [
+          "petrol_warm_beige"
+        ],
+        "paletteTags": [
+          "petrol"
+        ],
+        "pattern": "solid"
       }
     ],
     "thin_sweater": [
@@ -2524,6 +2598,18 @@
           "oat"
         ],
         "pattern": "fine_rib"
+      },
+      {
+        "id": "dusty-blue-solid-01",
+        "assetPath": "assets/clothing/tights/dusty-blue-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue"
+        ],
+        "pattern": "solid"
       }
     ],
     "light_trousers": [
@@ -2565,6 +2651,17 @@
           "oat"
         ],
         "pattern": "fine_stripe"
+      },
+      {
+        "id": "sage-solid-01",
+        "assetPath": "assets/clothing/light_trousers/sage-solid-01.webp",
+        "themeIds": [
+          "sage_oat"
+        ],
+        "paletteTags": [
+          "sage"
+        ],
+        "pattern": "solid"
       }
     ],
     "winter_overall": [
