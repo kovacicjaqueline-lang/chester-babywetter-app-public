@@ -475,7 +475,7 @@ test('all-color mode explores compatible legacy style variants across seeds', ()
 test('additional physical variants are explored without replacing the neutral fallback', () => {
   const catalog = buildVisualCatalog(assetManifest, visualManifest);
   const trousers = catalog.groupsById.trousers;
-  assert.equal(trousers.visualVariants.length, 6);
+  assert.equal(trousers.visualVariants.length, 7);
   assert.equal(trousers.visualVariants.filter((variant) => variant.isFallback).length, 1);
   const observed = new Set();
   for (let seed = 0; seed < 80; seed += 1) {
