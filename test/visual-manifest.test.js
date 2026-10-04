@@ -5,7 +5,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CLOTHING_CATALOG } from '../src/clothing-catalog.js';
-import { buildVisualCatalog } from '../src/visual-outfit.js';
+import { buildVisualCatalog, selectVisualVariant } from '../src/visual-outfit.js';
 
 const repoRoot = fileURLToPath(new URL('../', import.meta.url));
 const clothingRoot = join(repoRoot, 'assets', 'clothing');
@@ -249,6 +249,42 @@ test('warm palette has physical variants across the completed and remaining clot
     assert.ok(variant, `missing warm corduroy variant ${variantId}`);
     assert.equal(variant.pattern, 'fine_rib');
     assert.ok(variant.themeIds.some((themeId) => visualManifest.paletteModeProfiles[paletteMode].themeIds.includes(themeId)));
+  }
+});
+
+test('muted grey colorways stay visual-only and resolve in every palette mode', () => {
+  const expected = [
+    ['long_sleeve_bodysuit', 'pebble-greige-01', 'pebble_greige', 'solid'],
+    ['trousers', 'mushroom-taupe-01', 'mushroom_taupe', 'solid'],
+    ['light_long_sleeve_shirt', 'slate-mist-grey-blue-01', 'slate_mist_grey_blue', 'solid'],
+    ['thin_sweater', 'sage-grey-01', 'sage_grey', 'fine_knit']
+  ];
+  const catalog = buildVisualCatalog(assetManifest, visualManifest);
+
+  for (const [groupId, variantId, colorTag, pattern] of expected) {
+    const variant = visualManifest.additionalVariants[groupId].find((item) => item.id === variantId);
+    assert.ok(variant, `missing ${groupId} colorway ${variantId}`);
+    assert.equal(variant.pattern, pattern);
+    assert.ok(variant.paletteTags.includes(colorTag));
+    assert.deepEqual(Object.keys(variant).sort(), ['assetPath', 'id', 'paletteTags', 'pattern', 'themeIds'].sort());
+
+    for (const paletteMode of ['all', 'neutral', 'cool', 'warm']) {
+      assert.ok(
+        variant.themeIds.some((themeId) => visualManifest.paletteModeProfiles[paletteMode].themeIds.includes(themeId)),
+        `${paletteMode} can use ${groupId}::${variantId}`
+      );
+      const resolved = new Set();
+      for (let seed = 0; seed < 80; seed += 1) {
+        resolved.add(selectVisualVariant({
+          catalog,
+          assetGroupId: groupId,
+          themeId: 'sage_oat',
+          paletteMode,
+          seedKey: `${paletteMode}-${seed}`
+        }).variantId);
+      }
+      assert.ok(resolved.has(`${groupId}::${variantId}`), `${paletteMode} resolves ${groupId}::${variantId}`);
+    }
   }
 });
 

@@ -189,6 +189,29 @@ test('representative outfit compositions have a second asset-path look in every 
   }
 });
 
+test('muted grey outfit colors change asset paths but never the selected clothing items', () => {
+  const itemIds = ['long_sleeve_bodysuit', 'trousers', 'thin_sweater'];
+  const compositions = new Set();
+
+  for (const paletteMode of ['all', 'neutral', 'cool', 'warm']) {
+    for (const visualSeed of [0, 1]) {
+      const look = selectVisualLook({
+        recommendation: recommendation(itemIds),
+        assetManifest: realAssetManifest,
+        visualManifest,
+        paletteMode,
+        visualSeed
+      });
+      compositions.add(look.items.map((item) => item.assetPath).join('|'));
+      assert.ok(visualManifest.paletteModeProfiles[paletteMode].themeIds.includes(look.themeId));
+      assert.deepEqual(look.items.map((item) => item.itemId), itemIds);
+      assert.equal(look.items.every((item) => item.compatibleWithTheme), true, `${paletteMode} uses compatible colorways`);
+    }
+  }
+
+  assert.ok(compositions.size >= 2, 'palette modes expose at least two distinct asset-path compositions');
+});
+
 test('new clothing colorways compose distinct compatible outfits across all palette modes', () => {
   const combinations = [
     {
@@ -448,7 +471,7 @@ test('all-color mode explores compatible legacy style variants across seeds', ()
 test('additional physical variants are explored without replacing the neutral fallback', () => {
   const catalog = buildVisualCatalog(assetManifest, visualManifest);
   const trousers = catalog.groupsById.trousers;
-  assert.equal(trousers.visualVariants.length, 5);
+  assert.equal(trousers.visualVariants.length, 6);
   assert.equal(trousers.visualVariants.filter((variant) => variant.isFallback).length, 1);
   const observed = new Set();
   for (let seed = 0; seed < 80; seed += 1) {
