@@ -26,7 +26,9 @@
     "pebble_greige",
     "mushroom_taupe",
     "slate_mist_grey_blue",
-    "sage_grey"
+    "sage_grey",
+    "stone_greige",
+    "graphite_greige"
   ],
   "themes": [
     {
@@ -2261,6 +2263,22 @@
           "dusty_blue"
         ],
         "pattern": "solid"
+      },
+      {
+        "id": "stone-greige-01",
+        "assetPath": "assets/clothing/short_sleeve_bodysuit/stone-greige-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "ocher_taupe",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "stone_greige",
+          "greige",
+          "cool_muted"
+        ],
+        "pattern": "solid"
       }
     ],
     "long_sleeve_bodysuit": [
@@ -2630,6 +2648,22 @@
           "oat"
         ],
         "pattern": "solid"
+      },
+      {
+        "id": "olive-stone-grey-01",
+        "assetPath": "assets/clothing/fleece_jacket/olive-stone-grey-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "ocher_taupe",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "sage_grey",
+          "sage",
+          "cool_muted"
+        ],
+        "pattern": "solid"
       }
     ],
     "tights": [
@@ -2733,6 +2767,22 @@
         ],
         "paletteTags": [
           "sage"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "graphite-greige-01",
+        "assetPath": "assets/clothing/light_trousers/graphite-greige-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "ocher_taupe",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "graphite_greige",
+          "greige",
+          "cool_muted"
         ],
         "pattern": "solid"
       }
@@ -2896,6 +2946,24 @@
         ],
         "paletteTags": [
           "terracotta"
+        ],
+        "pattern": "fine_knit"
+      },
+      {
+        "id": "mushroom-taupe-02",
+        "assetPath": "assets/clothing/thin_cardigan/mushroom-taupe-02.webp",
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "terracotta_greige",
+          "ocher_taupe",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "mushroom_taupe",
+          "taupe",
+          "greige",
+          "cool_muted"
         ],
         "pattern": "fine_knit"
       }

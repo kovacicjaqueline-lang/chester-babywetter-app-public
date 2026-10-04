@@ -189,8 +189,8 @@ test('representative outfit compositions have a second asset-path look in every 
   }
 });
 
-test('muted grey outfit colors change asset paths but never the selected clothing items', () => {
-  const itemIds = ['long_sleeve_bodysuit', 'trousers', 'thin_sweater'];
+test('muted grey and neutral outfit colors change asset paths but never the selected clothing items', () => {
+  const itemIds = ['short_sleeve_bodysuit', 'light_trousers', 'thin_cardigan', 'fleece_jacket'];
   const compositions = new Set();
 
   for (const paletteMode of ['all', 'neutral', 'cool', 'warm']) {
@@ -341,7 +341,11 @@ test('new clothing colorways compose distinct compatible outfits across all pale
     ['leggings', 'ocher_taupe', 'cocoa-solid-01', ['all', 'neutral', 'warm']],
     ['tights', 'dusty_blue_sand', 'dusty-blue-solid-01', ['all', 'neutral', 'cool']],
     ['warm_trousers', 'petrol_warm_beige', 'petrol-solid-01', ['all', 'neutral', 'cool', 'warm']],
-    ['sweatshirt', 'terracotta_greige', 'terracotta-solid-01', ['all', 'neutral', 'warm']]
+    ['sweatshirt', 'terracotta_greige', 'terracotta-solid-01', ['all', 'neutral', 'warm']],
+    ['short_sleeve_bodysuit', 'sage_oat', 'stone-greige-01', ['all', 'neutral', 'cool', 'warm']],
+    ['light_trousers', 'sage_oat', 'graphite-greige-01', ['all', 'neutral', 'cool', 'warm']],
+    ['thin_cardigan', 'sage_oat', 'mushroom-taupe-02', ['all', 'neutral', 'cool', 'warm']],
+    ['fleece_jacket', 'sage_oat', 'olive-stone-grey-01', ['all', 'neutral', 'cool', 'warm']]
   ];
   for (const [assetGroupId, themeId, variantId, modes] of expectedVariants) {
     for (const paletteMode of modes) {

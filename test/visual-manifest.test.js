@@ -252,12 +252,16 @@ test('warm palette has physical variants across the completed and remaining clot
   }
 });
 
-test('muted grey colorways stay visual-only and resolve in every palette mode', () => {
+test('muted grey and neutral colorways stay visual-only and resolve in every palette mode', () => {
   const expected = [
     ['long_sleeve_bodysuit', 'pebble-greige-01', 'pebble_greige', 'solid'],
     ['trousers', 'mushroom-taupe-01', 'mushroom_taupe', 'solid'],
     ['light_long_sleeve_shirt', 'slate-mist-grey-blue-01', 'slate_mist_grey_blue', 'solid'],
-    ['thin_sweater', 'sage-grey-01', 'sage_grey', 'fine_knit']
+    ['thin_sweater', 'sage-grey-01', 'sage_grey', 'fine_knit'],
+    ['short_sleeve_bodysuit', 'stone-greige-01', 'stone_greige', 'solid'],
+    ['light_trousers', 'graphite-greige-01', 'graphite_greige', 'solid'],
+    ['thin_cardigan', 'mushroom-taupe-02', 'mushroom_taupe', 'fine_knit'],
+    ['fleece_jacket', 'olive-stone-grey-01', 'sage_grey', 'solid']
   ];
   const catalog = buildVisualCatalog(assetManifest, visualManifest);
 
