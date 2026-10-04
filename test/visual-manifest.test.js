@@ -305,6 +305,25 @@ test('insulated teddy jacket exposes the four planned colorways', () => {
   ]);
 });
 
+test('navy and berry colorways resolve across every palette mode', () => {
+  const expected = [
+    ['light_transition_jacket', 'navy-solid-01', 'navy'],
+    ['long_sleeve_bodysuit', 'berry-solid-01', 'berry']
+  ];
+
+  for (const [groupId, variantId, paletteTag] of expected) {
+    const variant = visualManifest.additionalVariants[groupId].find((item) => item.id === variantId);
+    assert.ok(variant, `missing ${groupId} colorway ${variantId}`);
+    assert.ok(variant.paletteTags.includes(paletteTag));
+    for (const paletteMode of ['all', 'neutral', 'cool', 'warm']) {
+      assert.ok(
+        variant.themeIds.some((themeId) => visualManifest.paletteModeProfiles[paletteMode].themeIds.includes(themeId)),
+        `${paletteMode} can use ${groupId}::${variantId}`
+      );
+    }
+  }
+});
+
 test('all referenced paths exist and no runtime image is accidentally unreferenced', () => {
   const referenced = new Set(allReferencedPaths());
   for (const relativePath of referenced) {

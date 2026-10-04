@@ -19,6 +19,8 @@
     "slate_blue",
     "soft_lavender",
     "soft_rose",
+    "berry",
+    "navy",
     "transparent",
     "light_neutral",
     "cool_muted",
@@ -2063,6 +2065,20 @@
           "sand"
         ],
         "pattern": "solid"
+      },
+      {
+        "id": "navy-solid-01",
+        "assetPath": "assets/clothing/light_transition_jacket/navy-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "petrol_warm_beige",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "navy",
+          "cool_muted"
+        ],
+        "pattern": "solid"
       }
     ],
     "thin_hat": [
@@ -2333,6 +2349,21 @@
           "pebble_greige",
           "greige",
           "cool_muted"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "berry-solid-01",
+        "assetPath": "assets/clothing/long_sleeve_bodysuit/berry-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "terracotta_greige",
+          "mauve_cream",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "berry",
+          "warm_soft"
         ],
         "pattern": "solid"
       }
