@@ -1843,6 +1843,46 @@
           "greige"
         ],
         "pattern": "micro_texture"
+      },
+      {
+        "id": "terracotta-rib-01",
+        "assetPath": "assets/clothing/leggings/terracotta-rib-01.webp",
+        "themeIds": [
+          "clay_cream",
+          "terracotta_greige",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "terracotta",
+          "clay"
+        ],
+        "pattern": "fine_rib"
+      },
+      {
+        "id": "dusty-blue-rib-01",
+        "assetPath": "assets/clothing/leggings/dusty-blue-rib-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue",
+          "sand"
+        ],
+        "pattern": "fine_rib"
+      },
+      {
+        "id": "cocoa-solid-01",
+        "assetPath": "assets/clothing/leggings/cocoa-solid-01.webp",
+        "themeIds": [
+          "ocher_taupe",
+          "terracotta_greige"
+        ],
+        "paletteTags": [
+          "taupe",
+          "warm_beige"
+        ],
+        "pattern": "solid"
       }
     ],
     "trousers": [
@@ -1875,9 +1915,49 @@
           "greige"
         ],
         "pattern": "solid"
+      },
+      {
+        "id": "terracotta-oat-01",
+        "assetPath": "assets/clothing/trousers/terracotta-oat-01.webp",
+        "themeIds": [
+          "terracotta_greige",
+          "ocher_taupe"
+        ],
+        "paletteTags": [
+          "terracotta",
+          "oat"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "olive-straight-01",
+        "assetPath": "assets/clothing/trousers/olive-straight-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "ocher_taupe"
+        ],
+        "paletteTags": [
+          "sage",
+          "ocher",
+          "taupe"
+        ],
+        "pattern": "solid"
       }
     ],
     "sweatshirt": [
+      {
+        "id": "sage-quilt-01",
+        "assetPath": "assets/clothing/sweatshirt/sage-quilt-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "petrol_warm_beige"
+        ],
+        "paletteTags": [
+          "sage",
+          "oat"
+        ],
+        "pattern": "micro_quilt"
+      },
       {
         "id": "dusty-blue-quilt-01",
         "assetPath": "assets/clothing/sweatshirt/dusty-blue-quilt-01.webp",
@@ -1891,15 +1971,44 @@
         "pattern": "micro_quilt"
       },
       {
-        "id": "sage-quilt-01",
-        "assetPath": "assets/clothing/sweatshirt/sage-quilt-01.webp",
+        "id": "terracotta-quilt-01",
+        "assetPath": "assets/clothing/sweatshirt/terracotta-quilt-01.webp",
         "themeIds": [
-          "sage_oat",
-          "petrol_warm_beige"
+          "clay_cream",
+          "terracotta_greige",
+          "apricot_oat"
         ],
         "paletteTags": [
-          "sage",
-          "oat"
+          "terracotta",
+          "clay"
+        ],
+        "pattern": "micro_quilt"
+      },
+      {
+        "id": "ocher-taupe-01",
+        "assetPath": "assets/clothing/sweatshirt/ocher-taupe-01.webp",
+        "themeIds": [
+          "ocher_taupe",
+          "sage_oat"
+        ],
+        "paletteTags": [
+          "ocher",
+          "taupe",
+          "sage"
+        ],
+        "pattern": "micro_quilt"
+      },
+      {
+        "id": "terracotta-solid-01",
+        "assetPath": "assets/clothing/sweatshirt/terracotta-solid-01.webp",
+        "themeIds": [
+          "clay_cream",
+          "terracotta_greige",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "terracotta",
+          "clay"
         ],
         "pattern": "micro_quilt"
       }
@@ -2039,6 +2148,20 @@
           "cream"
         ],
         "pattern": "solid"
+      },
+      {
+        "id": "dusty-blue-sand-01",
+        "assetPath": "assets/clothing/light_shoes/dusty-blue-sand-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue",
+          "sand",
+          "cream"
+        ],
+        "pattern": "solid"
       }
     ],
     "warm_socks_booties": [
@@ -2090,6 +2213,32 @@
           "oat"
         ],
         "pattern": "solid"
+      },
+      {
+        "id": "terracotta-clay-01",
+        "assetPath": "assets/clothing/short_sleeve_bodysuit/terracotta-clay-01.webp",
+        "themeIds": [
+          "clay_cream",
+          "terracotta_greige",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "terracotta",
+          "clay"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "dusty-blue-solid-01",
+        "assetPath": "assets/clothing/short_sleeve_bodysuit/dusty-blue-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue"
+        ],
+        "pattern": "solid"
       }
     ],
     "long_sleeve_bodysuit": [
@@ -2102,6 +2251,31 @@
         "paletteTags": [
           "terracotta",
           "greige"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "dusty-blue-greige-01",
+        "assetPath": "assets/clothing/long_sleeve_bodysuit/dusty-blue-greige-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue",
+          "greige"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "mauve-solid-01",
+        "assetPath": "assets/clothing/long_sleeve_bodysuit/mauve-solid-01.webp",
+        "themeIds": [
+          "mauve_cream",
+          "soft_lavender_sand"
+        ],
+        "paletteTags": [
+          "mauve"
         ],
         "pattern": "solid"
       }
@@ -2118,6 +2292,33 @@
           "warm_beige"
         ],
         "pattern": "solid"
+      },
+      {
+        "id": "terracotta-clay-01",
+        "assetPath": "assets/clothing/t_shirt/terracotta-clay-01.webp",
+        "themeIds": [
+          "clay_cream",
+          "terracotta_greige",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "terracotta",
+          "clay"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "dusty-blue-oat-02",
+        "assetPath": "assets/clothing/t_shirt/dusty-blue-oat-02.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue",
+          "oat"
+        ],
+        "pattern": "solid"
       }
     ],
     "light_long_sleeve_shirt": [
@@ -2130,6 +2331,45 @@
         "paletteTags": [
           "oat",
           "sage"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "dusty-blue-greige-01",
+        "assetPath": "assets/clothing/light_long_sleeve_shirt/dusty-blue-greige-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue",
+          "greige"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "terracotta-greige-01",
+        "assetPath": "assets/clothing/light_long_sleeve_shirt/terracotta-greige-01.webp",
+        "themeIds": [
+          "clay_cream",
+          "terracotta_greige",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "terracotta",
+          "greige"
+        ],
+        "pattern": "mini_motif"
+      },
+      {
+        "id": "ocher-solid-01",
+        "assetPath": "assets/clothing/light_long_sleeve_shirt/ocher-solid-01.webp",
+        "themeIds": [
+          "ocher_taupe"
+        ],
+        "paletteTags": [
+          "ocher",
+          "taupe"
         ],
         "pattern": "solid"
       }
@@ -2146,6 +2386,98 @@
           "taupe"
         ],
         "pattern": "solid"
+      },
+      {
+        "id": "terracotta-cord-01",
+        "assetPath": "assets/clothing/warm_trousers/terracotta-cord-01.webp",
+        "themeIds": [
+          "clay_cream",
+          "terracotta_greige",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "terracotta",
+          "clay"
+        ],
+        "pattern": "fine_rib"
+      },
+      {
+        "id": "cocoa-cord-01",
+        "assetPath": "assets/clothing/warm_trousers/cocoa-cord-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "terracotta_greige",
+          "ocher_taupe"
+        ],
+        "paletteTags": [
+          "ocher",
+          "taupe",
+          "warm_beige"
+        ],
+        "pattern": "fine_rib"
+      },
+      {
+        "id": "moss-cord-01",
+        "assetPath": "assets/clothing/warm_trousers/moss-cord-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "ocher_taupe"
+        ],
+        "paletteTags": [
+          "sage",
+          "oat",
+          "ocher"
+        ],
+        "pattern": "fine_rib"
+      },
+      {
+        "id": "dusty-blue-cord-01",
+        "assetPath": "assets/clothing/warm_trousers/dusty-blue-cord-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue",
+          "sand",
+          "greige"
+        ],
+        "pattern": "fine_rib"
+      },
+      {
+        "id": "petrol-cord-01",
+        "assetPath": "assets/clothing/warm_trousers/petrol-cord-01.webp",
+        "themeIds": [
+          "petrol_warm_beige"
+        ],
+        "paletteTags": [
+          "petrol",
+          "warm_beige"
+        ],
+        "pattern": "fine_rib"
+      },
+      {
+        "id": "plum-cord-camel-tie-01",
+        "assetPath": "assets/clothing/warm_trousers/plum-cord-camel-tie-01.webp",
+        "themeIds": [
+          "mauve_cream"
+        ],
+        "paletteTags": [
+          "mauve",
+          "warm_beige"
+        ],
+        "pattern": "fine_rib"
+      },
+      {
+        "id": "petrol-solid-01",
+        "assetPath": "assets/clothing/warm_trousers/petrol-solid-01.webp",
+        "themeIds": [
+          "petrol_warm_beige"
+        ],
+        "paletteTags": [
+          "petrol"
+        ],
+        "pattern": "solid"
       }
     ],
     "thin_sweater": [
@@ -2159,6 +2491,31 @@
           "terracotta"
         ],
         "pattern": "fine_knit"
+      },
+      {
+        "id": "sage-oat-01",
+        "assetPath": "assets/clothing/thin_sweater/sage-oat-01.webp",
+        "themeIds": [
+          "sage_oat"
+        ],
+        "paletteTags": [
+          "sage",
+          "oat"
+        ],
+        "pattern": "fine_knit"
+      },
+      {
+        "id": "dusty-blue-oat-01",
+        "assetPath": "assets/clothing/thin_sweater/dusty-blue-oat-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue",
+          "oat"
+        ],
+        "pattern": "fine_knit"
       }
     ],
     "fleece_jacket": [
@@ -2170,6 +2527,33 @@
         ],
         "paletteTags": [
           "sage",
+          "oat"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "dusty-blue-greige-01",
+        "assetPath": "assets/clothing/fleece_jacket/dusty-blue-greige-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue",
+          "greige"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "terracotta-oat-01",
+        "assetPath": "assets/clothing/fleece_jacket/terracotta-oat-01.webp",
+        "themeIds": [
+          "clay_cream",
+          "terracotta_greige",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "terracotta",
           "oat"
         ],
         "pattern": "solid"
@@ -2187,6 +2571,97 @@
           "oat"
         ],
         "pattern": "fine_rib"
+      },
+      {
+        "id": "dusty-blue-oat-01",
+        "assetPath": "assets/clothing/tights/dusty-blue-oat-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue",
+          "oat"
+        ],
+        "pattern": "fine_rib"
+      },
+      {
+        "id": "terracotta-oat-01",
+        "assetPath": "assets/clothing/tights/terracotta-oat-01.webp",
+        "themeIds": [
+          "clay_cream",
+          "terracotta_greige",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "terracotta",
+          "oat"
+        ],
+        "pattern": "fine_rib"
+      },
+      {
+        "id": "dusty-blue-solid-01",
+        "assetPath": "assets/clothing/tights/dusty-blue-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue"
+        ],
+        "pattern": "solid"
+      }
+    ],
+    "light_trousers": [
+      {
+        "id": "dusty-blue-stripe-01",
+        "assetPath": "assets/clothing/light_trousers/dusty-blue-stripe-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue",
+          "sand"
+        ],
+        "pattern": "fine_stripe"
+      },
+      {
+        "id": "terracotta-sand-stripe-01",
+        "assetPath": "assets/clothing/light_trousers/terracotta-sand-stripe-01.webp",
+        "themeIds": [
+          "clay_cream",
+          "terracotta_greige",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "terracotta",
+          "sand"
+        ],
+        "pattern": "fine_stripe"
+      },
+      {
+        "id": "sage-oat-stripe-01",
+        "assetPath": "assets/clothing/light_trousers/sage-oat-stripe-01.webp",
+        "themeIds": [
+          "sage_oat"
+        ],
+        "paletteTags": [
+          "sage",
+          "oat"
+        ],
+        "pattern": "fine_stripe"
+      },
+      {
+        "id": "sage-solid-01",
+        "assetPath": "assets/clothing/light_trousers/sage-solid-01.webp",
+        "themeIds": [
+          "sage_oat"
+        ],
+        "paletteTags": [
+          "sage"
+        ],
+        "pattern": "solid"
       }
     ],
     "winter_overall": [
@@ -2248,6 +2723,19 @@
           "oat"
         ],
         "pattern": "solid"
+      },
+      {
+        "id": "dusty-blue-sand-01",
+        "assetPath": "assets/clothing/sun_hat/dusty-blue-sand-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue",
+          "sand"
+        ],
+        "pattern": "solid"
       }
     ],
     "weatherproof_shoes": [
@@ -2299,6 +2787,22 @@
           "cream"
         ],
         "pattern": "solid"
+      }
+    ],
+    "stroller_warm_footmuff": [
+      {
+        "id": "clay-oat-01",
+        "assetPath": "assets/clothing/stroller_warm_footmuff/clay-oat-01.webp",
+        "themeIds": [
+          "clay_cream",
+          "terracotta_greige",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "terracotta",
+          "cream"
+        ],
+        "pattern": "micro_quilt"
       }
     ],
     "thin_cardigan": [

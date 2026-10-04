@@ -189,6 +189,154 @@ test('representative outfit compositions have a second asset-path look in every 
   }
 });
 
+test('new clothing colorways compose distinct compatible outfits across all palette modes', () => {
+  const combinations = [
+    {
+      label: 'dusty-blue shirt and fleece',
+      itemIds: ['light_long_sleeve_shirt', 'trousers', 'fleece_jacket'],
+      modes: ['all', 'neutral', 'cool', 'warm']
+    },
+    {
+      label: 'terracotta quilted sweatshirt outfit',
+      itemIds: ['long_sleeve_bodysuit', 'warm_trousers', 'sweatshirt'],
+      modes: ['all', 'neutral', 'cool', 'warm']
+    },
+    {
+      label: 'terracotta leggings and sage knit outfit',
+      itemIds: ['long_sleeve_bodysuit', 'leggings', 'thin_sweater'],
+      modes: ['all', 'neutral', 'cool', 'warm']
+    },
+    {
+      label: 'dusty-blue tights and fleece outfit',
+      itemIds: ['long_sleeve_bodysuit', 'tights', 'fleece_jacket'],
+      modes: ['all', 'neutral', 'cool', 'warm']
+    },
+    {
+      label: 'terracotta tee and sage knit outfit',
+      itemIds: ['t_shirt', 'trousers', 'thin_sweater'],
+      modes: ['all', 'neutral', 'cool', 'warm']
+    },
+    {
+      label: 'sage striped light-trouser outfit',
+      itemIds: ['short_sleeve_bodysuit', 'light_trousers', 'thin_sweater'],
+      modes: ['all', 'neutral', 'cool', 'warm']
+    },
+    {
+      label: 'mauve corduroy outfit',
+      itemIds: ['long_sleeve_bodysuit', 'warm_trousers', 'thin_sweater'],
+      modes: ['all', 'neutral', 'cool', 'warm']
+    },
+    {
+      label: 'sage solid outfit',
+      itemIds: ['short_sleeve_bodysuit', 'light_trousers', 'thin_sweater'],
+      modes: ['all', 'neutral', 'cool', 'warm']
+    },
+    {
+      label: 'ochre solid outfit',
+      itemIds: ['light_long_sleeve_shirt', 'trousers', 'sweatshirt'],
+      modes: ['all', 'neutral', 'cool', 'warm']
+    },
+    {
+      label: 'dusty-blue tights outfit',
+      itemIds: ['long_sleeve_bodysuit', 'tights', 'thin_sweater'],
+      modes: ['all', 'neutral', 'cool', 'warm']
+    },
+    {
+      label: 'cocoa leggings outfit',
+      itemIds: ['long_sleeve_bodysuit', 'leggings', 'thin_sweater'],
+      modes: ['all', 'neutral', 'cool', 'warm']
+    },
+    {
+      label: 'terracotta sweatshirt outfit',
+      itemIds: ['long_sleeve_bodysuit', 'warm_trousers', 'sweatshirt'],
+      modes: ['all', 'neutral', 'cool', 'warm']
+    }
+  ];
+
+  for (const combination of combinations) {
+    for (const paletteMode of combination.modes) {
+      const rec = recommendation(combination.itemIds);
+      const first = selectVisualLook({
+        recommendation:rec,
+        assetManifest:realAssetManifest,
+        visualManifest,
+        paletteMode,
+        visualSeed:0
+      });
+      const second = selectVisualLook({
+        recommendation:rec,
+        assetManifest:realAssetManifest,
+        visualManifest,
+        paletteMode,
+        visualSeed:1
+      });
+
+      assert.ok(visualManifest.paletteModeProfiles[paletteMode].themeIds.includes(first.themeId), `${paletteMode} / ${combination.label} picks an allowed theme`);
+      assert.ok(first.availableLookCount >= 2, `${paletteMode} / ${combination.label} has ${first.availableLookCount} looks`);
+      assert.notDeepEqual(first.items.map((item) => item.assetPath), second.items.map((item) => item.assetPath), `${paletteMode} / ${combination.label}`);
+      assert.deepEqual(first.items.map((item) => item.itemId), combination.itemIds);
+      assert.equal(first.items.every((item) => item.compatibleWithTheme), true, `${paletteMode} / ${combination.label} uses only matching variants`);
+    }
+  }
+
+  const catalog = buildVisualCatalog(realAssetManifest, visualManifest);
+  const expectedVariants = [
+    ['short_sleeve_bodysuit', 'terracotta_greige', 'terracotta-clay-01', ['all', 'neutral', 'warm']],
+    ['trousers', 'terracotta_greige', 'terracotta-oat-01', ['all', 'neutral', 'warm']],
+    ['light_trousers', 'dusty_blue_sand', 'dusty-blue-stripe-01', ['all', 'neutral', 'cool']],
+    ['sun_hat', 'dusty_blue_sand', 'dusty-blue-sand-01', ['all', 'neutral', 'cool']],
+    ['light_shoes', 'dusty_blue_sand', 'dusty-blue-sand-01', ['all', 'neutral', 'cool']],
+    ['stroller_warm_footmuff', 'terracotta_greige', 'clay-oat-01', ['all', 'neutral', 'warm']],
+    ['trousers', 'ocher_taupe', 'olive-straight-01', ['all', 'neutral', 'warm']],
+    ['warm_trousers', 'terracotta_greige', 'terracotta-cord-01', ['all', 'neutral', 'warm']],
+    ['warm_trousers', 'ocher_taupe', 'cocoa-cord-01', ['all', 'neutral', 'warm']],
+    ['warm_trousers', 'sage_oat', 'moss-cord-01', ['all', 'neutral', 'cool', 'warm']],
+    ['warm_trousers', 'dusty_blue_sand', 'dusty-blue-cord-01', ['all', 'neutral', 'cool']],
+    ['warm_trousers', 'petrol_warm_beige', 'petrol-cord-01', ['all', 'neutral', 'cool', 'warm']],
+    ['long_sleeve_bodysuit', 'dusty_blue_sand', 'dusty-blue-greige-01', ['all', 'neutral', 'cool']],
+    ['t_shirt', 'terracotta_greige', 'terracotta-clay-01', ['all', 'neutral', 'warm']],
+    ['light_long_sleeve_shirt', 'dusty_blue_sand', 'dusty-blue-greige-01', ['all', 'neutral', 'cool']],
+    ['thin_sweater', 'sage_oat', 'sage-oat-01', ['all', 'neutral', 'cool', 'warm']],
+    ['fleece_jacket', 'dusty_blue_sand', 'dusty-blue-greige-01', ['all', 'neutral', 'cool']],
+    ['sweatshirt', 'terracotta_greige', 'terracotta-quilt-01', ['all', 'neutral', 'warm']],
+    ['light_trousers', 'terracotta_greige', 'terracotta-sand-stripe-01', ['all', 'neutral', 'warm']],
+    ['leggings', 'terracotta_greige', 'terracotta-rib-01', ['all', 'neutral', 'warm']],
+    ['tights', 'dusty_blue_sand', 'dusty-blue-oat-01', ['all', 'neutral', 'cool']],
+    ['t_shirt', 'dusty_blue_sand', 'dusty-blue-oat-02', ['all', 'neutral', 'cool']],
+    ['light_long_sleeve_shirt', 'terracotta_greige', 'terracotta-greige-01', ['all', 'neutral', 'warm']],
+    ['thin_sweater', 'dusty_blue_sand', 'dusty-blue-oat-01', ['all', 'neutral', 'cool']],
+    ['fleece_jacket', 'terracotta_greige', 'terracotta-oat-01', ['all', 'neutral', 'warm']],
+    ['sweatshirt', 'ocher_taupe', 'ocher-taupe-01', ['all', 'neutral', 'warm']],
+    ['light_trousers', 'sage_oat', 'sage-oat-stripe-01', ['all', 'neutral', 'cool', 'warm']],
+    ['leggings', 'dusty_blue_sand', 'dusty-blue-rib-01', ['all', 'neutral', 'cool']],
+    ['tights', 'terracotta_greige', 'terracotta-oat-01', ['all', 'neutral', 'warm']],
+    ['warm_trousers', 'mauve_cream', 'plum-cord-camel-tie-01', ['all', 'neutral', 'warm']],
+    ['short_sleeve_bodysuit', 'dusty_blue_sand', 'dusty-blue-solid-01', ['all', 'neutral', 'cool']],
+    ['long_sleeve_bodysuit', 'mauve_cream', 'mauve-solid-01', ['all', 'neutral', 'warm']],
+    ['light_trousers', 'sage_oat', 'sage-solid-01', ['all', 'neutral', 'cool', 'warm']],
+    ['light_long_sleeve_shirt', 'ocher_taupe', 'ocher-solid-01', ['all', 'neutral', 'warm']],
+    ['leggings', 'ocher_taupe', 'cocoa-solid-01', ['all', 'neutral', 'warm']],
+    ['tights', 'dusty_blue_sand', 'dusty-blue-solid-01', ['all', 'neutral', 'cool']],
+    ['warm_trousers', 'petrol_warm_beige', 'petrol-solid-01', ['all', 'neutral', 'cool', 'warm']],
+    ['sweatshirt', 'terracotta_greige', 'terracotta-solid-01', ['all', 'neutral', 'warm']]
+  ];
+  for (const [assetGroupId, themeId, variantId, modes] of expectedVariants) {
+    for (const paletteMode of modes) {
+      const observed = new Set();
+      for (let seed = 0; seed < 80; seed += 1) {
+        observed.add(selectVisualVariant({
+          catalog,
+          assetGroupId,
+          themeId,
+          paletteMode,
+          seedKey:`${paletteMode}-${seed}`
+        }).variantId);
+      }
+      assert.ok(observed.has(`${assetGroupId}::${variantId}`), `${paletteMode} resolves ${assetGroupId}::${variantId} in ${themeId}`);
+    }
+  }
+});
+
 test('explicit theme anchor keeps theme and unchanged item assets stable across fachliche recomputation', () => {
   const firstRecommendation = recommendation(['long_sleeve_bodysuit', 'trousers', 'thin_sweater']);
   const changedRecommendation = recommendation(['long_sleeve_bodysuit', 'trousers'], { recommendationId: 'rec_2' });
@@ -212,6 +360,7 @@ test('missing theme variant falls back cleanly to the original neutral fallback'
   restrictiveVisualManifest.assetOverrides.long_sleeve_bodysuit.neutral.themeIds = ['sage_oat'];
   restrictiveVisualManifest.assetOverrides.long_sleeve_bodysuit.boy.themeIds = ['dusty_blue_sand'];
   restrictiveVisualManifest.assetOverrides.long_sleeve_bodysuit.girl.themeIds = ['clay_cream'];
+  restrictiveVisualManifest.additionalVariants.long_sleeve_bodysuit = [];
   const catalog = buildVisualCatalog(assetManifest, restrictiveVisualManifest);
 
   const result = selectVisualVariant({
@@ -299,7 +448,7 @@ test('all-color mode explores compatible legacy style variants across seeds', ()
 test('additional physical variants are explored without replacing the neutral fallback', () => {
   const catalog = buildVisualCatalog(assetManifest, visualManifest);
   const trousers = catalog.groupsById.trousers;
-  assert.equal(trousers.visualVariants.length, 3);
+  assert.equal(trousers.visualVariants.length, 5);
   assert.equal(trousers.visualVariants.filter((variant) => variant.isFallback).length, 1);
   const observed = new Set();
   for (let seed = 0; seed < 80; seed += 1) {

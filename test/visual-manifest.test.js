@@ -238,6 +238,18 @@ test('warm palette has physical variants across the completed and remaining clot
     assert.ok(variant, `missing generated warm variant for ${groupId}`);
     assert.ok(variant.themeIds.some((themeId) => visualManifest.paletteModeProfiles.warm.themeIds.includes(themeId)));
   }
+  for (const [variantId, paletteMode] of [
+    ['terracotta-cord-01', 'warm'],
+    ['cocoa-cord-01', 'warm'],
+    ['moss-cord-01', 'warm'],
+    ['dusty-blue-cord-01', 'cool'],
+    ['petrol-cord-01', 'warm']
+  ]) {
+    const variant = visualManifest.additionalVariants.warm_trousers.find((item) => item.id === variantId);
+    assert.ok(variant, `missing warm corduroy variant ${variantId}`);
+    assert.equal(variant.pattern, 'fine_rib');
+    assert.ok(variant.themeIds.some((themeId) => visualManifest.paletteModeProfiles[paletteMode].themeIds.includes(themeId)));
+  }
 });
 
 test('insulated teddy jacket exposes the four planned colorways', () => {
