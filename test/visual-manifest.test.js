@@ -308,7 +308,9 @@ test('insulated teddy jacket exposes the four planned colorways', () => {
 test('navy and berry colorways resolve across every palette mode', () => {
   const expected = [
     ['light_transition_jacket', 'navy-solid-01', 'navy'],
-    ['long_sleeve_bodysuit', 'berry-solid-01', 'berry']
+    ['long_sleeve_bodysuit', 'berry-solid-01', 'berry'],
+    ['thin_cardigan', 'aubergine-solid-01', 'aubergine'],
+    ['trousers', 'cognac-solid-01', 'cognac']
   ];
 
   for (const [groupId, variantId, paletteTag] of expected) {

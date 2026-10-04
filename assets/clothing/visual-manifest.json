@@ -21,6 +21,8 @@
     "soft_rose",
     "berry",
     "navy",
+    "aubergine",
+    "cognac",
     "transparent",
     "light_neutral",
     "cool_muted",
@@ -1968,6 +1970,22 @@
           "cool_muted"
         ],
         "pattern": "solid"
+      },
+      {
+        "id": "cognac-solid-01",
+        "assetPath": "assets/clothing/trousers/cognac-solid-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "terracotta_greige",
+          "ocher_taupe",
+          "mauve_cream"
+        ],
+        "paletteTags": [
+          "cognac",
+          "warm_soft"
+        ],
+        "pattern": "solid"
       }
     ],
     "sweatshirt": [
@@ -2994,6 +3012,21 @@
           "mushroom_taupe",
           "taupe",
           "greige",
+          "cool_muted"
+        ],
+        "pattern": "fine_knit"
+      },
+      {
+        "id": "aubergine-solid-01",
+        "assetPath": "assets/clothing/thin_cardigan/aubergine-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "mauve_cream",
+          "terracotta_greige",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "aubergine",
           "cool_muted"
         ],
         "pattern": "fine_knit"
