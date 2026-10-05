@@ -107,6 +107,41 @@ test('UV protection still selects a sun hat when no thermal hat is needed',()=>{
   assert.equal(itemId(result,'head'),'sun_hat');
 });
 
+test('16 to below 18 C keeps a thin thermal hat; from 18 C calm weather does not',()=>{
+  const contexts = [
+    outdoor({ sunExposure:'shade' }),
+    stroller({ sunExposure:'shade' }),
+    carrier({ sunExposure:'shade' })
+  ];
+
+  for (const context of contexts) {
+    for (const temp of [16,17.9]) {
+      const result = recommendOutfit(request(context,temp));
+      assert.equal(itemId(result,'head'),'thin_hat',`${context.mode} at ${temp} C should keep a thin hat`);
+    }
+
+    const mild = recommendOutfit(request(context,18));
+    assert.equal(itemId(mild,'head'),null,`${context.mode} at 18 C should not add a thermal hat in calm weather`);
+  }
+});
+
+test('18 to below 20 C still adds a thin hat when wind protection requires it',()=>{
+  const contexts = [
+    outdoor({ sunExposure:'shade' }),
+    stroller({ sunExposure:'shade' }),
+    carrier({ sunExposure:'shade' })
+  ];
+
+  for (const context of contexts) {
+    const req = request(context,18);
+    req.weather.current.windSpeedKmh = 20;
+    req.weather.current.windGustKmh = 22;
+    const result = recommendOutfit(req);
+    assert.equal(itemId(result,'head'),'thin_hat',`${context.mode} should add a thin hat for wind at 18 C`);
+    assert.ok(result.ruleTrace.some((entry) => entry.reasonCode === 'WIND_HEAD_PROTECTION_REQUIRED'));
+  }
+});
+
 test('manual head-slot changes do not rebalance torso or outerwear',()=>{
   const context = outdoor({ sunExposure:'shade' });
   const base = recommendOutfit(request(context,10));
