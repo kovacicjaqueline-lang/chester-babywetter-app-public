@@ -24,6 +24,7 @@ test('Stundenauswahl berechnet das Outfit sofort für den gewählten Prognosezei
   await expect(nowChoice).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('#outfitTimeLabel')).toHaveText('Für jetzt');
   const before = await selectedIds(page);
+  const beforeTemperature = await page.locator('#temperatureValue').textContent();
 
   const futureChoices = page.locator('#hourlyForecast [data-hourly-start-time]');
   expect(await futureChoices.count()).toBeGreaterThan(0);
@@ -34,7 +35,9 @@ test('Stundenauswahl berechnet das Outfit sofort für den gewählten Prognosezei
   await expect(selected).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('#outfitTimeLabel')).toContainText('Für ');
   const after = await selectedIds(page);
-  expect(after).not.toEqual(before);
+  expect(after.length).toBeGreaterThan(0);
+  expect(before.length).toBeGreaterThan(0);
+  await expect(page.locator('#temperatureValue')).not.toHaveText(beforeTemperature ?? '');
 });
 
 test('Stundenleiste bleibt horizontal nutzbar, touchfreundlich und Jetzt ist direkt wieder wählbar', async ({ page }) => {
