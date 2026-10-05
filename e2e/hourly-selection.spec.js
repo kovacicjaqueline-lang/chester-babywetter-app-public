@@ -12,10 +12,6 @@ async function chooseSituation(page, mode) {
   await page.locator('#applySituationButton').click();
 }
 
-async function selectedIds(page) {
-  return page.locator('#outfitGrid [data-item-id]').evaluateAll((nodes) => nodes.map((node) => node.dataset.itemId));
-}
-
 test('Stundenauswahl berechnet das Outfit sofort für den gewählten Prognosezeitpunkt neu', async ({ page }) => {
   await openDemo(page);
   await chooseSituation(page, 'outdoor');
@@ -23,18 +19,20 @@ test('Stundenauswahl berechnet das Outfit sofort für den gewählten Prognosezei
   const nowChoice = page.locator('#hourlyForecast [data-hourly-choice="now"]');
   await expect(nowChoice).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('#outfitTimeLabel')).toHaveText('Für jetzt');
-  const before = await selectedIds(page);
+  await expect(page.locator('#outfitGrid [data-item-id="rain_jacket"]')).toHaveCount(0);
 
   const futureChoices = page.locator('#hourlyForecast [data-hourly-start-time]');
-  expect(await futureChoices.count()).toBeGreaterThan(0);
-  const futureTime = await futureChoices.last().getAttribute('data-hourly-start-time');
-  await futureChoices.last().click();
+  expect(await futureChoices.count()).toBeGreaterThan(1);
+  const rainyChoice = futureChoices.nth(1);
+  const futureTime = await rainyChoice.getAttribute('data-hourly-start-time');
+  await rainyChoice.click();
 
   const selected = page.locator(`#hourlyForecast [data-hourly-start-time="${futureTime}"]`);
   await expect(selected).toHaveAttribute('aria-pressed', 'true');
+  await expect(nowChoice).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.locator('#outfitTimeLabel')).not.toHaveText('Für jetzt');
   await expect(page.locator('#outfitTimeLabel')).toContainText('Für ');
-  const after = await selectedIds(page);
-  expect(after).not.toEqual(before);
+  await expect(page.locator('#outfitGrid [data-item-id="rain_jacket"]')).toHaveCount(1);
 });
 
 test('Stundenleiste bleibt horizontal nutzbar, touchfreundlich und Jetzt ist direkt wieder wählbar', async ({ page }) => {

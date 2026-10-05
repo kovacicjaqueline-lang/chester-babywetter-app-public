@@ -112,13 +112,23 @@ UV-/Sonnenregeln bleiben aktiv; Sonnenschutz wird durch leichte Bedeckung statt 
 - Socken,
 - funktionale Außenschicht nur bei Wind/Regen.
 
-### `16 bis <20 °C` – kühl
+### `16 bis <18 °C` – kühl
 
 - Langarmbody,
 - Hose/Leggings,
 - dünner Pullover/Sweatshirt,
 - Socken,
+- dünne Mütze,
 - bei Wind leichte windschützende Außenschicht.
+
+### `18 bis <20 °C` – kühl bis mild
+
+- Langarmbody,
+- Hose/Leggings,
+- dünner Pullover/Sweatshirt,
+- Socken,
+- keine thermische Kopfbedeckung allein wegen der Temperatur,
+- bei Wind leichte windschützende Außenschicht; die Kopf-/Ohrenschutzregel aus Abschnitt 5.4 bleibt aktiv.
 
 ### `14 bis <16 °C` – deutlich kühl
 
