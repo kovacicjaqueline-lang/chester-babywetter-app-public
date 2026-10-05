@@ -2157,6 +2157,65 @@
           "clay"
         ],
         "pattern": "micro_quilt"
+      },
+      {
+        "id": "navy-solid-01",
+        "assetPath": "assets/clothing/sweatshirt/navy-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "petrol_warm_beige",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "navy",
+          "cool_muted"
+        ],
+        "pattern": "micro_quilt"
+      },
+      {
+        "id": "berry-solid-01",
+        "assetPath": "assets/clothing/sweatshirt/berry-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "terracotta_greige",
+          "mauve_cream",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "berry",
+          "warm_soft"
+        ],
+        "pattern": "micro_quilt"
+      },
+      {
+        "id": "aubergine-solid-01",
+        "assetPath": "assets/clothing/sweatshirt/aubergine-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "mauve_cream",
+          "terracotta_greige",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "aubergine",
+          "cool_muted"
+        ],
+        "pattern": "micro_quilt"
+      },
+      {
+        "id": "cognac-solid-01",
+        "assetPath": "assets/clothing/sweatshirt/cognac-solid-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "terracotta_greige",
+          "ocher_taupe"
+        ],
+        "paletteTags": [
+          "cognac",
+          "warm_soft"
+        ],
+        "pattern": "micro_quilt"
       }
     ],
     "light_transition_jacket": [
@@ -2197,6 +2256,51 @@
         "paletteTags": [
           "navy",
           "cool_muted"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "berry-solid-01",
+        "assetPath": "assets/clothing/light_transition_jacket/berry-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "terracotta_greige",
+          "mauve_cream",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "berry",
+          "warm_soft"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "aubergine-solid-01",
+        "assetPath": "assets/clothing/light_transition_jacket/aubergine-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "mauve_cream",
+          "terracotta_greige",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "aubergine",
+          "cool_muted"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "cognac-solid-01",
+        "assetPath": "assets/clothing/light_transition_jacket/cognac-solid-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "terracotta_greige",
+          "ocher_taupe"
+        ],
+        "paletteTags": [
+          "cognac",
+          "warm_soft"
         ],
         "pattern": "solid"
       }
@@ -2278,6 +2382,65 @@
           "terracotta",
           "sage",
           "cream"
+        ],
+        "pattern": "micro_texture"
+      },
+      {
+        "id": "navy-solid-01",
+        "assetPath": "assets/clothing/insulated_transition_jacket/navy-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "petrol_warm_beige",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "navy",
+          "cool_muted"
+        ],
+        "pattern": "micro_texture"
+      },
+      {
+        "id": "berry-solid-01",
+        "assetPath": "assets/clothing/insulated_transition_jacket/berry-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "terracotta_greige",
+          "mauve_cream",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "berry",
+          "warm_soft"
+        ],
+        "pattern": "micro_texture"
+      },
+      {
+        "id": "aubergine-solid-01",
+        "assetPath": "assets/clothing/insulated_transition_jacket/aubergine-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "mauve_cream",
+          "terracotta_greige",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "aubergine",
+          "cool_muted"
+        ],
+        "pattern": "micro_texture"
+      },
+      {
+        "id": "cognac-solid-01",
+        "assetPath": "assets/clothing/insulated_transition_jacket/cognac-solid-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "terracotta_greige",
+          "ocher_taupe"
+        ],
+        "paletteTags": [
+          "cognac",
+          "warm_soft"
         ],
         "pattern": "micro_texture"
       }
@@ -3038,6 +3201,65 @@
           "cool_muted"
         ],
         "pattern": "fine_knit"
+      },
+      {
+        "id": "navy-solid-01",
+        "assetPath": "assets/clothing/thin_sweater/navy-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "petrol_warm_beige",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "navy",
+          "cool_muted"
+        ],
+        "pattern": "fine_knit"
+      },
+      {
+        "id": "berry-solid-01",
+        "assetPath": "assets/clothing/thin_sweater/berry-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "terracotta_greige",
+          "mauve_cream",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "berry",
+          "warm_soft"
+        ],
+        "pattern": "fine_knit"
+      },
+      {
+        "id": "aubergine-solid-01",
+        "assetPath": "assets/clothing/thin_sweater/aubergine-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "mauve_cream",
+          "terracotta_greige",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "aubergine",
+          "cool_muted"
+        ],
+        "pattern": "fine_knit"
+      },
+      {
+        "id": "cognac-solid-01",
+        "assetPath": "assets/clothing/thin_sweater/cognac-solid-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "terracotta_greige",
+          "ocher_taupe"
+        ],
+        "paletteTags": [
+          "cognac",
+          "warm_soft"
+        ],
+        "pattern": "fine_knit"
       }
     ],
     "fleece_jacket": [
@@ -3093,6 +3315,65 @@
           "sage_grey",
           "sage",
           "cool_muted"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "navy-solid-01",
+        "assetPath": "assets/clothing/fleece_jacket/navy-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "petrol_warm_beige",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "navy",
+          "cool_muted"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "berry-solid-01",
+        "assetPath": "assets/clothing/fleece_jacket/berry-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "terracotta_greige",
+          "mauve_cream",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "berry",
+          "warm_soft"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "aubergine-solid-01",
+        "assetPath": "assets/clothing/fleece_jacket/aubergine-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "mauve_cream",
+          "terracotta_greige",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "aubergine",
+          "cool_muted"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "cognac-solid-01",
+        "assetPath": "assets/clothing/fleece_jacket/cognac-solid-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "terracotta_greige",
+          "ocher_taupe"
+        ],
+        "paletteTags": [
+          "cognac",
+          "warm_soft"
         ],
         "pattern": "solid"
       }
@@ -3177,6 +3458,36 @@
           "warm_soft"
         ],
         "pattern": "solid"
+      },
+      {
+        "id": "aubergine-solid-01",
+        "assetPath": "assets/clothing/tights/aubergine-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "mauve_cream",
+          "terracotta_greige",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "aubergine",
+          "cool_muted"
+        ],
+        "pattern": "fine_rib"
+      },
+      {
+        "id": "cognac-solid-01",
+        "assetPath": "assets/clothing/tights/cognac-solid-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "terracotta_greige",
+          "ocher_taupe"
+        ],
+        "paletteTags": [
+          "cognac",
+          "warm_soft"
+        ],
+        "pattern": "fine_rib"
       }
     ],
     "light_trousers": [
@@ -3500,6 +3811,172 @@
           "cool_muted"
         ],
         "pattern": "fine_knit"
+      },
+      {
+        "id": "navy-solid-01",
+        "assetPath": "assets/clothing/thin_cardigan/navy-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "petrol_warm_beige",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "navy",
+          "cool_muted"
+        ],
+        "pattern": "fine_knit"
+      },
+      {
+        "id": "berry-solid-01",
+        "assetPath": "assets/clothing/thin_cardigan/berry-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "terracotta_greige",
+          "mauve_cream",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "berry",
+          "warm_soft"
+        ],
+        "pattern": "fine_knit"
+      },
+      {
+        "id": "cognac-solid-01",
+        "assetPath": "assets/clothing/thin_cardigan/cognac-solid-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "terracotta_greige",
+          "ocher_taupe"
+        ],
+        "paletteTags": [
+          "cognac",
+          "warm_soft"
+        ],
+        "pattern": "fine_knit"
+      }
+    ],
+    "softshell_jacket": [
+      {
+        "id": "navy-solid-01",
+        "assetPath": "assets/clothing/softshell_jacket/navy-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "petrol_warm_beige",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "navy",
+          "cool_muted"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "berry-solid-01",
+        "assetPath": "assets/clothing/softshell_jacket/berry-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "terracotta_greige",
+          "mauve_cream",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "berry",
+          "warm_soft"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "aubergine-solid-01",
+        "assetPath": "assets/clothing/softshell_jacket/aubergine-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "mauve_cream",
+          "terracotta_greige",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "aubergine",
+          "cool_muted"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "cognac-solid-01",
+        "assetPath": "assets/clothing/softshell_jacket/cognac-solid-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "terracotta_greige",
+          "ocher_taupe"
+        ],
+        "paletteTags": [
+          "cognac",
+          "warm_soft"
+        ],
+        "pattern": "solid"
+      }
+    ],
+    "rain_jacket": [
+      {
+        "id": "navy-solid-01",
+        "assetPath": "assets/clothing/rain_jacket/navy-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "petrol_warm_beige",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "navy",
+          "cool_muted"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "berry-solid-01",
+        "assetPath": "assets/clothing/rain_jacket/berry-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "terracotta_greige",
+          "mauve_cream",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "berry",
+          "warm_soft"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "aubergine-solid-01",
+        "assetPath": "assets/clothing/rain_jacket/aubergine-solid-01.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "mauve_cream",
+          "terracotta_greige",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "aubergine",
+          "cool_muted"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "cognac-solid-01",
+        "assetPath": "assets/clothing/rain_jacket/cognac-solid-01.webp",
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "terracotta_greige",
+          "ocher_taupe"
+        ],
+        "paletteTags": [
+          "cognac",
+          "warm_soft"
+        ],
+        "pattern": "solid"
       }
     ]
   }
