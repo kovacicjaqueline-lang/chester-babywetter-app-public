@@ -41,9 +41,9 @@ const changedSlots = (a,b,phase='main') => {
 test('engine is deterministic for identical input',()=>{ const r=request(outdoor()); assert.deepEqual(recommendOutfit(r),recommendOutfit(r)); });
 
 test('calibrated temperature bands are exact',()=>{
-  const cases=[[-5,'below_0'],[-0.01,'below_0'],[0,'0_to_3'],[2.99,'0_to_3'],[3,'3_to_8'],[8,'8_to_10'],[9.99,'8_to_10'],[10,'10_to_12'],[11.99,'10_to_12'],[12,'12_to_14'],[13.99,'12_to_14'],[14,'14_to_16'],[15.99,'14_to_16'],[16,'16_to_20'],[20,'20_to_24'],[24,'24_to_28'],[28,'28_to_30'],[30,'30_plus'],[40,'30_plus']];
+  const cases=[[-5,'below_0'],[-0.01,'below_0'],[0,'0_to_3'],[2.99,'0_to_3'],[3,'3_to_8'],[8,'8_to_10'],[9.99,'8_to_10'],[10,'10_to_12'],[11.99,'10_to_12'],[12,'12_to_14'],[13.99,'12_to_14'],[14,'14_to_16'],[15.99,'14_to_16'],[16,'16_to_18'],[17.99,'16_to_18'],[18,'18_to_20'],[19.99,'18_to_20'],[20,'20_to_24'],[24,'24_to_28'],[28,'28_to_30'],[30,'30_plus'],[40,'30_plus']];
   for (const [t,expected] of cases) assert.equal(temperatureBandFor(t).id,expected);
-  assert.equal(TEMPERATURE_BANDS.length,12);
+  assert.equal(TEMPERATURE_BANDS.length,13);
 });
 
 test('10 C uses the light transition jacket without stacking a mid layer',()=>{
