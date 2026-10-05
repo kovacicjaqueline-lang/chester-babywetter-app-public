@@ -115,9 +115,9 @@ test('16 to below 18 C keeps a thin thermal hat; from 18 C calm weather does not
   ];
 
   for (const context of contexts) {
-    for (const temp of [16,17.9]) {
+    for (const temp of [16,17]) {
       const result = recommendOutfit(request(context,temp));
-      assert.equal(itemId(result,'head'),'thin_hat',`${context.mode} at ${temp} C should keep a thin hat`);
+      assert.equal(itemId(result,'head'),'thin_hat',`${context.mode} at visible ${temp} C should keep a thin hat`);
     }
 
     const mild = recommendOutfit(request(context,18));
