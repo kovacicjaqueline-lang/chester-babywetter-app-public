@@ -292,14 +292,25 @@ test('muted grey and neutral colorways stay visual-only and resolve in every pal
   }
 });
 
-test('insulated teddy jacket exposes the four planned colorways', () => {
+test('insulated teddy jacket exposes the planned colorways', () => {
   const variants = visualManifest.additionalVariants.insulated_transition_jacket;
-  assert.deepEqual(variants.map((variant) => variant.id), ['dusty-blue-01', 'sand-greige-01', 'terracotta-olive-01']);
-  assert.deepEqual(variants.flatMap((variant) => variant.themeIds).sort(), [
+  assert.deepEqual(variants.map((variant) => variant.id), [
+    'dusty-blue-01',
+    'sand-greige-01',
+    'terracotta-olive-01',
+    'navy-solid-01',
+    'berry-solid-01',
+    'aubergine-solid-01',
+    'cognac-solid-01'
+  ]);
+  assert.deepEqual([...new Set(variants.flatMap((variant) => variant.themeIds))].sort(), [
     'apricot_oat',
     'clay_cream',
     'dusty_blue_sand',
+    'mauve_cream',
     'ocher_taupe',
+    'petrol_warm_beige',
+    'sage_oat',
     'slate_blue_greige',
     'terracotta_greige'
   ]);
