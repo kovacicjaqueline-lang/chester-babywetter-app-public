@@ -292,17 +292,49 @@ test('muted grey and neutral colorways stay visual-only and resolve in every pal
   }
 });
 
-test('insulated teddy jacket exposes the four planned colorways', () => {
+test('insulated teddy jacket exposes the planned colorways', () => {
   const variants = visualManifest.additionalVariants.insulated_transition_jacket;
-  assert.deepEqual(variants.map((variant) => variant.id), ['dusty-blue-01', 'sand-greige-01', 'terracotta-olive-01']);
-  assert.deepEqual(variants.flatMap((variant) => variant.themeIds).sort(), [
+  assert.deepEqual(variants.map((variant) => variant.id), [
+    'dusty-blue-01',
+    'sand-greige-01',
+    'terracotta-olive-01',
+    'navy-solid-01',
+    'berry-solid-01',
+    'aubergine-solid-01',
+    'cognac-solid-01'
+  ]);
+  assert.deepEqual([...new Set(variants.flatMap((variant) => variant.themeIds))].sort(), [
     'apricot_oat',
     'clay_cream',
     'dusty_blue_sand',
+    'mauve_cream',
     'ocher_taupe',
+    'petrol_warm_beige',
+    'sage_oat',
     'slate_blue_greige',
     'terracotta_greige'
   ]);
+});
+
+test('navy and berry colorways resolve across every palette mode', () => {
+  const expected = [
+    ['light_transition_jacket', 'navy-solid-01', 'navy'],
+    ['long_sleeve_bodysuit', 'berry-solid-01', 'berry'],
+    ['thin_cardigan', 'aubergine-solid-01', 'aubergine'],
+    ['trousers', 'cognac-solid-01', 'cognac']
+  ];
+
+  for (const [groupId, variantId, paletteTag] of expected) {
+    const variant = visualManifest.additionalVariants[groupId].find((item) => item.id === variantId);
+    assert.ok(variant, `missing ${groupId} colorway ${variantId}`);
+    assert.ok(variant.paletteTags.includes(paletteTag));
+    for (const paletteMode of ['all', 'neutral', 'cool', 'warm']) {
+      assert.ok(
+        variant.themeIds.some((themeId) => visualManifest.paletteModeProfiles[paletteMode].themeIds.includes(themeId)),
+        `${paletteMode} can use ${groupId}::${variantId}`
+      );
+    }
+  }
 });
 
 test('all referenced paths exist and no runtime image is accidentally unreferenced', () => {
