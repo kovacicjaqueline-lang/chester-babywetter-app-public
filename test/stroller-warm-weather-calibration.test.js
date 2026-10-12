@@ -174,6 +174,29 @@ test('very active stroller still respects a manually selected thermal accessory'
   assert.equal(accessory.selected.selectionSource,'manual_lock');
 });
 
+test('removing stroller warmth accessory restores warmer body clothing and keeps slot addable', () => {
+  const context = stroller({ strollerState:'awake', activity:'active' });
+  const accessorySession = lockItem(createSession('session_stroller_accessory_remove'), {
+    slot:'stroller_thermal_accessory',
+    itemId:'stroller_light_footmuff'
+  });
+  const removalSession = lockItem(accessorySession, {
+    slot:'stroller_thermal_accessory',
+    itemId:'stroller_thermal_none'
+  });
+  const withAccessory = recommend(context, weather(9), accessorySession);
+  const removed = recommend(context, weather(9), removalSession);
+
+  assert.equal(item(withAccessory,'stroller_thermal_accessory'),'stroller_light_footmuff');
+  assert.equal(item(removed,'stroller_thermal_accessory'),'stroller_thermal_none');
+  assert.equal(item(withAccessory,'legs'),'light_trousers');
+  assert.equal(item(removed,'legs'),'trousers');
+
+  const addableAccessory = removed.addableSlots.find((entry) => entry.slot === 'stroller_thermal_accessory');
+  assert.ok(addableAccessory);
+  assert.ok(addableAccessory.alternatives.some((entry) => entry.itemId === 'stroller_light_footmuff'));
+});
+
 test('very active stroller can be lighter than awake in warm weather', () => {
   const mildWeather = weather(23);
   const awakeMild = recommend(stroller({ strollerState:'awake', activity:'normal' }), mildWeather);
