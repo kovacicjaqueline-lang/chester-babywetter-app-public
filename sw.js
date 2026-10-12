@@ -1,5 +1,5 @@
-const CACHE_NAME = 'babywetter-shell-v0.2.0-assets27';
-const SHELL_REVISION = '2026-09-27-day-trip-location';
+const CACHE_NAME = 'babywetter-shell-v0.2.0-assets28';
+const SHELL_REVISION = '2026-10-12-stroller-warm-accessory-rebalance';
 const ASSET_MANIFEST_PATH = '/assets/clothing/manifest.json';
 const VISUAL_MANIFEST_PATH = '/assets/clothing/visual-manifest.json';
 const SHELL = [
