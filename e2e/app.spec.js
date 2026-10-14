@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 
-const APP_SHELL_CACHE = 'babywetter-shell-v0.2.0-assets29';
+const APP_SHELL_CACHE = 'babywetter-shell-v0.2.0-assets31';
 
 async function openDemo(page) {
   await page.goto('/?demo=1');
@@ -155,6 +155,18 @@ test('entferntes Kinderwagen-Wärmezubehör kann wieder hinzugefügt werden', as
   await page.locator('#alternativeOptions [data-alternative-item-id="stroller_light_footmuff"]').click();
   await expect(page.locator('#outfitGrid [data-item-id="stroller_light_footmuff"]')).toBeVisible();
   await expect(page.locator('#outfitGrid [data-item-id="stroller_thermal_none"]')).toHaveCount(0);
+});
+
+test('fehlende Außenschicht kann ergänzend über der Basisschicht gewählt werden', async ({ page }) => {
+  await openDemo(page);
+  await chooseSituation(page, 'outdoor');
+  const addOuter = page.locator('#outfitGrid [data-addable-slot="true"][data-slot="outer"]');
+  await expect(addOuter).toBeVisible();
+  await addOuter.click();
+  await expect(page.locator('#alternativeTitle')).toHaveText('Außenschicht hinzufügen');
+  await page.locator('#alternativeOptions [data-alternative-item-id="light_transition_jacket"]').click();
+  await expect(page.locator('#outfitGrid [data-item-id="light_transition_jacket"]')).toBeVisible();
+  await expect(page.locator('#outfitGrid [data-item-id="long_sleeve_bodysuit"]')).toBeVisible();
 });
 
 test('fehlende Außenschicht kann ergänzend über der Basisschicht gewählt werden', async ({ page }) => {

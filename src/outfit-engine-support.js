@@ -93,7 +93,11 @@ export function seedBaseline(state, bandId, mode) {
   const baseline = BASELINE[bandId];
   for (const [slot,itemId] of Object.entries(baseline)) {
     if (!allowedInMode(itemId,mode)) continue;
-    setSelected(state,slot,itemId,'engine','on_body',[`BASELINE_${bandId.toUpperCase()}`]);
+    const selectedItemId = mode === 'carrier' && itemId.endsWith('_overall') ? 'softshell_jacket' : itemId;
+    const reasonCodes = selectedItemId === itemId
+      ? [`BASELINE_${bandId.toUpperCase()}`]
+      : [`BASELINE_${bandId.toUpperCase()}`,'CARRIER_COVER_OUTER_LAYER'];
+    setSelected(state,slot,selectedItemId,'engine','on_body',reasonCodes);
   }
 }
 
@@ -526,7 +530,9 @@ export function rebalanceOtherSlots(state,delta,locked,mode,excludeSlot,priority
 }
 
 export function nextThermalItem(current,slot,direction,mode) {
-  const ladder = THERMAL_LADDERS[slot];
+  const ladder = mode === 'carrier' && slot === 'outer'
+    ? THERMAL_LADDERS.outer.filter((itemId) => !itemId?.endsWith('_overall'))
+    : THERMAL_LADDERS[slot];
   if (!ladder) return undefined;
   let index = ladder.indexOf(current);
   if (index < 0) index = current == null ? 0 : -1;

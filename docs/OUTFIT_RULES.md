@@ -487,6 +487,8 @@ Diese Reduktion gilt **nicht** automatisch für Kopf, Füße, Unterschenkel und 
 
 Überlappende Wärme durch Jacke + Cover wird nicht unbegrenzt addiert. Gesamt-Reduktion am Rumpf ist auf `-2 thermalSteps` begrenzt.
 
+Ein Overall kann im Carrier als Außenschicht gewählt werden, wenn `carrier_cover_none` aktiv ist. Bei leichtem oder warmem Tragecover wird er nicht als zusätzliche Schicht angeboten.
+
 ### 9.4 Hitze
 
 - bei `thermalReferenceC >=24 °C` besonders zurückhaltend isolieren,
