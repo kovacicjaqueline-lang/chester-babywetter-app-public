@@ -588,7 +588,7 @@ code { font-size: .84em; }
   font-size: .74rem;
   font-weight: 740;
   line-height: 1.16;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
   hyphens: auto;
 }
 .clothing-description {
