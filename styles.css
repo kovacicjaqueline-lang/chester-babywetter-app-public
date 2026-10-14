@@ -560,8 +560,11 @@ code { font-size: .84em; }
 .clothing-card-addable .clothing-name,
 .clothing-card-addable .clothing-role {
   display: block;
+  white-space: normal;
   max-width: 100%;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
 }
 .clothing-image-shell img {
   width: 100%;
@@ -585,6 +588,8 @@ code { font-size: .84em; }
   font-size: .74rem;
   font-weight: 740;
   line-height: 1.16;
+  overflow-wrap: normal;
+  hyphens: auto;
 }
 .clothing-description {
   margin: 3px 1px 0;

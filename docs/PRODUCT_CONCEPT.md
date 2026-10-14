@@ -90,7 +90,7 @@ Wird `dünner Pullover` durch `Fleecejacke` ersetzt, bleibt dieser Wechsel für 
 
 Optionale Zubehörteile und eine derzeit nicht empfohlene Außenschicht müssen ebenfalls hinzugefügt werden können. Die Außenschicht-Auswahl umfasst passende Jacken und Übergangs- bzw. Winteroveralls; sie wird auf die aktuelle Situation begrenzt. Overalls bedecken zusätzlich die Beine und werden dort thermisch neu ausbalanciert. In der Trage sind sie nur auswählbar, wenn kein Tragecover genutzt wird. Im Autositz bleiben voluminöse Overalls ausgeschlossen. Die Auswahl wird wie ein Austausch manuell fixiert und löst die vollständige thermische Neubewertung aus.
 
-Sichtbare Kleidungsstücke und Zubehörbegriffe besitzen nutzerverständliche Definitionen. Sie erklären, welches reale Kleidungsstück oder Zubehör gemeint ist. Diese Beschreibungen sind zentrale Produktbegriffe und werden in Empfehlungskarten und auswählbaren Alternativen konsistent verwendet.
+Sichtbare Kleidungsstücke und Zubehörbegriffe besitzen nutzerverständliche Definitionen. Sie erklären, welches reale Kleidungsstück oder Zubehör gemeint ist. In den auswählbaren Alternativen und im Kleidungskatalog wird die Beschreibung zusammen mit dem Namen gezeigt; die Outfit-Übersicht bleibt auf Bild, Kleidungsname und Rolle beschränkt.
 
 ### 4.3 Schnellkorrektur
 
