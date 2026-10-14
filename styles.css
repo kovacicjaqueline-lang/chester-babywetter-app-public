@@ -560,6 +560,7 @@ code { font-size: .84em; }
 .clothing-card-addable .clothing-name,
 .clothing-card-addable .clothing-role {
   display: block;
+  white-space: normal;
   max-width: 100%;
   overflow-wrap: normal;
   word-break: normal;
