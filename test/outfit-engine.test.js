@@ -372,7 +372,7 @@ test('direct sun in stroller prefers sunshade/parasol and airflow warning',()=>{
 });
 
 test('under-6 direct sun creates avoidance notice',()=>{
-  const r=recommendOutfit(request(outdoor({sunExposure:'direct'}),{w:weather(22,{uvIndex:1})}));
+  const r=recommendOutfit(request(outdoor({sunExposure:'direct'}),{w:weather(22,{uvIndex:1}),p:profile({birthDate:'2026-03-25'})}));
   assert.ok(notices(r).includes('INFANT_UNDER_6M_AVOID_DIRECT_SUN'));
 });
 
