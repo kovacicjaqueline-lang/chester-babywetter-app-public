@@ -248,7 +248,8 @@ function syncWeatherOverrideForm() {
 function syncNeckFeedbackStatus() {
   const status = document.querySelector('#neckFeedbackStatus');
   if (!status) return;
-  if (!state.neckFeedback) { status.textContent = 'Noch keine Rückmeldung angewendet.'; return; }
+  if (!state.neckFeedback) { status.textContent = ''; status.hidden = true; return; }
+  status.hidden = false;
   if (state.neckFeedback === 'warm_dry') { status.textContent = 'Warm & trocken – Empfehlung beibehalten'; return; }
   const trace = [...(lastRecommendation?.ruleTrace ?? [])].reverse().find((entry) => entry.ruleId === 'feedback.neck');
   const changed = Boolean(trace?.target);
