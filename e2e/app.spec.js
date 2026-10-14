@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 
-const APP_SHELL_CACHE = 'babywetter-shell-v0.2.0-assets31';
+const APP_SHELL_CACHE = 'babywetter-shell-v0.2.0-assets32';
 
 async function openDemo(page) {
   await page.goto('/?demo=1');
@@ -191,6 +191,25 @@ test('Anderer Look ändert sichtbar die Visuals, nie die fachlichen Items, und b
   await expect(page.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
   expect(await selectedIds(page)).toEqual(afterItems);
   expect(await selectedVisuals(page)).toEqual(afterVisuals);
+});
+
+test('Kinderwagen: warmer Farbstil bietet mehrere sichtbar unterschiedliche Looks', async ({ page }) => {
+  await openDemo(page);
+  await chooseSituation(page, 'stroller');
+  await page.locator('[data-open-dialog="settingsDialog"]').first().click();
+  await page.locator('#settingsDialog input[name="paletteMode"][value="warm"]').check();
+  await page.locator('#settingsDialog [data-close-dialog="settingsDialog"]').click();
+
+  const originalItems = await selectedIds(page);
+  const images = new Set();
+  for (let index = 0; index < 10; index += 1) {
+    await expect(page.locator('#changeLookButton')).toBeEnabled();
+    images.add(JSON.stringify(await selectedVisuals(page)));
+    await page.locator('#changeLookButton').click();
+  }
+
+  expect(images.size).toBeGreaterThan(3);
+  expect(await selectedIds(page)).toEqual(originalItems);
 });
 
 test('Standort kann gewechselt werden', async ({ page }) => {
