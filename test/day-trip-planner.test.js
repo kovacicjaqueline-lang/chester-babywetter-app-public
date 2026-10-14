@@ -310,7 +310,7 @@ test('entering a car segment keeps harness safety visible and prioritized over c
   assert.ok(transition.unchangedItems.some((item) => item.itemId === 'warm_socks_booties'));
 });
 
-test('a warm later segment cannot make the car start outfit add layers over its own safe base', () => {
+test('a car segment keeps the outing bodysuit and sweater without adding a shirt under the harness', () => {
   const w = weather([
     point('2026-08-31T10:00:00.000Z',16),
     point('2026-08-31T11:00:00.000Z',20),
@@ -325,15 +325,13 @@ test('a warm later segment cannot make the car start outfit add layers over its 
   }));
 
   const start = result.startOutfit.items;
-  assert.ok(start.some((item) => item.slot === 'base_torso' && item.itemId === 'long_sleeve_bodysuit'));
+  assert.ok(start.some((item) => item.slot === 'base_torso' && item.itemId === 'short_sleeve_bodysuit'));
   assert.ok(start.some((item) => item.slot === 'mid' && item.itemId === 'thin_sweater'));
   assert.ok(!start.some((item) => item.slot === 'top'));
 
   const transitionActions = actionAt(result,'2026-08-31T11:00:00.000Z');
-  assert.ok(transitionActions.some((action) => action.slot === 'base_torso'
-    && action.kind === 'replace'
-    && action.fromItemId === 'long_sleeve_bodysuit'
-    && action.toItemId === 'short_sleeve_bodysuit'));
+  assert.ok(result.actions.every((action) => action.slot !== 'base_torso'));
+  assert.ok(transitionActions.some((action) => action.kind === 'remove' && action.fromItemId === 'thin_sweater'));
 });
 
 test('a situation-only segment change is represented once without an outfit action', () => {

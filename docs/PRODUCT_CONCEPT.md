@@ -486,7 +486,7 @@ Für Wetter-Checkpoints werden nur reale Punkte aus `WeatherSeries` verwendet. W
 
 ### 16.3 Minimale Wechsel und minimale Packliste
 
-Die unterste Schicht bleibt während des gesamten Ausflugs konstant. Für Oberteil und Unterteil wird aus dem gesamten geplanten Zeitraum jeweils die kühlste notwendige durchgehende Basisschicht gewählt; wärmere Anforderungen am Anfang werden über darüberliegende Schichten abgedeckt. Ein `car`-Segment behält jedoch die von der Auto-Engine erzeugte gurtsichere Oberkörper-Basisschicht. Weicht sie von der übrigen Basisschicht ab, zeigt der Tagesverlauf den nötigen Wechsel beim Ein- oder Aussteigen; die für den restlichen Ausflug festgelegte Basisschicht bleibt davon unberührt.
+Die unterste Schicht bleibt während des gesamten Ausflugs konstant. Für Oberteil und Unterteil wird aus dem gesamten geplanten Zeitraum jeweils die kühlste notwendige durchgehende Basisschicht gewählt; wärmere Anforderungen am Anfang werden über darüberliegende Schichten abgedeckt.
 
 Die Planung darf eine bereits getragene Variante beibehalten, wenn sie in der Folgeempfehlung als sichere `equivalent`-Alternative zulässig bleibt. Sie darf thermisch wärmere/kühlere Alternativen nicht aus Bequemlichkeit als gleichwertig behandeln.
 

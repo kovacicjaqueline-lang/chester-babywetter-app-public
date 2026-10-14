@@ -60,10 +60,7 @@ function practicalDiff(before, after) {
   for (const slot of slots) {
     const from = beforeMap.get(slot) ?? null;
     const to = afterMap.get(slot) ?? null;
-    const fixedOutsideCar = slot === 'base_torso'
-      ? before?.mode !== 'car' && after?.mode !== 'car'
-      : slot === 'legs';
-    if (samePhysicalWearPosition(from, to) || fixedOutsideCar) continue;
+    if (samePhysicalWearPosition(from, to) || FIXED_TRIP_UNDERLAYER_SLOTS.has(slot)) continue;
     let kind = 'replace';
     if (!from) kind = 'add';
     else if (!to) kind = 'remove';

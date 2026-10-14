@@ -432,8 +432,12 @@ export function applyBodyLocksAndRebalance(state,result,request,phase,mode) {
     if (phase === 'in_car' && definition.carSeatCompatibility === 'conditional') {
       addNotice(result,'CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT','caution',phase,['CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT'],{ itemId:lock.itemId });
     }
+    // A trip-wide cooler bodysuit must not add a second top layer under the harness.
+    const avoidExtraCarTorsoLayer = phase === 'in_car' && lock.slot === 'base_torso' && delta < 0;
     const rebalancePriority = delta !== 0 ? REBALANCE_SLOTS_BY_LOCK[lock.slot] ?? null : null;
-    if (delta && lock.slot !== 'head') rebalanceOtherSlots(state,-delta,lockedThermalSlots,mode,lock.slot,rebalancePriority);
+    if (delta && lock.slot !== 'head' && !avoidExtraCarTorsoLayer) {
+      rebalanceOtherSlots(state,-delta,lockedThermalSlots,mode,lock.slot,rebalancePriority);
+    }
     rebalanceNewlyCoveredLegs(state,result,before,definition,legsBeforeLock,lockedThermalSlots,phase,mode,lock.slot);
   }
 }

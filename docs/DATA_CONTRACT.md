@@ -1,3 +1,6 @@
+Warning: truncated output (original token count: 12918)
+Total output lines: 1446
+
 # Data Contract – Baby Clothing Weather App V1
 
 Status: fachlicher Datenvertrag für Vanilla JavaScript, `localStorage`, JSON-Export/-Import und testbare Outfitengine
@@ -723,163 +726,7 @@ interface RecommendationPhaseEvaluation {
   thermalReferenceSource:
     | "air_temp"
     | "apparent_temp"
-    | "room_temp"
-    | null;
-  thermalBand: string | null;
-  thermalAdjustment: number;
-  missingFields: string[];
-}
-```
-
-Nicht-Auto-Modi einschließlich `indoor` verwenden `main`. Auto verwendet ausschließlich `in_car`.
-
-## 17. Hinweise / Safety Codes
-
-```ts
-interface RecommendationNotice {
-  code: string;
-  severity: RecommendationSeverity;
-  phase: RecommendationPhase | null;
-  reasonCodes: string[];
-  data: Record<string, string | number | boolean | null>;
-}
-```
-
-Normative Codes mindestens:
-
-- `CHECK_NECK`,
-- `CAR_SEAT_NO_BULKY_LAYERS`,
-- `CAR_SEAT_BLANKET_OVER_HARNESS_ONLY`,
-- `CAR_SEAT_REMOVE_COVER_WHEN_WARM`,
-- `CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT`,
-- `SLEEP_NO_HAT`,
-- `SLEEP_NO_LOOSE_BEDDING`,
-- `SLEEP_NO_WEIGHTED_PRODUCTS`,
-- `SLEEP_USE_ROOM_TEMPERATURE`,
-- `SLEEP_GENERIC_TOG_ORIENTATION`,
-- `STROLLER_DO_NOT_COVER_AIRFLOW`,
-- `STROLLER_RAIN_COVER`,
-- `STROLLER_SUNSHADE`,
-- `INFANT_UNDER_12M_AVOID_DIRECT_SUN`,
-- `AGE_UNKNOWN_DIRECT_SUN_CONSERVATIVE_RULE`,
-- `UV_SHADE_AND_COVERAGE`,
-- `WEATHER_DATA_STALE`,
-- `WEATHER_DATA_INCOMPLETE`,
-- `EXTREME_COLD_CAUTION`,
-- `EXTREME_HEAT_CAUTION`,
-- `STRONG_WIND_CAUTION`,
-- `MANUAL_LOCK_OVERRIDDEN_FOR_SAFETY`.
-
-`SLEEP_NO_LOOSE_BEDDING` gilt für den gesamten `sleep`-Modus: keine lose Decke oder andere lose Bettware im Schlafbereich, unabhängig davon, ob `sleep_bag_none` oder ein TOG-Schlafsack gewählt ist.
-
-## 18. Regelspur
-
-```ts
-interface RuleTraceEntry {
-  ruleId: string;
-  phase: RecommendationPhase;
-  effect:
-    | "add"
-    | "remove"
-    | "replace"
-    | "thermal_up"
-    | "thermal_down"
-    | "protect"
-    | "lock"
-    | "override_lock"
-    | "notice"
-    | "no_change";
-  target: string | null;
-  delta: number | null;
-  reasonCode: string;
-}
-```
-
-## 19. Empfehlungsergebnis
-
-```ts
-interface OutfitRecommendation {
-  recommendationId: string;
-  requestId: string;
-  generatedAt: string;
-  sessionId: string;
-  mode: SituationMode;
-  status: RecommendationStatus;
-  phases: RecommendationPhaseEvaluation[];
-  slots: RecommendationSlotResult[];
-  addableSlots: AddableSlotResult[];
-  notices: RecommendationNotice[];
-  ruleTrace: RuleTraceEntry[];
-  dataQuality: {
-    weatherFreshness: WeatherFreshness | null;
-    missingFields: string[];
-    usedManualWeather: boolean;
-    /** @deprecated Kompatibilitätsfeld; im aktiven Modell immer false. */
-    usedEstimatedCabinTemperature: boolean;
-  };
-}
-```
-
-## 20. Kinderwagen-Beispiel
-
-```json
-{
-  "context": {
-    "mode": "stroller",
-    "plannedMinutes": 90,
-    "strollerState": "awake",
-    "activity": "active",
-    "activitySource": "user",
-    "sunExposure": "partial",
-    "windProtection": "partial"
-  },
-  "session": {
-    "sessionId": "session_001",
-    "manualLocks": [],
-    "warmthOffset": 0
-  }
-}
-```
-
-In der UI entspricht dieses Beispiel `Sehr aktiv`. Bei 8 °C könnte die Engine z. B. einen leichten Fußsack statt des warmen Fußsacks wählen, weil `awake + active` thermisch leichter bewertet wird als `asleep`.
-
-## 21. Austausch-Beispiel Fußsack → Decke
-
-Vorher:
-
-```json
-{
-  "phase": "main",
-  "slot": "stroller_thermal_accessory",
-  "selected": {
-    "itemId": "stroller_warm_footmuff",
-    "selectionSource": "engine",
-    "wearPosition": "external",
-    "reasonCodes": ["STROLLER_COLD_EXTERNAL_INSULATION"]
-  }
-}
-```
-
-Nutzer wählt warme Decke:
-
-```json
-{
-  "sessionId": "session_001",
-  "manualLocks": [
-    {
-      "phase": "main",
-      "slot": "stroller_thermal_accessory",
-      "itemId": "stroller_warm_blanket",
-      "lockedAt": "2026-08-25T12:30:00.000Z"
-    }
-  ],
-  "warmthOffset": 0
-}
-```
-
-Die nächste Engine-Ausgabe muss diesen Lock respektieren und bei Bedarf Körperkleidung ändern.
-
-## 22. Schlaf-Beispiel und TOG-Tausch
+    | "room_te…918 tokens truncated… und TOG-Tausch
 
 Ausgangslage:
 
@@ -1379,7 +1226,7 @@ Statusregeln:
 
 Der Comparator darf ausschließlich von der Engine bereits als `equivalent` angebotene Alternativen zur Kontinuitätsoptimierung verwenden. `warmer`/`cooler` werden nicht aus Bequemlichkeit gleichgesetzt.
 
-Die unterste Kleidungsschicht bleibt außerhalb des Autositzes während des gesamten Ausflugs unverändert. Das gilt für das Oberteil (`base_torso`) und das Unterteil (`legs`). Sie wird aus allen relevanten Checkpoints außerhalb von `car` als jeweils kühlste dort benötigte, durchgehend tragbare Variante bestimmt und nicht einfach vom ersten Zeitpunkt übernommen. Bei 10 °C am Morgen und 25 °C später kann z. B. ein Kurzarmbody durchgehend getragen werden; die morgendliche Wärme kommt über darüberliegende Schichten. Im `car`-Segment behält `base_torso` dagegen die von der Auto-Engine erzeugte gurtsichere Basisschicht, damit eine wärmere spätere Situation das Autositz-Outfit nicht mit zusätzlichen Schichten überlädt. Ein dadurch nötiger Wechsel beim Ein- oder Aussteigen wird als reale `base_torso`-Aktion angezeigt. Das Unterteil (`legs`) bleibt weiter durchgehend. Außerhalb solcher Autositz-Wechsel erzeugt der Planer keine Basisschicht-Aktion; Anpassungen erfolgen über `top`, darüberliegende Schichten, Zubehör oder notwendige Safety-Aktionen.
+Die unterste Kleidungsschicht bleibt während des gesamten Ausflugs unverändert. Das gilt für das Oberteil (`base_torso`) und das Unterteil (`legs`). Sie wird aus allen relevanten Checkpoints als jeweils kühlste dort benötigte, durchgehend tragbare Variante bestimmt und nicht einfach vom ersten Zeitpunkt übernommen. Bei 10 °C am Morgen und 25 °C später kann z. B. ein Kurzarmbody durchgehend getragen werden; die morgendliche Wärme kommt über darüberliegende Schichten. Für diese Slots erzeugt der Planer keine Wechsel-, Austausch- oder Repositionierungsaktion. Anpassungen erfolgen über `top`, darüberliegende Schichten, Zubehör oder notwendige Safety-Aktionen.
 
 Lexikographische Priorität:
 

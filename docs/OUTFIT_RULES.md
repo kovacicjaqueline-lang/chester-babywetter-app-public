@@ -530,6 +530,7 @@ Diese Grenzen sind nicht neu geschätzt. Sie folgen exakt den bestehenden Basisb
 - Zusätzliche Decke oder Überwurf liegt nur **über** dem bereits korrekt geschlossenen Gurt.
 - Sobald der Innenraum warm wird, Decke oder Überwurf entfernen.
 - Gurtsicherheit hat immer Vorrang vor Wärmeoptimierung und manuellen Locks.
+- Hält der Tagesplan im Auto einen durchgehend gewählten, leichteren Body fest, ergänzt er dafür kein zusätzliches Shirt unter dem Gurt. Die gurtsichere Auto-Mittelschicht bleibt bestehen.
 
 ## 11. Modus `indoor`
 
