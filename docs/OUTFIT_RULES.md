@@ -78,7 +78,7 @@ Manuelle Kleidungsalternativen werden primär innerhalb desselben Slots und ders
 
 ### 2.4 Strampler als zonenübergreifende Alternative
 
-Leichte, ungefütterte Strampler werden bei Body-/Shirt- und Hosenalternativen angeboten. Der Strampler liegt im `legs`-Slot, ersetzt dort die Hose und lässt den Body als Basisschicht bestehen. Weil er zusätzlich Torso und Arme bedeckt, wird eine freie obere Schicht (`top`, dann `mid`) um einen Schritt reduziert. Manuell fixierte Schichten bleiben bestehen. Bei der Fußvariante entfällt eine nicht fixierte Fußschicht. Strampler sind nur für wache Outdoor-, Kinderwagen-, Trage- und Autositzsituationen zugelassen, nicht für den Schlaf.
+Leichte, ungefütterte Strampler werden bei Body-/Shirt- und Hosenalternativen angeboten. Tagsüber liegt der Strampler im `legs`-Slot, ersetzt dort die Hose und lässt den Body als Basisschicht bestehen. Weil er zusätzlich Torso und Arme bedeckt, wird eine freie obere Schicht (`top`, dann `mid`) um einen Schritt reduziert. Manuell fixierte Schichten bleiben bestehen. Bei der Fußvariante entfällt eine nicht fixierte Fußschicht. Für `sleep` gibt es eigene Schlaf-Strampler im `sleep_underlayer`-Slot; sie nehmen an der üblichen Raumtemperatur-/TOG-Neubewertung teil. Nur leichte, ungefütterte Schlafkleidung ist als `sleepSafe` markiert.
 
 ## 3. Outdoor-Temperaturbaseline
 

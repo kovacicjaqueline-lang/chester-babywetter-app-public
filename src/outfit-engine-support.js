@@ -385,7 +385,8 @@ export function applySunProtection(state,result,request,uv,temp,phase,mode) {
   if (mode !== 'sleep' && !state.map.has('head')) setSelected(state,'head','sun_hat','engine','on_body',['UV_SHADE_AND_COVERAGE']);
   if (temp >= 24) {
     setSelected(state,'top','light_long_sleeve_shirt','engine','on_body',['UV_LIGHT_COVERAGE']);
-    if (!findLock(request.session,phase,'base_torso')) state.map.delete('base_torso');
+    const selectedRomper = request.session.manualLocks.some((lock) => lock.phase === phase && (CLOTHING_CATALOG[lock.itemId]?.upperBodyThermalCredit ?? 0) > 0);
+    if (!selectedRomper && !findLock(request.session,phase,'base_torso')) state.map.delete('base_torso');
     if (!state.map.has('legs')) setSelected(state,'legs','light_trousers','engine','on_body',['UV_LIGHT_COVERAGE']);
   }
 }

@@ -586,6 +586,13 @@ test('Strampler-Alternativen bleiben am Body und an der Hose verfügbar und glei
   assert.equal(id(pinnedFeet,'feet'),'socks');
 });
 
+test('Strampler-Alternative behält den Body auch bei direkter Sonne und UV-Bedeckung',()=>{
+  const session=lockItem(createSession('romper_sun'),{slot:'base_torso',itemId:'strampler_without_feet'});
+  const result=recommendOutfit(request(outdoor({sunExposure:'direct'}),{w:weather(27,{uvIndex:6}),session}));
+  assert.equal(id(result,'base_torso'),'short_sleeve_bodysuit');
+  assert.equal(id(result,'legs'),'strampler_without_feet');
+});
+
 test('all recommendation slots are unique per phase and use known catalog items',()=>{
   const scenarios=[outdoor(),stroller(),carrier(),car(),sleep()];
   for (const context of scenarios) {

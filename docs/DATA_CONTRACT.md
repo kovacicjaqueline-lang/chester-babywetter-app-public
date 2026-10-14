@@ -452,7 +452,7 @@ interface OutfitItemDefinition {
 }
 ```
 
-`thermalStepCredit` ist eine relative Produktheuristik und keine TOG-Einheit. `thermalSignatureWeight` überschreibt nur den aggregierten Wärmewert beim Vergleichen zonenübergreifender Alternativen; `thermalWeight` bleibt für Slot-Rebalancing maßgeblich.
+`thermalStepCredit` ist eine relative Produktheuristik und keine TOG-Einheit. `thermalSignatureWeight` überschreibt nur den aggregierten Wärmewert beim Vergleichen zonenübergreifender Alternativen; `thermalWeight` bleibt für Slot-Rebalancing maßgeblich. Schlaf-Strampler sind eigenständige `sleep_underlayer`-Items mit `sleepSafe: true` und werden über das vorhandene Raumtemperatur-/TOG-Modell bewertet.
 
 `thermalWeightByZone` überschreibt für einzelne Körperzonen die pauschale Item-Wärmeklasse, wenn ein Kleidungsstück mehrere Zonen gleichzeitig bedeckt. Nicht angegebene Zonen verwenden weiterhin `thermalWeight`. Das verhindert, dass ein Ganzkörper-Overall seine gesamte Außenschicht-Wärme für jede bedeckte Zone mehrfach zählt; aktuell wird die Beinabdeckung der Overalls für das Rebalancing separat mit `1` kalibriert.
 

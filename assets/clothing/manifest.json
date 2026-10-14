@@ -1000,7 +1000,7 @@
     {
       "id": "strampler_without_feet",
       "label": "Strampler ohne Füße",
-      "category": "strampler",
+      "category": "strampler_without_feet",
       "slot": "legs",
       "situations": [
         "outdoor",
@@ -1017,7 +1017,7 @@
     {
       "id": "strampler_with_feet",
       "label": "Strampler mit Füßen",
-      "category": "strampler",
+      "category": "strampler_with_feet",
       "slot": "legs",
       "situations": [
         "outdoor",
@@ -1029,6 +1029,34 @@
         "neutral"
       ],
       "altText": "Leichter Langarm-Strampler mit integrierten Füßen.",
+      "assetPath": "assets/clothing/strampler_with_feet/neutral.webp"
+    },
+    {
+      "id": "sleep_under_strampler_without_feet",
+      "label": "Schlaf-Strampler ohne Füße",
+      "category": "sleep_under_strampler_without_feet",
+      "slot": "sleep_underlayer",
+      "situations": [
+        "sleep"
+      ],
+      "styleVariants": [
+        "neutral"
+      ],
+      "altText": "Leichter Schlaf-Strampler ohne integrierte Füße.",
+      "assetPath": "assets/clothing/strampler_without_feet/neutral.webp"
+    },
+    {
+      "id": "sleep_under_strampler_with_feet",
+      "label": "Schlaf-Strampler mit Füßen",
+      "category": "sleep_under_strampler_with_feet",
+      "slot": "sleep_underlayer",
+      "situations": [
+        "sleep"
+      ],
+      "styleVariants": [
+        "neutral"
+      ],
+      "altText": "Leichter Schlaf-Strampler mit integrierten Füßen.",
       "assetPath": "assets/clothing/strampler_with_feet/neutral.webp"
     }
   ]
