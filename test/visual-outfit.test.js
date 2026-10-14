@@ -683,3 +683,54 @@ test('theme selection uses whole-outfit composition score instead of manifest or
   assert.equal(result.themeId, 'theme_a');
   assert.deepEqual(result.items.map((item) => item.assetPath), ['top-a.webp', 'bottom-a.webp']);
 });
+
+test('Kinderwagen zeigt trotz identischer Kleidungsstücke viele farblich unterschiedliche Looks', () => {
+  const itemIds = ['long_sleeve_bodysuit', 'trousers', 'thin_sweater', 'socks', 'thin_hat', 'stroller_light_blanket'];
+  const rec = recommendation(itemIds);
+
+  for (const paletteMode of ['warm', 'cool', 'neutral', 'all']) {
+    const first = selectVisualLook({
+      recommendation: rec, assetManifest: realAssetManifest, visualManifest, paletteMode, visualSeed: 0
+    });
+    const themeCount = visualManifest.paletteModeProfiles[paletteMode].themeIds.length;
+    assert.ok(first.availableLookCount > themeCount, `${paletteMode} must offer colorways beyond the one best look per theme`);
+    const looks = Array.from({ length: first.availableLookCount }, (_, visualSeed) =>
+      selectVisualLook({ recommendation: rec, assetManifest: realAssetManifest, visualManifest, paletteMode, visualSeed })
+    );
+    assert.equal(new Set(looks.map((look) => look.items.map((item) => item.assetPath).join('|'))).size, looks.length,
+      `${paletteMode} must not repeat visual compositions in its look cycle`);
+    for (const look of looks) {
+      assert.deepEqual(look.items.map((item) => item.itemId), itemIds, `${paletteMode} must preserve thermal clothing IDs`);
+      assert.ok(visualManifest.paletteModeProfiles[paletteMode].themeIds.includes(look.themeId));
+    }
+  }
+
+  const warmFirst = selectVisualLook({
+    recommendation: rec, assetManifest: realAssetManifest, visualManifest, paletteMode: 'warm', visualSeed: 0
+  });
+  const mainGarmentPaths = Array.from({ length: warmFirst.availableLookCount }, (_, visualSeed) =>
+    selectVisualLook({ recommendation: rec, assetManifest: realAssetManifest, visualManifest, paletteMode: 'warm', visualSeed })
+      .items.slice(0, 3).map((item) => item.assetPath)
+  ).flat();
+  for (const color of ['terracotta', 'berry', 'aubergine', 'cognac']) {
+    assert.ok(mainGarmentPaths.some((path) => path.includes(color)), `missing ${color} from warm Kinderwagen looks`);
+  }
+});
+
+test('Draußen und Kinderwagen behalten verschiedene Looks, ohne Sicherheit oder Kleidung zu ändern', () => {
+  for (const itemIds of [
+    ['long_sleeve_bodysuit', 'trousers', 'thin_sweater', 'socks', 'thin_hat'],
+    ['long_sleeve_bodysuit', 'trousers', 'thin_sweater', 'socks', 'thin_hat', 'stroller_light_blanket']
+  ]) {
+    const rec = recommendation(itemIds);
+    const first = selectVisualLook({
+      recommendation: rec, assetManifest: realAssetManifest, visualManifest, paletteMode: 'warm', visualSeed: 0
+    });
+    assert.ok(first.availableLookCount > visualManifest.paletteModeProfiles.warm.themeIds.length);
+    const second = selectVisualLook({
+      recommendation: rec, assetManifest: realAssetManifest, visualManifest, paletteMode: 'warm', visualSeed: 1
+    });
+    assert.notDeepEqual(first.items.map((item) => item.assetPath), second.items.map((item) => item.assetPath));
+    assert.deepEqual(second.items.map((item) => item.itemId), itemIds);
+  }
+});
