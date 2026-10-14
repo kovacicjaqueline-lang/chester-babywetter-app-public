@@ -26,6 +26,8 @@ const EXPECTED_V1_IDS = Object.freeze([
   'light_transition_jacket',
   'insulated_transition_jacket',
   'softshell_jacket',
+  'strampler_with_feet',
+  'strampler_without_feet',
   'rain_jacket',
   'transition_overall',
   'winter_overall',

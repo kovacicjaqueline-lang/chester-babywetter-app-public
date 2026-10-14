@@ -1034,7 +1034,7 @@
     {
       "id": "sleep_under_strampler_without_feet",
       "label": "Schlaf-Strampler ohne Füße",
-      "category": "sleep_under_strampler_without_feet",
+      "category": "sleep_underlayer",
       "slot": "sleep_underlayer",
       "situations": [
         "sleep"
@@ -1048,7 +1048,7 @@
     {
       "id": "sleep_under_strampler_with_feet",
       "label": "Schlaf-Strampler mit Füßen",
-      "category": "sleep_under_strampler_with_feet",
+      "category": "sleep_underlayer",
       "slot": "sleep_underlayer",
       "situations": [
         "sleep"
