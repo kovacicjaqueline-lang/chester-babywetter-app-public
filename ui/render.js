@@ -146,7 +146,7 @@ function addableSlotCard(slotResult, contextLabel) {
   shell.textContent = '+';
   const name = document.createElement('span');
   name.className = 'clothing-name';
-  name.textContent = slotResult.addLabel;
+  name.textContent = slotResult.addLabel.replace('Außenschicht', 'Außen\u00adschicht');
   const role = document.createElement('span');
   role.className = 'clothing-role';
   role.textContent = 'Outfit wird neu bewertet';
