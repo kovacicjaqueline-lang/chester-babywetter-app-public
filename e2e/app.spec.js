@@ -357,11 +357,13 @@ test('Schlafmodus verwendet Raumtemperatur', async ({ page }) => {
   await expect(page.locator('[data-notice-code="SLEEP_NO_HAT"]')).toBeVisible();
 });
 
-test('Nackentest bleibt kurz sichtbar; Detailhinweis steht in Hilfe', async ({ page }) => {
+test('Nackentest bleibt dezent erreichbar; Details stehen im Feedbackdialog', async ({ page }) => {
   await openDemo(page);
-  await expect(page.getByTestId('neck-check')).toBeVisible();
-  await expect(page.getByTestId('neck-check')).toContainText('Warm & trocken');
-  await expect(page.getByTestId('neck-check')).not.toContainText('Kalte Hände oder Füße');
+  const neckCheck = page.getByTestId('neck-check');
+  await expect(neckCheck).toBeVisible();
+  await expect(neckCheck).not.toContainText('Warm & trocken');
+  await expect(neckCheck.getByRole('button', { name:'Nackentest anwenden' })).toHaveText('Prüfen');
+  await expect(page.locator('#neckFeedbackStatus')).toBeHidden();
   await page.locator('[data-open-dialog="helpDialog"]').click();
   await expect(page.locator('#helpDialog')).toBeVisible();
   await expect(page.locator('#helpDialog')).toContainText('Kalte Hände oder Füße');
