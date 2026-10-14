@@ -584,9 +584,11 @@ code { font-size: .84em; }
 }
 .clothing-name {
   margin: 7px 1px 0;
-  font-size: .74rem;
+  font-size: .68rem;
   font-weight: 740;
   line-height: 1.16;
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 .clothing-description {
   margin: 3px 1px 0;
