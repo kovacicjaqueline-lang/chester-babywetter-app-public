@@ -581,6 +581,15 @@ test('Strampler-Alternativen bleiben am Body und an der Hose verfügbar und glei
   assert.equal(id(withFeet,'legs'),'strampler_with_feet');
   assert.equal(id(withFeet,'feet'),null);
 
+  const pinnedBodySession=lockItem(
+    lockItem(createSession('romper_pinned_body'),{slot:'base_torso',itemId:'long_sleeve_bodysuit'}),
+    {slot:'base_torso',itemId:'strampler_without_feet'}
+  );
+  assert.ok(pinnedBodySession.manualLocks.some((lock)=>lock.slot==='base_torso'&&lock.itemId==='long_sleeve_bodysuit'));
+  const pinnedBody=recommendOutfit(request(outdoor({sunExposure:'direct'}),{w:weather(27,{uvIndex:6}),session:pinnedBodySession}));
+  assert.equal(id(pinnedBody,'base_torso'),'long_sleeve_bodysuit');
+  assert.equal(id(pinnedBody,'legs'),'strampler_without_feet');
+
   const pinnedFeetSession=lockItem(withFeetSession,{slot:'feet',itemId:'socks'});
   const pinnedFeet=recommendOutfit(request(context,{w,session:pinnedFeetSession}));
   assert.equal(id(pinnedFeet,'feet'),'socks');

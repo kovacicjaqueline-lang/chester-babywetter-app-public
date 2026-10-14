@@ -82,7 +82,11 @@ export function lockItem(session, { phase = 'main', slot, itemId, lockedAt = '19
   if (!slot || !itemId) throw new TypeError('slot and itemId are required');
   const targetSlot = CLOTHING_CATALOG[itemId]?.slot ?? slot;
   const replacedSlots = new Set([slot,targetSlot]);
+  const retainedBaseLock = targetSlot !== slot && slot === 'base_torso' && (CLOTHING_CATALOG[itemId]?.upperBodyThermalCredit ?? 0) > 0
+    ? (session?.manualLocks ?? []).find((lock) => lock.phase === phase && lock.slot === 'base_torso')
+    : null;
   const locks = (session?.manualLocks ?? []).filter((lock) => !(lock.phase === phase && replacedSlots.has(lock.slot)));
+  if (retainedBaseLock) locks.push(retainedBaseLock);
   locks.push({ phase, slot:targetSlot, itemId, lockedAt });
   return { ...(session ?? createSession()), manualLocks:locks };
 }
