@@ -1,5 +1,5 @@
-const CACHE_NAME = 'babywetter-shell-v0.2.0-assets29';
-const SHELL_REVISION = '2026-10-14-profile-birthdate-field-width';
+const CACHE_NAME = 'babywetter-shell-v0.2.0-assets30';
+const SHELL_REVISION = '2026-10-14-profile-mobility-hidden';
 const ASSET_MANIFEST_PATH = '/assets/clothing/manifest.json';
 const VISUAL_MANIFEST_PATH = '/assets/clothing/visual-manifest.json';
 const SHELL = [
