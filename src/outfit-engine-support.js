@@ -583,7 +583,7 @@ export function thermalSignature(result,phase) {
     if (!def) continue;
     if (def.slot === 'sleep_bag' || def.slot === 'sleep_underlayer') score += def.sleepWarmthWeight ?? 0;
     else if (['stroller_thermal_accessory','carrier_accessory','car_thermal_accessory'].includes(def.slot)) score += (def.thermalStepCredit ?? 0) * 2;
-    else if (BODY_SLOTS.includes(def.slot)) score += def.thermalWeight ?? 0;
+    else if (BODY_SLOTS.includes(def.slot)) score += def.thermalSignatureWeight ?? def.thermalWeight ?? 0;
   }
   return score;
 }
