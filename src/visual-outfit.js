@@ -162,6 +162,7 @@ export function buildVisualCatalog(assetManifest, visualManifest) {
         id,
         assetGroupId: group.id,
         sourceStyle,
+        isAdditional: true,
         assetPath: additional.assetPath,
         themeIds: Object.freeze([...candidateThemeIds]),
         paletteTags: Object.freeze([...(additional.paletteTags || sourceProfile.paletteTags || [])]),
@@ -263,7 +264,9 @@ function themeRoleScore(variant, theme) {
   const colors = theme.colors || {};
   // New colorways can fit a theme through themeIds even when their hue is not
   // explicitly named in that theme's original color roles.
-  const accentBonus = hasAccentColor(variant) ? 2 : 0;
+  const representedColor = paletteTags(variant).some((tag) =>
+    ['primary', 'secondary', 'neutral'].some((role) => colors[role]?.includes(tag)));
+  const accentBonus = variant.isAdditional && hasAccentColor(variant) && !representedColor ? 2 : 0;
   return accentBonus + paletteTags(variant).reduce((sum, tag) => {
     if (colors.primary?.includes(tag)) return sum + 6;
     if (colors.secondary?.includes(tag)) return sum + 3;
