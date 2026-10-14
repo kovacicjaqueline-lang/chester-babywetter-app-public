@@ -164,6 +164,8 @@ test('fehlende Außenschicht kann ergänzend über der Basisschicht gewählt wer
   await expect(addOuter).toBeVisible();
   await addOuter.click();
   await expect(page.locator('#alternativeTitle')).toHaveText('Außenschicht hinzufügen');
+  await expect(page.locator('#alternativeOptions [data-alternative-item-id="transition_overall"]')).toBeVisible();
+  await expect(page.locator('#alternativeOptions [data-alternative-item-id="winter_overall"]')).toBeVisible();
   await page.locator('#alternativeOptions [data-alternative-item-id="light_transition_jacket"]').click();
   await expect(page.locator('#outfitGrid [data-item-id="light_transition_jacket"]')).toBeVisible();
   await expect(page.locator('#outfitGrid [data-item-id="long_sleeve_bodysuit"]')).toBeVisible();
