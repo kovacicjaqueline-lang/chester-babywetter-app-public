@@ -557,6 +557,7 @@ code { font-size: .84em; }
   font-weight: 300;
 }
 .clothing-card-addable .clothing-name { color: #46516a; }
+.clothing-card-addable .clothing-name { font-size: .68rem; }
 .clothing-card-addable .clothing-name,
 .clothing-card-addable .clothing-role {
   display: block;
