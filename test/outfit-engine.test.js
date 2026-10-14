@@ -132,6 +132,28 @@ test('an omitted outer layer can be added without removing the base layer',()=>{
   assert.equal(id(layered,'mid'),null);
 });
 
+test('carrier overalls are addable only when no carrier cover is worn',()=>{
+  const base=request(carrier(),{w:weather(18)});
+  const uncovered=recommendOutfit(base);
+  assert.equal(id(uncovered,'carrier_accessory'),'carrier_cover_none');
+  const uncoveredOuter=uncovered.addableSlots.find((entry)=>entry.slot==='outer');
+  assert.ok(uncoveredOuter?.alternatives.some((entry)=>entry.itemId==='transition_overall'));
+  assert.ok(uncoveredOuter?.alternatives.some((entry)=>entry.itemId==='winter_overall'));
+
+  const coveredRequest={...base,session:lockItem(base.session,{slot:'carrier_accessory',itemId:'carrier_cover_light'})};
+  const covered=recommendOutfit(coveredRequest);
+  assert.equal(id(covered,'carrier_accessory'),'carrier_cover_light');
+  const coveredOuter=covered.addableSlots.find((entry)=>entry.slot==='outer');
+  assert.ok(!coveredOuter?.alternatives.some((entry)=>entry.itemId==='transition_overall'));
+  assert.ok(!coveredOuter?.alternatives.some((entry)=>entry.itemId==='winter_overall'));
+});
+
+test('carrier baseline uses a jacket while a carrier cover is active',()=>{
+  const result=recommendOutfit(request(carrier(),{w:weather(5)}));
+  assert.equal(id(result,'carrier_accessory'),'carrier_cover_warm');
+  assert.ok(!['transition_overall','winter_overall'].includes(id(result,'outer')));
+});
+
 test('manual jacket and stroller-accessory changes do not accumulate thermal rebalance by tap order',()=>{
   const context=stroller({strollerState:'awake',activity:'normal'});
   const w=weather(15);

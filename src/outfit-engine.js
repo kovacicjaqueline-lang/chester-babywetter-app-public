@@ -423,8 +423,13 @@ function attachAlternatives(result,request) {
   const temperature = result.phases.find((entry) => entry.phase === 'main')?.thermalReferenceC;
   if (!outer && ['outdoor','stroller','carrier'].includes(request.context.mode) && temperature < 24) {
     const slotResult = { phase:'main', slot:'outer', selected:{ itemId:null }, alternatives:[] };
-    const jacketIds = (SLOT_ITEMS.outer ?? []).filter((itemId) => itemId.endsWith('_jacket'));
-    const alternatives = projectedAlternatives(result,request,slotResult,jacketIds);
+    const activeCarrierCover = result.slots.find((entry) => entry.phase === 'main' && entry.slot === 'carrier_accessory')?.selected.itemId;
+    const outerLayerIds = alternativeCandidateIds(slotResult,request.context.mode)
+      .filter((itemId) => itemId.endsWith('_jacket') || itemId.endsWith('_overall'))
+      .filter((itemId) => request.context.mode !== 'carrier'
+        || !itemId.endsWith('_overall')
+        || activeCarrierCover === 'carrier_cover_none');
+    const alternatives = projectedAlternatives(result,request,slotResult,outerLayerIds);
     if (alternatives.length) result.addableSlots.push({ phase:slotResult.phase, slot:slotResult.slot, addLabel:'Außenschicht hinzufügen', alternatives });
   }
 }
