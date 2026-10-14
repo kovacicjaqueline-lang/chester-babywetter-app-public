@@ -31,7 +31,6 @@ test('Outfit-Übersicht zeigt mobil nur Kleidungsname und Rolle', async ({ page 
   expect(outfitNameFontSizes).toBe(1);
 
   const addableName = page.locator('#outfitGrid .clothing-card-addable .clothing-name');
-  await expect(addableName).toHaveText('Außenschicht hinzufügen');
   const renderedAddableName = await addableName.evaluate((element) => element.textContent.replaceAll('\u00ad', ''));
   expect(renderedAddableName).toBe('Außenschicht hinzufügen');
   const wrapping = await addableName.evaluate((element) => ({
