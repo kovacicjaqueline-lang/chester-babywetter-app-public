@@ -375,7 +375,8 @@ export function applySunProtection(state,result,request,uv,temp,phase,mode) {
   if (exposure === 'direct') {
     const age = ageMonths(request.profile.birthDate, request.weather?.current?.time ?? request.requestedAt);
     if (age == null) addNotice(result,'AGE_UNKNOWN_DIRECT_SUN_CONSERVATIVE_RULE','caution',phase,['DIRECT_SUN_AVOIDANCE'],{});
-    else if (age < 12) addNotice(result,'INFANT_UNDER_12M_AVOID_DIRECT_SUN','caution',phase,['DIRECT_SUN_AVOIDANCE'],{ ageMonths:age });
+    else if (age < 6) addNotice(result,'INFANT_UNDER_6M_AVOID_DIRECT_SUN','caution',phase,['DIRECT_SUN_AVOIDANCE'],{ ageMonths:age });
+    else if (age < 12) addNotice(result,'INFANT_6_TO_12M_SHADE_UV_PROTECTION','caution',phase,['DIRECT_SUN_AVOIDANCE'],{ ageMonths:age });
   }
   if (!uv.active || mode === 'car') return;
   addNotice(result,'UV_SHADE_AND_COVERAGE','caution',phase,['UV_SHADE_AND_COVERAGE'],{ uvIndex:uv.uvIndex ?? null });
