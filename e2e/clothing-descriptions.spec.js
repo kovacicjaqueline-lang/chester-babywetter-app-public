@@ -33,11 +33,13 @@ test('Outfit-Übersicht zeigt mobil nur Kleidungsname und Rolle', async ({ page 
   const wrapping = await addableName.evaluate((element) => ({
     overflowWrap: getComputedStyle(element).overflowWrap,
     wordBreak: getComputedStyle(element).wordBreak,
+    whiteSpace: getComputedStyle(element).whiteSpace,
     width: element.getBoundingClientRect().width,
     scrollWidth: element.scrollWidth
   }));
   expect(wrapping.overflowWrap).toBe('normal');
   expect(wrapping.wordBreak).toBe('normal');
+  expect(wrapping.whiteSpace).toBe('normal');
   expect(wrapping.scrollWidth).toBeLessThanOrEqual(wrapping.width + 1);
 });
 
