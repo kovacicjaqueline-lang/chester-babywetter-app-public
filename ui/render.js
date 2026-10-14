@@ -1,6 +1,7 @@
 import { formatPrecipitation, formatTemperature, formatTemperatureC, formatUvIndex, precipitationLabelFor } from './weather-copy.js';
 import { isCompositeSleepVisualItem, visualPartsForItem } from './sleep-visual-parts.js';
 import { getClothingDescription } from '../src/clothing-catalog.js';
+import { getHourlySelectionSnapshot } from '../src/integration/hourly-selection.js';
 
 const MODE_COPY = Object.freeze({
   outdoor: { label: 'Draußen', icon: '☀', short: 'Wetter + Aktivität' },
@@ -55,6 +56,11 @@ const PHASE_COPY = Object.freeze({
   main: 'Jetzt',
   in_car: 'Im Autositz'
 });
+const WEATHER_SELECTION_MODES = new Set(['outdoor', 'stroller', 'carrier', 'car']);
+
+function formattedWeatherHour(value) {
+  return new Intl.DateTimeFormat('de-AT', { hour: '2-digit', minute: '2-digit' }).format(new Date(value));
+}
 
 function weatherIcon(code, isDay) {
   if (!Number.isFinite(code)) return '◌';
@@ -311,12 +317,18 @@ function unavailableWeatherLabel(runtime) {
 
 export function renderWeather(weather, location, runtime = {}, context = null) {
   document.querySelector('#locationLabel').textContent = location?.label || weather?.location?.label || 'Standort wählen';
-  const current = weather?.current ?? null;
+  const selection = getHourlySelectionSnapshot();
+  const selectedPoint = WEATHER_SELECTION_MODES.has(context?.mode) && selection.selectedTime
+    ? selection.options.find((option) => option.time === selection.selectedTime)?.point ?? null
+    : null;
+  const current = selectedPoint ?? weather?.current ?? null;
   const roomMode = ['indoor', 'sleep'].includes(context?.mode);
   const roomTemperature = Number.isFinite(context?.roomTempC) ? context.roomTempC : null;
   const hero = document.querySelector('.weather-hero');
   hero.classList.toggle('weather-hero--room', roomMode);
-  document.querySelector('#weatherHeading').textContent = roomMode ? (context.mode === 'sleep' ? 'Schlafraum' : 'Drinnen') : 'Jetzt';
+  document.querySelector('#weatherHeading').textContent = roomMode
+    ? (context.mode === 'sleep' ? 'Schlafraum' : 'Drinnen')
+    : selection.selectedTime && selectedPoint ? formattedWeatherHour(selection.selectedTime) : 'Jetzt';
   document.querySelector('#temperatureValue').textContent = roomMode ? formatTemperature(roomTemperature) : formatTemperature(current?.airTempC);
   document.querySelector('#weatherSymbol').textContent = roomMode ? (context.mode === 'sleep' ? '☾' : '⌂') : (current ? weatherIcon(current.weatherCode, current.isDay) : '◌');
   document.querySelector('#weatherDescription').textContent = roomMode

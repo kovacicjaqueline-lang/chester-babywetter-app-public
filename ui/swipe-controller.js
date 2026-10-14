@@ -222,6 +222,21 @@ function triggerRecommendationRecalculation() {
   window.dispatchEvent(new CustomEvent('babyweather:recalculate-recommendation'));
 }
 
+function selectAdjacentForecast(direction) {
+  const snapshot = getHourlySelectionSnapshot();
+  if (!WEATHER_SELECTION_MODES.has(snapshot.mode) || !snapshot.options.length) return false;
+  const currentIndex = Math.max(0, snapshot.options.findIndex((option) => option.time === snapshot.selectedTime));
+  const nextIndex = Math.max(0, Math.min(snapshot.options.length - 1, currentIndex + direction));
+  if (nextIndex === currentIndex) return false;
+
+  const nextOption = snapshot.options[nextIndex];
+  const nextTime = nextOption.kind === 'now' ? null : nextOption.time;
+  if (!setHourlySelectionStart(nextTime)) return false;
+  announce(nextTime ? `Wetter und Outfit für ${formattedHour(nextTime)} werden berechnet` : 'Wetter und Outfit für jetzt werden berechnet');
+  triggerRecommendationRecalculation();
+  return true;
+}
+
 function bindHourlySelection() {
   const host = document.querySelector('#hourlyForecast');
   if (!host) return;
@@ -250,6 +265,14 @@ function initSwipeControls() {
   createBottomNav();
   bindHourlySelection();
   bindPullToRefresh();
+
+  const temperatureSurface = document.querySelector('.temperature-line');
+  if (temperatureSurface) {
+    temperatureSurface.style.touchAction = 'pan-y';
+    bindHorizontalSwipe(temperatureSurface, (direction) => {
+      if (selectAdjacentForecast(direction)) flash(temperatureSurface);
+    });
+  }
 
   const situationStrip = document.querySelector('.situation-strip');
   bindHorizontalSwipe(situationStrip, (direction) => {

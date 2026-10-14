@@ -12,6 +12,33 @@ async function chooseSituation(page, mode) {
   await page.locator('#applySituationButton').click();
 }
 
+async function swipe(page, selector, { fromX = 280, toX = 80, y = 24 } = {}) {
+  const target = page.locator(selector);
+  await target.dispatchEvent('pointerdown', { pointerId: 1, pointerType: 'touch', clientX: fromX, clientY: y, button: 0 });
+  await target.dispatchEvent('pointerup', { pointerId: 1, pointerType: 'touch', clientX: toX, clientY: y, button: 0 });
+}
+
+test('Wischen direkt auf der Temperatur wechselt Wetteranzeige und Outfit zur nächsten Stunde', async ({ page }) => {
+  await openDemo(page);
+  await chooseSituation(page, 'outdoor');
+
+  const nowChoice = page.locator('#hourlyForecast [data-hourly-choice="now"]');
+  const firstFuture = page.locator('#hourlyForecast [data-hourly-start-time]').first();
+  const futureTime = await firstFuture.getAttribute('data-hourly-start-time');
+  const expectedHour = new Date(futureTime).toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit' });
+
+  await swipe(page, '.temperature-line');
+  await expect(page.locator(`#hourlyForecast [data-hourly-start-time="${futureTime}"]`)).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#weatherHeading')).toHaveText(expectedHour);
+  await expect(page.locator('#outfitTimeLabel')).toHaveText(`Für ${expectedHour}`);
+  await expect(page.locator('.temperature-line')).toHaveCSS('touch-action', 'pan-y');
+
+  await swipe(page, '.temperature-line', { fromX: 80, toX: 280 });
+  await expect(nowChoice).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#weatherHeading')).toHaveText('Jetzt');
+  await expect(page.locator('#outfitTimeLabel')).toHaveText('Für jetzt');
+});
+
 test('Stundenauswahl berechnet das Outfit sofort für den gewählten Prognosezeitpunkt neu', async ({ page }) => {
   await openDemo(page);
   await chooseSituation(page, 'outdoor');
