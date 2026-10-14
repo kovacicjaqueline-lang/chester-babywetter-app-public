@@ -176,6 +176,18 @@ test('fehlende Außenschicht kann ergänzend über der Basisschicht gewählt wer
   await expect(addOuter).toBeVisible();
   await addOuter.click();
   await expect(page.locator('#alternativeTitle')).toHaveText('Außenschicht hinzufügen');
+  await page.locator('#alternativeOptions [data-alternative-item-id="light_transition_jacket"]').click();
+  await expect(page.locator('#outfitGrid [data-item-id="light_transition_jacket"]')).toBeVisible();
+  await expect(page.locator('#outfitGrid [data-item-id="long_sleeve_bodysuit"]')).toBeVisible();
+});
+
+test('fehlende Außenschicht kann ergänzend über der Basisschicht gewählt werden', async ({ page }) => {
+  await openDemo(page);
+  await chooseSituation(page, 'outdoor');
+  const addOuter = page.locator('#outfitGrid [data-addable-slot="true"][data-slot="outer"]');
+  await expect(addOuter).toBeVisible();
+  await addOuter.click();
+  await expect(page.locator('#alternativeTitle')).toHaveText('Außenschicht hinzufügen');
   await expect(page.locator('#alternativeOptions [data-alternative-item-id="transition_overall"]')).toBeVisible();
   await expect(page.locator('#alternativeOptions [data-alternative-item-id="winter_overall"]')).toBeVisible();
   await page.locator('#alternativeOptions [data-alternative-item-id="light_transition_jacket"]').click();
@@ -371,11 +383,13 @@ test('Schlafmodus verwendet Raumtemperatur', async ({ page }) => {
   await expect(page.locator('[data-notice-code="SLEEP_NO_HAT"]')).toBeVisible();
 });
 
-test('Nackentest bleibt kurz sichtbar; Detailhinweis steht in Hilfe', async ({ page }) => {
+test('Nackentest bleibt dezent erreichbar; Details stehen im Feedbackdialog', async ({ page }) => {
   await openDemo(page);
-  await expect(page.getByTestId('neck-check')).toBeVisible();
-  await expect(page.getByTestId('neck-check')).toContainText('Warm & trocken');
-  await expect(page.getByTestId('neck-check')).not.toContainText('Kalte Hände oder Füße');
+  const neckCheck = page.getByTestId('neck-check');
+  await expect(neckCheck).toBeVisible();
+  await expect(neckCheck).not.toContainText('Warm & trocken');
+  await expect(neckCheck.getByRole('button', { name:'Nackentest anwenden' })).toHaveText('Prüfen');
+  await expect(page.locator('#neckFeedbackStatus')).toBeHidden();
   await page.locator('[data-open-dialog="helpDialog"]').click();
   await expect(page.locator('#helpDialog')).toBeVisible();
   await expect(page.locator('#helpDialog')).toContainText('Kalte Hände oder Füße');

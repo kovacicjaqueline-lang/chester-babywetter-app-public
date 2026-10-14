@@ -3,22 +3,29 @@ import { test, expect } from '@playwright/test';
 async function openDemo(page) {
   await page.goto('/?demo=1');
   await expect(page.locator('#confidencePill')).not.toHaveText('Lädt …');
-  await expect(page.locator('#neckFeedbackStatus')).toContainText('Noch keine Rückmeldung');
+  await expect(page.locator('#neckFeedbackStatus')).toBeHidden();
 }
 
-test('Nackentest-Hinweis und Feedbackstatus überlappen mobil nicht', async ({ page }) => {
+test('Nackentest bleibt mobil dezent; Rückmeldestatus erscheint erst nach Auswahl', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await openDemo(page);
 
-  const guidance = page.locator('[data-testid="neck-check"] p').filter({ hasText:'Warm & trocken' }).first();
+  const neckCheck = page.getByTestId('neck-check');
   const status = page.locator('#neckFeedbackStatus');
-  await expect(guidance).toBeVisible();
-  await expect(status).toBeVisible();
+  await expect(neckCheck).not.toContainText('Warm & trocken');
+  await expect(status).toBeHidden();
 
-  const [guidanceBox, statusBox] = await Promise.all([guidance.boundingBox(), status.boundingBox()]);
-  expect(guidanceBox).not.toBeNull();
+  await page.getByRole('button', { name:'Nackentest anwenden' }).click();
+  await page.locator('[data-neck-feedback="warm_dry"]').click();
+  await expect(status).toContainText('Warm & trocken');
+
+  const [buttonBox, statusBox] = await Promise.all([
+    neckCheck.getByRole('button', { name:'Nackentest anwenden' }).boundingBox(),
+    status.boundingBox()
+  ]);
+  expect(buttonBox).not.toBeNull();
   expect(statusBox).not.toBeNull();
-  expect(statusBox.y).toBeGreaterThanOrEqual(guidanceBox.y + guidanceBox.height - 0.5);
+  expect(statusBox.y).toBeGreaterThanOrEqual(buttonBox.y + buttonBox.height - 0.5);
 });
 
 test('Outfit zeigt alle Teile ohne horizontales Scrollen', async ({ page }) => {
