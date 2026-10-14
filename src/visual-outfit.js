@@ -483,6 +483,43 @@ function buildLookCandidates(catalog, visualManifest, itemIds, paletteMode, them
   return candidates;
 }
 
+const LOOK_SELECTION_CACHE = new WeakMap();
+const MAX_CACHED_LOOK_COMPOSITIONS = 64;
+
+// A new seed selects from the same set of compositions. Build that set just
+// once per immutable manifest pair, clothing combination and palette mode.
+function cachedLookCandidates(assetManifest, visualManifest, itemIds, paletteMode, themeId) {
+  assertObject(assetManifest, 'assetManifest');
+  assertObject(visualManifest, 'visualManifest');
+
+  let byVisualManifest = LOOK_SELECTION_CACHE.get(assetManifest);
+  if (!byVisualManifest) {
+    byVisualManifest = new WeakMap();
+    LOOK_SELECTION_CACHE.set(assetManifest, byVisualManifest);
+  }
+  let state = byVisualManifest.get(visualManifest);
+  if (!state) {
+    state = { catalog: buildVisualCatalog(assetManifest, visualManifest), looks: new Map() };
+    byVisualManifest.set(visualManifest, state);
+  }
+
+  const key = JSON.stringify([itemIds, paletteMode, themeId]);
+  const cached = state.looks.get(key);
+  if (cached) {
+    // Keep recently used outfits available without retaining every combination.
+    state.looks.delete(key);
+    state.looks.set(key, cached);
+    return cached;
+  }
+
+  const candidates = buildLookCandidates(state.catalog, visualManifest, itemIds, paletteMode, themeId);
+  if (state.looks.size >= MAX_CACHED_LOOK_COMPOSITIONS) {
+    state.looks.delete(state.looks.keys().next().value);
+  }
+  state.looks.set(key, candidates);
+  return candidates;
+}
+
 function normalizedSeedOffset(visualSeed, candidateCount) {
   if (Number.isSafeInteger(visualSeed)) {
     return ((visualSeed % candidateCount) + candidateCount) % candidateCount;
@@ -562,9 +599,8 @@ export function selectVisualLook({
   }
   const normalizedPaletteMode = normalizePaletteMode(paletteMode, styleTheme);
 
-  const catalog = buildVisualCatalog(assetManifest, visualManifest);
   const itemIds = recommendation.slots.map((slotResult) => slotResult?.selected?.itemId || null);
-  const lookCandidates = buildLookCandidates(catalog, visualManifest, itemIds, normalizedPaletteMode, themeId);
+  const lookCandidates = cachedLookCandidates(assetManifest, visualManifest, itemIds, normalizedPaletteMode, themeId);
   const lookIndex = normalizedSeedOffset(visualSeed, lookCandidates.length);
   const selectedLook = lookCandidates[lookIndex];
   const theme = selectedLook.theme;
