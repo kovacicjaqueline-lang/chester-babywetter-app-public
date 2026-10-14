@@ -61,9 +61,12 @@ const REBALANCE_SLOTS_BY_LOCK = Object.freeze({
   head:Object.freeze(['head']),
   hands:Object.freeze(['hands'])
 });
+const STRAMPLER_ALTERNATIVES = Object.freeze(['strampler_without_feet','strampler_with_feet']);
 const CROSS_SLOT_ALTERNATIVES = Object.freeze({
-  long_sleeve_bodysuit: Object.freeze(['light_long_sleeve_shirt']),
-  light_long_sleeve_shirt: Object.freeze(['long_sleeve_bodysuit'])
+  short_sleeve_bodysuit: STRAMPLER_ALTERNATIVES,
+  long_sleeve_bodysuit: Object.freeze(['light_long_sleeve_shirt',...STRAMPLER_ALTERNATIVES]),
+  t_shirt: STRAMPLER_ALTERNATIVES,
+  light_long_sleeve_shirt: Object.freeze(['long_sleeve_bodysuit',...STRAMPLER_ALTERNATIVES])
 });
 
 export function createSession(sessionId = 'session') {
@@ -428,6 +431,14 @@ export function applyBodyLocksAndRebalance(state,result,request,phase,mode) {
     const delta = definition.thermalWeight - beforeWeight - replacedCrossSlotWeight;
     const wearPosition = phase === 'in_car' ? 'under_harness' : 'on_body';
     setSelected(state,lock.slot,lock.itemId,'manual_lock',wearPosition,['MANUAL_ITEM_LOCK']);
+    if (definition.upperBodyThermalCredit > 0) {
+      if (definition.bodyZones.includes('feet') && !findLock(request.session,phase,'feet')) {
+        state.map.delete('feet');
+        addTrace(result,'swap.coverage.strampler.feet',phase,'remove','feet',null,'BODY_ZONE_COVERAGE_REBALANCE');
+      }
+      const changedUpperSlot = applyThermalDelta(state,-definition.upperBodyThermalCredit,lockedThermalSlots,mode,['top','mid'],true,new Set(['top','mid']));
+      if (changedUpperSlot) addTrace(result,'swap.coverage.strampler.upper',phase,'thermal_down','upper_body',-1,'BODY_ZONE_COVERAGE_REBALANCE');
+    }
     addTrace(result,'swap.manual_lock',phase,'lock',lock.itemId,delta,'MANUAL_ITEM_LOCK');
     if (phase === 'in_car' && definition.carSeatCompatibility === 'conditional') {
       addNotice(result,'CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT','caution',phase,['CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT'],{ itemId:lock.itemId });

@@ -440,7 +440,8 @@ function projectedAlternatives(result,request,slotResult,candidates) {
     if (projected.status === 'blocked') continue;
     const projectedSelection = projected.slots.find((entry) => entry.phase === slotResult.phase && entry.slot === candidateSlot);
     if (!projectedSelection || projectedSelection.selected.itemId !== itemId) continue;
-    if (candidateSlot !== slotResult.slot && slotResult.selected.itemId) {
+    const preservesBaseLayer = (CLOTHING_CATALOG[itemId]?.upperBodyThermalCredit ?? 0) > 0;
+    if (candidateSlot !== slotResult.slot && slotResult.selected.itemId && !preservesBaseLayer) {
       const originalStillSelected = projected.slots.some((entry) => entry.phase === slotResult.phase && entry.selected.itemId === slotResult.selected.itemId);
       if (originalStillSelected) continue;
     }

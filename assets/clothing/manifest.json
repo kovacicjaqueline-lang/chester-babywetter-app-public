@@ -996,6 +996,40 @@
       ],
       "altText": "Dünne Strickjacke.",
       "assetPath": "assets/clothing/thin_cardigan/neutral.webp"
+    },
+    {
+      "id": "strampler_without_feet",
+      "label": "Strampler ohne Füße",
+      "category": "strampler",
+      "slot": "legs",
+      "situations": [
+        "outdoor",
+        "stroller",
+        "carrier",
+        "car"
+      ],
+      "styleVariants": [
+        "neutral"
+      ],
+      "altText": "Leichter Langarm-Strampler ohne integrierte Füße.",
+      "assetPath": "assets/clothing/strampler_without_feet/neutral.webp"
+    },
+    {
+      "id": "strampler_with_feet",
+      "label": "Strampler mit Füßen",
+      "category": "strampler",
+      "slot": "legs",
+      "situations": [
+        "outdoor",
+        "stroller",
+        "carrier",
+        "car"
+      ],
+      "styleVariants": [
+        "neutral"
+      ],
+      "altText": "Leichter Langarm-Strampler mit integrierten Füßen.",
+      "assetPath": "assets/clothing/strampler_with_feet/neutral.webp"
     }
   ]
 }

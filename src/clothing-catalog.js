@@ -2,12 +2,13 @@ const MODES = ['outdoor', 'stroller', 'carrier', 'car', 'sleep'];
 
 function def({ itemId, description, kind = 'clothing', slot, category = itemId, bodyZones = [], thermalWeight = 0,
   thermalStepCredit = 0, sleepWarmthWeight = null, tog = null, windProtection = 0,
-  rainProtection = 0, sunCoverage = 0, thermalWeightByZone = null, carSeatCompatibility = 'allowed', sleepSafe = false,
+  rainProtection = 0, sunCoverage = 0, thermalWeightByZone = null, thermalSignatureWeight = null, upperBodyThermalCredit = 0, carSeatCompatibility = 'allowed', sleepSafe = false,
   allowedSituations = MODES, styleAssetGroup = itemId }) {
   return Object.freeze({
     itemId, kind, slot, category, labelKey: `clothing.${itemId}`, description, bodyZones: Object.freeze([...bodyZones]),
     thermalWeight, thermalStepCredit, sleepWarmthWeight, tog, windProtection, rainProtection,
     sunCoverage, thermalWeightByZone: thermalWeightByZone ? Object.freeze({ ...thermalWeightByZone }) : null,
+    thermalSignatureWeight, upperBodyThermalCredit,
     carSeatCompatibility, sleepSafe, allowedSituations: Object.freeze([...allowedSituations]),
     styleAssetGroup
   });
@@ -24,6 +25,8 @@ const items = [
   def({ itemId:'trousers', description:'Normale ungefütterte Alltagshose mittlerer Stoffstärke.', slot:'legs', bodyZones:['legs'], thermalWeight:2, sleepSafe:false, allowedSituations:['outdoor','stroller','carrier','car'] }),
   def({ itemId:'warm_trousers', description:'Dickere oder gefütterte Hose, deutlich wärmer als eine normale Hose.', slot:'legs', bodyZones:['legs'], thermalWeight:3, sleepSafe:false, allowedSituations:['outdoor','stroller','carrier','car'] }),
   def({ itemId:'tights', description:'Normale Strumpfhose mittlerer Stärke, die Beine und Füße bedeckt.', slot:'legs', bodyZones:['legs','feet'], thermalWeight:2, thermalWeightByZone:{ feet:1 }, sleepSafe:false, allowedSituations:['outdoor','stroller','carrier','car'] }),
+  def({ itemId:'strampler_without_feet', description:'Leichter, ungefütterter Langarm-Strampler aus Jersey mit freien Füßen; kann über einem Body getragen werden.', slot:'legs', category:'strampler', bodyZones:['torso','arms','legs'], thermalWeight:2, thermalWeightByZone:{ torso:1, arms:1, legs:2 }, thermalSignatureWeight:4, upperBodyThermalCredit:1, sleepSafe:false, allowedSituations:['outdoor','stroller','carrier','car'] }),
+  def({ itemId:'strampler_with_feet', description:'Leichter, ungefütterter Langarm-Strampler aus Jersey mit integrierten Füßen; kann über einem Body getragen werden.', slot:'legs', category:'strampler', bodyZones:['torso','arms','legs','feet'], thermalWeight:2, thermalWeightByZone:{ torso:1, arms:1, legs:2, feet:1 }, thermalSignatureWeight:5, upperBodyThermalCredit:1, sleepSafe:false, allowedSituations:['outdoor','stroller','carrier','car'] }),
 
   def({ itemId:'thin_sweater', description:'Leichter Strick- oder Jersey-Pullover, ungefüttert.', slot:'mid', bodyZones:['torso','arms'], thermalWeight:2, carSeatCompatibility:'allowed', allowedSituations:['outdoor','stroller','carrier','car'] }),
   def({ itemId:'sweatshirt', description:'Pullover aus normalem Sweatstoff, nicht dick gefüttert oder stark angeraut.', slot:'mid', bodyZones:['torso','arms'], thermalWeight:2, carSeatCompatibility:'allowed', allowedSituations:['outdoor','stroller','carrier','car'] }),

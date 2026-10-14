@@ -558,6 +558,34 @@ test('extreme cold, heat and strong wind produce caution codes',()=>{
   assert.ok(notices(recommendOutfit(request(outdoor(),{w:weather(18,{windGustKmh:60})}))).includes('STRONG_WIND_CAUTION'));
 });
 
+test('Strampler-Alternativen bleiben am Body und an der Hose verfügbar und gleichen Oberkörper/Füße aus',()=>{
+  const context=outdoor();
+  const w=weather(16);
+  const baseline=recommendOutfit(request(context,{w}));
+  const bodyOptions=slot(baseline,'base_torso').alternatives.map((option)=>option.itemId);
+  const legOptions=slot(baseline,'legs').alternatives.map((option)=>option.itemId);
+  assert.ok(bodyOptions.includes('strampler_without_feet'));
+  assert.ok(bodyOptions.includes('strampler_with_feet'));
+  assert.ok(legOptions.includes('strampler_without_feet'));
+  assert.ok(legOptions.includes('strampler_with_feet'));
+
+  const noFeetSession=lockItem(createSession('romper_no_feet'),{slot:'base_torso',itemId:'strampler_without_feet'});
+  const noFeet=recommendOutfit(request(context,{w,session:noFeetSession}));
+  assert.equal(id(noFeet,'base_torso'),'long_sleeve_bodysuit');
+  assert.equal(id(noFeet,'legs'),'strampler_without_feet');
+  assert.equal(id(noFeet,'mid'),null);
+
+  const withFeetSession=lockItem(createSession('romper_with_feet'),{slot:'base_torso',itemId:'strampler_with_feet'});
+  const withFeet=recommendOutfit(request(context,{w,session:withFeetSession}));
+  assert.equal(id(withFeet,'base_torso'),'long_sleeve_bodysuit');
+  assert.equal(id(withFeet,'legs'),'strampler_with_feet');
+  assert.equal(id(withFeet,'feet'),null);
+
+  const pinnedFeetSession=lockItem(withFeetSession,{slot:'feet',itemId:'socks'});
+  const pinnedFeet=recommendOutfit(request(context,{w,session:pinnedFeetSession}));
+  assert.equal(id(pinnedFeet,'feet'),'socks');
+});
+
 test('all recommendation slots are unique per phase and use known catalog items',()=>{
   const scenarios=[outdoor(),stroller(),carrier(),car(),sleep()];
   for (const context of scenarios) {
