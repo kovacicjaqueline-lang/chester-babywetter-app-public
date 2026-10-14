@@ -6,30 +6,29 @@ async function openDemo(page) {
   await expect(page.locator('#outfitGrid .clothing-card').first()).toBeVisible();
 }
 
-test('Outfit-Karten zeigen mobil Name und kompakte, untergeordnete Beschreibung', async ({ page }) => {
+test('Outfit-Übersicht zeigt mobil nur Kleidungsname und Rolle', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await openDemo(page);
+
   const cards = page.locator('#outfitGrid .clothing-card[data-item-id]');
   expect(await cards.count()).toBeGreaterThan(1);
   for (const card of await cards.all()) {
     await expect(card.locator('.clothing-name')).not.toBeEmpty();
-    await expect(card.locator('.clothing-description')).not.toBeEmpty();
-    const typography = await card.evaluate((element) => {
-      const name = getComputedStyle(element.querySelector('.clothing-name'));
-      const description = getComputedStyle(element.querySelector('.clothing-description'));
-      return {
-        nameSize: Number.parseFloat(name.fontSize),
-        descriptionSize: Number.parseFloat(description.fontSize),
-        descriptionColor: description.color,
-        nameColor: name.color,
-        descriptionWidth: element.querySelector('.clothing-description').getBoundingClientRect().width,
-        cardWidth: element.getBoundingClientRect().width
-      };
-    });
-    expect(typography.descriptionSize).toBeLessThan(typography.nameSize);
-    expect(typography.descriptionColor).not.toBe(typography.nameColor);
-    expect(typography.descriptionWidth).toBeLessThanOrEqual(typography.cardWidth + 1);
+    await expect(card.locator('.clothing-role')).not.toBeEmpty();
+    await expect(card.locator('.clothing-description')).toHaveCount(0);
   }
+
+  const addableName = page.locator('#outfitGrid .clothing-card-addable .clothing-name');
+  await expect(addableName).toHaveText('Außenschicht hinzufügen');
+  const wrapping = await addableName.evaluate((element) => ({
+    overflowWrap: getComputedStyle(element).overflowWrap,
+    wordBreak: getComputedStyle(element).wordBreak,
+    width: element.getBoundingClientRect().width,
+    scrollWidth: element.scrollWidth
+  }));
+  expect(wrapping.overflowWrap).toBe('normal');
+  expect(wrapping.wordBreak).toBe('normal');
+  expect(wrapping.scrollWidth).toBeLessThanOrEqual(wrapping.width + 1);
 });
 
 test('Alternativen zeigen Name, Beschreibung und Wärmebeziehung in dieser Reihenfolge', async ({ page }) => {
