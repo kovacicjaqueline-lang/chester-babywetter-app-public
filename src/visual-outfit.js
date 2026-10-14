@@ -229,6 +229,12 @@ function primaryPaletteTags(variant) {
   return paletteTags(variant).filter((tag) => !NEUTRAL_PALETTE_TAGS.has(tag));
 }
 
+const NON_COLOR_PALETTE_TAGS = new Set(['warm_soft', 'cool_muted']);
+
+function hasAccentColor(variant) {
+  return primaryPaletteTags(variant).some((tag) => !NON_COLOR_PALETTE_TAGS.has(tag));
+}
+
 function paletteModeProfile(catalog, visualManifest, paletteMode) {
   const configured = catalog.paletteModeProfiles?.[paletteMode];
   if (configured) return configured;
@@ -255,7 +261,10 @@ function stylePreferenceScore(variant, profile) {
 
 function themeRoleScore(variant, theme) {
   const colors = theme.colors || {};
-  return paletteTags(variant).reduce((sum, tag) => {
+  // New colorways can fit a theme through themeIds even when their hue is not
+  // explicitly named in that theme's original color roles.
+  const accentBonus = hasAccentColor(variant) ? 2 : 0;
+  return accentBonus + paletteTags(variant).reduce((sum, tag) => {
     if (colors.primary?.includes(tag)) return sum + 6;
     if (colors.secondary?.includes(tag)) return sum + 3;
     if (colors.neutral?.includes(tag)) return sum + 1;
@@ -440,27 +449,35 @@ function buildLookCandidates(catalog, visualManifest, itemIds, paletteMode, them
 
   if (themeId != null) return candidates;
 
-  // Complete theme compositions are the most coherent look cycle. Only fan out
-  // individual item variants when the available themes render identically.
-  if (candidates.length > 1) return candidates;
-
+  // Show each theme's coordinated outfit first. Then expose other compatible
+  // garment colors; otherwise most additional colorways never appear at all.
+  const multipleThemes = candidates.length > 1;
   for (const scoredTheme of themes) {
-    for (const selection of scoredTheme.result.selections) {
-      if (!selection.group) continue;
+    let addedForTheme = 0;
+    const selections = [...scoredTheme.result.selections]
+      .filter((selection) => selection.group)
+      .sort((left, right) => itemWeight(right.group) - itemWeight(left.group));
+    for (const selection of selections) {
+      // A second sock or blanket alone should not crowd out different outfits.
+      if (multipleThemes && itemWeight(selection.group) < 4) continue;
       const alternatives = variantCandidates(selection.group, scoredTheme.theme, paletteMode, catalog, visualManifest)
-        .sort(compareCandidates);
+        .sort(compareCandidates)
+        .filter((candidate) => candidate.variant.id !== selection.chosen.variant?.id
+          && (!multipleThemes || (candidate.themed && hasAccentColor(candidate.variant))));
       for (const alternative of alternatives) {
-        if (alternative.variant.id === selection.chosen.variant?.id) continue;
         const result = chooseVariantsForTheme(
-          catalog,
-          visualManifest,
-          itemIds,
-          scoredTheme.theme,
-          paletteMode,
+          catalog, visualManifest, itemIds, scoredTheme.theme, paletteMode,
           new Map([[selection.index, alternative.variant.id]])
         );
+        const before = candidates.length;
         addCandidate(scoredTheme.theme, result);
+        if (multipleThemes && candidates.length > before) {
+          addedForTheme += 1;
+          break;
+        }
       }
+      // Bound work on mobile: maximum three extra garment looks per theme.
+      if (multipleThemes && addedForTheme >= 3) break;
     }
   }
   return candidates;
