@@ -18,10 +18,12 @@ test('Outfit-Übersicht zeigt mobil nur Kleidungsname und Rolle', async ({ page 
     await expect(card.locator('.clothing-description')).toHaveCount(0);
     const nameLayout = await card.locator('.clothing-name').evaluate((element) => ({
       overflowWrap: getComputedStyle(element).overflowWrap,
+      hyphens: getComputedStyle(element).hyphens,
       clientWidth: element.clientWidth,
       scrollWidth: element.scrollWidth
     }));
-    expect(nameLayout.overflowWrap).toBe('anywhere');
+    expect(nameLayout.overflowWrap).toBe('normal');
+    expect(nameLayout.hyphens).toBe('auto');
     expect(nameLayout.scrollWidth).toBeLessThanOrEqual(nameLayout.clientWidth + 1);
   }
 
