@@ -561,7 +561,9 @@ code { font-size: .84em; }
 .clothing-card-addable .clothing-role {
   display: block;
   max-width: 100%;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
 }
 .clothing-image-shell img {
   width: 100%;
