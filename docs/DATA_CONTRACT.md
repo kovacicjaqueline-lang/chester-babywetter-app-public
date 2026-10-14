@@ -110,7 +110,7 @@ Regeln:
 
 - V1-Scope: 0–24 Monate,
 - `birthDate` bleibt optional und ist die einzige persistente Altersquelle; das aktuelle Alter wird zum `requestedAt` abgeleitet und nicht zusätzlich gespeichert,
-- bei unbekanntem Alter + direkter Sonne gilt konservativ die `<12 Monate`-Sonnenregel,
+- bei direkter Sonne: unter sechs vollendeten Monaten Sonne vermeiden, ab sechs Monaten altersgerechten Schutz (Schatten, Kleidung, Sonnencreme) einplanen; bei unbekanntem Alter gilt konservativ die Unter-6-Monate-Regel,
 - `mobilityStage` ist Pflicht in neu gespeicherten Profilen; ältere Schema-V1-Profile ohne dieses Feld werden beim Laden/Import auf `low_mobility` migriert,
 - `mobilityStage` verändert selbst keine thermische Stufe und setzt weder `activity` noch `groundContact` automatisch,
 - kein Kleidungsinventar,
@@ -760,7 +760,8 @@ Normative Codes mindestens:
 - `STROLLER_DO_NOT_COVER_AIRFLOW`,
 - `STROLLER_RAIN_COVER`,
 - `STROLLER_SUNSHADE`,
-- `INFANT_UNDER_12M_AVOID_DIRECT_SUN`,
+- `INFANT_UNDER_6M_AVOID_DIRECT_SUN`,
+- `CHILD_FROM_6M_SUN_PROTECTION`,
 - `AGE_UNKNOWN_DIRECT_SUN_CONSERVATIVE_RULE`,
 - `UV_SHADE_AND_COVERAGE`,
 - `WEATHER_DATA_STALE`,

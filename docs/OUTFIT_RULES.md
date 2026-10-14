@@ -269,7 +269,7 @@ Für Wachkleidung gilt als vorsichtige V1-Produktheuristik:
 
 Die Korrektur gilt für `outdoor`, `stroller`, `carrier`, `indoor` sowie für sichere körpernahe Kleidung in `car/in_car`. Die Autositz-Gurtsicherheitsregeln bleiben dabei immer vorrangig.
 
-Ab `28 °C` wird **keine zusätzliche Isolation allein wegen jungen Alters** ergänzt. Sonnen-/UV-Schutz und Hitzewarnungen bleiben unabhängig davon aktiv.
+Ab `28 °C` wird **keine zusätzliche Isolation allein wegen jungen Alters** ergänzt. Zwischen 24 und unter 28 °C darf der kleine Altersfaktor insbesondere keine isolierende Mid-/Outer-Schicht erzeugen; die bestehende Wärmegrenze wird zunächst beibehalten und durch Regressionstests überwacht. Sonnen-/UV-Schutz und Hitzewarnungen bleiben unabhängig davon aktiv.
 
 Der Altersfaktor ist absichtlich klein: Er bedeutet nicht pauschal „eine zusätzliche Schicht“. Aktivität, Situation, externe Isolation, `warmthBias`, Wetter und Nackentest werden weiterhin separat berücksichtigt. Ein sieben Monate altes Baby erhält deshalb bei identischen übrigen Inputs keinen Altersaufschlag, während ein einmonatiges Baby moderat wärmer kalibriert wird.
 
@@ -382,15 +382,23 @@ Bei erforderlichem Regenschutz wird standardmäßig **Regenverdeck** als Situati
 
 ### 7.1 Alter
 
-`<12 Monate + direct sun`:
+`<6 vollendete Monate + direct sun`:
 
 - Outfit weiterhin anzeigen,
-- `INFANT_UNDER_12M_AVOID_DIRECT_SUN`,
-- Schatten priorisieren.
+- `INFANT_UNDER_6M_AVOID_DIRECT_SUN`,
+- direkte Sonne vermeiden; Schatten, leichte bedeckende Kleidung und Sonnenhut priorisieren.
+
+`>=6 Monate + direct sun` (einschließlich 12–24 Monate):
+
+- `CHILD_FROM_6M_SUN_PROTECTION`,
+- Schatten weiterhin bevorzugen; Sonnenhut und leichte bedeckende Kleidung,
+- unbedeckte Haut mit geeigneter kindgerechter Sonnencreme (mindestens LSF 30) schützen.
 
 Unbekanntes Alter + direkte Sonne:
 
-- konservativer gleicher Hinweis.
+- `AGE_UNKNOWN_DIRECT_SUN_CONSERVATIVE_RULE` mit konservativer Unter-6-Monate-Empfehlung.
+
+Alterswarnungen betreffen **Sicherheitshinweise**, nicht die thermische Outfit-Stufe. Das Alter wird zum `requestedAt` berechnet, nicht zum Zeitpunkt des Wetterpunkts. Der allgemeine UV-Schutz (auch ab 12 Monaten) bleibt davon unabhängig. Keine schwere zusätzliche Schicht als UV-Maßnahme.
 
 ### 7.2 UV
 
@@ -754,7 +762,8 @@ Mindestens:
 - `STROLLER_DO_NOT_COVER_AIRFLOW`,
 - `STROLLER_RAIN_COVER`,
 - `STROLLER_SUNSHADE`,
-- `INFANT_UNDER_12M_AVOID_DIRECT_SUN`,
+- `INFANT_UNDER_6M_AVOID_DIRECT_SUN`,
+- `CHILD_FROM_6M_SUN_PROTECTION`,
 - `AGE_UNKNOWN_DIRECT_SUN_CONSERVATIVE_RULE`,
 - `UV_SHADE_AND_COVERAGE`,
 - `WEATHER_DATA_INCOMPLETE`,
@@ -798,7 +807,7 @@ Mindestens:
 30. Der Auto-Zubehörslot folgt ausschließlich den aus bestehenden Baseline-Bändern abgeleiteten Grenzen 12 °C und 8 °C.
 31. Autositz-Zubehör liegt immer `over_harness`; alle Körperkleidungs-Slots liegen `under_harness` und enthalten keine voluminöse Schicht.
 32. Ein Baby unter drei vollendeten Monaten erhält bei thermischer Referenz `<28 °C` in Wachkleidungsmodi `+0.5 thermalStep`; ab drei Monaten entfällt dieser Altersaufschlag.
-33. Unbekanntes Alter erzeugt keinen thermischen Altersaufschlag; die konservative direkte-Sonne-Regel bleibt davon unabhängig.
+33. Unbekanntes Alter erzeugt keinen thermischen Altersaufschlag; bei direkter Sonne gilt vorsorglich der Unter-6-Monate-Hinweis.
 34. Schlafempfehlungen ändern sich durch den thermischen Altersfaktor nicht.
 35. `mobilityStage` allein verändert keine thermische Stufe und keine fachliche Item-Auswahl bei identischen übrigen Inputs.
 36. `walking + activity: normal` ist thermisch identisch zu `low_mobility + activity: normal`; eine leichtere Empfehlung entsteht erst durch `activity: active`.
@@ -808,6 +817,8 @@ Mindestens:
 40. Eine vertrauenswürdige `apparentTempC` bleibt auch bei `windProtection: partial | good` thermische Referenz; V1 behandelt die gesamte Differenz zu `airTempC` nicht als Windanteil.
 41. Kinderwagen-Windschutz reduziert nur einen separat berechneten thermischen Windmodifikator, wenn Wind nicht bereits in der vertrauenswürdigen `apparentTempC` enthalten ist.
 42. Ab `24 °C` erzeugt eine automatische thermische Kinderwagen-Rebalance keine isolierende Mid-/Outer-Schicht; funktionale Wind-/Regenschutz-Shells bleiben zulässig.
+43. Direkte Sonne erzeugt vor 6 vollendeten Monaten den Vermeidungs-Hinweis, ab 6 Monaten den Schutz-Hinweis; der zwölfte Monat ist keine weitere Hinweisgrenze.
+44. Im warmen Bereich 24–30 °C darf der Altersaufschlag keine isolierende Mid-/Outer-Schicht allein wegen des jungen Alters erzeugen.
 43. Neue Outdoor-, Kinderwagen- und Trage-Kontexte starten mit `sunExposure: unknown`; neue Kinderwagen-Kontexte zusätzlich mit `windProtection: unknown`. Alte unversionierte `shade`-/`partial`-Defaults werden einmalig auf `unknown` migriert; danach bleiben ausdrücklich gewählte versionierte Werte erhalten.
 44. Leichte und gefütterte Übergangsjacke belegen denselben `outer`-Slot; `mid` und `outer` werden bei einer passenden Übergangsjacke nicht unnötig doppelt gestapelt.
 45. Die gefütterte Teddy-Übergangsjacke liegt thermisch zwischen leichter Übergangsjacke und Softshelljacke, hat aber nur leichten Windschutz; ab Windschutzstufe 2 wird sie durch eine Softshell-/Regenjacke ersetzt bzw. ergänzt und bleibt unter Winteroverall und Übergangsoverall.

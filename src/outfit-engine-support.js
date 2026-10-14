@@ -373,9 +373,10 @@ export function ensureFunctionalOuter(state,type,level) {
 export function applySunProtection(state,result,request,uv,temp,phase,mode) {
   const exposure = request.context.sunExposure ?? 'unknown';
   if (exposure === 'direct') {
-    const age = ageMonths(request.profile.birthDate, request.weather?.current?.time ?? request.requestedAt);
+    const age = ageMonths(request.profile.birthDate, request.requestedAt);
     if (age == null) addNotice(result,'AGE_UNKNOWN_DIRECT_SUN_CONSERVATIVE_RULE','caution',phase,['DIRECT_SUN_AVOIDANCE'],{});
-    else if (age < 12) addNotice(result,'INFANT_UNDER_12M_AVOID_DIRECT_SUN','caution',phase,['DIRECT_SUN_AVOIDANCE'],{ ageMonths:age });
+    else if (age < 6) addNotice(result,'INFANT_UNDER_6M_AVOID_DIRECT_SUN','caution',phase,['DIRECT_SUN_AVOIDANCE'],{ ageMonths:age });
+    else addNotice(result,'CHILD_FROM_6M_SUN_PROTECTION','caution',phase,['DIRECT_SUN_PROTECTION'],{ ageMonths:age });
   }
   if (!uv.active || mode === 'car') return;
   addNotice(result,'UV_SHADE_AND_COVERAGE','caution',phase,['UV_SHADE_AND_COVERAGE'],{ uvIndex:uv.uvIndex ?? null });

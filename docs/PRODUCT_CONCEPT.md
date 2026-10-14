@@ -408,8 +408,10 @@ Stand der fachlichen Prüfung: 2026-08-29.
   - Babys unter 12 Monaten im Schatten halten.
 - WHO, Ultraviolet radiation / UV Index: https://www.who.int/news-room/fact-sheets/detail/ultraviolet-radiation
   - Schutzmaßnahmen ab UVI 3.
-- NHS, Keeping your baby safe in the sun: https://www.nhs.uk/baby/first-aid-and-safety/safety-in-the-sun/
-  - kleine Babys aus direkter Sonne; leichte Kleidung; Sonnenschutz am Kinderwagen; keine Decke über dem Wagen.
+- NHS, Keeping your baby safe in the sun: https://www.nhs.uk/baby/first-aid-and-safety/safety/safety-in-the-sun/
+  - Babys unter sechs Monaten aus direkter Sonne halten; ab sechs Monaten auch Sonnencreme (mindestens LSF 30); leichte Kleidung; Sonnenschutz am Kinderwagen; keine Decke über dem Wagen.
+- American Academy of Pediatrics, Sun Safety: https://www.healthychildren.org/English/safety-prevention/at-play/pages/Sun-Safety.aspx
+  - unter sechs Monaten direkte Sonne meiden; ab sechs Monaten unbedeckte Haut mit Sonnenschutz schützen, unabhängig vom UV-bedingten Outfit-Schutz.
 - NHS, How to dress a newborn baby: https://www.nhs.uk/best-start-in-life/baby/baby-basics/caring-for-your-baby/how-to-dress-a-newborn/
   - kleine Babys regulieren ihre Temperatur weniger zuverlässig; Überhitzung durch zu viel Kleidung bleibt ausdrücklich zu vermeiden.
 - HealthyChildren/AAP, Your Baby's First Month: Growth & Physical Appearance: https://www.healthychildren.org/English/ages-stages/baby/Pages/First-Month-Physical-Appearance-and-Growth.aspx
@@ -451,7 +453,7 @@ Die Auto-Entscheidung ist geschlossen: keine geschätzte Innenraumtemperatur und
 
 Die V1-Entscheidung zur finalen Katalogzuordnung und relativen `thermalWeight`-Kalibrierung ist ebenfalls geschlossen. Für Übergangsjacken werden eine ungefütterte leichte Windschutzschicht und eine leicht gefütterte wärmere Zwischenstufe als eigene `outer`-Items geführt; eine zusätzliche Mittelschicht wird bei passenden Bedingungen nicht automatisch gestapelt. Der vollständige Audit ist in `docs/THERMAL_WEIGHT_AUDIT.md` dokumentiert. Die aktuellen `thermalWeight`-, `thermalStepCredit`- und `sleepWarmthWeight`-Werte sind intern konsistent und werden durch gezielte Kataloginvarianten abgesichert.
 
-Die V1-Alterskalibrierung ist geschlossen: `birthDate` aus dem Babyprofil wird ohne redundantes Altersfeld ausgewertet; unter drei vollendeten Monaten gilt außerhalb des Schlafmodus bei thermischer Referenz unter 28 °C ein kleiner `+0.5 thermalStep`-Faktor. Ab drei Monaten entfällt der allgemeine Altersaufschlag.
+Die V1-Alterskalibrierung ist geschlossen: `birthDate` aus dem Babyprofil wird ohne redundantes Altersfeld ausgewertet; unter drei vollendeten Monaten gilt außerhalb des Schlafmodus bei thermischer Referenz unter 28 °C ein kleiner `+0.5 thermalStep`-Faktor. Ab drei Monaten entfällt der allgemeine Altersaufschlag. Bei 24–28 °C wird geprüft, dass daraus keine zusätzlichen isolierenden Mid-/Outer-Schichten entstehen. Der Sonnenschutzhinweis differenziert ab 2026-10-14 bei direkter Sonne unter sechs Monate (direkte Sonne vermeiden), ab sechs Monate (Schatten, bedeckende Kleidung und Sonnenschutzmittel) und unbekanntes Alter (konservativ wie unter sechs Monaten).
 
 Die V1-Mobilitätsmodellierung ist geschlossen: `mobilityStage` wird im Babyprofil gespeichert, bleibt aber strikt von der situationsbezogenen `activity` getrennt und verändert selbst keine thermische Stufe. Bewegungswärme wird weiterhin ausschließlich über die aktuelle Aktivität bewertet.
 
