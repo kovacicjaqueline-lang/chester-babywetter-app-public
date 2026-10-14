@@ -192,6 +192,7 @@ function sessionWithFixedUnderlayers(checkpoint, recommendation, fixedUnderlayer
   for (const phase of phaseOrderFor(checkpoint.engineRequest.context, recommendation)) {
     for (const [slot, itemId] of fixedUnderlayers) {
       if (!itemId || !FIXED_TRIP_UNDERLAYER_SLOTS.has(slot)) continue;
+      if (slot === 'base_torso' && checkpoint.engineRequest.context.mode === 'car') continue;
       session = lockItem(session, { phase, slot, itemId, lockedAt });
     }
   }
@@ -239,7 +240,9 @@ function primaryLegThermalWeight(recommendation, phase) {
 
 function fixedUnderlayersFrom(checkpoints, recommendations) {
   const fixedUnderlayers = new Map();
-  const baseTorso = fixedUnderlayerCandidates(recommendations, 'base_torso')[0];
+  const nonCarRecommendations = recommendations.filter((_, index) =>
+    checkpoints[index].engineRequest.context.mode !== 'car');
+  const baseTorso = fixedUnderlayerCandidates(nonCarRecommendations, 'base_torso')[0];
   if (baseTorso) fixedUnderlayers.set('base_torso', baseTorso);
 
   const legCandidates = fixedUnderlayerCandidates(recommendations, 'legs');
