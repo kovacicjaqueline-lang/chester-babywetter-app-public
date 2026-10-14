@@ -817,8 +817,8 @@ Mindestens:
 40. Eine vertrauenswürdige `apparentTempC` bleibt auch bei `windProtection: partial | good` thermische Referenz; V1 behandelt die gesamte Differenz zu `airTempC` nicht als Windanteil.
 41. Kinderwagen-Windschutz reduziert nur einen separat berechneten thermischen Windmodifikator, wenn Wind nicht bereits in der vertrauenswürdigen `apparentTempC` enthalten ist.
 42. Ab `24 °C` erzeugt eine automatische thermische Kinderwagen-Rebalance keine isolierende Mid-/Outer-Schicht; funktionale Wind-/Regenschutz-Shells bleiben zulässig.
-43. Direkte Sonne erzeugt vor 6 vollendeten Monaten den Vermeidungs-Hinweis, ab 6 Monaten den Schutz-Hinweis; der zwölfte Monat ist keine weitere Hinweisgrenze.
-44. Im warmen Bereich 24–30 °C darf der Altersaufschlag keine isolierende Mid-/Outer-Schicht allein wegen des jungen Alters erzeugen.
 43. Neue Outdoor-, Kinderwagen- und Trage-Kontexte starten mit `sunExposure: unknown`; neue Kinderwagen-Kontexte zusätzlich mit `windProtection: unknown`. Alte unversionierte `shade`-/`partial`-Defaults werden einmalig auf `unknown` migriert; danach bleiben ausdrücklich gewählte versionierte Werte erhalten.
 44. Leichte und gefütterte Übergangsjacke belegen denselben `outer`-Slot; `mid` und `outer` werden bei einer passenden Übergangsjacke nicht unnötig doppelt gestapelt.
 45. Die gefütterte Teddy-Übergangsjacke liegt thermisch zwischen leichter Übergangsjacke und Softshelljacke, hat aber nur leichten Windschutz; ab Windschutzstufe 2 wird sie durch eine Softshell-/Regenjacke ersetzt bzw. ergänzt und bleibt unter Winteroverall und Übergangsoverall.
+46. Direkte Sonne erzeugt vor 6 vollendeten Monaten den Vermeidungs-Hinweis, ab 6 Monaten den Schutz-Hinweis; der zwölfte Monat ist keine weitere Hinweisgrenze.
+47. Im warmen Bereich 24–30 °C darf der Altersaufschlag keine isolierende Mid-/Outer-Schicht allein wegen des jungen Alters erzeugen.
