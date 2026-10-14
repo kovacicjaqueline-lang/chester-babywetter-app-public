@@ -126,7 +126,7 @@ test('Nackentest-Rückmeldung wird nur auf die aktuelle Empfehlung angewendet', 
   expect(await selectedIds(page)).not.toEqual(before);
 
   await chooseSituation(page, 'stroller');
-  await expect(page.locator('#neckFeedbackStatus')).toContainText('Noch keine Rückmeldung');
+  await expect(page.locator('#neckFeedbackStatus')).toBeHidden();
 });
 
 test('Nackentest behauptet keine Änderung wenn keine sichere Wärmestufe mehr möglich ist', async ({ page }) => {
