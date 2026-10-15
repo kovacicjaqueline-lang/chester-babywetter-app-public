@@ -10,6 +10,8 @@ Dieses Dokument konkretisiert die Wetter- und Interaktionsabschnitte aus `PRODUC
 - Die Standardauswahl ist `Jetzt`.
 - Die vorhandene stündliche Wettervorschau ist horizontal scrollbar/wischbar und jede verwendbare zukünftige Stunde ist direkt antippbar.
 - Ein Tap auf eine Stunde löst sofort eine neue Empfehlung aus. Es gibt keinen zusätzlichen Übernehmen-Button.
+- Ein horizontaler Wisch direkt auf der Temperaturanzeige wechselt schrittweise zur nächsten verfügbaren Stunde; ein Wisch nach rechts geht zur vorherigen Auswahl bis zurück zu `Jetzt`.
+- Wetteranzeige und Outfit folgen derselben Auswahl. Die Stundenauswahl bleibt zusätzlich antippbar.
 - Die aktive Auswahl ist visuell und semantisch eindeutig markiert (`aria-pressed`).
 - Bei der Empfehlung steht sichtbar, für welchen Zeitpunkt gerechnet wird, z. B. `Für 14:00`; bei Standardauswahl `Für jetzt`.
 - Die Zeitwahl ist flüchtiger UI-/Integrationszustand und wird in V1 nicht in `localStorage` oder Exportdaten persistiert. Nach einem neuen App-Start gilt wieder `Jetzt`.
