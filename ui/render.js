@@ -92,7 +92,7 @@ function imageFallback(shell, label) {
   shell.append(fallback);
 }
 
-function clothingCard({ slotResult = null, itemId, logicalItemId = null, asset, label, description = getClothingDescription(itemId), role = '', interactive = false, interactiveLabel = 'Alternativen anzeigen', contextLabel = '' }) {
+function clothingCard({ slotResult = null, itemId, logicalItemId = null, asset, label, description = getClothingDescription(itemId), showDescription = true, role = '', interactive = false, interactiveLabel = 'Alternativen anzeigen', contextLabel = '' }) {
   const element = document.createElement(interactive ? 'button' : 'article');
   if (interactive) element.type = 'button';
   element.className = `clothing-card${interactive ? ' clothing-card-button' : ''}`;
@@ -131,7 +131,9 @@ function clothingCard({ slotResult = null, itemId, logicalItemId = null, asset, 
   const roleText = document.createElement('p');
   roleText.className = 'clothing-role';
   roleText.textContent = role;
-  element.append(shell, name, descriptionText, roleText);
+  element.append(shell, name);
+  if (showDescription && description) element.append(descriptionText);
+  element.append(roleText);
   return element;
 }
 
@@ -150,7 +152,7 @@ function addableSlotCard(slotResult, contextLabel) {
   shell.textContent = '+';
   const name = document.createElement('span');
   name.className = 'clothing-name';
-  name.textContent = slotResult.addLabel;
+  name.textContent = slotResult.addLabel.replace('Außenschicht', 'Außen\u00adschicht');
   const role = document.createElement('span');
   role.className = 'clothing-role';
   role.textContent = 'Outfit wird neu bewertet';
@@ -247,6 +249,7 @@ function renderGroup(slots, { addableSlots = [], mode, phase, context, assetStor
         logicalItemId: split ? logicalItemId : null,
         asset,
         label: itemGroup?.label ?? part.itemId.replaceAll('_', ' '),
+        showDescription: false,
         role: part.role ?? slotRole(slotResult.slot),
         interactive: slotResult.alternatives?.length > 0,
         interactiveLabel: split ? 'Kombination austauschen' : 'Alternativen anzeigen',
