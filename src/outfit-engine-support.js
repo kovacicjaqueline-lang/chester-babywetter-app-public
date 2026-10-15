@@ -108,6 +108,13 @@ export function seedBaseline(state, bandId, mode) {
   }
 }
 
+export function protectOutdoorExposedFeet(state, temperature, context, mode) {
+  const feetExposed = (mode === 'outdoor' && context.groundContact === 'none')
+    || (mode === 'stroller' && context.strollerState === 'awake' && context.activity === 'active');
+  if (!feetExposed || temperature < 14 || temperature >= 18) return;
+  setSelected(state,'feet','warm_socks_booties','engine','on_body',['OUTDOOR_EXPOSED_FEET']);
+}
+
 export function makeCarSafeBaseline(state) {
   for (const slot of [...state.map.keys()]) {
     if (!BODY_SLOTS.includes(slot)) continue;
