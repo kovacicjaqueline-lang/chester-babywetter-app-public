@@ -140,6 +140,19 @@ test('sleep_bag_none stays free of loose bedding for every selection path',()=>{
   ));
 });
 
+test('Strampler mit und ohne Füße ist eine sichere Schlafkleidungsalternative',()=>{
+  const base=recommendOutfit(req(19));
+  const underlayer=base.slots.find((entry)=>entry.slot==='sleep_underlayer');
+  assert.ok(underlayer.alternatives.some((alternative)=>alternative.itemId==='sleep_under_strampler_without_feet'));
+  assert.ok(underlayer.alternatives.some((alternative)=>alternative.itemId==='sleep_under_strampler_with_feet'));
+
+  const session=lockItem(createSession('sleep_romper'),{slot:'sleep_underlayer',itemId:'sleep_under_strampler_with_feet'});
+  const selected=recommendOutfit(req(19,session));
+  assert.equal(id(selected,'sleep_underlayer'),'sleep_under_strampler_with_feet');
+  assert.equal(CLOTHING_CATALOG.sleep_under_strampler_with_feet.sleepSafe,true);
+  assert.ok(['sleep_bag_0_5','sleep_bag_1_0','sleep_bag_1_5','sleep_bag_2_5','sleep_bag_3_5'].includes(id(selected,'sleep_bag')));
+});
+
 test('warmer/cooler sleep correction prefers underlayer single-slot change',()=>{
   const base=recommendOutfit(req(18.5));
   const warmer=recommendOutfit(req(18.5,setWarmthOffset(createSession('sleep'),'warmer')));

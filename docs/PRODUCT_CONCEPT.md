@@ -25,7 +25,7 @@ Die App ist eine Entscheidungshilfe und keine medizinische Anwendung. Sie gibt k
 ## 2. Normative Produktprinzipien
 
 1. **Ein konkretes Hauptoutfit.** Die App zeigt nicht zuerst eine Liste gleichwertiger Möglichkeiten, sondern eine klare Empfehlung aus Einzelteilen.
-2. **Jedes relevante Teil ist austauschbar.** Ein Tap auf ein Teil zeigt passende Alternativen.
+2. **Jedes relevante Teil ist austauschbar.** Ein Tap auf ein Teil zeigt passende Alternativen. Bei Body/Shirt und Hose gehören leichte Strampler-Varianten mit oder ohne Füße dazu; beim Wechsel bleibt der Body als Basisschicht erhalten. Im Schlafmodus sind Strampler ebenfalls als Schlafkleidung wählbar und werden mit der Schlafsack-/Raumtemperatur-Empfehlung neu abgestimmt.
 3. **Austausch löst Neuberechnung aus.** Wird ein Teil geändert, wird das gesamte Outfit neu ausbalanciert.
 4. **Manuell gewählte Teile bleiben für die aktuelle Empfehlung fixiert.** Andere Teile passen sich daran an. Nur eine harte Sicherheitsregel darf einen Lock überstimmen; dann muss die App den Grund sichtbar erklären.
 5. **Alternativen werden nach Nähe sortiert.** Zuerst thermisch möglichst gleichwertig, danach etwas wärmer bzw. kühler.

@@ -61,9 +61,12 @@ const REBALANCE_SLOTS_BY_LOCK = Object.freeze({
   head:Object.freeze(['head']),
   hands:Object.freeze(['hands'])
 });
+const STRAMPLER_ALTERNATIVES = Object.freeze(['strampler_without_feet','strampler_with_feet']);
 const CROSS_SLOT_ALTERNATIVES = Object.freeze({
-  long_sleeve_bodysuit: Object.freeze(['light_long_sleeve_shirt']),
-  light_long_sleeve_shirt: Object.freeze(['long_sleeve_bodysuit'])
+  short_sleeve_bodysuit: STRAMPLER_ALTERNATIVES,
+  long_sleeve_bodysuit: Object.freeze(['light_long_sleeve_shirt',...STRAMPLER_ALTERNATIVES]),
+  t_shirt: STRAMPLER_ALTERNATIVES,
+  light_long_sleeve_shirt: Object.freeze(['long_sleeve_bodysuit',...STRAMPLER_ALTERNATIVES])
 });
 
 export function createSession(sessionId = 'session') {
@@ -79,7 +82,11 @@ export function lockItem(session, { phase = 'main', slot, itemId, lockedAt = '19
   if (!slot || !itemId) throw new TypeError('slot and itemId are required');
   const targetSlot = CLOTHING_CATALOG[itemId]?.slot ?? slot;
   const replacedSlots = new Set([slot,targetSlot]);
+  const retainedBaseLock = targetSlot !== slot && slot === 'base_torso' && (CLOTHING_CATALOG[itemId]?.upperBodyThermalCredit ?? 0) > 0
+    ? (session?.manualLocks ?? []).find((lock) => lock.phase === phase && lock.slot === 'base_torso')
+    : null;
   const locks = (session?.manualLocks ?? []).filter((lock) => !(lock.phase === phase && replacedSlots.has(lock.slot)));
+  if (retainedBaseLock) locks.push(retainedBaseLock);
   locks.push({ phase, slot:targetSlot, itemId, lockedAt });
   return { ...(session ?? createSession()), manualLocks:locks };
 }
@@ -386,7 +393,8 @@ export function applySunProtection(state,result,request,uv,temp,phase,mode) {
   if (mode !== 'sleep' && !state.map.has('head')) setSelected(state,'head','sun_hat','engine','on_body',['UV_SHADE_AND_COVERAGE']);
   if (temp >= 24) {
     setSelected(state,'top','light_long_sleeve_shirt','engine','on_body',['UV_LIGHT_COVERAGE']);
-    if (!findLock(request.session,phase,'base_torso')) state.map.delete('base_torso');
+    const selectedRomper = request.session.manualLocks.some((lock) => lock.phase === phase && (CLOTHING_CATALOG[lock.itemId]?.upperBodyThermalCredit ?? 0) > 0);
+    if (!selectedRomper && !findLock(request.session,phase,'base_torso')) state.map.delete('base_torso');
     if (!state.map.has('legs')) setSelected(state,'legs','light_trousers','engine','on_body',['UV_LIGHT_COVERAGE']);
   }
 }
@@ -432,6 +440,14 @@ export function applyBodyLocksAndRebalance(state,result,request,phase,mode) {
     const delta = definition.thermalWeight - beforeWeight - replacedCrossSlotWeight;
     const wearPosition = phase === 'in_car' ? 'under_harness' : 'on_body';
     setSelected(state,lock.slot,lock.itemId,'manual_lock',wearPosition,['MANUAL_ITEM_LOCK']);
+    if (definition.upperBodyThermalCredit > 0) {
+      if (definition.bodyZones.includes('feet') && !findLock(request.session,phase,'feet')) {
+        state.map.delete('feet');
+        addTrace(result,'swap.coverage.strampler.feet',phase,'remove','feet',null,'BODY_ZONE_COVERAGE_REBALANCE');
+      }
+      const changedUpperSlot = applyThermalDelta(state,-definition.upperBodyThermalCredit,lockedThermalSlots,mode,['top','mid'],true,new Set(['top','mid']));
+      if (changedUpperSlot) addTrace(result,'swap.coverage.strampler.upper',phase,'thermal_down','upper_body',-1,'BODY_ZONE_COVERAGE_REBALANCE');
+    }
     addTrace(result,'swap.manual_lock',phase,'lock',lock.itemId,delta,'MANUAL_ITEM_LOCK');
     if (phase === 'in_car' && definition.carSeatCompatibility === 'conditional') {
       addNotice(result,'CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT','caution',phase,['CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT'],{ itemId:lock.itemId });
@@ -578,7 +594,7 @@ export function thermalSignature(result,phase) {
     if (!def) continue;
     if (def.slot === 'sleep_bag' || def.slot === 'sleep_underlayer') score += def.sleepWarmthWeight ?? 0;
     else if (['stroller_thermal_accessory','carrier_accessory','car_thermal_accessory'].includes(def.slot)) score += (def.thermalStepCredit ?? 0) * 2;
-    else if (BODY_SLOTS.includes(def.slot)) score += def.thermalWeight ?? 0;
+    else if (BODY_SLOTS.includes(def.slot)) score += def.thermalSignatureWeight ?? def.thermalWeight ?? 0;
   }
   return score;
 }
