@@ -561,6 +561,19 @@ test('groundContact none never adds shoes',()=>{
   assert.equal(id(r,'footwear'),null);
 });
 
+test('outdoor without ground contact uses warm socks or booties from 14 to under 18 C',()=>{
+  for (const temperature of [14,16,17]) {
+    const result=recommendOutfit(request(outdoor({groundContact:'none'}),{w:weather(temperature)}));
+    assert.equal(id(result,'feet'),'warm_socks_booties',`${temperature} C`);
+    assert.equal(id(result,'footwear'),null,`${temperature} C`);
+  }
+  const mild=recommendOutfit(request(outdoor({groundContact:'none'}),{w:weather(18)}));
+  assert.equal(id(mild,'feet'),'socks');
+  const shoes=recommendOutfit(request(outdoor({groundContact:'standing'}),{w:weather(16)}));
+  assert.equal(id(shoes,'feet'),'socks');
+  assert.equal(id(shoes,'footwear'),'light_shoes');
+});
+
 test('standing/walking can add weather-appropriate shoes',()=>{
   const dry=recommendOutfit(request(outdoor({groundContact:'standing'}),{w:weather(20)}));
   const wet=recommendOutfit(request(outdoor({groundContact:'walking'}),{w:weather(20,{precipProbabilityPct:70})}));

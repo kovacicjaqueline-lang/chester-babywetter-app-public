@@ -170,6 +170,15 @@ test('very active stroller still respects a manually selected thermal accessory'
   const result = recommend(stroller({ strollerState:'awake', activity:'active' }), weather(9), session);
 
   assert.equal(item(result,'stroller_thermal_accessory'),'stroller_light_footmuff');
+  const mildManualFootmuff = recommend(
+    stroller({ strollerState:'awake', activity:'active' }),
+    weather(16),
+    lockItem(createSession('session_stroller_mild_footmuff'), {
+      slot:'stroller_thermal_accessory', itemId:'stroller_light_footmuff'
+    })
+  );
+  assert.equal(item(mildManualFootmuff,'stroller_thermal_accessory'),'stroller_light_footmuff');
+  assert.equal(item(mildManualFootmuff,'feet'),'socks');
   const accessory = result.slots.find((entry) => entry.phase === 'main' && entry.slot === 'stroller_thermal_accessory');
   assert.equal(accessory.selected.selectionSource,'manual_lock');
 });
