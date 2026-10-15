@@ -61,9 +61,12 @@ const REBALANCE_SLOTS_BY_LOCK = Object.freeze({
   head:Object.freeze(['head']),
   hands:Object.freeze(['hands'])
 });
+const STRAMPLER_ALTERNATIVES = Object.freeze(['strampler_without_feet','strampler_with_feet']);
 const CROSS_SLOT_ALTERNATIVES = Object.freeze({
-  long_sleeve_bodysuit: Object.freeze(['light_long_sleeve_shirt']),
-  light_long_sleeve_shirt: Object.freeze(['long_sleeve_bodysuit'])
+  short_sleeve_bodysuit: STRAMPLER_ALTERNATIVES,
+  long_sleeve_bodysuit: Object.freeze(['light_long_sleeve_shirt',...STRAMPLER_ALTERNATIVES]),
+  t_shirt: STRAMPLER_ALTERNATIVES,
+  light_long_sleeve_shirt: Object.freeze(['long_sleeve_bodysuit',...STRAMPLER_ALTERNATIVES])
 });
 
 export function createSession(sessionId = 'session') {
@@ -79,7 +82,11 @@ export function lockItem(session, { phase = 'main', slot, itemId, lockedAt = '19
   if (!slot || !itemId) throw new TypeError('slot and itemId are required');
   const targetSlot = CLOTHING_CATALOG[itemId]?.slot ?? slot;
   const replacedSlots = new Set([slot,targetSlot]);
+  const retainedBaseLock = targetSlot !== slot && slot === 'base_torso' && (CLOTHING_CATALOG[itemId]?.upperBodyThermalCredit ?? 0) > 0
+    ? (session?.manualLocks ?? []).find((lock) => lock.phase === phase && lock.slot === 'base_torso')
+    : null;
   const locks = (session?.manualLocks ?? []).filter((lock) => !(lock.phase === phase && replacedSlots.has(lock.slot)));
+  if (retainedBaseLock) locks.push(retainedBaseLock);
   locks.push({ phase, slot:targetSlot, itemId, lockedAt });
   return { ...(session ?? createSession()), manualLocks:locks };
 }
@@ -93,7 +100,11 @@ export function seedBaseline(state, bandId, mode) {
   const baseline = BASELINE[bandId];
   for (const [slot,itemId] of Object.entries(baseline)) {
     if (!allowedInMode(itemId,mode)) continue;
-    setSelected(state,slot,itemId,'engine','on_body',[`BASELINE_${bandId.toUpperCase()}`]);
+    const selectedItemId = mode === 'carrier' && itemId.endsWith('_overall') ? 'softshell_jacket' : itemId;
+    const reasonCodes = selectedItemId === itemId
+      ? [`BASELINE_${bandId.toUpperCase()}`]
+      : [`BASELINE_${bandId.toUpperCase()}`,'CARRIER_COVER_OUTER_LAYER'];
+    setSelected(state,slot,selectedItemId,'engine','on_body',reasonCodes);
   }
 }
 
@@ -382,7 +393,8 @@ export function applySunProtection(state,result,request,uv,temp,phase,mode) {
   if (mode !== 'sleep' && !state.map.has('head')) setSelected(state,'head','sun_hat','engine','on_body',['UV_SHADE_AND_COVERAGE']);
   if (temp >= 24) {
     setSelected(state,'top','light_long_sleeve_shirt','engine','on_body',['UV_LIGHT_COVERAGE']);
-    if (!findLock(request.session,phase,'base_torso')) state.map.delete('base_torso');
+    const selectedRomper = request.session.manualLocks.some((lock) => lock.phase === phase && (CLOTHING_CATALOG[lock.itemId]?.upperBodyThermalCredit ?? 0) > 0);
+    if (!selectedRomper && !findLock(request.session,phase,'base_torso')) state.map.delete('base_torso');
     if (!state.map.has('legs')) setSelected(state,'legs','light_trousers','engine','on_body',['UV_LIGHT_COVERAGE']);
   }
 }
@@ -428,16 +440,20 @@ export function applyBodyLocksAndRebalance(state,result,request,phase,mode) {
     const delta = definition.thermalWeight - beforeWeight - replacedCrossSlotWeight;
     const wearPosition = phase === 'in_car' ? 'under_harness' : 'on_body';
     setSelected(state,lock.slot,lock.itemId,'manual_lock',wearPosition,['MANUAL_ITEM_LOCK']);
+    if (definition.upperBodyThermalCredit > 0) {
+      if (definition.bodyZones.includes('feet') && !findLock(request.session,phase,'feet')) {
+        state.map.delete('feet');
+        addTrace(result,'swap.coverage.strampler.feet',phase,'remove','feet',null,'BODY_ZONE_COVERAGE_REBALANCE');
+      }
+      const changedUpperSlot = applyThermalDelta(state,-definition.upperBodyThermalCredit,lockedThermalSlots,mode,['top','mid'],true,new Set(['top','mid']));
+      if (changedUpperSlot) addTrace(result,'swap.coverage.strampler.upper',phase,'thermal_down','upper_body',-1,'BODY_ZONE_COVERAGE_REBALANCE');
+    }
     addTrace(result,'swap.manual_lock',phase,'lock',lock.itemId,delta,'MANUAL_ITEM_LOCK');
     if (phase === 'in_car' && definition.carSeatCompatibility === 'conditional') {
       addNotice(result,'CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT','caution',phase,['CAR_SEAT_CONDITIONAL_LAYER_CHECK_FIT'],{ itemId:lock.itemId });
     }
-    // A trip-wide cooler bodysuit must not add a second top layer under the harness.
-    const avoidExtraCarTorsoLayer = phase === 'in_car' && lock.slot === 'base_torso' && delta < 0;
     const rebalancePriority = delta !== 0 ? REBALANCE_SLOTS_BY_LOCK[lock.slot] ?? null : null;
-    if (delta && lock.slot !== 'head' && !avoidExtraCarTorsoLayer) {
-      rebalanceOtherSlots(state,-delta,lockedThermalSlots,mode,lock.slot,rebalancePriority);
-    }
+    if (delta && lock.slot !== 'head') rebalanceOtherSlots(state,-delta,lockedThermalSlots,mode,lock.slot,rebalancePriority);
     rebalanceNewlyCoveredLegs(state,result,before,definition,legsBeforeLock,lockedThermalSlots,phase,mode,lock.slot);
   }
 }
@@ -530,7 +546,9 @@ export function rebalanceOtherSlots(state,delta,locked,mode,excludeSlot,priority
 }
 
 export function nextThermalItem(current,slot,direction,mode) {
-  const ladder = THERMAL_LADDERS[slot];
+  const ladder = mode === 'carrier' && slot === 'outer'
+    ? THERMAL_LADDERS.outer.filter((itemId) => !itemId?.endsWith('_overall'))
+    : THERMAL_LADDERS[slot];
   if (!ladder) return undefined;
   let index = ladder.indexOf(current);
   if (index < 0) index = current == null ? 0 : -1;
@@ -576,7 +594,7 @@ export function thermalSignature(result,phase) {
     if (!def) continue;
     if (def.slot === 'sleep_bag' || def.slot === 'sleep_underlayer') score += def.sleepWarmthWeight ?? 0;
     else if (['stroller_thermal_accessory','carrier_accessory','car_thermal_accessory'].includes(def.slot)) score += (def.thermalStepCredit ?? 0) * 2;
-    else if (BODY_SLOTS.includes(def.slot)) score += def.thermalWeight ?? 0;
+    else if (BODY_SLOTS.includes(def.slot)) score += def.thermalSignatureWeight ?? def.thermalWeight ?? 0;
   }
   return score;
 }

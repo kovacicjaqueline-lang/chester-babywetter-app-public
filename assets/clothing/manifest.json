@@ -340,9 +340,10 @@
       "category": "transition_overall",
       "slot": "outer",
       "situations": [
+        "car",
+        "carrier",
         "outdoor",
-        "stroller",
-        "car"
+        "stroller"
       ],
       "styleVariants": [
         "neutral"
@@ -356,9 +357,10 @@
       "category": "winter_overall",
       "slot": "outer",
       "situations": [
+        "car",
+        "carrier",
         "outdoor",
-        "stroller",
-        "car"
+        "stroller"
       ],
       "styleVariants": [
         "neutral",
@@ -996,6 +998,68 @@
       ],
       "altText": "Dünne Strickjacke.",
       "assetPath": "assets/clothing/thin_cardigan/neutral.webp"
+    },
+    {
+      "id": "strampler_without_feet",
+      "label": "Strampler ohne Füße",
+      "category": "strampler_without_feet",
+      "slot": "legs",
+      "situations": [
+        "outdoor",
+        "stroller",
+        "carrier",
+        "car"
+      ],
+      "styleVariants": [
+        "neutral"
+      ],
+      "altText": "Leichter Langarm-Strampler ohne integrierte Füße.",
+      "assetPath": "assets/clothing/strampler_without_feet/neutral.webp"
+    },
+    {
+      "id": "strampler_with_feet",
+      "label": "Strampler mit Füßen",
+      "category": "strampler_with_feet",
+      "slot": "legs",
+      "situations": [
+        "outdoor",
+        "stroller",
+        "carrier",
+        "car"
+      ],
+      "styleVariants": [
+        "neutral"
+      ],
+      "altText": "Leichter Langarm-Strampler mit integrierten Füßen.",
+      "assetPath": "assets/clothing/strampler_with_feet/neutral.webp"
+    },
+    {
+      "id": "sleep_under_strampler_without_feet",
+      "label": "Schlaf-Strampler ohne Füße",
+      "category": "sleep_underlayer",
+      "slot": "sleep_underlayer",
+      "situations": [
+        "sleep"
+      ],
+      "styleVariants": [
+        "neutral"
+      ],
+      "altText": "Leichter Schlaf-Strampler ohne integrierte Füße.",
+      "assetPath": "assets/clothing/strampler_without_feet/neutral.webp"
+    },
+    {
+      "id": "sleep_under_strampler_with_feet",
+      "label": "Schlaf-Strampler mit Füßen",
+      "category": "sleep_underlayer",
+      "slot": "sleep_underlayer",
+      "situations": [
+        "sleep"
+      ],
+      "styleVariants": [
+        "neutral"
+      ],
+      "altText": "Leichter Schlaf-Strampler mit integrierten Füßen.",
+      "assetPath": "assets/clothing/strampler_with_feet/neutral.webp"
     }
   ]
 }

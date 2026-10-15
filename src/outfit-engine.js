@@ -296,6 +296,7 @@ function evaluateCar(result, request) {
   applyNeckCorrection(state,result,request,'in_car','car',neckFeedback,neck,carNeckProtected);
   sanitizeAutomaticConditionalCarLayers(state);
   enforceCarSafetyAfterLocks(state,result,request,'in_car');
+  removeAutomaticThirdCarTorsoLayer(state,result);
 
   const thermalAccessory = selectCarThermalAccessory(request,thermal.thermalReferenceC,'in_car');
   setSelected(state,'car_thermal_accessory',thermalAccessory.itemId,thermalAccessory.source,'over_harness',thermalAccessory.reasons);
@@ -423,8 +424,13 @@ function attachAlternatives(result,request) {
   const temperature = result.phases.find((entry) => entry.phase === 'main')?.thermalReferenceC;
   if (!outer && ['outdoor','stroller','carrier'].includes(request.context.mode) && temperature < 24) {
     const slotResult = { phase:'main', slot:'outer', selected:{ itemId:null }, alternatives:[] };
-    const jacketIds = (SLOT_ITEMS.outer ?? []).filter((itemId) => itemId.endsWith('_jacket'));
-    const alternatives = projectedAlternatives(result,request,slotResult,jacketIds);
+    const activeCarrierCover = result.slots.find((entry) => entry.phase === 'main' && entry.slot === 'carrier_accessory')?.selected.itemId;
+    const outerLayerIds = alternativeCandidateIds(slotResult,request.context.mode)
+      .filter((itemId) => itemId.endsWith('_jacket') || itemId.endsWith('_overall'))
+      .filter((itemId) => request.context.mode !== 'carrier'
+        || !itemId.endsWith('_overall')
+        || activeCarrierCover === 'carrier_cover_none');
+    const alternatives = projectedAlternatives(result,request,slotResult,outerLayerIds);
     if (alternatives.length) result.addableSlots.push({ phase:slotResult.phase, slot:slotResult.slot, addLabel:'Außenschicht hinzufügen', alternatives });
   }
 }
@@ -440,7 +446,8 @@ function projectedAlternatives(result,request,slotResult,candidates) {
     if (projected.status === 'blocked') continue;
     const projectedSelection = projected.slots.find((entry) => entry.phase === slotResult.phase && entry.slot === candidateSlot);
     if (!projectedSelection || projectedSelection.selected.itemId !== itemId) continue;
-    if (candidateSlot !== slotResult.slot && slotResult.selected.itemId) {
+    const preservesBaseLayer = (CLOTHING_CATALOG[itemId]?.upperBodyThermalCredit ?? 0) > 0;
+    if (candidateSlot !== slotResult.slot && slotResult.selected.itemId && !preservesBaseLayer) {
       const originalStillSelected = projected.slots.some((entry) => entry.phase === slotResult.phase && entry.selected.itemId === slotResult.selected.itemId);
       if (originalStillSelected) continue;
     }
@@ -580,6 +587,15 @@ function sanitizeAutomaticConditionalCarLayers(state) {
     if (slot === 'mid') setSelected(state,'mid','thin_sweater','engine','under_harness',['IN_CAR_THERMAL_BASELINE']);
     else state.map.delete(slot);
   }
+}
+
+function removeAutomaticThirdCarTorsoLayer(state,result) {
+  const base = state.map.get('base_torso');
+  const top = state.map.get('top');
+  const mid = state.map.get('mid');
+  if (!base || !top || !mid || mid.selectionSource === 'manual_lock') return;
+  state.map.delete('mid');
+  addTrace(result,'safety.car.layering','in_car','remove',mid.itemId,-(CLOTHING_CATALOG[mid.itemId]?.thermalWeight ?? 0),'CAR_AVOID_THREE_TORSO_LAYERS');
 }
 
 function youngInfantThermalAdjustment(birthDate, at, thermalReferenceC) {

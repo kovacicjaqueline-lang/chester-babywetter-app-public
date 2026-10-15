@@ -132,6 +132,28 @@ test('an omitted outer layer can be added without removing the base layer',()=>{
   assert.equal(id(layered,'mid'),null);
 });
 
+test('carrier overalls are addable only when no carrier cover is worn',()=>{
+  const base=request(carrier(),{w:weather(18)});
+  const uncovered=recommendOutfit(base);
+  assert.equal(id(uncovered,'carrier_accessory'),'carrier_cover_none');
+  const uncoveredOuter=uncovered.addableSlots.find((entry)=>entry.slot==='outer');
+  assert.ok(uncoveredOuter?.alternatives.some((entry)=>entry.itemId==='transition_overall'));
+  assert.ok(uncoveredOuter?.alternatives.some((entry)=>entry.itemId==='winter_overall'));
+
+  const coveredRequest={...base,session:lockItem(base.session,{slot:'carrier_accessory',itemId:'carrier_cover_light'})};
+  const covered=recommendOutfit(coveredRequest);
+  assert.equal(id(covered,'carrier_accessory'),'carrier_cover_light');
+  const coveredOuter=covered.addableSlots.find((entry)=>entry.slot==='outer');
+  assert.ok(!coveredOuter?.alternatives.some((entry)=>entry.itemId==='transition_overall'));
+  assert.ok(!coveredOuter?.alternatives.some((entry)=>entry.itemId==='winter_overall'));
+});
+
+test('carrier baseline uses a jacket while a carrier cover is active',()=>{
+  const result=recommendOutfit(request(carrier(),{w:weather(5)}));
+  assert.equal(id(result,'carrier_accessory'),'carrier_cover_warm');
+  assert.ok(!['transition_overall','winter_overall'].includes(id(result,'outer')));
+});
+
 test('manual jacket and stroller-accessory changes do not accumulate thermal rebalance by tap order',()=>{
   const context=stroller({strollerState:'awake',activity:'normal'});
   const w=weather(15);
@@ -556,6 +578,50 @@ test('extreme cold, heat and strong wind produce caution codes',()=>{
   assert.ok(notices(recommendOutfit(request(outdoor(),{w:weather(-1)}))).includes('EXTREME_COLD_CAUTION'));
   assert.ok(notices(recommendOutfit(request(outdoor(),{w:weather(30)}))).includes('EXTREME_HEAT_CAUTION'));
   assert.ok(notices(recommendOutfit(request(outdoor(),{w:weather(18,{windGustKmh:60})}))).includes('STRONG_WIND_CAUTION'));
+});
+
+test('Strampler-Alternativen bleiben am Body und an der Hose verfügbar und gleichen Oberkörper/Füße aus',()=>{
+  const context=outdoor();
+  const w=weather(16);
+  const baseline=recommendOutfit(request(context,{w}));
+  const bodyOptions=slot(baseline,'base_torso').alternatives.map((option)=>option.itemId);
+  const legOptions=slot(baseline,'legs').alternatives.map((option)=>option.itemId);
+  assert.ok(bodyOptions.includes('strampler_without_feet'));
+  assert.ok(bodyOptions.includes('strampler_with_feet'));
+  assert.ok(legOptions.includes('strampler_without_feet'));
+  assert.ok(legOptions.includes('strampler_with_feet'));
+
+  const noFeetSession=lockItem(createSession('romper_no_feet'),{slot:'base_torso',itemId:'strampler_without_feet'});
+  const noFeet=recommendOutfit(request(context,{w,session:noFeetSession}));
+  assert.equal(id(noFeet,'base_torso'),'long_sleeve_bodysuit');
+  assert.equal(id(noFeet,'legs'),'strampler_without_feet');
+  assert.equal(id(noFeet,'mid'),null);
+
+  const withFeetSession=lockItem(createSession('romper_with_feet'),{slot:'base_torso',itemId:'strampler_with_feet'});
+  const withFeet=recommendOutfit(request(context,{w,session:withFeetSession}));
+  assert.equal(id(withFeet,'base_torso'),'long_sleeve_bodysuit');
+  assert.equal(id(withFeet,'legs'),'strampler_with_feet');
+  assert.equal(id(withFeet,'feet'),null);
+
+  const pinnedBodySession=lockItem(
+    lockItem(createSession('romper_pinned_body'),{slot:'base_torso',itemId:'long_sleeve_bodysuit'}),
+    {slot:'base_torso',itemId:'strampler_without_feet'}
+  );
+  assert.ok(pinnedBodySession.manualLocks.some((lock)=>lock.slot==='base_torso'&&lock.itemId==='long_sleeve_bodysuit'));
+  const pinnedBody=recommendOutfit(request(outdoor({sunExposure:'direct'}),{w:weather(27,{uvIndex:6}),session:pinnedBodySession}));
+  assert.equal(id(pinnedBody,'base_torso'),'long_sleeve_bodysuit');
+  assert.equal(id(pinnedBody,'legs'),'strampler_without_feet');
+
+  const pinnedFeetSession=lockItem(withFeetSession,{slot:'feet',itemId:'socks'});
+  const pinnedFeet=recommendOutfit(request(context,{w,session:pinnedFeetSession}));
+  assert.equal(id(pinnedFeet,'feet'),'socks');
+});
+
+test('Strampler-Alternative behält den Body auch bei direkter Sonne und UV-Bedeckung',()=>{
+  const session=lockItem(createSession('romper_sun'),{slot:'base_torso',itemId:'strampler_without_feet'});
+  const result=recommendOutfit(request(outdoor({sunExposure:'direct'}),{w:weather(27,{uvIndex:6}),session}));
+  assert.equal(id(result,'base_torso'),'short_sleeve_bodysuit');
+  assert.equal(id(result,'legs'),'strampler_without_feet');
 });
 
 test('all recommendation slots are unique per phase and use known catalog items',()=>{

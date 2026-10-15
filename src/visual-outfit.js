@@ -162,6 +162,7 @@ export function buildVisualCatalog(assetManifest, visualManifest) {
         id,
         assetGroupId: group.id,
         sourceStyle,
+        isAdditional: true,
         assetPath: additional.assetPath,
         themeIds: Object.freeze([...candidateThemeIds]),
         paletteTags: Object.freeze([...(additional.paletteTags || sourceProfile.paletteTags || [])]),
@@ -229,6 +230,12 @@ function primaryPaletteTags(variant) {
   return paletteTags(variant).filter((tag) => !NEUTRAL_PALETTE_TAGS.has(tag));
 }
 
+const NON_COLOR_PALETTE_TAGS = new Set(['warm_soft', 'cool_muted']);
+
+function hasAccentColor(variant) {
+  return primaryPaletteTags(variant).some((tag) => !NON_COLOR_PALETTE_TAGS.has(tag));
+}
+
 function paletteModeProfile(catalog, visualManifest, paletteMode) {
   const configured = catalog.paletteModeProfiles?.[paletteMode];
   if (configured) return configured;
@@ -255,7 +262,12 @@ function stylePreferenceScore(variant, profile) {
 
 function themeRoleScore(variant, theme) {
   const colors = theme.colors || {};
-  return paletteTags(variant).reduce((sum, tag) => {
+  // New colorways can fit a theme through themeIds even when their hue is not
+  // explicitly named in that theme's original color roles.
+  const representedColor = paletteTags(variant).some((tag) =>
+    ['primary', 'secondary', 'neutral'].some((role) => colors[role]?.includes(tag)));
+  const accentBonus = variant.isAdditional && hasAccentColor(variant) && !representedColor ? 2 : 0;
+  return accentBonus + paletteTags(variant).reduce((sum, tag) => {
     if (colors.primary?.includes(tag)) return sum + 6;
     if (colors.secondary?.includes(tag)) return sum + 3;
     if (colors.neutral?.includes(tag)) return sum + 1;
@@ -440,29 +452,74 @@ function buildLookCandidates(catalog, visualManifest, itemIds, paletteMode, them
 
   if (themeId != null) return candidates;
 
-  // Complete theme compositions are the most coherent look cycle. Only fan out
-  // individual item variants when the available themes render identically.
-  if (candidates.length > 1) return candidates;
-
+  // Show each theme's coordinated outfit first. Then expose other compatible
+  // garment colors; otherwise most additional colorways never appear at all.
+  const multipleThemes = candidates.length > 1;
   for (const scoredTheme of themes) {
-    for (const selection of scoredTheme.result.selections) {
-      if (!selection.group) continue;
+    let addedForTheme = 0;
+    const selections = [...scoredTheme.result.selections]
+      .filter((selection) => selection.group)
+      .sort((left, right) => itemWeight(right.group) - itemWeight(left.group));
+    for (const selection of selections) {
+      // A second sock or blanket alone should not crowd out different outfits.
+      if (multipleThemes && itemWeight(selection.group) < 4) continue;
       const alternatives = variantCandidates(selection.group, scoredTheme.theme, paletteMode, catalog, visualManifest)
-        .sort(compareCandidates);
+        .sort(compareCandidates)
+        .filter((candidate) => candidate.variant.id !== selection.chosen.variant?.id
+          && (!multipleThemes || (candidate.themed && hasAccentColor(candidate.variant))));
       for (const alternative of alternatives) {
-        if (alternative.variant.id === selection.chosen.variant?.id) continue;
         const result = chooseVariantsForTheme(
-          catalog,
-          visualManifest,
-          itemIds,
-          scoredTheme.theme,
-          paletteMode,
+          catalog, visualManifest, itemIds, scoredTheme.theme, paletteMode,
           new Map([[selection.index, alternative.variant.id]])
         );
+        const before = candidates.length;
         addCandidate(scoredTheme.theme, result);
+        if (multipleThemes && candidates.length > before) {
+          addedForTheme += 1;
+          break;
+        }
       }
+      // Bound work on mobile: maximum three extra garment looks per theme.
+      if (multipleThemes && addedForTheme >= 3) break;
     }
   }
+  return candidates;
+}
+
+const LOOK_SELECTION_CACHE = new WeakMap();
+const MAX_CACHED_LOOK_COMPOSITIONS = 64;
+
+// A new seed selects from the same set of compositions. Build that set just
+// once per immutable manifest pair, clothing combination and palette mode.
+function cachedLookCandidates(assetManifest, visualManifest, itemIds, paletteMode, themeId) {
+  assertObject(assetManifest, 'assetManifest');
+  assertObject(visualManifest, 'visualManifest');
+
+  let byVisualManifest = LOOK_SELECTION_CACHE.get(assetManifest);
+  if (!byVisualManifest) {
+    byVisualManifest = new WeakMap();
+    LOOK_SELECTION_CACHE.set(assetManifest, byVisualManifest);
+  }
+  let state = byVisualManifest.get(visualManifest);
+  if (!state) {
+    state = { catalog: buildVisualCatalog(assetManifest, visualManifest), looks: new Map() };
+    byVisualManifest.set(visualManifest, state);
+  }
+
+  const key = JSON.stringify([itemIds, paletteMode, themeId]);
+  const cached = state.looks.get(key);
+  if (cached) {
+    // Keep recently used outfits available without retaining every combination.
+    state.looks.delete(key);
+    state.looks.set(key, cached);
+    return cached;
+  }
+
+  const candidates = buildLookCandidates(state.catalog, visualManifest, itemIds, paletteMode, themeId);
+  if (state.looks.size >= MAX_CACHED_LOOK_COMPOSITIONS) {
+    state.looks.delete(state.looks.keys().next().value);
+  }
+  state.looks.set(key, candidates);
   return candidates;
 }
 
@@ -545,9 +602,8 @@ export function selectVisualLook({
   }
   const normalizedPaletteMode = normalizePaletteMode(paletteMode, styleTheme);
 
-  const catalog = buildVisualCatalog(assetManifest, visualManifest);
   const itemIds = recommendation.slots.map((slotResult) => slotResult?.selected?.itemId || null);
-  const lookCandidates = buildLookCandidates(catalog, visualManifest, itemIds, normalizedPaletteMode, themeId);
+  const lookCandidates = cachedLookCandidates(assetManifest, visualManifest, itemIds, normalizedPaletteMode, themeId);
   const lookIndex = normalizedSeedOffset(visualSeed, lookCandidates.length);
   const selectedLook = lookCandidates[lookIndex];
   const theme = selectedLook.theme;

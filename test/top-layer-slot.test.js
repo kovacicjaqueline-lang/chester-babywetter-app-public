@@ -130,3 +130,12 @@ test('warm UV coverage can use the light long-sleeve top without forcing a body 
   assert.equal(item(result,'mid'),null);
   assert.equal(CLOTHING_CATALOG[item(result,'top')].sunCoverage,3);
 });
+
+test('addable outdoor outer layer offers transition and winter overalls', () => {
+  const result = recommendOutfit(request(outdoor(),22));
+  const addableOuter = result.addableSlots.find((entry) => entry.slot === 'outer');
+
+  assert.ok(addableOuter);
+  assert.ok(addableOuter.alternatives.some((option) => option.itemId === 'transition_overall'));
+  assert.ok(addableOuter.alternatives.some((option) => option.itemId === 'winter_overall'));
+});

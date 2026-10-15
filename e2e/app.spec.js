@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 
-const APP_SHELL_CACHE = 'babywetter-shell-v0.2.0-assets28';
+const APP_SHELL_CACHE = 'babywetter-shell-v0.2.0-assets33';
 
 async function openDemo(page) {
   await page.goto('/?demo=1');
@@ -135,6 +135,37 @@ test('dünner Pullover bietet Sweatshirt und dünne Strickjacke, aber keine Flee
   await expect(page.locator('#outfitGrid [data-item-id="trousers"]')).toHaveCount(trousersBefore);
 });
 
+test('Strampler ist bei Oberteil und Hose austauschbar und unterscheidet Fußvarianten', async ({ page }) => {
+  await openDemo(page);
+  const body = page.locator('#outfitGrid [data-item-id="long_sleeve_bodysuit"][data-open-alternatives="true"]');
+  await expect(body).toBeVisible();
+  await body.click();
+  await expect(page.locator('#alternativeOptions [data-alternative-item-id="strampler_without_feet"]')).toBeVisible();
+  await expect(page.locator('#alternativeOptions [data-alternative-item-id="strampler_with_feet"]')).toBeVisible();
+  await page.locator('#alternativeOptions [data-alternative-item-id="strampler_without_feet"]').click();
+  await expect(page.locator('#outfitGrid [data-item-id="long_sleeve_bodysuit"]')).toBeVisible();
+  await expect(page.locator('#outfitGrid [data-item-id="strampler_without_feet"]')).toBeVisible();
+
+  const romper = page.locator('#outfitGrid [data-item-id="strampler_without_feet"][data-open-alternatives="true"]');
+  await romper.click();
+  await page.locator('#alternativeOptions [data-alternative-item-id="strampler_with_feet"]').click();
+  await expect(page.locator('#outfitGrid [data-item-id="long_sleeve_bodysuit"]')).toBeVisible();
+  await expect(page.locator('#outfitGrid [data-item-id="strampler_with_feet"]')).toBeVisible();
+  await expect(page.locator('#outfitGrid [data-item-id="strampler_without_feet"]')).toHaveCount(0);
+});
+
+test('Strampler kann auch als Schlafkleidung gewählt werden', async ({ page }) => {
+  await openDemo(page);
+  await chooseSituation(page, 'sleep');
+  const underlayer = page.locator('#outfitGrid [data-slot="sleep_underlayer"][data-open-alternatives="true"]');
+  await expect(underlayer).toBeVisible();
+  await underlayer.click();
+  await expect(page.locator('#alternativeOptions [data-alternative-item-id="sleep_under_strampler_without_feet"]')).toBeVisible();
+  await expect(page.locator('#alternativeOptions [data-alternative-item-id="sleep_under_strampler_with_feet"]')).toBeVisible();
+  await page.locator('#alternativeOptions [data-alternative-item-id="sleep_under_strampler_with_feet"]').click();
+  await expect(page.locator('#outfitGrid [data-item-id="sleep_under_strampler_with_feet"]')).toBeVisible();
+});
+
 test('entferntes Kinderwagen-Wärmezubehör kann wieder hinzugefügt werden', async ({ page }) => {
   await openDemo(page);
   await chooseSituation(page, 'stroller');
@@ -164,6 +195,8 @@ test('fehlende Außenschicht kann ergänzend über der Basisschicht gewählt wer
   await expect(addOuter).toBeVisible();
   await addOuter.click();
   await expect(page.locator('#alternativeTitle')).toHaveText('Außenschicht hinzufügen');
+  await expect(page.locator('#alternativeOptions [data-alternative-item-id="transition_overall"]')).toBeVisible();
+  await expect(page.locator('#alternativeOptions [data-alternative-item-id="winter_overall"]')).toBeVisible();
   await page.locator('#alternativeOptions [data-alternative-item-id="light_transition_jacket"]').click();
   await expect(page.locator('#outfitGrid [data-item-id="light_transition_jacket"]')).toBeVisible();
   await expect(page.locator('#outfitGrid [data-item-id="long_sleeve_bodysuit"]')).toBeVisible();
@@ -189,6 +222,25 @@ test('Anderer Look ändert sichtbar die Visuals, nie die fachlichen Items, und b
   await expect(page.locator('#outfitGrid [data-item-id]').first()).toBeVisible();
   expect(await selectedIds(page)).toEqual(afterItems);
   expect(await selectedVisuals(page)).toEqual(afterVisuals);
+});
+
+test('Kinderwagen: warmer Farbstil bietet mehrere sichtbar unterschiedliche Looks', async ({ page }) => {
+  await openDemo(page);
+  await chooseSituation(page, 'stroller');
+  await page.locator('[data-open-dialog="settingsDialog"]').first().click();
+  await page.locator('#settingsDialog input[name="paletteMode"][value="warm"]').check();
+  await page.locator('#settingsDialog [data-close-dialog="settingsDialog"]').click();
+
+  const originalItems = await selectedIds(page);
+  const images = new Set();
+  for (let index = 0; index < 10; index += 1) {
+    await expect(page.locator('#changeLookButton')).toBeEnabled();
+    images.add(JSON.stringify(await selectedVisuals(page)));
+    await page.locator('#changeLookButton').click();
+  }
+
+  expect(images.size).toBeGreaterThan(3);
+  expect(await selectedIds(page)).toEqual(originalItems);
 });
 
 test('Standort kann gewechselt werden', async ({ page }) => {
@@ -357,11 +409,13 @@ test('Schlafmodus verwendet Raumtemperatur', async ({ page }) => {
   await expect(page.locator('[data-notice-code="SLEEP_NO_HAT"]')).toBeVisible();
 });
 
-test('Nackentest bleibt kurz sichtbar; Detailhinweis steht in Hilfe', async ({ page }) => {
+test('Nackentest bleibt dezent erreichbar; Details stehen im Feedbackdialog', async ({ page }) => {
   await openDemo(page);
-  await expect(page.getByTestId('neck-check')).toBeVisible();
-  await expect(page.getByTestId('neck-check')).toContainText('Warm & trocken');
-  await expect(page.getByTestId('neck-check')).not.toContainText('Kalte Hände oder Füße');
+  const neckCheck = page.getByTestId('neck-check');
+  await expect(neckCheck).toBeVisible();
+  await expect(neckCheck).not.toContainText('Warm & trocken');
+  await expect(neckCheck.getByRole('button', { name:'Nackentest anwenden' })).toHaveText('Prüfen');
+  await expect(page.locator('#neckFeedbackStatus')).toBeHidden();
   await page.locator('[data-open-dialog="helpDialog"]').click();
   await expect(page.locator('#helpDialog')).toBeVisible();
   await expect(page.locator('#helpDialog')).toContainText('Kalte Hände oder Füße');

@@ -560,8 +560,11 @@ code { font-size: .84em; }
 .clothing-card-addable .clothing-name,
 .clothing-card-addable .clothing-role {
   display: block;
+  white-space: normal;
   max-width: 100%;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
 }
 .clothing-image-shell img {
   width: 100%;
@@ -585,6 +588,8 @@ code { font-size: .84em; }
   font-size: .74rem;
   font-weight: 740;
   line-height: 1.16;
+  overflow-wrap: normal;
+  hyphens: auto;
 }
 .clothing-description {
   margin: 3px 1px 0;
@@ -695,38 +700,23 @@ code { font-size: .84em; }
   margin: 0 0 2px;
   font-size: .77rem;
 }
-.neck-check > div:last-child > p:not(.fine-print) {
-  grid-column: 1 / -1;
-  grid-row: 2;
-  margin: 0;
-  font-size: .64rem;
-  line-height: 1.25;
-}
-.neck-check .fine-print {
-  grid-column: 1 / -1;
-  grid-row: 3;
-  margin: 1px 0 0;
-  color: var(--muted);
-  font-size: .58rem;
-  line-height: 1.22;
-}
 .neck-action-row { display: contents; }
 .neck-action-button {
   grid-column: 2;
   grid-row: 1;
-  min-height: 30px;
-  padding: 4px 8px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
+  min-height: 40px;
+  padding: 4px 2px;
+  border: 0;
+  border-radius: 0;
   background: transparent;
-  color: var(--ink);
-  font-size: .6rem;
-  font-weight: 780;
+  color: var(--muted);
+  font-size: .64rem;
+  font-weight: 650;
   white-space: nowrap;
 }
 .neck-feedback-status {
   grid-column: 1 / -1;
-  grid-row: 4;
+  grid-row: 2;
   color: var(--muted);
   font-size: .56rem;
   line-height: 1.2;
@@ -870,6 +860,7 @@ code { font-size: .84em; }
 }
 .field {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 6px;
   margin: 11px 0;
   font-size: .79rem;
@@ -878,6 +869,7 @@ code { font-size: .84em; }
 .field input,
 .field select {
   width: 100%;
+  min-width: 0;
   min-height: 46px;
   padding: 9px 11px;
   border: 1px solid var(--line);

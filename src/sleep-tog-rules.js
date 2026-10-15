@@ -18,7 +18,9 @@ export const SLEEP_UNDERLAYER_IDS = Object.freeze([
   'sleep_under_long_sleeve_bodysuit',
   'sleep_under_light_pajamas',
   'sleep_under_short_body_plus_light_pajamas',
-  'sleep_under_long_body_plus_light_pajamas'
+  'sleep_under_long_body_plus_light_pajamas',
+  'sleep_under_strampler_without_feet',
+  'sleep_under_strampler_with_feet'
 ]);
 
 export function genericTogGuidanceForRoomTemp(roomTempC) {
