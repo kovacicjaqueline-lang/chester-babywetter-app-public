@@ -425,7 +425,7 @@ Der Wärmekredit ersetzt bei Bedarf Kleidung am Körper. Die Verrechnung erfolgt
 
 Für `Sehr aktiv` gilt in allen Temperaturbändern dieselbe Grundregel: `awake + active` übernimmt die Outdoor-Aktivitätskorrektur von `-1 thermalStep`, und die Engine ergänzt **keine automatische thermische Decke und keinen automatischen Fußsack**. Wärme wird bevorzugt über die passende Körperkleidung gelöst. Ein manuell gewähltes thermisches Kinderwagen-Zubehör bleibt zulässig und wird zonengerecht gegen die Körperkleidung rebalanced. Wetterzubehör wie Regenverdeck oder Sonnensegel bleibt unabhängig davon aktiv.
 
-Bei 14 bis <18 °C erhalten freie Füße in diesem Zustand dicke Socken oder weiche Booties; ein manuell ergänztes Kinderwagen-Zubehör kann diese Wärme zonengerecht ausgleichen.
+Bei 14 bis <18 °C erhalten freie Füße dicke Socken oder weiche Booties, wenn kein thermisches Kinderwagen-Zubehör ausgewählt ist (`stroller_thermal_none`). Fußsack oder Decke decken die Füße bereits ab und greifen in die zonengerechte Rebalance ein.
 
 #### `>=20 °C`
 

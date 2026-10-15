@@ -2,7 +2,7 @@ import { CLOTHING_CATALOG, SLOT_ITEMS } from './clothing-catalog.js';
 import { SLEEP_BAG_IDS, genericTogGuidanceForRoomTemp } from './sleep-tog-rules.js';
 import {
   TEMPERATURE_BANDS, RELATION_ORDER, createSession, setWarmthOffset, lockItem, temperatureBandFor,
-  createPhaseState, seedBaseline, protectOutdoorExposedFeet, activityAdjustmentFor, traceThermal, strollerStateAdjustment,
+  createPhaseState, seedBaseline, protectExposedFeetWithoutThermalCover, activityAdjustmentFor, traceThermal, strollerStateAdjustment,
   evaluateWind, warmthBiasAdjustment, neckFeedbackAdjustment, selectStrollerThermalAccessory, selectCarrierAccessory, selectCarThermalAccessory,
   setSelected, carrierThermalCredit, applyThermalDelta, applyCoveredThermalCredit, applyCarrierTorsoReduction,
   protectCarrierExposedAreas, rainRequirement, sunRequirement, selectStrollerWeatherAccessory,
@@ -137,7 +137,6 @@ function evaluateOutdoorLike(result, request, phase, effectiveMode) {
   const weatherWindow = summarizeWeatherWindow(weather, context.plannedMinutes);
   const state = createPhaseState(result, phase, effectiveMode);
   seedBaseline(state, band.id, effectiveMode);
-  protectOutdoorExposedFeet(state, thermal.thermalReferenceC, context, effectiveMode);
 
   let adjustment = 0;
   let strollerStateAdjustmentValue = 0;
@@ -172,6 +171,7 @@ function evaluateOutdoorLike(result, request, phase, effectiveMode) {
     accessoryCredit = CLOTHING_CATALOG[thermalAccessory.itemId].thermalStepCredit;
     if (accessoryCredit) addTrace(result,'situation.stroller.external_isolation',phase,'thermal_down',thermalAccessory.itemId,-accessoryCredit,'STROLLER_EXTERNAL_ISOLATION_CREDIT');
   }
+  protectExposedFeetWithoutThermalCover(state, thermal.thermalReferenceC, context, effectiveMode);
 
   let carrierTorsoCredit = 0;
   let carrierCoverCredit = 0;
