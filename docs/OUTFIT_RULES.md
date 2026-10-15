@@ -76,6 +76,10 @@ Das gleiche Prinzip gilt für situative Außenwärme: Ein Tragecover darf seinen
 
 Manuelle Kleidungsalternativen werden primär innerhalb desselben Slots und derselben Körperzone rebalanceiert. Ein wärmeres Oberteil darf Wärme mit anderen Oberkörperschichten verrechnen, aber nicht automatisch mit der Beinbekleidung. Beinbekleidung wird nur reduziert, wenn die zusätzliche Isolation die Beine tatsächlich bedeckt, etwa durch Overall, Fußsack, Decke oder Tragecover mit entsprechender `bodyZones`-Abdeckung. Der dünne Cardigan liegt wie dünner Pullover und Sweatshirt im Mid-Layer-Slot bei `thermalWeight: 2`; Fleece bleibt eine wärmere Stufe (`3`) und wird nicht als normale gleichwarme Pullover-Alternative angeboten.
 
+### 2.4 Strampler als zonenübergreifende Alternative
+
+Leichte, ungefütterte Strampler werden bei Body-/Shirt- und Hosenalternativen angeboten. Tagsüber liegt der Strampler im `legs`-Slot, ersetzt dort die Hose und lässt den Body als Basisschicht bestehen. Weil er zusätzlich Torso und Arme bedeckt, wird eine freie obere Schicht (`top`, dann `mid`) um einen Schritt reduziert. Manuell fixierte Schichten bleiben bestehen. Bei der Fußvariante entfällt eine nicht fixierte Fußschicht. Für `sleep` gibt es eigene Schlaf-Strampler im `sleep_underlayer`-Slot; sie nehmen an der üblichen Raumtemperatur-/TOG-Neubewertung teil. Nur leichte, ungefütterte Schlafkleidung ist als `sleepSafe` markiert.
+
 ## 3. Outdoor-Temperaturbaseline
 
 Baseline: Modus `outdoor`, Aktivität `normal`, trocken, keine starke Windexposition, kein zusätzlicher Wärmekredit.

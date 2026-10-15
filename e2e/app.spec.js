@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 
-const APP_SHELL_CACHE = 'babywetter-shell-v0.2.0-assets32';
+const APP_SHELL_CACHE = 'babywetter-shell-v0.2.0-assets33';
 
 async function openDemo(page) {
   await page.goto('/?demo=1');
@@ -133,6 +133,37 @@ test('dünner Pullover bietet Sweatshirt und dünne Strickjacke, aber keine Flee
   await page.locator('#alternativeOptions [data-alternative-item-id="thin_cardigan"]').click();
   await expect(page.locator('#outfitGrid [data-item-id="thin_cardigan"]')).toBeVisible();
   await expect(page.locator('#outfitGrid [data-item-id="trousers"]')).toHaveCount(trousersBefore);
+});
+
+test('Strampler ist bei Oberteil und Hose austauschbar und unterscheidet Fußvarianten', async ({ page }) => {
+  await openDemo(page);
+  const body = page.locator('#outfitGrid [data-item-id="long_sleeve_bodysuit"][data-open-alternatives="true"]');
+  await expect(body).toBeVisible();
+  await body.click();
+  await expect(page.locator('#alternativeOptions [data-alternative-item-id="strampler_without_feet"]')).toBeVisible();
+  await expect(page.locator('#alternativeOptions [data-alternative-item-id="strampler_with_feet"]')).toBeVisible();
+  await page.locator('#alternativeOptions [data-alternative-item-id="strampler_without_feet"]').click();
+  await expect(page.locator('#outfitGrid [data-item-id="long_sleeve_bodysuit"]')).toBeVisible();
+  await expect(page.locator('#outfitGrid [data-item-id="strampler_without_feet"]')).toBeVisible();
+
+  const romper = page.locator('#outfitGrid [data-item-id="strampler_without_feet"][data-open-alternatives="true"]');
+  await romper.click();
+  await page.locator('#alternativeOptions [data-alternative-item-id="strampler_with_feet"]').click();
+  await expect(page.locator('#outfitGrid [data-item-id="long_sleeve_bodysuit"]')).toBeVisible();
+  await expect(page.locator('#outfitGrid [data-item-id="strampler_with_feet"]')).toBeVisible();
+  await expect(page.locator('#outfitGrid [data-item-id="strampler_without_feet"]')).toHaveCount(0);
+});
+
+test('Strampler kann auch als Schlafkleidung gewählt werden', async ({ page }) => {
+  await openDemo(page);
+  await chooseSituation(page, 'sleep');
+  const underlayer = page.locator('#outfitGrid [data-slot="sleep_underlayer"][data-open-alternatives="true"]');
+  await expect(underlayer).toBeVisible();
+  await underlayer.click();
+  await expect(page.locator('#alternativeOptions [data-alternative-item-id="sleep_under_strampler_without_feet"]')).toBeVisible();
+  await expect(page.locator('#alternativeOptions [data-alternative-item-id="sleep_under_strampler_with_feet"]')).toBeVisible();
+  await page.locator('#alternativeOptions [data-alternative-item-id="sleep_under_strampler_with_feet"]').click();
+  await expect(page.locator('#outfitGrid [data-item-id="sleep_under_strampler_with_feet"]')).toBeVisible();
 });
 
 test('entferntes Kinderwagen-Wärmezubehör kann wieder hinzugefügt werden', async ({ page }) => {

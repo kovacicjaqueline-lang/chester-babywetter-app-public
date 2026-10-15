@@ -1824,6 +1824,90 @@
         ],
         "pattern": "fine_knit"
       }
+    },
+    "strampler_without_feet": {
+      "neutral": {
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "clay_cream",
+          "terracotta_greige",
+          "ocher_taupe",
+          "petrol_warm_beige",
+          "mauve_cream",
+          "apricot_oat",
+          "slate_blue_greige",
+          "soft_lavender_sand"
+        ],
+        "paletteTags": [
+          "cream",
+          "oat"
+        ],
+        "pattern": "solid"
+      }
+    },
+    "strampler_with_feet": {
+      "neutral": {
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "clay_cream",
+          "terracotta_greige",
+          "ocher_taupe",
+          "petrol_warm_beige",
+          "mauve_cream",
+          "apricot_oat",
+          "slate_blue_greige",
+          "soft_lavender_sand"
+        ],
+        "paletteTags": [
+          "cream",
+          "oat"
+        ],
+        "pattern": "solid"
+      }
+    },
+    "sleep_under_strampler_without_feet": {
+      "neutral": {
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "clay_cream",
+          "terracotta_greige",
+          "ocher_taupe",
+          "petrol_warm_beige",
+          "mauve_cream",
+          "apricot_oat",
+          "slate_blue_greige",
+          "soft_lavender_sand"
+        ],
+        "paletteTags": [
+          "cream",
+          "oat"
+        ],
+        "pattern": "solid"
+      }
+    },
+    "sleep_under_strampler_with_feet": {
+      "neutral": {
+        "themeIds": [
+          "sage_oat",
+          "dusty_blue_sand",
+          "clay_cream",
+          "terracotta_greige",
+          "ocher_taupe",
+          "petrol_warm_beige",
+          "mauve_cream",
+          "apricot_oat",
+          "slate_blue_greige",
+          "soft_lavender_sand"
+        ],
+        "paletteTags": [
+          "cream",
+          "oat"
+        ],
+        "pattern": "solid"
+      }
     }
   },
   "additionalVariants": {
@@ -3975,6 +4059,162 @@
         "paletteTags": [
           "cognac",
           "warm_soft"
+        ],
+        "pattern": "solid"
+      }
+    ],
+    "strampler_without_feet": [
+      {
+        "id": "sage-oat-01",
+        "assetPath": "assets/clothing/strampler_without_feet/sage.webp",
+        "themeIds": [
+          "sage_oat"
+        ],
+        "paletteTags": [
+          "sage"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "dusty-blue-01",
+        "assetPath": "assets/clothing/strampler_without_feet/dusty_blue.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "terracotta-01",
+        "assetPath": "assets/clothing/strampler_without_feet/terracotta.webp",
+        "themeIds": [
+          "clay_cream",
+          "terracotta_greige",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "terracotta",
+          "clay"
+        ],
+        "pattern": "solid"
+      }
+    ],
+    "strampler_with_feet": [
+      {
+        "id": "sage-oat-01",
+        "assetPath": "assets/clothing/strampler_with_feet/sage.webp",
+        "themeIds": [
+          "sage_oat"
+        ],
+        "paletteTags": [
+          "sage"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "dusty-blue-01",
+        "assetPath": "assets/clothing/strampler_with_feet/dusty_blue.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "terracotta-01",
+        "assetPath": "assets/clothing/strampler_with_feet/terracotta.webp",
+        "themeIds": [
+          "clay_cream",
+          "terracotta_greige",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "terracotta",
+          "clay"
+        ],
+        "pattern": "solid"
+      }
+    ],
+    "sleep_under_strampler_without_feet": [
+      {
+        "id": "sage-oat-01",
+        "assetPath": "assets/clothing/strampler_without_feet/sage.webp",
+        "themeIds": [
+          "sage_oat"
+        ],
+        "paletteTags": [
+          "sage"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "dusty-blue-01",
+        "assetPath": "assets/clothing/strampler_without_feet/dusty_blue.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "terracotta-01",
+        "assetPath": "assets/clothing/strampler_without_feet/terracotta.webp",
+        "themeIds": [
+          "clay_cream",
+          "terracotta_greige",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "terracotta",
+          "clay"
+        ],
+        "pattern": "solid"
+      }
+    ],
+    "sleep_under_strampler_with_feet": [
+      {
+        "id": "sage-oat-01",
+        "assetPath": "assets/clothing/strampler_with_feet/sage.webp",
+        "themeIds": [
+          "sage_oat"
+        ],
+        "paletteTags": [
+          "sage"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "dusty-blue-01",
+        "assetPath": "assets/clothing/strampler_with_feet/dusty_blue.webp",
+        "themeIds": [
+          "dusty_blue_sand",
+          "slate_blue_greige"
+        ],
+        "paletteTags": [
+          "dusty_blue"
+        ],
+        "pattern": "solid"
+      },
+      {
+        "id": "terracotta-01",
+        "assetPath": "assets/clothing/strampler_with_feet/terracotta.webp",
+        "themeIds": [
+          "clay_cream",
+          "terracotta_greige",
+          "apricot_oat"
+        ],
+        "paletteTags": [
+          "terracotta",
+          "clay"
         ],
         "pattern": "solid"
       }

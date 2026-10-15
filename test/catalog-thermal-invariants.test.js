@@ -26,6 +26,8 @@ const EXPECTED_V1_IDS = Object.freeze([
   'light_transition_jacket',
   'insulated_transition_jacket',
   'softshell_jacket',
+  'strampler_with_feet',
+  'strampler_without_feet',
   'rain_jacket',
   'transition_overall',
   'winter_overall',
@@ -61,7 +63,9 @@ const EXPECTED_V1_IDS = Object.freeze([
   'sleep_under_long_sleeve_bodysuit',
   'sleep_under_light_pajamas',
   'sleep_under_short_body_plus_light_pajamas',
-  'sleep_under_long_body_plus_light_pajamas'
+  'sleep_under_long_body_plus_light_pajamas',
+  'sleep_under_strampler_without_feet',
+  'sleep_under_strampler_with_feet'
 ]);
 
 function assertThermalWeights(expected) {
