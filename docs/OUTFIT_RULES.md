@@ -271,6 +271,8 @@ Für Wachkleidung gilt als vorsichtige V1-Produktheuristik:
 - `>=3 Monate`: `0`,
 - unbekanntes/ungültiges Alter: `0` thermische Alterskorrektur.
 
+Die Grenze ist inklusiv eindeutig: Bei `24 °C` und `27 °C` bleibt der kleine Aufschlag aktiv; ab `28 °C` entfällt er. Regressionstests decken diese warmen Grenzwerte ab, damit der Altersfaktor bei Hitze keine zusätzliche Isolation erzeugt.
+
 Die Korrektur gilt für `outdoor`, `stroller`, `carrier`, `indoor` sowie für sichere körpernahe Kleidung in `car/in_car`. Die Autositz-Gurtsicherheitsregeln bleiben dabei immer vorrangig.
 
 Ab `28 °C` wird **keine zusätzliche Isolation allein wegen jungen Alters** ergänzt. Sonnen-/UV-Schutz und Hitzewarnungen bleiben unabhängig davon aktiv.
@@ -386,15 +388,12 @@ Bei erforderlichem Regenschutz wird standardmäßig **Regenverdeck** als Situati
 
 ### 7.1 Alter
 
-`<12 Monate + direct sun`:
+Direkte Sonne wird altersabhängig eingeordnet:
 
-- Outfit weiterhin anzeigen,
-- `INFANT_UNDER_12M_AVOID_DIRECT_SUN`,
-- Schatten priorisieren.
-
-Unbekanntes Alter + direkte Sonne:
-
-- konservativer gleicher Hinweis.
+- `<6 Monate`: Outfit weiterhin anzeigen, `INFANT_UNDER_6M_AVOID_DIRECT_SUN`; möglichst aus direkter Sonne halten und Schatten nutzen.
+- `6 bis <12 Monate`: `INFANT_6_TO_12M_SHADE_UV_PROTECTION`; Schatten bevorzugen und altersgerechten UV-Schutz verwenden.
+- `>=12 Monate`: kein zusätzlicher Hinweis allein aufgrund des Alters.
+- unbekanntes/ungültiges Alter: `AGE_UNKNOWN_DIRECT_SUN_CONSERVATIVE_RULE`; Schatten priorisieren und direkte Sonne vorsorglich vermeiden.
 
 ### 7.2 UV
 
@@ -761,7 +760,8 @@ Mindestens:
 - `STROLLER_DO_NOT_COVER_AIRFLOW`,
 - `STROLLER_RAIN_COVER`,
 - `STROLLER_SUNSHADE`,
-- `INFANT_UNDER_12M_AVOID_DIRECT_SUN`,
+- `INFANT_UNDER_6M_AVOID_DIRECT_SUN`,
+- `INFANT_6_TO_12M_SHADE_UV_PROTECTION`,
 - `AGE_UNKNOWN_DIRECT_SUN_CONSERVATIVE_RULE`,
 - `UV_SHADE_AND_COVERAGE`,
 - `WEATHER_DATA_INCOMPLETE`,

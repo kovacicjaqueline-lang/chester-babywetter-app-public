@@ -83,11 +83,13 @@ test('age correction stops at three completed months',()=>{
   assert.equal(atThreshold.phases[0].thermalAdjustment,0);
 });
 
-test('young infant age does not add insulation in very warm conditions',()=>{
-  const result = recommendOutfit(request({ birthDate:'2026-07-24', context:outdoor, temp:28 }));
+test('young infant warmth adjustment stays below 28 C and stops at the warm-weather boundary',()=>{
+  for (const [temp, expectedAdjustment] of [[24,0.5],[27,0.5],[28,0]]) {
+    const result = recommendOutfit(request({ birthDate:'2026-07-24', context:outdoor, temp }));
 
-  assert.equal(result.phases[0].thermalAdjustment,0);
-  assert.ok(!result.ruleTrace.some((entry) => entry.ruleId === 'profile.age'));
+    assert.equal(result.phases[0].thermalAdjustment,expectedAdjustment, `temperature ${temp} C`);
+    assert.equal(result.ruleTrace.some((entry) => entry.ruleId === 'profile.age'),expectedAdjustment > 0, `age trace at ${temp} C`);
+  }
 });
 
 test('unknown birth date does not invent a thermal age adjustment',()=>{
@@ -95,6 +97,24 @@ test('unknown birth date does not invent a thermal age adjustment',()=>{
 
   assert.equal(result.phases[0].thermalAdjustment,0);
   assert.ok(!result.ruleTrace.some((entry) => entry.ruleId === 'profile.age'));
+});
+
+test('direct sun guidance changes at six months and ends at twelve months',()=>{
+  const directSun = { ...outdoor, sunExposure:'direct' };
+  const underSixMonths = recommendOutfit(request({ birthDate:'2026-03-25', context:directSun, temp:24 }));
+  const sixToTwelveMonths = recommendOutfit(request({ birthDate:'2025-09-25', context:directSun, temp:24 }));
+  const overTwelveMonths = recommendOutfit(request({ birthDate:'2025-08-25', context:directSun, temp:24 }));
+
+  assert.ok(underSixMonths.notices.some((notice) => notice.code === 'INFANT_UNDER_6M_AVOID_DIRECT_SUN'));
+  assert.ok(sixToTwelveMonths.notices.some((notice) => notice.code === 'INFANT_6_TO_12M_SHADE_UV_PROTECTION'));
+  assert.ok(!overTwelveMonths.notices.some((notice) => notice.code.startsWith('INFANT_')));
+});
+
+test('unknown age keeps conservative direct sun guidance',()=>{
+  const directSun = { ...outdoor, sunExposure:'direct' };
+  const result = recommendOutfit(request({ birthDate:null, context:directSun, temp:24 }));
+
+  assert.ok(result.notices.some((notice) => notice.code === 'AGE_UNKNOWN_DIRECT_SUN_CONSERVATIVE_RULE'));
 });
 
 test('sleep remains room-temperature and TOG based regardless of age',()=>{
