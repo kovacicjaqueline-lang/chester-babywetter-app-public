@@ -1145,6 +1145,24 @@ code { font-size: .84em; }
   height: 100%;
   object-fit: contain;
 }
+.selected-item-explanation {
+  grid-column: 1 / -1;
+  padding: 10px 12px;
+  border: 1px solid rgba(130, 91, 66, .16);
+  border-radius: 13px;
+  background: #f8f3ee;
+}
+.selected-item-explanation strong {
+  display: block;
+  font-size: .82rem;
+  line-height: 1.25;
+}
+.selected-item-explanation p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: .78rem;
+  line-height: 1.35;
+}
 .alternative-option strong,
 .alternative-option small { display: block; }
 .alternative-option strong {
