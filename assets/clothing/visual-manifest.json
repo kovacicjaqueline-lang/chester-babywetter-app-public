@@ -1908,6 +1908,28 @@
         ],
         "pattern": "solid"
       }
+    },
+    "woolwalk_overall": {
+      "neutral": {
+        "themeIds": [
+          "sage_oat"
+        ],
+        "paletteTags": [
+          "sage"
+        ],
+        "pattern": "solid"
+      }
+    },
+    "woolfleece_overall": {
+      "neutral": {
+        "themeIds": [
+          "sage_oat"
+        ],
+        "paletteTags": [
+          "sage"
+        ],
+        "pattern": "solid"
+      }
     }
   },
   "additionalVariants": {
@@ -4215,6 +4237,34 @@
         "paletteTags": [
           "terracotta",
           "clay"
+        ],
+        "pattern": "solid"
+      }
+    ],
+    "woolwalk_overall": [
+      {
+        "id": "oat-01",
+        "assetPath": "assets/clothing/woolwalk_overall/oat-01.webp",
+        "themeIds": [
+          "sage_oat"
+        ],
+        "paletteTags": [
+          "oat",
+          "cream"
+        ],
+        "pattern": "solid"
+      }
+    ],
+    "woolfleece_overall": [
+      {
+        "id": "oat-01",
+        "assetPath": "assets/clothing/woolfleece_overall/oat-01.webp",
+        "themeIds": [
+          "sage_oat"
+        ],
+        "paletteTags": [
+          "oat",
+          "cream"
         ],
         "pattern": "solid"
       }

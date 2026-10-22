@@ -336,7 +336,7 @@
     },
     {
       "id": "transition_overall",
-      "label": "Übergangsoverall",
+      "label": "Overall für kühlere Tage",
       "category": "transition_overall",
       "slot": "outer",
       "situations": [
@@ -348,7 +348,7 @@
       "styleVariants": [
         "neutral"
       ],
-      "altText": "Übergangsoverall.",
+      "altText": "Overall für kühlere Tage.",
       "assetPath": "assets/clothing/transition_overall/neutral.webp"
     },
     {
@@ -366,7 +366,7 @@
         "neutral"
       ],
       "altText": "Overall aus Wollwalk.",
-      "assetPath": "assets/clothing/transition_overall/neutral.webp"
+      "assetPath": "assets/clothing/woolwalk_overall/neutral.webp"
     },
     {
       "id": "woolfleece_overall",
@@ -383,7 +383,7 @@
         "neutral"
       ],
       "altText": "Overall aus Wollfleece.",
-      "assetPath": "assets/clothing/transition_overall/neutral.webp"
+      "assetPath": "assets/clothing/woolfleece_overall/neutral.webp"
     },
     {
       "id": "winter_overall",
