@@ -53,6 +53,10 @@ test('Alternativen zeigen Name, Beschreibung und Wärmebeziehung in dieser Reihe
   await expect(midCard).toBeVisible();
   await midCard.click();
 
+  const currentExplanation = page.locator('#alternativeOptions .selected-item-explanation');
+  await expect(currentExplanation.locator('strong')).toHaveText('Aktuell empfohlen: Dünner Pullover');
+  await expect(currentExplanation.locator('p')).toHaveText('Leichter Strick- oder Jersey-Pullover, ungefüttert.');
+
   const sweatshirt = page.locator('#alternativeOptions .alternative-option[data-alternative-item-id="sweatshirt"]');
   await expect(sweatshirt).toBeVisible();
   await expect(sweatshirt.locator('strong')).toHaveText('Sweatshirt');
