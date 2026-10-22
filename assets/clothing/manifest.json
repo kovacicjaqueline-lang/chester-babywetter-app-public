@@ -336,7 +336,7 @@
     },
     {
       "id": "transition_overall",
-      "label": "Übergangsoverall",
+      "label": "Softshelloverall",
       "category": "transition_overall",
       "slot": "outer",
       "situations": [
@@ -348,8 +348,42 @@
       "styleVariants": [
         "neutral"
       ],
-      "altText": "Übergangsoverall.",
+      "altText": "Softshelloverall.",
       "assetPath": "assets/clothing/transition_overall/neutral.webp"
+    },
+    {
+      "id": "woolwalk_overall",
+      "label": "Wollwalk-Overall",
+      "category": "woolwalk_overall",
+      "slot": "outer",
+      "situations": [
+        "car",
+        "carrier",
+        "outdoor",
+        "stroller"
+      ],
+      "styleVariants": [
+        "neutral"
+      ],
+      "altText": "Overall aus Wollwalk.",
+      "assetPath": "assets/clothing/woolwalk_overall/neutral.webp"
+    },
+    {
+      "id": "woolfleece_overall",
+      "label": "Wollfleece-Overall",
+      "category": "woolfleece_overall",
+      "slot": "outer",
+      "situations": [
+        "car",
+        "carrier",
+        "outdoor",
+        "stroller"
+      ],
+      "styleVariants": [
+        "neutral"
+      ],
+      "altText": "Overall aus Wollfleece.",
+      "assetPath": "assets/clothing/woolfleece_overall/neutral.webp"
     },
     {
       "id": "winter_overall",
