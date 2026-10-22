@@ -148,7 +148,7 @@ UV-/Sonnenregeln bleiben aktiv; Sonnenschutz wird durch leichte Bedeckung statt 
 - Langarmbody,
 - normale Hose/wärmere Leggings,
 - dünner Pullover,
-- Socken,
+- bei `outdoor` ohne Bodenkontakt dicke Socken oder weiche Booties; bei Bodenkontakt Socken unter den Schuhen,
 - dünne Mütze je nach Wind und Exposition,
 - funktionale Außenschicht nur bei relevantem Wind oder Regen.
 
@@ -157,7 +157,7 @@ UV-/Sonnenregeln bleiben aktiv; Sonnenschutz wird durch leichte Bedeckung statt 
 - Langarmbody,
 - normale Hose,
 - leichte Übergangsjacke als eigenständige leichte Außenschicht,
-- Socken,
+- bei `outdoor` ohne Bodenkontakt dicke Socken oder weiche Booties; bei Bodenkontakt Socken unter den Schuhen,
 - dünne Mütze.
 
 Die leichte Außenschicht in diesem Übergangsband verhindert einen Mehrfachsprung zwischen 8 und 12 °C, ohne zusätzlich einen Mid-Layer zu stapeln. Im Kinderwagen kann sie durch zonengerechte externe Isolation teilweise entlastet werden.
@@ -167,7 +167,7 @@ Die leichte Außenschicht in diesem Übergangsband verhindert einen Mehrfachspru
 - Langarmbody,
 - normale Hose,
 - gefütterte Übergangsjacke als eigenständige warme Außenschicht,
-- Socken,
+- bei `outdoor` ohne Bodenkontakt dicke Socken oder weiche Booties; bei Bodenkontakt Socken unter den Schuhen,
 - warme Mütze,
 - Handschuhe nur bei längerer Exposition oder zusätzlichem Hand-Windschutzbedarf.
 
@@ -425,7 +425,7 @@ Der Wärmekredit ersetzt bei Bedarf Kleidung am Körper. Die Verrechnung erfolgt
 
 Für `Sehr aktiv` gilt in allen Temperaturbändern dieselbe Grundregel: `awake + active` übernimmt die Outdoor-Aktivitätskorrektur von `-1 thermalStep`, und die Engine ergänzt **keine automatische thermische Decke und keinen automatischen Fußsack**. Wärme wird bevorzugt über die passende Körperkleidung gelöst. Ein manuell gewähltes thermisches Kinderwagen-Zubehör bleibt zulässig und wird zonengerecht gegen die Körperkleidung rebalanced. Wetterzubehör wie Regenverdeck oder Sonnensegel bleibt unabhängig davon aktiv.
 
-Bei 14 bis <18 °C erhalten freie Füße dicke Socken oder weiche Booties, wenn kein thermisches Kinderwagen-Zubehör ausgewählt ist (`stroller_thermal_none`). Fußsack oder Decke decken die Füße bereits ab und greifen in die zonengerechte Rebalance ein.
+Bei Temperaturen unter 18 °C erhalten freie Füße dicke Socken oder weiche Booties, wenn kein thermisches Kinderwagen-Zubehör ausgewählt ist (`stroller_thermal_none`). Fußsack oder Decke decken die Füße bereits ab und greifen in die zonengerechte Rebalance ein.
 
 #### `>=20 °C`
 
@@ -556,7 +556,7 @@ Für die körpernahen Slots wird dieselbe kalibrierte Temperaturstaffel als Ausg
 
 ## 12. Schuhe / Bodenkontakt
 
-- `groundContact: none`: keine Schuhe allein aus Temperaturgründen; bei `outdoor` zwischen 14 und <18 °C dicke Socken oder weiche Booties,
+- `groundContact: none`: keine Schuhe allein aus Temperaturgründen; bei `outdoor` unter 18 °C dicke Socken oder weiche Booties,
 - `standing`: wettergerechte Schuhe abhängig von Untergrund/Wetter,
 - `walking`: Schuhe als regulärer Outfit-Slot; Regen/Kälte beeinflussen die Variante.
 

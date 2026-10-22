@@ -561,8 +561,8 @@ test('groundContact none never adds shoes',()=>{
   assert.equal(id(r,'footwear'),null);
 });
 
-test('outdoor without ground contact uses warm socks or booties from 14 to under 18 C',()=>{
-  for (const temperature of [14,16,17]) {
+test('outdoor without ground contact uses warm socks or booties below 18 C',()=>{
+  for (const temperature of [8,10,12,14,16,17]) {
     const result=recommendOutfit(request(outdoor({groundContact:'none'}),{w:weather(temperature)}));
     assert.equal(id(result,'feet'),'warm_socks_booties',`${temperature} C`);
     assert.equal(id(result,'footwear'),null,`${temperature} C`);
