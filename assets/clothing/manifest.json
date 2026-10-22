@@ -336,7 +336,7 @@
     },
     {
       "id": "transition_overall",
-      "label": "Overall für kühlere Tage",
+      "label": "Softshelloverall",
       "category": "transition_overall",
       "slot": "outer",
       "situations": [
@@ -348,7 +348,7 @@
       "styleVariants": [
         "neutral"
       ],
-      "altText": "Overall für kühlere Tage.",
+      "altText": "Softshelloverall.",
       "assetPath": "assets/clothing/transition_overall/neutral.webp"
     },
     {
