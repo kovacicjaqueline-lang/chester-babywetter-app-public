@@ -618,6 +618,17 @@ export function renderAlternatives(slotResult, assetStore, paletteMode) {
   const selectedItemId = slotResult.selected?.itemId;
   const selectedGroup = selectedItemId ? assetStore.group(selectedItemId) : null;
   title.textContent = slotResult.addLabel ?? (selectedGroup?.label?.includes('Kein ') ? `${slotRole(slotResult.slot)} hinzufügen` : `${selectedGroup?.label ?? 'Kleidungsstück'} austauschen`);
+  const selectedDescription = selectedItemId ? getClothingDescription(selectedItemId) : '';
+  if (selectedDescription) {
+    const explanation = document.createElement('div');
+    explanation.className = 'selected-item-explanation';
+    const selectedName = document.createElement('strong');
+    selectedName.textContent = `Aktuell empfohlen: ${selectedGroup?.label ?? selectedItemId.replaceAll('_', ' ')}`;
+    const description = document.createElement('p');
+    description.textContent = selectedDescription;
+    explanation.append(selectedName, description);
+    host.append(explanation);
+  }
   for (const alternative of slotResult.alternatives ?? []) {
     const group = assetStore.group(alternative.itemId);
     const parts = visualPartsForItem(alternative.itemId);
