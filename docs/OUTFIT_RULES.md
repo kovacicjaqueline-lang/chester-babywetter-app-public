@@ -121,7 +121,7 @@ UV-/Sonnenregeln bleiben aktiv; Sonnenschutz wird durch leichte Bedeckung statt 
 - Langarmbody,
 - Hose/Leggings,
 - dünner Pullover/Sweatshirt,
-- Socken,
+- bei `outdoor` ohne Bodenkontakt dicke Socken oder weiche Booties; bei Bodenkontakt Socken unter den Schuhen,
 - dünne Mütze,
 - bei Wind leichte windschützende Außenschicht.
 
@@ -139,7 +139,7 @@ UV-/Sonnenregeln bleiben aktiv; Sonnenschutz wird durch leichte Bedeckung statt 
 - Langarmbody,
 - Hose/wärmere Leggings,
 - dünner Pullover oder Fleece,
-- Socken,
+- bei `outdoor` ohne Bodenkontakt dicke Socken oder weiche Booties; bei Bodenkontakt Socken unter den Schuhen,
 - dünne/warme Mütze je nach Wind und Exposition,
 - funktionale Übergangs-/Softshelljacke nur bei relevantem Wind oder Regen.
 
@@ -425,6 +425,8 @@ Der Wärmekredit ersetzt bei Bedarf Kleidung am Körper. Die Verrechnung erfolgt
 
 Für `Sehr aktiv` gilt in allen Temperaturbändern dieselbe Grundregel: `awake + active` übernimmt die Outdoor-Aktivitätskorrektur von `-1 thermalStep`, und die Engine ergänzt **keine automatische thermische Decke und keinen automatischen Fußsack**. Wärme wird bevorzugt über die passende Körperkleidung gelöst. Ein manuell gewähltes thermisches Kinderwagen-Zubehör bleibt zulässig und wird zonengerecht gegen die Körperkleidung rebalanced. Wetterzubehör wie Regenverdeck oder Sonnensegel bleibt unabhängig davon aktiv.
 
+Bei 14 bis <18 °C erhalten freie Füße dicke Socken oder weiche Booties, wenn kein thermisches Kinderwagen-Zubehör ausgewählt ist (`stroller_thermal_none`). Fußsack oder Decke decken die Füße bereits ab und greifen in die zonengerechte Rebalance ein.
+
 #### `>=20 °C`
 
 - keine thermische externe Isolation standardmäßig,
@@ -554,7 +556,7 @@ Für die körpernahen Slots wird dieselbe kalibrierte Temperaturstaffel als Ausg
 
 ## 12. Schuhe / Bodenkontakt
 
-- `groundContact: none`: keine Schuhe allein aus Temperaturgründen; Socken/Booties je Bedarf,
+- `groundContact: none`: keine Schuhe allein aus Temperaturgründen; bei `outdoor` zwischen 14 und <18 °C dicke Socken oder weiche Booties,
 - `standing`: wettergerechte Schuhe abhängig von Untergrund/Wetter,
 - `walking`: Schuhe als regulärer Outfit-Slot; Regen/Kälte beeinflussen die Variante.
 
