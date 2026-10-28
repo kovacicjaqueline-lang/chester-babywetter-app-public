@@ -132,13 +132,13 @@ test('an omitted outer layer can be added without removing the base layer',()=>{
   assert.equal(id(layered,'mid'),null);
 });
 
-test('carrier overalls are addable only when no carrier cover is worn',()=>{
+test('carrier transition overalls are addable only when no carrier cover is worn',()=>{
   const base=request(carrier(),{w:weather(18)});
   const uncovered=recommendOutfit(base);
   assert.equal(id(uncovered,'carrier_accessory'),'carrier_cover_none');
   const uncoveredOuter=uncovered.addableSlots.find((entry)=>entry.slot==='outer');
   assert.ok(uncoveredOuter?.alternatives.some((entry)=>entry.itemId==='transition_overall'));
-  assert.ok(uncoveredOuter?.alternatives.some((entry)=>entry.itemId==='winter_overall'));
+  assert.ok(!uncoveredOuter?.alternatives.some((entry)=>entry.itemId==='winter_overall'));
 
   const coveredRequest={...base,session:lockItem(base.session,{slot:'carrier_accessory',itemId:'carrier_cover_light'})};
   const covered=recommendOutfit(coveredRequest);
@@ -146,6 +146,19 @@ test('carrier overalls are addable only when no carrier cover is worn',()=>{
   const coveredOuter=covered.addableSlots.find((entry)=>entry.slot==='outer');
   assert.ok(!coveredOuter?.alternatives.some((entry)=>entry.itemId==='transition_overall'));
   assert.ok(!coveredOuter?.alternatives.some((entry)=>entry.itemId==='winter_overall'));
+});
+
+test('winter overall is hidden when at least two thermal points warmer than the temperature baseline',()=>{
+  const ten=recommendOutfit(request(outdoor(),{w:weather(10)}));
+  assert.equal(id(ten,'outer'),'light_transition_jacket');
+  assert.ok(!slot(ten,'outer').alternatives.some((entry)=>entry.itemId==='winter_overall'));
+
+  const mild=recommendOutfit(request(outdoor(),{w:weather(18)}));
+  const addable=mild.addableSlots.find((entry)=>entry.slot==='outer');
+  assert.ok(!addable?.alternatives.some((entry)=>entry.itemId==='winter_overall'));
+
+  const cool=recommendOutfit(request(outdoor(),{w:weather(5)}));
+  assert.ok(slot(cool,'outer').alternatives.some((entry)=>entry.itemId==='winter_overall'));
 });
 
 test('carrier baseline uses a jacket while a carrier cover is active',()=>{
@@ -349,6 +362,37 @@ test('alternative projectedChanges contains whole-outfit rebalancing',()=>{
   assert.ok(sweatshirt.projectedChanges.some(change=>change.slot==='mid'));
   assert.ok(!sweatshirt.projectedChanges.some(change=>['outer','legs'].includes(change.slot)));
   assert.equal(slot(r,'mid').alternatives.find(a=>a.itemId==='fleece_jacket')?.relation,'warmer');
+});
+
+test('manual outfit deviations that remain after rebalancing show warm or cool cautions',()=>{
+  const warmLocks=[
+    {slot:'base_torso',itemId:'long_sleeve_bodysuit'},
+    {slot:'legs',itemId:'warm_trousers'},
+    {slot:'mid',itemId:'fleece_jacket'},
+    {slot:'outer',itemId:'winter_overall'},
+    {slot:'feet',itemId:'warm_socks_booties'},
+    {slot:'head',itemId:'warm_hat'},
+    {slot:'hands',itemId:'gloves'}
+  ];
+  const warmSession=warmLocks.reduce((session,lock)=>lockItem(session,lock),createSession('too_warm'));
+  const tooWarm=recommendOutfit(request(outdoor(),{w:weather(10),session:warmSession}));
+  const warmNotice=tooWarm.notices.find((notice)=>notice.code==='MANUAL_OUTFIT_TOO_WARM');
+  assert.equal(warmNotice?.severity,'caution');
+  assert.ok(warmNotice?.data.thermalDelta>=1.5);
+
+  const coolLocks=[
+    {slot:'base_torso',itemId:'short_sleeve_bodysuit'},
+    {slot:'legs',itemId:'trousers'},
+    {slot:'mid',itemId:'thin_sweater'},
+    {slot:'outer',itemId:'light_transition_jacket'},
+    {slot:'feet',itemId:'socks'},
+    {slot:'head',itemId:'thin_hat'}
+  ];
+  const coolSession=coolLocks.reduce((session,lock)=>lockItem(session,lock),createSession('too_cool'));
+  const tooCool=recommendOutfit(request(outdoor(),{w:weather(5),session:coolSession}));
+  const coolNotice=tooCool.notices.find((notice)=>notice.code==='MANUAL_OUTFIT_TOO_COOL');
+  assert.equal(coolNotice?.severity,'caution');
+  assert.ok(coolNotice?.data.thermalDelta<=-1.5);
 });
 
 test('precip probability below 40 alone adds no rain element',()=>{

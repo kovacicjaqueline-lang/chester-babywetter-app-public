@@ -698,6 +698,8 @@ Alternativen werden als eigener Engine-Request mit einem manuellen Lock projizie
 
 Für Alternativen im `mid`-Slot zeigen `relation` und `relativeThermalDelta` den Wärmeunterschied der gewählten Mittelschicht anhand ihres `thermalWeight`; ein Rebalancing anderer Slots ändert diese Einordnung nicht. Die angepassten Teile bleiben separat unter `projectedChanges` sichtbar.
 
+Außenschichten werden gegen die `outer`-Wärme der aktuellen Temperatur-Baseline geprüft. Ein Winteroverall wird ausgeblendet, wenn sein `thermalWeight` mindestens zwei Punkte über dem Baseline-Outer liegt. Im aktuellen Temperaturmodell ist das ab 8 °C der Fall; bei 10 °C wird deshalb kein Winteroverall angeboten. Eine manuell gewählte Kombination, die nach dem Rebalancing mindestens `1.5 thermalSignature`-Punkte wärmer oder kühler als die Empfehlung ohne manuelle Locks bleibt, erhält einen sichtbaren Warnhinweis. Der Hinweis ändert den Lock nicht und ersetzt nicht den Nackentest.
+
 ### 14.4 Lock-Lebensdauer
 
 Ein manueller Lock gilt nur für die aktuelle Recommendation-Session. Bei komplett neuem Wetter/Ort/Modus darf eine neue Empfehlung ohne alten Lock gestartet werden.
