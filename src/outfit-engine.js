@@ -476,6 +476,9 @@ function attachAlternatives(result,request) {
 
 function projectedAlternatives(result,request,slotResult,candidates) {
   const baselineScore = thermalSignature(result,slotResult.phase);
+  const thermalSuitabilityBaseline = slotResult.slot === 'outer'
+    ? recommendCore({ ...request, session:{ ...request.session, manualLocks:[] } })
+    : null;
   const options = [];
   for (const itemId of candidates) {
     if (itemId === slotResult.selected.itemId) continue;
@@ -491,6 +494,10 @@ function projectedAlternatives(result,request,slotResult,candidates) {
       if (originalStillSelected) continue;
     }
     const projectedScore = thermalSignature(projected,slotResult.phase);
+    if (thermalSuitabilityBaseline && thermalSuitabilityBaseline.status !== 'blocked') {
+      const suitabilityDelta = roundHalf(projectedScore - thermalSignature(thermalSuitabilityBaseline,slotResult.phase));
+      if (suitabilityDelta >= MANUAL_THERMAL_MISMATCH_THRESHOLD) continue;
+    }
     let delta = roundHalf(projectedScore - baselineScore);
     let relation = Math.abs(delta) < 0.25 ? 'equivalent' : delta > 0 ? 'warmer' : 'cooler';
     if (slotResult.slot === 'mid' && candidateSlot === slotResult.slot) {

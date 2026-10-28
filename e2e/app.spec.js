@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 
-const APP_SHELL_CACHE = 'babywetter-shell-v0.2.0-assets35';
+const APP_SHELL_CACHE = 'babywetter-shell-v0.2.0-assets36';
 
 async function openDemo(page) {
   await page.goto('/?demo=1');

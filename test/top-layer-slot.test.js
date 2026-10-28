@@ -131,11 +131,12 @@ test('warm UV coverage can use the light long-sleeve top without forcing a body 
   assert.equal(CLOTHING_CATALOG[item(result,'top')].sunCoverage,3);
 });
 
-test('addable outdoor outer layer keeps transition overalls and hides winter overalls in warm weather', () => {
+test('warm-weather outer layer add-ons hide options that remain significantly too warm', () => {
   const result = recommendOutfit(request(outdoor(),22));
   const addableOuter = result.addableSlots.find((entry) => entry.slot === 'outer');
 
   assert.ok(addableOuter);
-  assert.ok(addableOuter.alternatives.some((option) => option.itemId === 'transition_overall'));
+  assert.ok(addableOuter.alternatives.some((option) => option.itemId === 'light_transition_jacket'));
+  assert.ok(!addableOuter.alternatives.some((option) => option.itemId === 'transition_overall'));
   assert.ok(!addableOuter.alternatives.some((option) => option.itemId === 'winter_overall'));
 });
