@@ -50,6 +50,11 @@ type ApparentTempFactor = "wind" | "humidity" | "sun";
 type ThermalWeight = 0 | 1 | 2 | 3 | 4;
 type ProtectionLevel = 0 | 1 | 2 | 3;
 type CarSeatCompatibility = "allowed" | "conditional" | "prohibited";
+type WardrobeFitStatus = "fits" | "snug" | "large" | "unclear" | "too_small";
+type WardrobeAvailability = "available" | "laundry" | "wet" | "packed";
+type WardrobeCondition = "clean" | "wet" | "damaged";
+type WardrobeWarmth = "unknown" | "none" | "light" | "medium" | "warm";
+type WardrobeProtection = "unknown" | "none" | "partial" | "full";
 type RecommendationSeverity = "info" | "caution" | "hard_rule";
 type RecommendationStatus = "idle" | "ready" | "ready_with_estimate" | "partial" | "blocked";
 type RecommendationPhase = "main" | "in_car";
@@ -113,10 +118,34 @@ Regeln:
 - bei unbekanntem Alter + direkter Sonne gilt konservativ die `<12 Monate`-Sonnenregel,
 - `mobilityStage` ist Pflicht in neu gespeicherten Profilen; ältere Schema-V1-Profile ohne dieses Feld werden beim Laden/Import auf `low_mobility` migriert,
 - `mobilityStage` verändert selbst keine thermische Stufe und setzt weder `activity` noch `groundContact` automatisch,
-- kein Kleidungsinventar,
+- kein Cloud-, Mehrprofil- oder Stückzahl-Inventar; die optionale Kleiderschrankliste liegt ausschließlich lokal auf dem Gerät,
 - kein Schlafsackinventar,
 - keine Hersteller-/Markenfelder für Schlafsäcke,
 - `warmthBias` ist manuell und wird nicht automatisch gelernt.
+
+### 4.1 Lokale Kleiderschrankdaten
+
+Die optionale Kleiderschrankliste ist eine Auswahl konkreter Katalogteile, kein vollständiger Haushalts- oder Schlafsackbestand. Sie wird geräteintern unter `babyweather.v1.wardrobe` gespeichert. Die App lädt keine Kleidungsfotos hoch und synchronisiert die Einträge nicht.
+
+```ts
+interface WardrobeItem {
+  id: string;
+  itemId: string; // muss auf einen vorhandenen Katalogeintrag verweisen; Schlafsack-Items sind ausgeschlossen
+  label: string | null;
+  sizeLabel: string | null;
+  material: string | null;
+  lining: string | null;
+  fitStatus: WardrobeFitStatus;
+  availability: WardrobeAvailability;
+  condition: WardrobeCondition;
+  warmthLevel: WardrobeWarmth;
+  windProtection: WardrobeProtection;
+  waterProtection: WardrobeProtection;
+  coverageZones: BodyZone[];
+}
+```
+
+Nur verfügbare, saubere, trockene, passend sitzende Teile mit bestätigter Wärmeleistung werden als Kandidaten genutzt. Unbekannte Wärme oder Schutzwirkung wird nicht als ausreichend angenommen. Ein unvollständiger Kleiderschrank reduziert die generische Anforderung nicht: passende Teile bleiben sichtbar, offene Zonen werden als `missingItems` ausgewiesen und der Status wird `partial`. Fehlt das Feld im alten Import, bleibt der bereits lokal gespeicherte Kleiderschrank erhalten.
 
 ## 5. Wetterdaten
 
@@ -392,7 +421,7 @@ type SituationContext =
 ### 8.1 Körperzonen und Slots
 
 ```ts
-type BodyZone = "torso" | "arms" | "legs" | "feet" | "hands" | "head" | "neck";
+type BodyZone = "torso" | "arms" | "legs" | "feet" | "hands" | "head" | "neck" | "ears" | "ankles";
 
 type OutfitSlot =
   | "base_torso"
@@ -647,6 +676,7 @@ interface OutfitRecommendationRequest {
   weather: WeatherSeries | null;
   session: RecommendationSessionState;
   neckFeedback: NeckFeedback | null;
+  wardrobe?: WardrobeItem[]; // optional, lokale Auswahl; ohne Feld bleibt die generische Katalogempfehlung aktiv
 }
 ```
 
@@ -812,6 +842,11 @@ interface OutfitRecommendation {
   addableSlots: AddableSlotResult[];
   notices: RecommendationNotice[];
   ruleTrace: RuleTraceEntry[];
+  wardrobeMode: "legacy" | "inventory";
+  needProfile: WardrobeNeedProfile;
+  missingItems: WardrobeGap[];
+  wardrobeNotes: { reasonCode: string; detail: string; }[];
+  wardrobeAssumptions: string[];
   dataQuality: {
     weatherFreshness: WeatherFreshness | null;
     missingFields: string[];
@@ -819,6 +854,29 @@ interface OutfitRecommendation {
     /** @deprecated Kompatibilitätsfeld; im aktiven Modell immer false. */
     usedEstimatedCabinTemperature: boolean;
   };
+}
+```
+
+```ts
+interface WardrobeNeedProfile {
+  schemaVersion: 1;
+  zoneNeeds: { zone: BodyZone; coverage: "required"; minWarmth: WardrobeWarmth; sourceSlots: OutfitSlot[]; reasonCodes: string[]; }[];
+  protection: { wind: "none" | "partial" | "full"; water: "none" | "partial" | "full"; };
+  footwear: { thermalNeed: WardrobeWarmth; groundProtection: "none" | "required"; };
+  confidence: "medium";
+  reasonCodes: string[];
+}
+
+interface WardrobeGap {
+  phase: RecommendationPhase;
+  slot: OutfitSlot;
+  zone: BodyZone;
+  neededItemId: string;
+  reasonCode: string;
+  title: string;
+  detail: string;
+  requiredWarmth: WardrobeWarmth;
+  reasonCodes: string[];
 }
 ```
 
@@ -1015,6 +1073,7 @@ Empfohlene Keys:
 - `babyweather.v1.profile`,
 - `babyweather.v1.settings`,
 - `babyweather.v1.feedback`,
+- `babyweather.v1.wardrobe`,
 - `babyweather.v1.weatherCache`.
 
 Aktuelle Recommendation-Sessions/Locks müssen nicht über App-Neustarts persistiert werden. Das verhindert, dass alte manuelle Outfitentscheidungen auf neues Wetter übertragen werden.
@@ -1026,10 +1085,11 @@ interface ExportPayloadV1 {
   profile: BabyProfile | null;
   settings: LocalSettings;
   feedback: NeckFeedbackEvent[];
+  wardrobe?: WardrobeItem[]; // additive für Abwärtskompatibilität
 }
 ```
 
-Keine Schlafsack-/Kleidungsinventare in V1 exportieren. Der Wettercache selbst ist Laufzeit-/Offline-Datenbestand und wird nicht exportiert.
+Der optionale Kleiderschrank wird mit Export/Import übertragen. Ältere Dateien ohne das Feld bleiben gültig; der Wettercache wird nicht exportiert. Der Validator lehnt mehr als 100 Teile, doppelte IDs, unbekannte Katalogteile, Schlafsack-Items und ungültige Enum-Werte ab.
 
 ## 30. Importvalidierung
 
@@ -1199,6 +1259,7 @@ interface TripPlannerRequest {
   requestId: string;
   requestedAt: string;
   profile: BabyProfile;
+  wardrobe?: WardrobeItem[];
   plan: TripPlan;
   weather: WeatherSeries | null;
 }
@@ -1284,7 +1345,7 @@ interface TripPackItem {
 }
 ```
 
-V1 führt keine Reserve-Stückzahlen oder Kleidungsinventare. Ein `itemId` erscheint höchstens einmal in `packList`. Ein Teil des Start-Outfits wird nie zusätzlich als Packteil dupliziert.
+V1 führt keine Reserve-Stückzahlen und reserviert keine physischen Kleidungsstücke. Jeder Checkpoint wird dennoch gegen die optionale lokale Kleiderschrankliste bewertet. Ein `itemId` erscheint höchstens einmal in `packList`. Ein Teil des Start-Outfits wird nie zusätzlich als Packteil dupliziert.
 
 ### 36.3 Wechselaktionen
 
@@ -1366,7 +1427,13 @@ interface TripResult {
   actions: TripAction[];
   transitions: TripTransition[];
   notices: RecommendationNotice[];
+  wardrobeGaps: TripWardrobeGap[];
   coverage: TripCoverage;
+}
+
+interface TripWardrobeGap extends WardrobeGap {
+  firstNeededAt: string;
+  segmentIds: string[];
 }
 ```
 

@@ -171,10 +171,32 @@
     <div class="sheet"><header class="sheet-header"><h2 id="alternativeTitle">Alternative wählen</h2><button class="icon-button" type="button" data-close-dialog="alternativeDialog" aria-label="Alternativen schließen">×</button></header><div id="alternativeOptions" class="alternative-options"></div></div>
   </dialog>
   <dialog id="catalogDialog" class="sheet-dialog" aria-labelledby="catalogTitle">
-    <div class="sheet"><header class="sheet-header"><h2 id="catalogTitle">Kleidungskatalog</h2><button class="icon-button" type="button" data-close-dialog="catalogDialog" aria-label="Katalog schließen">×</button></header><div id="catalogGrid" class="catalog-grid"></div></div>
+    <div class="sheet"><header class="sheet-header"><h2 id="catalogTitle">Kleidung & Kleiderschrank</h2><button class="icon-button" type="button" data-close-dialog="catalogDialog" aria-label="Katalog schließen">×</button></header>
+      <section id="wardrobePanel" class="wardrobe-panel" aria-labelledby="wardrobeHeading">
+        <h3 id="wardrobeHeading">Dein Kleiderschrank</h3>
+        <p class="dialog-note">Trage vorhandene Teile ein und bestätige Passform, Wärme- und Wetterschutz. Als grobe Einordnung gilt: ungefüttert meist leicht, dünn gefüttert mittel, deutlich gefüttert warm. Unklares wird nicht geschätzt. Die Angaben bleiben auf diesem Gerät.</p>
+        <form id="wardrobeAddForm" class="wardrobe-form">
+          <label>Kleidungsart oder Zubehör<select id="wardrobeNewItemId" name="itemId" required><option value="">Bitte wählen</option></select></label>
+          <label>Eigener Name (optional)<input name="label" type="text" maxlength="80" autocomplete="off"></label>
+          <label>Größe (optional)<input name="sizeLabel" type="text" maxlength="40" autocomplete="off"></label>
+          <label>Material (optional)<input name="material" type="text" maxlength="80" autocomplete="off"></label>
+          <label>Fütterung (optional)<input name="lining" type="text" maxlength="80" autocomplete="off"></label>
+          <label>Passform<select name="fitStatus"><option value="unclear">Unklar</option><option value="fits">Passt</option><option value="snug">Eng</option><option value="large">Weit</option><option value="too_small">Zu klein</option></select></label>
+          <label>Verfügbarkeit<select name="availability"><option value="available">Verfügbar</option><option value="laundry">In der Wäsche</option><option value="wet">Nass</option><option value="packed">Eingepackt</option></select></label>
+          <label>Zustand<select name="condition"><option value="clean">Sauber und trocken</option><option value="wet">Nass</option><option value="damaged">Beschädigt</option></select></label>
+          <label>Wärmeleistung<select name="warmthLevel"><option value="unknown">Unbekannt</option><option value="none">Keine</option><option value="light">Leicht</option><option value="medium">Mittel</option><option value="warm">Warm</option></select></label>
+          <label>Windschutz<select name="windProtection"><option value="unknown">Unbekannt</option><option value="none">Keiner</option><option value="partial">Teilweise</option><option value="full">Voll</option></select></label>
+          <label>Nässeschutz<select name="waterProtection"><option value="unknown">Unbekannt</option><option value="none">Keiner</option><option value="partial">Teilweise</option><option value="full">Voll</option></select></label>
+          <button type="submit" class="primary-button">Teil eintragen</button>
+        </form>
+        <p id="wardrobeEmpty" class="wardrobe-empty">Noch keine eigenen Kleidungsstücke eingetragen. Bis dahin zeigt die App eine allgemeine Katalogempfehlung.</p>
+        <div id="wardrobeList" class="wardrobe-list"></div>
+      </section>
+      <h3 class="catalog-section-heading">Kleidungsarten im App-Katalog</h3>
+      <div id="catalogGrid" class="catalog-grid"></div></div>
   </dialog>
   <dialog id="settingsDialog" class="sheet-dialog" aria-labelledby="settingsTitle">
-    <div class="sheet"><header class="sheet-header"><h2 id="settingsTitle">Einstellungen</h2><button class="icon-button" type="button" data-close-dialog="settingsDialog" aria-label="Einstellungen schließen">×</button></header>
+  <div class="sheet"><header class="sheet-header"><h2 id="settingsTitle">Einstellungen</h2><button class="icon-button" type="button" data-close-dialog="settingsDialog" aria-label="Einstellungen schließen">×</button></header>
       <fieldset class="choice-fieldset"><legend>Farbwelt der Bilder</legend><p class="dialog-note">Beeinflusst nur die Bildfarben – nicht Kleidungsauswahl, Wärmegrad oder Empfehlung.</p><label><input type="radio" name="paletteMode" value="all"> Alle passenden Farben</label><label><input type="radio" name="paletteMode" value="neutral"> Ausgewogene Farben</label><label><input type="radio" name="paletteMode" value="cool"> Kühle, gedeckte Farben</label><label><input type="radio" name="paletteMode" value="warm"> Warme, gedämpfte Naturfarben</label></fieldset>
       <div class="settings-actions"><button class="secondary-button" type="button" id="exportSettingsButton">JSON exportieren</button><label class="secondary-button file-button">JSON importieren<input type="file" id="importSettingsInput" accept="application/json,.json"></label></div>
       <p class="version-line">Version <span id="appVersion">0.2.0</span></p>

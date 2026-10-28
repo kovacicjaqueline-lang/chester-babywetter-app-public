@@ -162,14 +162,14 @@ UV-/Sonnenregeln bleiben aktiv; Sonnenschutz wird durch leichte Bedeckung statt 
 - bei Bodenkontakt: Socken und wettergerechte Schuhe; unter 12 °C warme Schuhe,
 - ohne Bodenkontakt: dicke Socken oder weiche Booties.
 
-Die leichte Übergangsjacke bleibt eine eigene Außenschicht und zählt nicht als Ersatz für die isolierende Mittelschicht. Diese Ergänzung gilt für `outdoor`; Kinderwagen und Trage behalten ihre situativen Wärmeregeln. Ein verlässlicher Feels-like-Wert wird thermisch nicht ein zweites Mal durch Wind korrigiert.
+Die leichte Übergangsjacke bleibt eine eigene Außenschicht und zählt nicht als Ersatz für die isolierende Mittelschicht. Diese Ergänzung gilt für `outdoor`; Kinderwagen und Trage behalten ihre situativen Wärmeregeln. Im optionalen lokalen Kleiderschrank darf eine bestätigte mittelwarme oder warme Außenschicht den Mittelschichtbedarf nur bei bestätigter Passform und vollständiger Abdeckung von Rumpf und Armen übernehmen. Ein verlässlicher Feels-like-Wert wird thermisch nicht ein zweites Mal durch Wind korrigiert.
 
 ### `8 bis <10 °C` – kalt
 
 - Langarmbody,
 - normale Hose,
 - gefütterte Übergangsjacke als eigenständige warme Außenschicht,
-- Socken,
+- bei Bodenkontakt: Socken unter warmen Schuhen; ohne Bodenkontakt: dicke Socken oder weiche Booties,
 - warme Mütze,
 - Handschuhe nur bei längerer Exposition oder zusätzlichem Hand-Windschutzbedarf.
 
@@ -427,7 +427,7 @@ Der Wärmekredit ersetzt bei Bedarf Kleidung am Körper. Die Verrechnung erfolgt
 
 Für `Sehr aktiv` gilt in allen Temperaturbändern dieselbe Grundregel: `awake + active` übernimmt die Outdoor-Aktivitätskorrektur von `-1 thermalStep`, und die Engine ergänzt **keine automatische thermische Decke und keinen automatischen Fußsack**. Wärme wird bevorzugt über die passende Körperkleidung gelöst. Ein manuell gewähltes thermisches Kinderwagen-Zubehör bleibt zulässig und wird zonengerecht gegen die Körperkleidung rebalanced. Wetterzubehör wie Regenverdeck oder Sonnensegel bleibt unabhängig davon aktiv.
 
-Bei 14 bis <18 °C erhalten freie Füße dicke Socken oder weiche Booties, wenn kein thermisches Kinderwagen-Zubehör ausgewählt ist (`stroller_thermal_none`). Fußsack oder Decke decken die Füße bereits ab und greifen in die zonengerechte Rebalance ein.
+Unter 18 °C erhalten freie Füße dicke Socken oder weiche Booties, wenn kein thermisches Kinderwagen-Zubehör ausgewählt ist (`stroller_thermal_none`). Fußsack oder Decke decken die Füße bereits ab und greifen in die zonengerechte Rebalance ein.
 
 #### `>=20 °C`
 
@@ -820,5 +820,5 @@ Mindestens:
 41. Kinderwagen-Windschutz reduziert nur einen separat berechneten thermischen Windmodifikator, wenn Wind nicht bereits in der vertrauenswürdigen `apparentTempC` enthalten ist.
 42. Ab `24 °C` erzeugt eine automatische thermische Kinderwagen-Rebalance keine isolierende Mid-/Outer-Schicht; funktionale Wind-/Regenschutz-Shells bleiben zulässig.
 43. Neue Outdoor-, Kinderwagen- und Trage-Kontexte starten mit `sunExposure: unknown`; neue Kinderwagen-Kontexte zusätzlich mit `windProtection: unknown`. Alte unversionierte `shade`-/`partial`-Defaults werden einmalig auf `unknown` migriert; danach bleiben ausdrücklich gewählte versionierte Werte erhalten.
-44. Leichte und gefütterte Übergangsjacke belegen denselben `outer`-Slot; `mid` und `outer` werden bei einer passenden Übergangsjacke nicht unnötig doppelt gestapelt.
+44. Leichte und gefütterte Übergangsjacke belegen denselben `outer`-Slot. Bei `10 bis <12 °C` ersetzt eine leichte ungefütterte Jacke die isolierende `mid`-Schicht nicht. Nur im optionalen Kleiderschrank-Abgleich darf eine bestätigte mittelwarme oder warme Außenschicht mit passender Passform und vollständiger Rumpf-/Armabdeckung den zusätzlichen Mittelschichtbedarf übernehmen; dann wird kein doppelter Layer ausgegeben.
 45. Die gefütterte Teddy-Übergangsjacke liegt thermisch zwischen leichter Übergangsjacke und Softshelljacke, hat aber nur leichten Windschutz; ab Windschutzstufe 2 wird sie durch eine Softshell-/Regenjacke ersetzt bzw. ergänzt und bleibt unter Winteroverall und Übergangsoverall.

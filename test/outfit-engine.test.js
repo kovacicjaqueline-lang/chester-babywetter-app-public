@@ -61,7 +61,7 @@ test('8 C uses the insulated transition jacket without fleece stacking',()=>{
   assert.equal(id(result,'mid'),null);
   assert.equal(id(result,'outer'),'insulated_transition_jacket');
   assert.equal(id(result,'legs'),'trousers');
-  assert.equal(id(result,'feet'),'socks');
+  assert.equal(id(result,'feet'),'warm_socks_booties');
 });
 
 test('transition jacket ladder distinguishes light, insulated and softshell outerwear',()=>{

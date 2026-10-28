@@ -1,6 +1,6 @@
 import { formatPrecipitation, formatTemperature, formatTemperatureC, formatUvIndex, precipitationLabelFor } from './weather-copy.js';
 import { isCompositeSleepVisualItem, visualPartsForItem } from './sleep-visual-parts.js';
-import { getClothingDescription } from '../src/clothing-catalog.js';
+import { CLOTHING_CATALOG, getClothingDescription } from '../src/clothing-catalog.js';
 import { getHourlySelectionSnapshot } from '../src/integration/hourly-selection.js';
 
 const MODE_COPY = Object.freeze({
@@ -35,7 +35,8 @@ const NOTICE_COPY = Object.freeze({
   STRONG_WIND_CAUTION: ['Starker Wind', 'Exponierte Bereiche windgeschützt halten und die Situation regelmäßig prüfen.'],
   MANUAL_LOCK_OVERRIDDEN_FOR_SAFETY: ['Auswahl aus Sicherheitsgründen geändert', 'Eine manuelle Auswahl wurde von einer Sicherheitsregel überstimmt.'],
   MANUAL_LOCK_LIMITS_WEATHER_PROTECTION: ['Wetterschutz eingeschränkt', 'Die manuell gewählte Kombination deckt die aktuelle Wetteranforderung nicht vollständig ab.'],
-  RAIN_PROTECTION_OPTIONAL: ['Regenschutz optional', 'Regen ist möglich; ein leichter Regenschutz kann sinnvoll sein.']
+  RAIN_PROTECTION_OPTIONAL: ['Regenschutz optional', 'Regen ist möglich; ein leichter Regenschutz kann sinnvoll sein.'],
+  WARDROBE_INCOMPLETE: ['Kleiderschrank lückenhaft', 'Die App zeigt nur bestätigte passende Teile; offene Stellen sind unten erklärt.']
 });
 
 const REDUNDANT_NOTICE_CODES = new Set([
@@ -189,6 +190,7 @@ function statusDetail(recommendation) {
   if ([...fields].some((field) => field.includes('precipProbabilityPct') || field === 'weather.precipitation')) labels.push('Niederschlagsangabe fehlt');
   if ([...fields].some((field) => field.includes('hourly.coverage'))) labels.push('Wetterzeitraum unvollständig');
   if (fields.has('context.roomTempC')) labels.push('Raumtemperatur fehlt');
+  if ([...fields].some((field) => field.startsWith('wardrobe.'))) labels.push('Eigene Kleidung nicht vollständig eingetragen');
   if (fields.has('integration')) labels.push('Daten konnten nicht ausgewertet werden');
   if (labels.length) return labels.slice(0, 2).join(' · ');
   if (recommendation?.notices?.some((notice) => notice.code === 'MANUAL_LOCK_LIMITS_WEATHER_PROTECTION')) return 'Wetterschutz eingeschränkt';
@@ -248,7 +250,7 @@ function renderGroup(slots, { addableSlots = [], mode, phase, context, assetStor
         itemId: part.itemId,
         logicalItemId: split ? logicalItemId : null,
         asset,
-        label: itemGroup?.label ?? part.itemId.replaceAll('_', ' '),
+        label: slotResult.selected.wardrobeLabel || itemGroup?.label || part.itemId.replaceAll('_', ' '),
         showDescription: false,
         role: part.role ?? slotRole(slotResult.slot),
         interactive: slotResult.alternatives?.length > 0,
@@ -264,7 +266,7 @@ function renderGroup(slots, { addableSlots = [], mode, phase, context, assetStor
 
 function phaseSlots(recommendation, phase) {
   return (recommendation?.slots ?? [])
-    .filter((slot) => slot.phase === phase && !slot.selected.itemId.endsWith('_none'))
+    .filter((slot) => slot.phase === phase && slot.selected?.itemId && !slot.selected.itemId.endsWith('_none'))
     .sort((left, right) => SLOT_ORDER.indexOf(left.slot) - SLOT_ORDER.indexOf(right.slot));
 }
 
@@ -288,6 +290,7 @@ function renderPhase(recommendation, phaseEvaluation, context, assetStore, palet
     if (!grouped.has(key)) grouped.set(key, []);
     grouped.get(key).push(slot);
   }
+  const gaps = (recommendation?.missingItems ?? []).filter((item) => item.phase === phase);
   let missingAssets = 0;
   for (const groupKey of ['body', 'extremities', 'situational']) {
     const groupAddable = addableSlots.filter((slot) => groupKeyForSlot(slot.slot) === groupKey);
@@ -296,7 +299,27 @@ function renderPhase(recommendation, phaseEvaluation, context, assetStore, palet
     missingAssets += rendered.missingAssets;
     section.append(rendered.element);
   }
-  if (!slots.length && !addableSlots.length) {
+  if (gaps.length) {
+    const gapSection = document.createElement('section');
+    gapSection.className = 'wardrobe-gaps';
+    gapSection.setAttribute('aria-label','Fehlende Kleidungsstücke');
+    const gapHeading = document.createElement('h3');
+    gapHeading.textContent = 'Noch nötig';
+    gapSection.append(gapHeading);
+    for (const gap of gaps) {
+      const card = document.createElement('article');
+      card.className = 'wardrobe-gap';
+      card.dataset.reasonCode = gap.reasonCode;
+      const title = document.createElement('strong');
+      title.textContent = gap.title;
+      const detail = document.createElement('p');
+      detail.textContent = gap.detail;
+      card.append(title,detail);
+      gapSection.append(card);
+    }
+    section.append(gapSection);
+  }
+  if (!slots.length && !addableSlots.length && !gaps.length) {
     const empty = document.createElement('div');
     empty.className = 'outfit-empty outfit-phase-empty';
     empty.innerHTML = phaseEvaluation.status === 'blocked'
@@ -535,6 +558,22 @@ function renderNotices(recommendation, excludedCodes = new Set()) {
 
 function reasonFor(context, recommendation) {
   if (recommendation.status === 'blocked') return 'Für eine sichere Empfehlung fehlen noch Angaben.';
+  if (context.mode === 'outdoor') {
+    const missingInsulation = recommendation.missingItems?.find((item) => item.reasonCode === 'LIGHT_JACKET_NOT_INSULATING');
+    if (missingInsulation) return missingInsulation.detail;
+    const midLayer = recommendation.slots?.find((entry) => entry.phase === 'main' && entry.slot === 'mid');
+    const has10to12Layer = midLayer?.selected?.reasonCodes?.includes('BASELINE_10_TO_12');
+    if (has10to12Layer) {
+      const hasFeet = recommendation.slots?.some((entry) => entry.phase === 'main' && entry.slot === 'feet');
+      const hasShoes = recommendation.slots?.some((entry) => entry.phase === 'main' && entry.slot === 'footwear');
+      const footCopy = context.groundContact === 'none'
+        ? hasFeet ? 'Ohne Bodenkontakt bleiben die Füße mit warmen Socken oder Booties geschützt; Schuhe entfallen.' : 'Ohne Bodenkontakt entfallen Schuhe; eine Fußwärmelücke ist unten markiert.'
+        : hasShoes ? 'Mit Bodenkontakt kommen passende Schuhe für den Untergrund dazu.' : 'Für den Bodenkontakt fehlen passende Schuhe; die Lücke ist unten erklärt.';
+      return 'Bei gefühlten 10–12 °C ergänzt eine dünne isolierende Schicht die Außenschicht. Eine leichte ungefütterte Jacke schützt etwas vor Wind, ersetzt aber keine Wärmeschicht. ' + footCopy;
+    }
+    if (recommendation.wardrobeNotes?.length) return recommendation.wardrobeNotes.map((note) => note.detail).join(' ');
+    if (recommendation.wardrobeMode === 'legacy') return 'Noch keine eigenen Kleidungsstücke eingetragen – die App zeigt eine allgemeine Katalogempfehlung.';
+  }
   if (context.mode === 'stroller') return context.strollerState === 'asleep'
     ? 'Beim Schlafen im Kinderwagen wird thermisch wärmer bewertet; Outdoor-Wetter bleibt relevant.'
     : context.activity === 'active'
@@ -553,7 +592,7 @@ export function renderOutfit({ recommendation, context, warmthDirection, palette
   const grid = document.querySelector('#outfitGrid');
   grid.replaceChildren();
   const visual = assetStore.resolveLook(recommendation, paletteMode, visualSeed);
-  const visibleSlots = (recommendation?.slots ?? []).filter((slot) => !slot.selected.itemId.endsWith('_none'));
+  const visibleSlots = (recommendation?.slots ?? []).filter((slot) => slot.selected?.itemId && !slot.selected.itemId.endsWith('_none'));
   let missingAssets = 0;
   const phaseEvaluations = recommendation?.phases ?? [];
   for (const phaseEvaluation of orderedPhasesForDisplay(phaseEvaluations)) {
@@ -602,7 +641,100 @@ export function renderOutfit({ recommendation, context, warmthDirection, palette
   }
 }
 
-export function renderCatalog(assetStore, paletteMode) {
+function createLabeledSelect(labelText,name,options,value) {
+  const label=document.createElement('label');
+  label.textContent=labelText;
+  const select=document.createElement('select');
+  select.name=name;
+  for (const [optionValue,optionLabel] of options) {
+    const option=document.createElement('option');
+    option.value=optionValue;
+    option.textContent=optionLabel;
+    option.selected=optionValue===value;
+    select.append(option);
+  }
+  label.append(select);
+  return label;
+}
+
+function createLabeledInput(labelText,name,value,maxLength=80) {
+  const label=document.createElement('label');
+  label.textContent=labelText;
+  const input=document.createElement('input');
+  input.type='text';
+  input.name=name;
+  input.maxLength=maxLength;
+  input.value=value??'';
+  input.autocomplete='off';
+  label.append(input);
+  return label;
+}
+
+function renderWardrobe(assetStore,items=[]) {
+  const picker=document.querySelector('#wardrobeNewItemId');
+  if (picker && picker.options.length===1) {
+    const groups=assetStore.listGroups().filter((group)=>CLOTHING_CATALOG[group.id]?.kind!=='sleep_bag'&&!group.id.endsWith('_none')&&!isCompositeSleepVisualItem(group.id)&&(group.assetPath||group.variantPaths));
+    for (const group of groups) {
+      const option=document.createElement('option');
+      option.value=group.id;
+      option.textContent=group.label??group.id;
+      picker.append(option);
+    }
+  }
+  const host=document.querySelector('#wardrobeList');
+  const empty=document.querySelector('#wardrobeEmpty');
+  if (!host) return;
+  host.replaceChildren();
+  if (empty) empty.hidden=items.length>0;
+  for (const item of items) {
+    const group=assetStore.group(item.itemId);
+    const article=document.createElement('article');
+    article.className='wardrobe-item';
+    article.dataset.wardrobeId=item.id;
+    const header=document.createElement('div');
+    header.className='wardrobe-item-heading';
+    const name=document.createElement('strong');
+    name.textContent=item.label||group?.label||item.itemId;
+    const type=document.createElement('span');
+    type.textContent=[group?.label,item.sizeLabel?'Größe '+item.sizeLabel:null].filter(Boolean).join(' · ');
+    header.append(name,type);
+    const form=document.createElement('form');
+    form.className='wardrobe-edit-form';
+    form.dataset.wardrobeEdit='true';
+    form.dataset.wardrobeId=item.id;
+    form.dataset.itemId=item.itemId;
+    form.append(
+      createLabeledInput('Eigener Name','label',item.label),
+      createLabeledInput('Größe','sizeLabel',item.sizeLabel,40),
+      createLabeledInput('Material','material',item.material),
+      createLabeledInput('Fütterung','lining',item.lining),
+      createLabeledSelect('Passform','fitStatus',[['unclear','Unklar'],['fits','Passt'],['snug','Eng'],['large','Weit'],['too_small','Zu klein']],item.fitStatus),
+      createLabeledSelect('Verfügbarkeit','availability',[['available','Verfügbar'],['laundry','In der Wäsche'],['wet','Nass'],['packed','Eingepackt']],item.availability),
+      createLabeledSelect('Zustand','condition',[['clean','Sauber und trocken'],['wet','Nass'],['damaged','Beschädigt']],item.condition),
+      createLabeledSelect('Wärme','warmthLevel',[['unknown','Unbekannt'],['none','Keine'],['light','Leicht'],['medium','Mittel'],['warm','Warm']],item.warmthLevel),
+      createLabeledSelect('Windschutz','windProtection',[['unknown','Unbekannt'],['none','Keiner'],['partial','Teilweise'],['full','Voll']],item.windProtection),
+      createLabeledSelect('Nässeschutz','waterProtection',[['unknown','Unbekannt'],['none','Keiner'],['partial','Teilweise'],['full','Voll']],item.waterProtection)
+    );
+    const actions=document.createElement('div');
+    actions.className='wardrobe-item-actions';
+    const save=document.createElement('button');
+    save.type='submit';
+    save.className='secondary-button';
+    save.textContent='Änderungen speichern';
+    const remove=document.createElement('button');
+    remove.type='button';
+    remove.className='text-button';
+    remove.dataset.removeWardrobe=item.id;
+    remove.textContent='Entfernen';
+    actions.append(save,remove);
+    form.append(actions);
+    article.append(header,form);
+    host.append(article);
+  }
+}
+
+export function renderCatalog(assetStore, paletteMode, wardrobe=[]) {
+  renderWardrobe(assetStore,wardrobe);
   const host = document.querySelector('#catalogGrid');
   host.replaceChildren();
   for (const group of assetStore.listGroups().filter((entry) => !isCompositeSleepVisualItem(entry.id) && (entry.assetPath || entry.variantPaths))) {

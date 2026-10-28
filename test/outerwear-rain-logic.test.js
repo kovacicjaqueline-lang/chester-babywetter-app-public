@@ -77,7 +77,7 @@ test('13 C, nearly windless and dry does not add an outer shell automatically', 
 
   assert.equal(item(result, 'mid'), 'thin_sweater');
   assert.equal(item(result, 'outer'), null);
-  assert.equal(item(result, 'feet'), 'socks');
+  assert.equal(item(result, 'feet'), 'warm_socks_booties');
 });
 
 test('current rain requires outdoor rain protection even with low precipitation probability', () => {

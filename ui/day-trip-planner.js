@@ -48,6 +48,7 @@ const NOTICE_COPY = Object.freeze({
   SLEEP_GENERIC_TOG_ORIENTATION: ['TOG als Orientierung', 'Die TOG-Auswahl ist eine allgemeine Orientierung und ersetzt nicht den Nackentest.'],
   SLEEP_ROOM_BELOW_ORIENTATION_RANGE: ['Raumtemperatur unter 16 °C', 'Die Raumtemperatur liegt unter dem üblichen Orientierungsbereich. Nacken regelmäßig kontrollieren und die Schlafumgebung prüfen.'],
   WEATHER_DATA_STALE: ['Wetterdaten nicht aktuell', 'Der Plan verwendet sichtbar gekennzeichnete ältere Wetterdaten.'],
+  WARDROBE_INCOMPLETE: ['Kleiderschrank lückenhaft', 'Der Plan zeigt vorhandene passende Teile und weist fehlende Kleidung nach Zeitpunkt aus.'],
   WEATHER_DATA_INCOMPLETE: ['Prognose unvollständig', 'Fehlende Wetterwerte werden nicht als null Risiko interpretiert.'],
   EXTREME_COLD_CAUTION: ['Sehr kalt', 'Exposition begrenzen und den Nacken häufiger kontrollieren.'],
   EXTREME_HEAT_CAUTION: ['Sehr warm', 'Überhitzung vermeiden und den Nacken häufiger kontrollieren.'],
@@ -376,6 +377,7 @@ function ensureUi() {
           <div class="trip-result-head"><div><span id="tripResultStatus" class="trip-status-pill"></span><h3 id="tripResultTitle" tabindex="-1">Dein Tagesplan</h3></div><span id="tripResultRange" class="trip-segment-time-label"></span></div>
           <div id="tripSafetyNotices" class="trip-safety-list" aria-label="Sicherheitshinweise"></div>
           <section class="trip-result-section" aria-labelledby="tripStartOutfitHeading"><h4 id="tripStartOutfitHeading">Start-Outfit</h4><div id="tripStartOutfit" class="trip-outfit-grid" data-testid="trip-start-outfit"></div></section>
+          <section id="tripWardrobeGapSection" class="trip-result-section" aria-labelledby="tripWardrobeGapHeading" hidden><h4 id="tripWardrobeGapHeading">Noch nötig</h4><div id="tripWardrobeGaps" class="trip-wardrobe-gap-list"></div></section>
           <div id="tripNeckReminder" class="trip-neck-reminder" hidden><strong>Nackentest</strong><p>Nach dem Anziehen und nach einem echten Wechsel prüfen: warm und trocken passt; heiß oder schwitzig bedeutet eine sinnvolle Schicht weniger; kühl bedeutet eine sinnvolle Schicht mehr.</p></div>
           <div id="tripCoverageNotice" class="trip-coverage" hidden></div>
           <div id="tripHintSummary" class="trip-notice-summary" hidden></div>
@@ -753,6 +755,24 @@ function renderResult(result, draft, snapshot, assetStore) {
     outfitHost.append(empty);
   }
 
+  const wardrobeGapSection=document.querySelector('#tripWardrobeGapSection');
+  const wardrobeGapHost=document.querySelector('#tripWardrobeGaps');
+  wardrobeGapHost.replaceChildren();
+  for (const gap of result.wardrobeGaps ?? []) {
+    const card=document.createElement('article');
+    card.className='trip-wardrobe-gap';
+    card.dataset.slot=gap.slot;
+    const title=document.createElement('strong');
+    title.textContent=gap.title;
+    const detail=document.createElement('p');
+    detail.textContent=gap.detail;
+    const time=document.createElement('small');
+    time.textContent=`Ab ${formatTime(gap.firstNeededAt)} einplanen`;
+    card.append(title,detail,time);
+    wardrobeGapHost.append(card);
+  }
+  setHidden(wardrobeGapSection,wardrobeGapHost.children.length===0);
+
   const packHost = document.querySelector('#tripPackList');
   packHost.replaceChildren();
   if (result.packList?.length) {
@@ -1037,6 +1057,7 @@ export function bindDayTripPlanner({ getSnapshot, assetStore, showToast = () => 
         requestId: `trip-ui:${Date.now()}`,
         requestedAt: draft.requestedAt,
         profile: clone(snapshot.profile),
+        wardrobe:clone(snapshot.wardrobe ?? []),
         plan: {
           tripId: `trip-ui-plan:${Date.now()}`,
           startTime: draft.startTime,
