@@ -95,7 +95,7 @@ function temperatureSamples() {
   });
 }
 
-test('offered outerwear stays within the warmth margin at every temperature-band edge',() => {
+test('offered outerwear stays within the warmth margin at both edges of every temperature band',() => {
   for (const { bandId,temp } of temperatureSamples()) {
     for (const mode of MODES) {
       const result = recommendOutfit(requestFor(mode,temp,bandId));
