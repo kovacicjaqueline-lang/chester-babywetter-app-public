@@ -1,5 +1,5 @@
-const CACHE_NAME = 'babywetter-shell-v0.2.0-assets34';
-const SHELL_REVISION = '2026-10-15-temperature-hourly-swipe';
+const CACHE_NAME = 'babywetter-shell-v0.2.0-assets35';
+const SHELL_REVISION = '2026-10-28-network-first-app-shell';
 const ASSET_MANIFEST_PATH = '/assets/clothing/manifest.json';
 const VISUAL_MANIFEST_PATH = '/assets/clothing/visual-manifest.json';
 const SHELL = [
@@ -152,6 +152,32 @@ self.addEventListener('fetch', (event) => {
   }
 
   const cacheKey = new Request(url.pathname, { method: 'GET' });
+  if (SHELL.includes(url.pathname)) {
+    event.respondWith((async () => {
+      let response;
+      try {
+        response = await fetch(new Request(request, { cache: 'reload' }));
+      } catch (error) {
+        const cached = await caches.match(cacheKey);
+        if (cached) return cached;
+        throw error;
+      }
+
+      if (!response.ok) {
+        return (await caches.match(cacheKey)) ?? response;
+      }
+
+      try {
+        const cache = await caches.open(CACHE_NAME);
+        await cache.put(cacheKey, response.clone());
+      } catch {
+        return response;
+      }
+      return response;
+    })());
+    return;
+  }
+
   event.respondWith(caches.match(cacheKey).then((cached) => cached || fetch(request)));
 });
 

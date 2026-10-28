@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-const OLD_CACHE = 'babywetter-shell-v0.2.0-assets33';
-const NEW_CACHE = 'babywetter-shell-v0.2.0-assets34';
+const OLD_CACHE = 'babywetter-shell-v0.2.0-assets34';
+const NEW_CACHE = 'babywetter-shell-v0.2.0-assets35';
 
 test('Service-Worker-Upgrade ersetzt den vorherigen App-Shell-Cache', async ({ page, context }) => {
   await page.goto('/?demo=1');
@@ -27,6 +27,10 @@ test('Service-Worker-Upgrade ersetzt den vorherigen App-Shell-Cache', async ({ p
     const response = await (await caches.open(name)).match('/ui/render.js');
     return response ? response.text() : '';
   }, NEW_CACHE)).toContain('Schlafraum');
+  await expect.poll(() => upgradePage.evaluate(async (name) => {
+    const response = await (await caches.open(name)).match('/ui/render.js');
+    return response ? response.text() : '';
+  }, NEW_CACHE)).toContain('selected-item-explanation');
   await expect.poll(() => upgradePage.evaluate(async (name) => {
     const response = await (await caches.open(name)).match('/ui/weather-copy.js');
     return response ? response.text() : '';
