@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 
-const APP_SHELL_CACHE = 'babywetter-shell-v0.2.0-assets34';
+const APP_SHELL_CACHE = 'babywetter-shell-v0.2.0-assets35';
 
 async function openDemo(page) {
   await page.goto('/?demo=1');
@@ -88,6 +88,18 @@ test('Autositz zeigt Warnung vor dicker Kleidung', async ({ page }) => {
   const safetyNotice = page.locator('[data-notice-code="CAR_SEAT_NO_BULKY_LAYERS"]');
   await expect(safetyNotice).toBeVisible();
   await expect(safetyNotice).toContainText('Winteroverall');
+});
+
+test('bei 10 °C wird der Winteroverall nicht als Außenschicht angeboten', async ({ page }) => {
+  await openDemo(page);
+  await page.locator('[data-open-dialog="weatherOverrideDialog"]').click();
+  await page.locator('#manualAirTempC').fill('10');
+  await page.locator('#applyWeatherOverrideButton').click();
+
+  const jacket = page.locator('#outfitGrid [data-item-id="light_transition_jacket"][data-open-alternatives="true"]');
+  await expect(jacket).toBeVisible();
+  await jacket.click();
+  await expect(page.locator('#alternativeOptions [data-alternative-item-id="winter_overall"]')).toHaveCount(0);
 });
 
 test('Kleidung besitzt echte Bilder und sinnvolle Alt-Texte', async ({ page }) => {
@@ -188,7 +200,7 @@ test('entferntes Kinderwagen-Wärmezubehör kann wieder hinzugefügt werden', as
   await expect(page.locator('#outfitGrid [data-item-id="stroller_thermal_none"]')).toHaveCount(0);
 });
 
-test('fehlende Außenschicht kann ergänzend über der Basisschicht gewählt werden', async ({ page }) => {
+test('fehlende Außenschicht bleibt wählbar und filtert bei mildem Wetter den Winteroverall', async ({ page }) => {
   await openDemo(page);
   await chooseSituation(page, 'outdoor');
   const addOuter = page.locator('#outfitGrid [data-addable-slot="true"][data-slot="outer"]');
@@ -196,7 +208,7 @@ test('fehlende Außenschicht kann ergänzend über der Basisschicht gewählt wer
   await addOuter.click();
   await expect(page.locator('#alternativeTitle')).toHaveText('Außenschicht hinzufügen');
   await expect(page.locator('#alternativeOptions [data-alternative-item-id="transition_overall"]')).toBeVisible();
-  await expect(page.locator('#alternativeOptions [data-alternative-item-id="winter_overall"]')).toBeVisible();
+  await expect(page.locator('#alternativeOptions [data-alternative-item-id="winter_overall"]')).toHaveCount(0);
   await page.locator('#alternativeOptions [data-alternative-item-id="light_transition_jacket"]').click();
   await expect(page.locator('#outfitGrid [data-item-id="light_transition_jacket"]')).toBeVisible();
   await expect(page.locator('#outfitGrid [data-item-id="long_sleeve_bodysuit"]')).toBeVisible();

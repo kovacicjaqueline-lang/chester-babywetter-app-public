@@ -1,7 +1,7 @@
 import { CLOTHING_CATALOG, SLOT_ITEMS } from './clothing-catalog.js';
 import { SLEEP_BAG_IDS, genericTogGuidanceForRoomTemp } from './sleep-tog-rules.js';
 import {
-  TEMPERATURE_BANDS, RELATION_ORDER, createSession, setWarmthOffset, lockItem, temperatureBandFor,
+  BASELINE, TEMPERATURE_BANDS, RELATION_ORDER, createSession, setWarmthOffset, lockItem, temperatureBandFor,
   createPhaseState, seedBaseline, protectExposedFeetWithoutThermalCover, activityAdjustmentFor, traceThermal, strollerStateAdjustment,
   evaluateWind, warmthBiasAdjustment, neckFeedbackAdjustment, selectStrollerThermalAccessory, selectCarrierAccessory, selectCarThermalAccessory,
   setSelected, carrierThermalCredit, applyThermalDelta, applyCoveredThermalCredit, applyCarrierTorsoReduction,
@@ -19,6 +19,7 @@ export { TEMPERATURE_BANDS, createSession, setWarmthOffset, lockItem, temperatur
 const BODY_THERMAL_SLOTS = Object.freeze(['base_torso','legs','mid','outer','feet','head','hands']);
 const PROTECTION_REBALANCE_PRIORITY = Object.freeze(['mid','legs','base_torso','feet','head','hands']);
 const CARRIER_PROTECTION_REBALANCE_PRIORITY = Object.freeze(['mid','base_torso']);
+const MANUAL_THERMAL_MISMATCH_THRESHOLD = 1.5;
 
 function roundVisibleRuleValue(value) {
   if (!isFiniteNumber(value)) return value;
@@ -54,7 +55,10 @@ function normalizeContextForRules(context) {
 export function recommendOutfit(input) {
   const request = normalizeRequest(input);
   const result = recommendCore(request);
-  if (result.status !== 'blocked') attachAlternatives(result, request);
+  if (result.status !== 'blocked') {
+    addManualThermalDeviationNotices(result, request);
+    attachAlternatives(result, request);
+  }
   result.items = result.slots.map((entry) => ({
     itemId:entry.selected.itemId,
     phase:entry.phase,
@@ -413,9 +417,43 @@ function evaluateSleep(result, request) {
   return result;
 }
 
+function addManualThermalDeviationNotices(result,request) {
+  const manualPhases = new Set(result.slots
+    .filter((entry) => entry.selected.selectionSource === 'manual_lock')
+    .map((entry) => entry.phase));
+  if (!manualPhases.size) return;
+
+  const baseline = recommendCore({
+    ...request,
+    session:{ ...request.session, manualLocks:[] }
+  });
+  if (baseline.status === 'blocked') return;
+
+  for (const phase of manualPhases) {
+    const thermalDelta = roundHalf(thermalSignature(result,phase) - thermalSignature(baseline,phase));
+    if (thermalDelta >= MANUAL_THERMAL_MISMATCH_THRESHOLD) {
+      addNotice(result,'MANUAL_OUTFIT_TOO_WARM','caution',phase,['MANUAL_OUTFIT_THERMAL_MISMATCH'],{ thermalDelta });
+    } else if (thermalDelta <= -MANUAL_THERMAL_MISMATCH_THRESHOLD) {
+      addNotice(result,'MANUAL_OUTFIT_TOO_COOL','caution',phase,['MANUAL_OUTFIT_THERMAL_MISMATCH'],{ thermalDelta });
+    }
+  }
+}
+
+function situationRelevantCandidates(result,request,slotResult) {
+  const candidates = alternativeCandidateIds(slotResult,request.context.mode);
+  if (slotResult.slot !== 'outer') return candidates;
+  const temperature = result.phases.find((entry) => entry.phase === slotResult.phase)?.thermalReferenceC;
+  if (!isFiniteNumber(temperature)) return candidates;
+
+  const baselineOuter = BASELINE[temperatureBandFor(temperature).id]?.outer;
+  const baselineWeight = CLOTHING_CATALOG[baselineOuter]?.thermalWeight ?? 0;
+  return candidates.filter((itemId) => itemId !== 'winter_overall'
+    || (CLOTHING_CATALOG[itemId]?.thermalWeight ?? 0) - baselineWeight < 2);
+}
+
 function attachAlternatives(result,request) {
   for (const slotResult of result.slots) {
-    slotResult.alternatives = projectedAlternatives(result,request,slotResult,alternativeCandidateIds(slotResult,request.context.mode));
+    slotResult.alternatives = projectedAlternatives(result,request,slotResult,situationRelevantCandidates(result,request,slotResult));
     if (slotResult.selected.itemId.endsWith('_none') && slotResult.alternatives.length) {
       result.addableSlots.push({ phase:slotResult.phase, slot:slotResult.slot, addLabel:addableLabelFor(slotResult.slot), alternatives:slotResult.alternatives });
     }
@@ -426,7 +464,7 @@ function attachAlternatives(result,request) {
   if (!outer && ['outdoor','stroller','carrier'].includes(request.context.mode) && temperature < 24) {
     const slotResult = { phase:'main', slot:'outer', selected:{ itemId:null }, alternatives:[] };
     const activeCarrierCover = result.slots.find((entry) => entry.phase === 'main' && entry.slot === 'carrier_accessory')?.selected.itemId;
-    const outerLayerIds = alternativeCandidateIds(slotResult,request.context.mode)
+    const outerLayerIds = situationRelevantCandidates(result,request,slotResult)
       .filter((itemId) => itemId.endsWith('_jacket') || itemId.endsWith('_overall'))
       .filter((itemId) => request.context.mode !== 'carrier'
         || !itemId.endsWith('_overall')

@@ -35,6 +35,8 @@ const NOTICE_COPY = Object.freeze({
   STRONG_WIND_CAUTION: ['Starker Wind', 'Exponierte Bereiche windgeschützt halten und die Situation regelmäßig prüfen.'],
   MANUAL_LOCK_OVERRIDDEN_FOR_SAFETY: ['Auswahl aus Sicherheitsgründen geändert', 'Eine manuelle Auswahl wurde von einer Sicherheitsregel überstimmt.'],
   MANUAL_LOCK_LIMITS_WEATHER_PROTECTION: ['Wetterschutz eingeschränkt', 'Die manuell gewählte Kombination deckt die aktuelle Wetteranforderung nicht vollständig ab.'],
+  MANUAL_OUTFIT_TOO_WARM: ['Auswahl deutlich zu warm', 'Die Kombination ist deutlich wärmer als die Empfehlung. Bitte eine Schicht weglassen und den Nacken prüfen.'],
+  MANUAL_OUTFIT_TOO_COOL: ['Auswahl deutlich zu kühl', 'Die Kombination ist deutlich kühler als die Empfehlung. Bitte eine passende Schicht ergänzen und den Nacken prüfen.'],
   RAIN_PROTECTION_OPTIONAL: ['Regenschutz optional', 'Regen ist möglich; ein leichter Regenschutz kann sinnvoll sein.']
 });
 
