@@ -46,12 +46,12 @@ test('calibrated temperature bands are exact',()=>{
   assert.equal(TEMPERATURE_BANDS.length,13);
 });
 
-test('10 C uses the light transition jacket without stacking a mid layer',()=>{
+test('10 C outdoor adds an insulating mid layer and keeps exposed feet warm',()=>{
   const result=recommendOutfit(request(outdoor(),{w:weather(10)}));
-  assert.equal(id(result,'mid'),null);
+  assert.equal(id(result,'mid'),'thin_sweater');
   assert.equal(id(result,'outer'),'light_transition_jacket');
   assert.equal(id(result,'legs'),'trousers');
-  assert.equal(id(result,'feet'),'socks');
+  assert.equal(id(result,'feet'),'warm_socks_booties');
   assert.equal(id(result,'head'),'thin_hat');
   assert.equal(id(result,'hands'),null);
 });
@@ -568,7 +568,7 @@ test('exposed feet use warm socks below 8 C and from 14 to under 18 C',()=>{
 
   for (const temperature of [8,10,12]) {
     const mild=recommendOutfit(request(outdoor({groundContact:'none'}),{w:weather(temperature)}));
-    assert.equal(id(mild,'feet'),'socks',`${temperature} C`);
+    assert.equal(id(mild,'feet'),'warm_socks_booties',`${temperature} C`);
     assert.equal(id(mild,'footwear'),null,`${temperature} C`);
   }
   for (const temperature of [14,16,17]) {

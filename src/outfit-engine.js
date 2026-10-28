@@ -138,6 +138,10 @@ function evaluateOutdoorLike(result, request, phase, effectiveMode) {
   const state = createPhaseState(result, phase, effectiveMode);
   seedBaseline(state, band.id, effectiveMode);
 
+  if (effectiveMode === 'outdoor' && band.id === '10_to_12') {
+    setSelected(state,'mid','thin_sweater','engine','on_body',['BASELINE_10_TO_12']);
+  }
+
   let adjustment = 0;
   let strollerStateAdjustmentValue = 0;
   const activityAdjustment = activityAdjustmentFor(context, effectiveMode);

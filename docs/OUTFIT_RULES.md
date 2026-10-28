@@ -156,11 +156,13 @@ UV-/Sonnenregeln bleiben aktiv; Sonnenschutz wird durch leichte Bedeckung statt 
 
 - Langarmbody,
 - normale Hose,
-- leichte Übergangsjacke als eigenständige leichte Außenschicht,
-- Socken,
-- dünne Mütze.
+- dünner Pullover als zusätzliche isolierende Mittelschicht,
+- leichte Übergangsjacke als Außenschicht,
+- dünne Mütze,
+- bei Bodenkontakt: Socken und wettergerechte Schuhe; unter 12 °C warme Schuhe,
+- ohne Bodenkontakt: dicke Socken oder weiche Booties.
 
-Die leichte Außenschicht in diesem Übergangsband verhindert einen Mehrfachsprung zwischen 8 und 12 °C, ohne zusätzlich einen Mid-Layer zu stapeln. Im Kinderwagen kann sie durch zonengerechte externe Isolation teilweise entlastet werden.
+Die leichte Übergangsjacke bleibt eine eigene Außenschicht und zählt nicht als Ersatz für die isolierende Mittelschicht. Diese Ergänzung gilt für `outdoor`; Kinderwagen und Trage behalten ihre situativen Wärmeregeln. Ein verlässlicher Feels-like-Wert wird thermisch nicht ein zweites Mal durch Wind korrigiert.
 
 ### `8 bis <10 °C` – kalt
 
@@ -556,8 +558,8 @@ Für die körpernahen Slots wird dieselbe kalibrierte Temperaturstaffel als Ausg
 
 ## 12. Schuhe / Bodenkontakt
 
-- `groundContact: none`: keine Schuhe allein aus Temperaturgründen; bei `outdoor` zwischen 14 und <18 °C dicke Socken oder weiche Booties,
-- `standing`: wettergerechte Schuhe abhängig von Untergrund/Wetter,
+- `groundContact: none`: keine Schuhe allein aus Temperaturgründen; bei `outdoor` unter 18 °C dicke Socken oder weiche Booties,
+- `standing`: wettergerechte Schuhe abhängig von Untergrund/Wetter; unter 12 °C warme Schuhe, wenn es trocken ist,
 - `walking`: Schuhe als regulärer Outfit-Slot; Regen/Kälte beeinflussen die Variante.
 
 `groundContact` beschreibt die aktuelle Draußensituation. `profile.mobilityStage: walking` darf deshalb nicht automatisch `groundContact: walking` setzen; ein Kind, das laufen kann, kann aktuell trotzdem getragen werden, sitzen oder ohne Bodenkontakt unterwegs sein.
