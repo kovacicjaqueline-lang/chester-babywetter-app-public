@@ -82,12 +82,14 @@ function request({
   end='2026-08-31T12:00:00.000Z',
   segments=null,
   weatherValue,
+  wardrobe=[],
   profile={...PROFILE}
 }) {
   return {
     requestId:'trip_request',
     requestedAt:'2026-08-31T08:00:00.000Z',
     profile,
+    wardrobe,
     plan:{
       tripId:'trip_1',
       startTime:start,
@@ -97,6 +99,26 @@ function request({
     weather:weatherValue
   };
 }
+
+test('Tagesplan weist Lücken im lokalen Kleiderschrank mit dem ersten Bedarfszeitpunkt aus',()=>{
+  const start='2026-08-31T10:00:00.000Z';
+  const end='2026-08-31T11:00:00.000Z';
+  const points=[
+    point(start,11,{apparentTempC:10,apparentTempTrusted:true,apparentTempIncludes:['wind','humidity','sun']}),
+    point(end,11,{apparentTempC:10,apparentTempTrusted:true,apparentTempIncludes:['wind','humidity','sun']})
+  ];
+  const result=planDayTrip(request({
+    start,end,weatherValue:weather(points),
+    wardrobe:[{
+      id:'trip-jacket',itemId:'light_transition_jacket',fitStatus:'fits',availability:'available',condition:'clean',
+      warmthLevel:'light',windProtection:'partial',waterProtection:'none'
+    }]
+  }));
+
+  assert.equal(result.status,'partial');
+  assert.ok(result.wardrobeGaps.some((gap)=>gap.slot==='mid'&&gap.reasonCode==='LIGHT_JACKET_NOT_INSULATING'));
+  assert.equal(result.wardrobeGaps.find((gap)=>gap.slot==='mid')?.firstNeededAt,start);
+});
 
 const startIds = (result) => result.startOutfit?.items.map((item) => item.itemId) ?? [];
 const actionAt = (result, at) => result.actions.filter((action) => action.at === at);

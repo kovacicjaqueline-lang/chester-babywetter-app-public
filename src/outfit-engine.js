@@ -54,6 +54,7 @@ function normalizeContextForRules(context) {
 export function recommendOutfit(input) {
   const request = normalizeRequest(input);
   const result = recommendCore(request);
+  if (result.status !== 'blocked') addManualThermalShiftNotices(result, request);
   if (result.status !== 'blocked') attachAlternatives(result, request);
   result.items = result.slots.map((entry) => ({
     itemId:entry.selected.itemId,
@@ -64,6 +65,41 @@ export function recommendOutfit(input) {
     reasonCodes:[...entry.selected.reasonCodes]
   }));
   return result;
+}
+
+function relativeThermalLevel(itemId) {
+  const definition = CLOTHING_CATALOG[itemId];
+  if (!definition) return null;
+  if (Number.isFinite(definition.sleepWarmthWeight)) return definition.sleepWarmthWeight;
+  if (['stroller_thermal_accessory','carrier_accessory','car_thermal_accessory'].includes(definition.slot)) {
+    return definition.thermalStepCredit ?? 0;
+  }
+  return definition.thermalWeight ?? 0;
+}
+
+function addManualThermalShiftNotices(result, request) {
+  if (!request.session.manualLocks.length) return;
+  const automatic = recommendCore({
+    ...request,
+    session:{ ...request.session, manualLocks:[] }
+  });
+  if (automatic.status === 'blocked') return;
+
+  for (const lock of request.session.manualLocks) {
+    const selected = result.slots.find((entry) => entry.phase === lock.phase && entry.slot === lock.slot)?.selected;
+    if (selected?.selectionSource !== 'manual_lock') continue;
+    const recommendedItemId = automatic.slots.find((entry) => entry.phase === lock.phase && entry.slot === lock.slot)?.selected.itemId;
+    if (!recommendedItemId) continue;
+    const relativeThermalDelta = (relativeThermalLevel(selected.itemId) ?? 0) - (relativeThermalLevel(recommendedItemId) ?? 0);
+    if (Math.abs(relativeThermalDelta) < 2) continue;
+
+    addNotice(result,'MANUAL_ITEM_THERMAL_SHIFT','caution',lock.phase,['MANUAL_ITEM_THERMAL_SHIFT'],{
+      direction:relativeThermalDelta > 0 ? 'warmer' : 'cooler',
+      itemId:selected.itemId,
+      recommendedItemId,
+      relativeThermalDelta
+    });
+  }
 }
 
 function normalizeRequest(input) {
@@ -137,6 +173,10 @@ function evaluateOutdoorLike(result, request, phase, effectiveMode) {
   const weatherWindow = summarizeWeatherWindow(weather, context.plannedMinutes);
   const state = createPhaseState(result, phase, effectiveMode);
   seedBaseline(state, band.id, effectiveMode);
+
+  if (effectiveMode === 'outdoor' && band.id === '10_to_12') {
+    setSelected(state,'mid','thin_sweater','engine','on_body',['BASELINE_10_TO_12']);
+  }
 
   let adjustment = 0;
   let strollerStateAdjustmentValue = 0;
@@ -438,9 +478,11 @@ function attachAlternatives(result,request) {
 
 function projectedAlternatives(result,request,slotResult,candidates) {
   const baselineScore = thermalSignature(result,slotResult.phase);
+  const thermalReferenceC = result.phases.find((entry) => entry.phase === slotResult.phase)?.thermalReferenceC;
   const options = [];
   for (const itemId of candidates) {
     if (itemId === slotResult.selected.itemId) continue;
+    if (request.context.mode === 'outdoor' && thermalReferenceC >= 8 && itemId === 'winter_overall') continue;
     const candidateSlot = CLOTHING_CATALOG[itemId]?.slot ?? slotResult.slot;
     const session = lockItem(request.session,{ phase:slotResult.phase, slot:slotResult.slot, itemId, lockedAt:request.requestedAt });
     const projected = recommendCore({ ...request, session });

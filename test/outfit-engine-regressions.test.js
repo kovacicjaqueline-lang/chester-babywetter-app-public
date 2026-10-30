@@ -88,7 +88,7 @@ test('cool apparent windy weather uses one light outer layer without over-warmin
   assert.ok(selected.has('long_sleeve_bodysuit'));
   assert.ok(selected.has('trousers'));
   assert.ok(selected.has('light_transition_jacket'));
-  assert.ok(!selected.has('thin_sweater'));
+  assert.ok(selected.has('thin_sweater'));
   assert.ok(!selected.has('fleece_jacket'));
   assert.ok(!selected.has('warm_trousers'));
   assert.ok(selected.has('thin_hat'));

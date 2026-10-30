@@ -224,6 +224,32 @@ function coveredUntilFor(request, checkpoints, issues, startOutfit) {
   return request.plan.startTime;
 }
 
+function wardrobeGapsFrom(checkpoints) {
+  const gaps = new Map();
+  for (const checkpoint of checkpoints) {
+    const recommendation = checkpoint.recommendation;
+    for (const gap of recommendation?.missingItems ?? []) {
+      const key = `${gap.phase}|${gap.slot}`;
+      const existing = gaps.get(key);
+      if (existing) {
+        existing.segmentIds = unique([...existing.segmentIds,checkpoint.segmentId]);
+        existing.reasonCodes = unique([...existing.reasonCodes,...(gap.reasonCodes ?? [gap.reasonCode])]);
+        if (gap.reasonCode === 'LIGHT_JACKET_NOT_INSULATING' && existing.reasonCode !== gap.reasonCode) {
+          Object.assign(existing,gap,{ firstNeededAt:checkpoint.startTime,reasonCode:gap.reasonCode });
+        }
+        continue;
+      }
+      gaps.set(key,{
+        ...gap,
+        firstNeededAt:checkpoint.startTime,
+        segmentIds:[checkpoint.segmentId],
+        reasonCodes:[...(gap.reasonCodes ?? [gap.reasonCode])]
+      });
+    }
+  }
+  return [...gaps.values()];
+}
+
 /**
  * Pure day-trip planner over the existing OutfitRecommendation engine.
  * No DOM, storage, weather-provider access, or input mutation occurs here.
@@ -258,6 +284,7 @@ export function planDayTrip(request) {
   const notices = startOutfit
     ? dedupeNotices(evaluated.flatMap((checkpoint) => tripNoticesFrom(checkpoint.recommendation)))
     : [];
+  const wardrobeGaps = startOutfit ? wardrobeGapsFrom(evaluated) : [];
 
   return {
     tripResultId:`trip-result:${request.requestId}:${request.plan.tripId}`,
@@ -270,6 +297,7 @@ export function planDayTrip(request) {
     actions,
     transitions:projection.transitions,
     notices,
+    wardrobeGaps,
     coverage:{
       plannedStartTime:request.plan.startTime,
       plannedEndTime:request.plan.endTime,

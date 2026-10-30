@@ -22,6 +22,8 @@ Die Engine wendet Regeln in dieser Reihenfolge an:
 
 Ein manuell fixiertes Teil darf nur dann entfernt werden, wenn es eine harte Sicherheitsregel verletzt. Die Engine erzeugt dann einen sichtbaren Override-Hinweis.
 
+Weicht ein manuell fixiertes Teil auf der relativen Katalogskala um mindestens zwei Wärmestufen von der automatischen Auswahl desselben Slots ab, zeigt die App einen sichtbaren Wärmehinweis. Der Lock bleibt bestehen und die übrigen Lagen werden wie üblich neu ausbalanciert. Dieser Vergleich ist eine relative Orientierung, keine Temperaturmessung oder medizinische Aussage.
+
 ## 2. Thermisches Modell
 
 ### 2.1 `thermalReferenceC`
@@ -156,18 +158,20 @@ UV-/Sonnenregeln bleiben aktiv; Sonnenschutz wird durch leichte Bedeckung statt 
 
 - Langarmbody,
 - normale Hose,
-- leichte Übergangsjacke als eigenständige leichte Außenschicht,
-- Socken,
-- dünne Mütze.
+- dünner Pullover als zusätzliche isolierende Mittelschicht,
+- leichte Übergangsjacke als Außenschicht,
+- dünne Mütze,
+- bei Bodenkontakt: Socken und wettergerechte Schuhe; unter 12 °C warme Schuhe,
+- ohne Bodenkontakt: dicke Socken oder weiche Booties.
 
-Die leichte Außenschicht in diesem Übergangsband verhindert einen Mehrfachsprung zwischen 8 und 12 °C, ohne zusätzlich einen Mid-Layer zu stapeln. Im Kinderwagen kann sie durch zonengerechte externe Isolation teilweise entlastet werden.
+Die leichte Übergangsjacke bleibt eine eigene Außenschicht und zählt nicht als Ersatz für die isolierende Mittelschicht. Diese Ergänzung gilt für `outdoor`; Kinderwagen und Trage behalten ihre situativen Wärmeregeln. Im optionalen lokalen Kleiderschrank darf eine bestätigte mittelwarme oder warme Außenschicht den Mittelschichtbedarf nur bei bestätigter Passform und vollständiger Abdeckung von Rumpf und Armen übernehmen. Ein verlässlicher Feels-like-Wert wird thermisch nicht ein zweites Mal durch Wind korrigiert.
 
 ### `8 bis <10 °C` – kalt
 
 - Langarmbody,
 - normale Hose,
 - gefütterte Übergangsjacke als eigenständige warme Außenschicht,
-- Socken,
+- bei Bodenkontakt: Socken unter warmen Schuhen; ohne Bodenkontakt: dicke Socken oder weiche Booties,
 - warme Mütze,
 - Handschuhe nur bei längerer Exposition oder zusätzlichem Hand-Windschutzbedarf.
 
@@ -180,6 +184,8 @@ Die leichte Außenschicht in diesem Übergangsband verhindert einen Mehrfachspru
 - warme Füße,
 - warme Mütze,
 - Handschuhe.
+
+Im Modus `outdoor` wird der Winteroverall nur unter 8 °C als Alternative angeboten. Ab 8 °C bleibt die Auswahl auf passendere Außenschichten begrenzt. Ein bereits manuell gesetzter Winteroverall-Lock bleibt erhalten, löst dann aber den relativen Wärmehinweis aus. Kinderwagen und Trage folgen ihren eigenen situativen Regeln.
 
 ### `0 bis <3 °C` – nahe Gefrierpunkt
 
@@ -425,7 +431,7 @@ Der Wärmekredit ersetzt bei Bedarf Kleidung am Körper. Die Verrechnung erfolgt
 
 Für `Sehr aktiv` gilt in allen Temperaturbändern dieselbe Grundregel: `awake + active` übernimmt die Outdoor-Aktivitätskorrektur von `-1 thermalStep`, und die Engine ergänzt **keine automatische thermische Decke und keinen automatischen Fußsack**. Wärme wird bevorzugt über die passende Körperkleidung gelöst. Ein manuell gewähltes thermisches Kinderwagen-Zubehör bleibt zulässig und wird zonengerecht gegen die Körperkleidung rebalanced. Wetterzubehör wie Regenverdeck oder Sonnensegel bleibt unabhängig davon aktiv.
 
-Bei 14 bis <18 °C erhalten freie Füße dicke Socken oder weiche Booties, wenn kein thermisches Kinderwagen-Zubehör ausgewählt ist (`stroller_thermal_none`). Fußsack oder Decke decken die Füße bereits ab und greifen in die zonengerechte Rebalance ein.
+Unter 18 °C erhalten freie Füße dicke Socken oder weiche Booties, wenn kein thermisches Kinderwagen-Zubehör ausgewählt ist (`stroller_thermal_none`). Fußsack oder Decke decken die Füße bereits ab und greifen in die zonengerechte Rebalance ein.
 
 #### `>=20 °C`
 
@@ -556,8 +562,8 @@ Für die körpernahen Slots wird dieselbe kalibrierte Temperaturstaffel als Ausg
 
 ## 12. Schuhe / Bodenkontakt
 
-- `groundContact: none`: keine Schuhe allein aus Temperaturgründen; bei `outdoor` zwischen 14 und <18 °C dicke Socken oder weiche Booties,
-- `standing`: wettergerechte Schuhe abhängig von Untergrund/Wetter,
+- `groundContact: none`: keine Schuhe allein aus Temperaturgründen; bei `outdoor` unter 18 °C dicke Socken oder weiche Booties,
+- `standing`: wettergerechte Schuhe abhängig von Untergrund/Wetter; unter 12 °C warme Schuhe, wenn es trocken ist,
 - `walking`: Schuhe als regulärer Outfit-Slot; Regen/Kälte beeinflussen die Variante.
 
 `groundContact` beschreibt die aktuelle Draußensituation. `profile.mobilityStage: walking` darf deshalb nicht automatisch `groundContact: walking` setzen; ein Kind, das laufen kann, kann aktuell trotzdem getragen werden, sitzen oder ohne Bodenkontakt unterwegs sein.
@@ -818,5 +824,5 @@ Mindestens:
 41. Kinderwagen-Windschutz reduziert nur einen separat berechneten thermischen Windmodifikator, wenn Wind nicht bereits in der vertrauenswürdigen `apparentTempC` enthalten ist.
 42. Ab `24 °C` erzeugt eine automatische thermische Kinderwagen-Rebalance keine isolierende Mid-/Outer-Schicht; funktionale Wind-/Regenschutz-Shells bleiben zulässig.
 43. Neue Outdoor-, Kinderwagen- und Trage-Kontexte starten mit `sunExposure: unknown`; neue Kinderwagen-Kontexte zusätzlich mit `windProtection: unknown`. Alte unversionierte `shade`-/`partial`-Defaults werden einmalig auf `unknown` migriert; danach bleiben ausdrücklich gewählte versionierte Werte erhalten.
-44. Leichte und gefütterte Übergangsjacke belegen denselben `outer`-Slot; `mid` und `outer` werden bei einer passenden Übergangsjacke nicht unnötig doppelt gestapelt.
+44. Leichte und gefütterte Übergangsjacke belegen denselben `outer`-Slot. Bei `10 bis <12 °C` ersetzt eine leichte ungefütterte Jacke die isolierende `mid`-Schicht nicht. Nur im optionalen Kleiderschrank-Abgleich darf eine bestätigte mittelwarme oder warme Außenschicht mit passender Passform und vollständiger Rumpf-/Armabdeckung den zusätzlichen Mittelschichtbedarf übernehmen; dann wird kein doppelter Layer ausgegeben.
 45. Die gefütterte Teddy-Übergangsjacke liegt thermisch zwischen leichter Übergangsjacke und Softshelljacke, hat aber nur leichten Windschutz; ab Windschutzstufe 2 wird sie durch eine Softshell-/Regenjacke ersetzt bzw. ergänzt und bleibt unter Winteroverall und Übergangsoverall.

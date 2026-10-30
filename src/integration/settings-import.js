@@ -1,3 +1,4 @@
+import { validateWardrobeItems } from '../wardrobe.js';
 import { WEATHER_CACHE_MAX_AGE_MINUTES, WEATHER_FRESH_MAX_AGE_MINUTES } from './weather-series.js';
 
 const MODES = new Set(['outdoor', 'stroller', 'carrier', 'car', 'indoor', 'sleep']);
@@ -125,14 +126,16 @@ export function validateImportEnvelopeV1(value, { now = () => new Date() } = {})
   const current = now();
   if (!(current instanceof Date) || !Number.isFinite(current.getTime())) throw new TypeError('now must return a valid Date');
   const appVersion = value.appVersion === undefined ? undefined : requiredString(value.appVersion, 'appVersion', { max: 40 });
+  const payload = {
+    profile: validateProfile(value.payload.profile, current),
+    settings: validateSettings(value.payload.settings),
+    feedback: value.payload.feedback.map(validateFeedbackEntry)
+  };
+  if (value.payload.wardrobe !== undefined) payload.wardrobe = validateWardrobeItems(value.payload.wardrobe);
   const envelope = {
     schemaVersion: 1,
     exportedAt: isoTimestamp(value.exportedAt, 'exportedAt'),
-    payload: {
-      profile: validateProfile(value.payload.profile, current),
-      settings: validateSettings(value.payload.settings),
-      feedback: value.payload.feedback.map(validateFeedbackEntry)
-    }
+    payload
   };
   if (appVersion !== undefined) envelope.appVersion = appVersion;
   return envelope;

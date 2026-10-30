@@ -109,10 +109,20 @@ export function seedBaseline(state, bandId, mode) {
 }
 
 export function protectExposedFeetWithoutThermalCover(state, temperature, context, mode) {
-  const feetExposed = (mode === 'outdoor' && context.groundContact === 'none')
-    || (mode === 'stroller' && state.map.get('stroller_thermal_accessory')?.itemId === 'stroller_thermal_none');
-  if (!feetExposed || temperature < 14 || temperature >= 18) return;
-  setSelected(state,'feet','warm_socks_booties','engine','on_body',['OUTDOOR_EXPOSED_FEET']);
+  const outdoorFeetExposed = mode === 'outdoor' && context.groundContact === 'none';
+  if (outdoorFeetExposed && temperature < 18) {
+    if (state.map.get('feet')?.itemId !== 'warm_socks_booties') {
+      setSelected(state,'feet','warm_socks_booties','engine','on_body',['OUTDOOR_EXPOSED_FEET']);
+    }
+    return;
+  }
+
+  const strollerFeetExposed = mode === 'stroller'
+    && state.map.get('stroller_thermal_accessory')?.itemId === 'stroller_thermal_none';
+  if (!strollerFeetExposed || temperature >= 18) return;
+  if (state.map.get('feet')?.itemId !== 'warm_socks_booties') {
+    setSelected(state,'feet','warm_socks_booties','engine','on_body',['STROLLER_EXPOSED_FEET']);
+  }
 }
 
 export function makeCarSafeBaseline(state) {

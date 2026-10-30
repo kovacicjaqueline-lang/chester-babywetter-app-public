@@ -2,6 +2,8 @@ const WEATHER_HOURLY_MODES = new Set(['outdoor', 'stroller', 'carrier']);
 const SUPPORTED_MODES = new Set(['outdoor', 'stroller', 'carrier', 'car', 'indoor', 'sleep']);
 const MAX_WEATHER_STEP_MS = 60 * 60 * 1000;
 
+import { validateWardrobeItems } from './wardrobe.js';
+
 export function cloneTripValue(value) {
   return structuredClone(value);
 }
@@ -39,6 +41,7 @@ export function invalidTripResult(request, issues) {
     actions:[],
     transitions:[],
     notices:[],
+    wardrobeGaps:[],
     coverage:{
       plannedStartTime:startTime,
       plannedEndTime:endTime,
@@ -57,6 +60,7 @@ export function validateTripPlannerRequest(request) {
 
   if (!request || typeof request !== 'object' || !request.profile || typeof request.profile !== 'object') return invalid();
   if (!plan || typeof plan !== 'object' || !Array.isArray(plan.segments) || plan.segments.length === 0) return invalid();
+  try { validateWardrobeItems(request.wardrobe ?? []); } catch { return [coverageIssue(startTime,endTime,'invalid_wardrobe',null)]; }
   const startMs = parseTripTime(plan.startTime);
   const endMs = parseTripTime(plan.endTime);
   if (startMs === null || endMs === null || endMs <= startMs) return invalid();
@@ -170,7 +174,8 @@ function buildCheckpoint({ request, segment, startTime, endTime, weatherPoint })
       requestedAt:request.requestedAt,
       profile:cloneTripValue(request.profile),
       context,
-      weather:derivedWeather
+      weather:derivedWeather,
+      wardrobe:cloneTripValue(request.wardrobe ?? [])
     },
     recommendation:null
   };

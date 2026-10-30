@@ -48,6 +48,25 @@ test('valid V1 import is returned as an explicit sanitized payload', () => {
   assert.equal('injected' in result.payload.settings, false);
 });
 
+test('optional local wardrobe is sanitized while legacy exports remain without that field',()=>{
+  const legacy=validateImportEnvelopeV1(validEnvelope(),{now:NOW});
+  assert.equal('wardrobe' in legacy.payload,false);
+
+  const modern=validEnvelope();
+  modern.payload.wardrobe=[{
+    id:'jacket_1',itemId:'light_transition_jacket',label:'Jacke',sizeLabel:'68',
+    fitStatus:'fits',availability:'available',condition:'clean',warmthLevel:'light',
+    windProtection:'partial',waterProtection:'none'
+  }];
+  const result=validateImportEnvelopeV1(modern,{now:NOW});
+  assert.equal(result.payload.wardrobe[0].itemId,'light_transition_jacket');
+  assert.deepEqual(result.payload.wardrobe[0].coverageZones,['torso','arms']);
+
+  const invalid=validEnvelope();
+  invalid.payload.wardrobe=[{id:'bad',itemId:'unknown_item'}];
+  assert.throws(()=>validateImportEnvelopeV1(invalid,{now:NOW}),TypeError);
+});
+
 test('palette mode imports directly and legacy gender labels migrate to visual worlds', () => {
   const modern = validEnvelope();
   modern.payload.profile.paletteMode = 'cool';

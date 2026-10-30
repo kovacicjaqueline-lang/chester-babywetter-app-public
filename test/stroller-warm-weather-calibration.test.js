@@ -139,7 +139,11 @@ test('very active stroller uses the same body activity correction as outdoor act
 
     assert.equal(activeStroller.phases[0].thermalAdjustment,-1, `stroller adjustment at ${temp} C`);
     assert.equal(activeOutdoor.phases[0].thermalAdjustment,-1, `outdoor adjustment at ${temp} C`);
-    assert.deepEqual(body(activeStroller), body(activeOutdoor), `active body at ${temp} C`);
+    const strollerBody=body(activeStroller);
+    const outdoorBody=body(activeOutdoor);
+    delete strollerBody.mid;
+    delete outdoorBody.mid;
+    assert.deepEqual(strollerBody,outdoorBody,`active body outside the outdoor 10–12 C mid-layer rule at ${temp} C`);
     assert.equal(item(activeStroller,'stroller_thermal_accessory'),'stroller_thermal_none', `stroller accessory at ${temp} C`);
   }
 });
@@ -157,7 +161,7 @@ test('11 C air / 9 C apparent very active stroller keeps warmth on body without 
   assert.equal(item(result,'base_torso'),'long_sleeve_bodysuit');
   assert.equal(item(result,'legs'),'trousers');
   assert.equal(item(result,'outer'),'light_transition_jacket');
-  assert.equal(item(result,'feet'),'socks');
+  assert.equal(item(result,'feet'),'warm_socks_booties');
   assert.equal(item(result,'head'),'warm_hat');
   assert.equal(item(result,'stroller_thermal_accessory'),'stroller_thermal_none');
 });

@@ -1,3 +1,4 @@
+import { applyWardrobeToRecommendation } from './wardrobe.js';
 import { recommendOutfit as recommendBase } from './outfit-engine-contract.js';
 
 const INDOOR_HIDDEN_SLOTS = new Set(['outer', 'head', 'hands', 'footwear']);
@@ -109,8 +110,13 @@ function adaptIndoorResult(result, roomTempC) {
 
 export function recommendOutfit(input) {
   const context = input?.context ?? input?.situation;
-  if (context?.mode !== 'indoor') return recommendBase(input);
-  if (!Number.isFinite(context.roomTempC)) return indoorBlockedResult(input);
+  const wardrobe = input?.wardrobe ?? [];
+  if (context?.mode !== 'indoor') {
+    return applyWardrobeToRecommendation(recommendBase(input),context ?? { mode:'outdoor', groundContact:'none' },wardrobe);
+  }
+  if (!Number.isFinite(context.roomTempC)) {
+    return applyWardrobeToRecommendation(indoorBlockedResult(input),context,wardrobe);
+  }
 
   const roomTempC = Math.round(context.roomTempC);
   const activity = context.activity === 'active' ? 'active' : 'normal';
@@ -128,5 +134,5 @@ export function recommendOutfit(input) {
     situation:undefined,
     weather:syntheticIndoorWeather(roomTempC, input?.requestedAt)
   };
-  return adaptIndoorResult(recommendBase(baseInput), roomTempC);
+  return applyWardrobeToRecommendation(adaptIndoorResult(recommendBase(baseInput), roomTempC),context,wardrobe);
 }

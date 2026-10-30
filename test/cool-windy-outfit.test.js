@@ -73,7 +73,7 @@ function item(result, slot, phase = 'main') {
   return result.slots.find((entry) => entry.phase === phase && entry.slot === slot)?.selected.itemId ?? null;
 }
 
-test('15 C with 11 C apparent temperature and 20 km/h wind stays in a light normal outdoor stack', () => {
+test('15 C air / 11 C apparent uses a light insulating layer without double-counting wind', () => {
   const result = recommend();
 
   assert.equal(result.phases[0].thermalReferenceC,11);
@@ -82,11 +82,11 @@ test('15 C with 11 C apparent temperature and 20 km/h wind stays in a light norm
   assert.equal(item(result,'legs'),'trousers');
   assert.ok(['light_transition_jacket','softshell_jacket'].includes(item(result,'outer')));
   assert.equal(item(result,'head'),'thin_hat');
-  assert.equal(item(result,'feet'),'socks');
+  assert.equal(item(result,'mid'),'thin_sweater');
+  assert.equal(item(result,'feet'),'warm_socks_booties');
   assert.equal(item(result,'hands'),null);
   assert.notEqual(item(result,'mid'),'fleece_jacket');
   assert.notEqual(item(result,'legs'),'warm_trousers');
-  assert.notEqual(item(result,'feet'),'warm_socks_booties');
   assert.notEqual(item(result,'head'),'warm_hat');
   assert.ok(!result.ruleTrace.some((entry) => entry.reasonCode === 'WIND_THERMAL_EFFECT'));
 });
@@ -96,7 +96,7 @@ test('trusted apparent temperature does not receive a second wind step when fact
 
   assert.equal(result.phases[0].thermalReferenceSource,'apparent_temp');
   assert.equal(result.phases[0].thermalAdjustment,0);
-  assert.equal(item(result,'feet'),'socks');
+  assert.equal(item(result,'feet'),'warm_socks_booties');
   assert.equal(item(result,'hands'),null);
   assert.ok(!result.ruleTrace.some((entry) => entry.reasonCode === 'WIND_THERMAL_EFFECT'));
 });

@@ -10,3 +10,5 @@ export { planDayTrip } from './day-trip-planner.js';
 export function recommendOutfit(request) {
   return recommendOutfitBase(prepareRequestForHourlySelection(request));
 }
+
+export { applyWardrobeToRecommendation, buildNeedProfile, validateWardrobeItem, validateWardrobeItems } from './wardrobe.js';

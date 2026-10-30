@@ -4,6 +4,7 @@ import { WEATHER_CACHE_MAX_AGE_MINUTES, WEATHER_FRESH_MAX_AGE_MINUTES, assessCac
 import { applyManualWeatherOverride, normalizeTemperatureToHalfDegree } from './src/integration/manual-weather.js';
 import { manualWeatherValuesFromPresets, precipitationPresetForWeather, sunPresetForWeather, windPresetForWeather } from './src/integration/manual-weather-presets.js';
 import { validateImportEnvelopeV1 } from './src/integration/settings-import.js';
+import { validateWardrobeItem, validateWardrobeItems } from './src/wardrobe.js';
 import { APP_VERSION } from './src/version.js';
 import { ClothingAssetStore } from './ui/asset-store.js';
 import { renderAlternatives, renderCatalog, renderHourly, renderOutfit, renderWeather } from './ui/render.js';
@@ -14,6 +15,7 @@ import { bindDayTripLocation } from './ui/day-trip-location.js';
 const PROFILE_KEY = 'babyweather.v1.profile';
 const SETTINGS_KEY = 'babyweather.v1.settings';
 const UI_STATE_KEY = 'babyweather.v1.uiState';
+const WARDROBE_KEY = 'babyweather.v1.wardrobe';
 const UI_STATE_VERSION = 3;
 const WEATHER_CACHE_KEY = 'babyweather.v1.weatherCache';
 const DEMO_MODE = new URLSearchParams(location.search).get('demo') === '1';
@@ -58,6 +60,7 @@ function loadProfile() {
   const fallback = defaultProfile(); const stored = safeParse(PROFILE_KEY); if (!stored || typeof stored !== 'object') return fallback;
   return { ...fallback, profileId: typeof stored.profileId === 'string' ? stored.profileId : fallback.profileId, displayName: typeof stored.displayName === 'string' ? stored.displayName.slice(0, 40) : null, birthDate: typeof stored.birthDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(stored.birthDate) ? stored.birthDate : null, mobilityStage: MOBILITY_STAGES.has(stored.mobilityStage) ? stored.mobilityStage : 'low_mobility', warmthBias: BIASES.has(stored.warmthBias) ? stored.warmthBias : 'neutral', paletteMode: paletteModeFromProfile(stored), styleTheme: 'neutral', defaultMode: MODES.has(stored.defaultMode) ? stored.defaultMode : 'stroller', createdAt: typeof stored.createdAt === 'string' ? stored.createdAt : fallback.createdAt, updatedAt: typeof stored.updatedAt === 'string' ? stored.updatedAt : fallback.updatedAt };
 }
+function loadWardrobe() { try { return validateWardrobeItems(safeParse(WARDROBE_KEY) ?? []); } catch { return []; } }
 function loadSettings(profile) {
   const fallback = defaultSettings(); const stored = safeParse(SETTINGS_KEY); if (!stored || typeof stored !== 'object') return { ...fallback, defaultMode: profile.defaultMode };
   return { ...fallback, defaultMode: MODES.has(stored.defaultMode) ? stored.defaultMode : profile.defaultMode, allowLocation: typeof stored.allowLocation === 'boolean' ? stored.allowLocation : null, weatherCacheMaxAgeMinutes: sanitizeWeatherCacheMaxAgeMinutes(stored.weatherCacheMaxAgeMinutes) };
@@ -78,12 +81,13 @@ function sanitizeContexts(candidate, { migrateLegacyDefaults = false } = {}) {
 const profile = loadProfile(); const settings = loadSettings(profile); const storedUi = safeParse(UI_STATE_KEY);
 const storedUiVersion = Number.isInteger(storedUi?.uiStateVersion) ? storedUi.uiStateVersion : 1;
 const migrateLegacyUiDefaults = Boolean(storedUi && typeof storedUi === 'object' && storedUiVersion < UI_STATE_VERSION);
-const state = { profile, settings, mode: MODES.has(storedUi?.mode) ? storedUi.mode : settings.defaultMode, contexts: sanitizeContexts(storedUi?.contexts, { migrateLegacyDefaults:migrateLegacyUiDefaults }), visualSeed: Number.isSafeInteger(storedUi?.visualSeed) ? storedUi.visualSeed : 0, location: null, weather: null, runtime: { weatherLoading: true, weatherError: null, weatherCacheStatus: null, weatherCacheAgeMinutes: null, weatherCacheOrigin: null }, warmthDirection: 'balanced', neckFeedback: null };
+const state = { profile, settings, wardrobe:loadWardrobe(), mode: MODES.has(storedUi?.mode) ? storedUi.mode : settings.defaultMode, contexts: sanitizeContexts(storedUi?.contexts, { migrateLegacyDefaults:migrateLegacyUiDefaults }), visualSeed: Number.isSafeInteger(storedUi?.visualSeed) ? storedUi.visualSeed : 0, location: null, weather: null, runtime: { weatherLoading: true, weatherError: null, weatherCacheStatus: null, weatherCacheAgeMinutes: null, weatherCacheOrigin: null }, warmthDirection: 'balanced', neckFeedback: null };
 let session = createSession(`ui:${Date.now()}`); let lastRecommendation = null; let alternativeSlot = null; let toastTimer = null; let weatherRefreshInFlight = false; let situationDraft = null; let tripPlannerOverride = null;
 const situationDialogReturnFocus = new WeakMap();
 const assetStore = new ClothingAssetStore(); const weatherService = createWeatherService({ onStorageError: () => showToast('Standort konnte lokal nicht gespeichert werden.') });
 function persistProfile() { state.profile.defaultMode = state.settings.defaultMode; state.profile.updatedAt = nowIso(); localStorage.setItem(PROFILE_KEY, JSON.stringify(state.profile)); }
 function persistSettings() { localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings)); localStorage.setItem(UI_STATE_KEY, JSON.stringify({ uiStateVersion:UI_STATE_VERSION, mode: state.mode, contexts: state.contexts, visualSeed: state.visualSeed })); }
+function persistWardrobe() { state.wardrobe = validateWardrobeItems(state.wardrobe); localStorage.setItem(WARDROBE_KEY, JSON.stringify(state.wardrobe)); }
 function cacheWeather(series) { try { localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify(series)); } catch { showToast('Wetterdaten konnten nicht lokal gespeichert werden.'); } }
 function isManualWeatherOrigin(origin) { return origin === 'manual' || origin === 'api_with_manual_override'; }
 function weatherAssessmentOptions(location) { return { location, maxAgeMinutes: state.settings.weatherCacheMaxAgeMinutes }; }
@@ -124,7 +128,7 @@ function requestForCurrentState() {
   const weather = ['sleep','indoor'].includes(state.mode) ? null : state.weather;
   const baseContext = structuredClone(state.contexts[state.mode]);
   const context = weather ? compensateWeatherRiskHorizon(baseContext, weather) : baseContext;
-  return { requestId: `ui:${state.mode}`, requestedAt: nowIso(), profile: structuredClone(state.profile), context, weather, session, neckFeedback: state.neckFeedback };
+  return { requestId: `ui:${state.mode}`, requestedAt: nowIso(), profile: structuredClone(state.profile), context, weather, session, neckFeedback: state.neckFeedback, wardrobe:structuredClone(state.wardrobe) };
 }
 function computeRecommendation() {
   try { return recommendOutfit(requestForCurrentState()); } catch (error) {
@@ -150,6 +154,7 @@ function tripPlannerSnapshot() {
   const tripWeather = tripPlannerOverride?.weather ?? state.weather;
   return {
     profile: structuredClone(state.profile),
+    wardrobe:structuredClone(state.wardrobe),
     mode: state.mode,
     contexts: structuredClone(state.contexts),
     location: tripLocation ? structuredClone(tripLocation) : null,
@@ -257,7 +262,7 @@ function syncNeckFeedbackStatus() {
   else status.textContent = changed ? 'Heiß/schwitzig – dünner angepasst' : 'Heiß/schwitzig – keine weitere sinnvolle oder sichere Schichtänderung möglich';
 }
 function renderSituationSheet() { const mode = situationDraft?.mode ?? state.mode; const contexts = situationDraft?.contexts ?? state.contexts; renderSituationOptions(mode); renderSituationContext(mode, contexts[mode]); }
-function renderAll() { document.body.dataset.paletteMode = state.profile.paletteMode; renderWeather(state.weather, state.location, state.runtime, state.contexts[state.mode]); renderHourly(state.weather); renderSituation(state.mode); renderSituationSheet(); renderRecommendation(); renderCatalog(assetStore, state.profile.paletteMode); syncForms(); syncNeckFeedbackStatus(); updateConnectionBanner(); }
+function renderAll() { document.body.dataset.paletteMode = state.profile.paletteMode; renderWeather(state.weather, state.location, state.runtime, state.contexts[state.mode]); renderHourly(state.weather); renderSituation(state.mode); renderSituationSheet(); renderRecommendation(); renderCatalog(assetStore, state.profile.paletteMode, state.wardrobe); syncForms(); syncNeckFeedbackStatus(); updateConnectionBanner(); }
 function syncForms() { document.querySelector('#profileName').value = state.profile.displayName ?? ''; document.querySelector('#profileBirthDate').value = state.profile.birthDate ?? ''; document.querySelector('#locationInput').value = state.location?.label ?? ''; for (const input of document.querySelectorAll('input[name="warmthBias"]')) input.checked = input.value === state.profile.warmthBias; for (const input of document.querySelectorAll('input[name="paletteMode"]')) input.checked = input.value === state.profile.paletteMode; document.querySelector('#appVersion').textContent = APP_VERSION; syncWeatherOverrideForm(); }
 function showToast(message) { const toast = document.querySelector('#toast'); toast.textContent = message; toast.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { toast.hidden = true; }, 3200); }
 function openDialog(id) { const dialog = document.getElementById(id); if (!(dialog instanceof HTMLDialogElement)) return; for (const open of document.querySelectorAll('dialog[open]')) if (open !== dialog) open.close(); if (dialog.open) return; if (id === 'situationDialog') { const active = document.activeElement; if (active instanceof HTMLElement) situationDialogReturnFocus.set(dialog, active); situationDraft = { mode: state.mode, contexts: structuredClone(state.contexts) }; renderSituationSheet(); } dialog.showModal(); if (id === 'situationDialog') requestAnimationFrame(() => dialog.querySelector('.sheet-header .icon-button')?.focus()); }
@@ -434,7 +439,7 @@ function bindWeatherOverride() {
   });
 }
 function bindPaletteSettings() { document.querySelectorAll('input[name="paletteMode"]').forEach((input) => { input.addEventListener('change', () => { if (!input.checked || !PALETTE_MODES.has(input.value)) return; state.profile.paletteMode = input.value; state.profile.styleTheme = 'neutral'; persistProfile(); renderAll(); showToast('Farbstil gespeichert.'); }); }); }
-function exportSettings() { const envelope = { schemaVersion: 1, exportedAt: nowIso(), appVersion: APP_VERSION, payload: { profile: state.profile, settings: state.settings, feedback: [] } }; const blob = new Blob([JSON.stringify(envelope, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'babywetter-einstellungen.json'; document.body.append(anchor); anchor.click(); anchor.remove(); URL.revokeObjectURL(url); showToast('Einstellungen als JSON exportiert.'); }
+function exportSettings() { const envelope = { schemaVersion: 1, exportedAt: nowIso(), appVersion: APP_VERSION, payload: { profile: state.profile, settings: state.settings, wardrobe:state.wardrobe, feedback: [] } }; const blob = new Blob([JSON.stringify(envelope, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'babywetter-einstellungen.json'; document.body.append(anchor); anchor.click(); anchor.remove(); URL.revokeObjectURL(url); showToast('Einstellungen als JSON exportiert.'); }
 async function importSettings(file) {
   if (!file) return;
   try {
@@ -443,6 +448,10 @@ async function importSettings(file) {
     const importedSettings = parsed.payload.settings;
     state.profile = importedProfile === null ? { ...state.profile } : { ...importedProfile, updatedAt: nowIso() };
     state.settings = { ...importedSettings };
+    if (parsed.payload.wardrobe !== undefined) {
+      state.wardrobe = validateWardrobeItems(parsed.payload.wardrobe);
+      persistWardrobe();
+    }
     state.mode = state.settings.defaultMode;
     persistProfile();
     persistSettings();
@@ -454,6 +463,44 @@ async function importSettings(file) {
   } finally {
     document.querySelector('#importSettingsInput').value = '';
   }
+}
+function bindWardrobe() {
+  document.querySelector('#wardrobeAddForm').addEventListener('submit',(event)=>{
+    event.preventDefault();
+    const form=event.currentTarget;
+    const data=new FormData(form);
+    try {
+      const item=validateWardrobeItem({id:globalThis.crypto?.randomUUID?.()??`wardrobe_${Date.now()}_${Math.random().toString(36).slice(2)}`,itemId:data.get('itemId'),label:data.get('label')||null,sizeLabel:data.get('sizeLabel')||null,material:data.get('material')||null,lining:data.get('lining')||null,fitStatus:data.get('fitStatus'),availability:data.get('availability'),condition:data.get('condition'),warmthLevel:data.get('warmthLevel'),windProtection:data.get('windProtection'),waterProtection:data.get('waterProtection')});
+      state.wardrobe=validateWardrobeItems([...state.wardrobe,item]);
+      persistWardrobe();
+      form.reset();
+      renderAll();
+      showToast('Kleidungsstück eingetragen.');
+    } catch { showToast('Bitte die Kleidungsangaben prüfen.'); }
+  });
+  const list=document.querySelector('#wardrobeList');
+  list.addEventListener('submit',(event)=>{
+    const form=event.target.closest('[data-wardrobe-edit]');
+    if (!form) return;
+    event.preventDefault();
+    const data=new FormData(form);
+    try {
+      const previous=state.wardrobe.find((entry)=>entry.id===form.dataset.wardrobeId);
+      const item=validateWardrobeItem({id:form.dataset.wardrobeId,itemId:form.dataset.itemId,label:data.get('label')||null,sizeLabel:data.get('sizeLabel')||null,material:data.get('material')||null,lining:data.get('lining')||null,coverageZones:previous?.coverageZones,fitStatus:data.get('fitStatus'),availability:data.get('availability'),condition:data.get('condition'),warmthLevel:data.get('warmthLevel'),windProtection:data.get('windProtection'),waterProtection:data.get('waterProtection')});
+      state.wardrobe=validateWardrobeItems(state.wardrobe.map((entry)=>entry.id===item.id?item:entry));
+      persistWardrobe();
+      renderAll();
+      showToast('Kleidungsstück aktualisiert.');
+    } catch { showToast('Bitte die Kleidungsangaben prüfen.'); }
+  });
+  list.addEventListener('click',(event)=>{
+    const button=event.target.closest('[data-remove-wardrobe]');
+    if (!button) return;
+    state.wardrobe=state.wardrobe.filter((item)=>item.id!==button.dataset.removeWardrobe);
+    persistWardrobe();
+    renderAll();
+    showToast('Kleidungsstück entfernt.');
+  });
 }
 function bindImportExport() { document.querySelector('#exportSettingsButton').addEventListener('click', exportSettings); document.querySelector('#importSettingsInput').addEventListener('change', (event) => importSettings(event.target.files?.[0])); }
 function bindDialogs() { for (const dialog of document.querySelectorAll('dialog')) { dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); }); dialog.addEventListener('close', () => { if (dialog.id !== 'situationDialog') return; situationDraft = null; const returnFocus = situationDialogReturnFocus.get(dialog); situationDialogReturnFocus.delete(dialog); if (returnFocus?.isConnected) requestAnimationFrame(() => returnFocus.focus()); }); } }
@@ -471,7 +518,7 @@ async function refreshWeatherIfNeeded() {
 }
 async function init() {
   if (migrateLegacyUiDefaults) persistSettings();
-  bindGlobalActions(); bindSituationContext(); bindProfile(); bindLocation(); bindWeatherOverride(); bindPaletteSettings(); bindImportExport();
+  bindGlobalActions(); bindSituationContext(); bindProfile(); bindLocation(); bindWeatherOverride(); bindPaletteSettings(); bindWardrobe(); bindImportExport();
   bindDayTripPlanner({ getSnapshot: tripPlannerSnapshot, assetStore, showToast });
   bindDayTripLocation({
     loadWeatherForLocation: loadTripWeatherForLocation,

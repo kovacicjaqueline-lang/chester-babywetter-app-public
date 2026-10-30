@@ -18,7 +18,8 @@ Die App gibt eine konkrete, nachvollziehbare Kleidungsempfehlung für ein Baby a
 - Alter aus dem Geburtsdatum als kleine thermische Feinjustierung in den ersten Lebensmonaten,
 - Mobilitätsstand als Entwicklungsinformation im Babyprofil, getrennt von der aktuellen Aktivität,
 - manuell gesetzte Wärmetendenz,
-- Nackentest als reale Rückmeldung.
+- Nackentest als reale Rückmeldung,
+- optionaler lokaler Kleiderschrank-Abgleich mit vorhandenen, passenden und verfügbaren Teilen.
 
 Die App ist eine Entscheidungshilfe und keine medizinische Anwendung. Sie gibt keine Diagnose und keine Garantie für thermischen Komfort.
 
@@ -51,18 +52,21 @@ Enthalten:
 - austauschbare Outfit- und Zubehörteile,
 - `wärmer` / `dünner`,
 - Nackentest-Button,
+- optionaler Kleiderschrank mit Katalogteilen, Passform, Verfügbarkeit, Zustand, Wärme- und Wetterschutz,
 - lokale Einstellungen,
 - JSON-Export/-Import.
 
 Nicht enthalten:
 
-- vollständiges Inventar der Kleidung zu Hause,
+- Mengen-, Marken- oder Größenverwaltung für den gesamten Haushalt,
 - gespeicherte Marken-/Hersteller-Schlafsäcke,
 - Hersteller-TOG-Tabellen,
 - mehrere Babyprofile,
 - automatische Langzeit-Personalisierung,
 - kommerzielle Produktempfehlungen,
 - medizinische Diagnosen.
+
+Der Kleiderschrank ist eine optionale lokale Liste konkreter Katalogteile, kein Produktkatalog und kein Muss für eine Empfehlung. Ohne Einträge bleibt die generische Outfit-Empfehlung unverändert. Mit Einträgen zählen nur saubere, trockene, verfügbare Teile mit bestätigter Passform und ausreichender Wärme-/Schutzleistung. Fehlende oder unklare Teile werden sichtbar als Lücke gezeigt; die App stuft den Bedarf nicht stillschweigend herunter. Die Liste bleibt auf dem Gerät und kann im JSON-Export mitgenommen werden.
 
 ## 4. Hauptnutzerfluss
 
@@ -88,7 +92,9 @@ Beim Tap auf `dünner Pullover` werden z. B. angezeigt:
 
 Wird `dünner Pullover` durch `Fleecejacke` ersetzt, bleibt dieser Wechsel für die aktuelle Empfehlung fixiert. Die Engine darf daraufhin z. B. die Softshelljacke leichter machen oder entfernen.
 
-Optionale Zubehörteile und eine derzeit nicht empfohlene Außenschicht müssen ebenfalls hinzugefügt werden können. Die Außenschicht-Auswahl umfasst passende Jacken sowie Softshell-, Wollwalk- und Wollfleece-Overalls und Winteroveralls; sie wird auf die aktuelle Situation begrenzt. Overalls bedecken zusätzlich die Beine und werden dort thermisch neu ausbalanciert. In der Trage sind sie nur auswählbar, wenn kein Tragecover genutzt wird. Im Autositz bleiben voluminöse Overalls ausgeschlossen. Die Auswahl wird wie ein Austausch manuell fixiert und löst die vollständige thermische Neubewertung aus.
+Optionale Zubehörteile und eine derzeit nicht empfohlene Außenschicht müssen ebenfalls hinzugefügt werden können. Die Außenschicht-Auswahl umfasst passende Jacken sowie Softshell-, Wollwalk- und Wollfleece-Overalls; der Winteroverall wird im Modus `outdoor` nur unter 8 °C angeboten. In der Trage sind Overalls nur auswählbar, wenn kein Tragecover genutzt wird. Im Autositz bleiben voluminöse Overalls ausgeschlossen. Overalls bedecken zusätzlich die Beine und werden dort thermisch neu ausbalanciert. Eine manuelle Auswahl bleibt fixiert und löst die vollständige Neubewertung aus. Liegt das gewählte Teil mindestens zwei relative Wärmestufen über oder unter der automatischen Auswahl desselben Slots, zeigt die App einen Hinweis; die Wärmestufen sind eine Orientierung und keine Temperaturmessung.
+
+Im Kleidungskatalog können vorhandene Teile in den lokalen Kleiderschrank übernommen und später bearbeitet oder entfernt werden. Wenn ein passendes Teil fehlt, zeigt die Empfehlung die vorhandenen passenden Teile und benennt die noch offene Körperzone bzw. Schutzfunktion.
 
 Sichtbare Kleidungsstücke und Zubehörbegriffe besitzen nutzerverständliche Definitionen. Sie erklären, welches reale Kleidungsstück oder Zubehör gemeint ist. In den auswählbaren Alternativen und im Kleidungskatalog wird die Beschreibung zusammen mit dem Namen gezeigt; die Outfit-Übersicht bleibt auf Bild, Kleidungsname und Rolle beschränkt.
 
@@ -126,7 +132,7 @@ Nicht benötigt:
 - Geschlecht als Fachparameter,
 - Gewicht/Körpergröße für die Wärmelogik,
 - medizinische Diagnosen,
-- Kleidungsinventar,
+- vollständiges Haushaltsinventar mit Stückzahlen, Marken und Einkaufsverwaltung,
 - Schlafsackinventar.
 
 ### 5.1 Alter
@@ -248,7 +254,7 @@ Zusätzlich relevant:
 - Windschutz des Wagens,
 - Wetter.
 
-Die App empfiehlt Kinderwagen-Zubehör selbst. Es wird nicht als Besitz-Inventar vorab abgefragt.
+Die App empfiehlt Kinderwagen-Zubehör selbst; ein Kleiderschrank-Eintrag ist dafür nicht erforderlich. Wer möchte, kann passendes Zubehör wie andere Katalogteile lokal als verfügbar markieren.
 
 Mögliche empfehlbare und austauschbare Teile:
 
@@ -449,13 +455,13 @@ Diese Quellen werden **nur** verwendet, um eine generische Produkt-Orientierung 
 
 Die Auto-Entscheidung ist geschlossen: keine geschätzte Innenraumtemperatur und keine getrennte Übergangsphase. Die Autositz-Empfehlung startet mit dem aktuellen Außenwetter, priorisiert Gurtsicherheit und modelliert entfernbare Zusatzwärme in einem eigenen Zubehörslot über dem Gurt.
 
-Die V1-Entscheidung zur finalen Katalogzuordnung und relativen `thermalWeight`-Kalibrierung ist ebenfalls geschlossen. Für Übergangsjacken werden eine ungefütterte leichte Windschutzschicht und eine leicht gefütterte wärmere Zwischenstufe als eigene `outer`-Items geführt; eine zusätzliche Mittelschicht wird bei passenden Bedingungen nicht automatisch gestapelt. Der vollständige Audit ist in `docs/THERMAL_WEIGHT_AUDIT.md` dokumentiert. Die aktuellen `thermalWeight`-, `thermalStepCredit`- und `sleepWarmthWeight`-Werte sind intern konsistent und werden durch gezielte Kataloginvarianten abgesichert.
+Die V1-Entscheidung zur finalen Katalogzuordnung und relativen `thermalWeight`-Kalibrierung ist ebenfalls geschlossen. Für Übergangsjacken werden eine ungefütterte leichte Windschutzschicht und eine leicht gefütterte wärmere Zwischenstufe als eigene `outer`-Items geführt. Bei 10 bis unter 12 °C ergänzt die generische Empfehlung eine dünne isolierende Mittelschicht; die leichte ungefütterte Jacke ersetzt sie nicht. Im lokalen Kleiderschrank kann eine bestätigte mittelwarme oder warme Außenschicht die Mittelschicht nur dann abdecken, wenn Passform und Körperzonenabdeckung ausreichen. Der vollständige Audit ist in `docs/THERMAL_WEIGHT_AUDIT.md` dokumentiert.
 
 Die V1-Alterskalibrierung ist geschlossen: `birthDate` aus dem Babyprofil wird ohne redundantes Altersfeld ausgewertet; unter drei vollendeten Monaten gilt außerhalb des Schlafmodus bei thermischer Referenz unter 28 °C ein kleiner `+0.5 thermalStep`-Faktor. Ab drei Monaten entfällt der allgemeine Altersaufschlag.
 
 Die V1-Mobilitätsmodellierung ist geschlossen: `mobilityStage` wird im Babyprofil gespeichert, bleibt aber strikt von der situationsbezogenen `activity` getrennt und verändert selbst keine thermische Stufe. Bewegungswärme wird weiterhin ausschließlich über die aktuelle Aktivität bewertet.
 
-Damit sind die wesentlichen **Produkt- und Kalibrierungsentscheidungen für V1 geschlossen**. Spätere Mehrprofil-, Inventar- oder Präferenzlern-Funktionen bleiben ausdrücklich außerhalb des V1-Scopes und sind keine offenen V1-Entscheidungen.
+Damit sind die wesentlichen **Produkt- und Kalibrierungsentscheidungen für V1 geschlossen**. Mehrprofile, vollständige Mengen-/Markeninventare und automatische Präferenzlern-Funktionen bleiben außerhalb des V1-Scopes.
 
 ## 16. Tagesausflug planen
 
@@ -468,6 +474,8 @@ Normatives Ergebnis:
 3. **Tagesverlauf:** nur praktisch relevante Wechselaktionen.
 
 Der Planer darf intern stündliche bzw. situationsbedingte Empfehlungen erzeugen, zeigt aber nicht standardmäßig für jede Stunde ein vollständiges Outfit. Praktisch gleiche Folgezustände werden zusammengeführt.
+
+Der optionale lokale Kleiderschrank wird für jeden Checkpoint wiederverwendet. Fehlt ein benötigtes Teil, bleibt der Plan unvollständig und zeigt die Lücke mit dem frühesten Bedarfszeitpunkt.
 
 ### 16.1 Zeitraum und Situationen
 
