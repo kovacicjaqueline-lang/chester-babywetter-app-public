@@ -22,6 +22,8 @@ Die Engine wendet Regeln in dieser Reihenfolge an:
 
 Ein manuell fixiertes Teil darf nur dann entfernt werden, wenn es eine harte Sicherheitsregel verletzt. Die Engine erzeugt dann einen sichtbaren Override-Hinweis.
 
+Weicht ein manuell fixiertes Teil auf der relativen Katalogskala um mindestens zwei Wärmestufen von der automatischen Auswahl desselben Slots ab, zeigt die App einen sichtbaren Wärmehinweis. Der Lock bleibt bestehen und die übrigen Lagen werden wie üblich neu ausbalanciert. Dieser Vergleich ist eine relative Orientierung, keine Temperaturmessung oder medizinische Aussage.
+
 ## 2. Thermisches Modell
 
 ### 2.1 `thermalReferenceC`
@@ -182,6 +184,8 @@ Die leichte Übergangsjacke bleibt eine eigene Außenschicht und zählt nicht al
 - warme Füße,
 - warme Mütze,
 - Handschuhe.
+
+Im Modus `outdoor` wird der Winteroverall nur unter 8 °C als Alternative angeboten. Ab 8 °C bleibt die Auswahl auf passendere Außenschichten begrenzt. Ein bereits manuell gesetzter Winteroverall-Lock bleibt erhalten, löst dann aber den relativen Wärmehinweis aus. Kinderwagen und Trage folgen ihren eigenen situativen Regeln.
 
 ### `0 bis <3 °C` – nahe Gefrierpunkt
 

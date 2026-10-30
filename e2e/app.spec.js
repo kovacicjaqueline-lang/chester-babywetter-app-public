@@ -196,10 +196,32 @@ test('fehlende Außenschicht kann ergänzend über der Basisschicht gewählt wer
   await addOuter.click();
   await expect(page.locator('#alternativeTitle')).toHaveText('Außenschicht hinzufügen');
   await expect(page.locator('#alternativeOptions [data-alternative-item-id="transition_overall"]')).toBeVisible();
-  await expect(page.locator('#alternativeOptions [data-alternative-item-id="winter_overall"]')).toBeVisible();
+  await expect(page.locator('#alternativeOptions [data-alternative-item-id="winter_overall"]')).toHaveCount(0);
   await page.locator('#alternativeOptions [data-alternative-item-id="light_transition_jacket"]').click();
   await expect(page.locator('#outfitGrid [data-item-id="light_transition_jacket"]')).toBeVisible();
   await expect(page.locator('#outfitGrid [data-item-id="long_sleeve_bodysuit"]')).toBeVisible();
+});
+
+test('stark wärmere manuelle Auswahl zeigt den relativen Wärmehinweis', async ({ page }) => {
+  await openDemo(page);
+  await chooseSituation(page, 'outdoor');
+  await page.locator('[data-open-dialog="weatherOverrideDialog"]').click();
+  await page.locator('#manualAirTempC').fill('10');
+  await page.locator('input[name="manualWindPreset"][value="calm"]').check();
+  await page.locator('input[name="manualPrecipitationPreset"][value="dry"]').check();
+  await page.locator('input[name="manualSunPreset"][value="cloudy"]').check();
+  await page.locator('#applyWeatherOverrideButton').click();
+
+  const outer = page.locator('#outfitGrid [data-item-id="light_transition_jacket"][data-open-alternatives="true"]');
+  await expect(outer).toBeVisible();
+  await outer.click();
+  await expect(page.locator('#alternativeOptions [data-alternative-item-id="winter_overall"]')).toHaveCount(0);
+  await page.locator('#alternativeOptions [data-alternative-item-id="softshell_jacket"]').click();
+
+  const notice = page.locator('#safetyNotice [data-notice-code="MANUAL_ITEM_THERMAL_SHIFT"]');
+  await expect(notice).toBeVisible();
+  await expect(notice).toContainText('deutlich wärmer');
+  await expect(notice).toContainText('relative Orientierung');
 });
 
 test('Anderer Look ändert sichtbar die Visuals, nie die fachlichen Items, und bleibt nach Reload stabil', async ({ page }) => {

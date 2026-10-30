@@ -35,6 +35,7 @@ const NOTICE_COPY = Object.freeze({
   STRONG_WIND_CAUTION: ['Starker Wind', 'Exponierte Bereiche windgeschützt halten und die Situation regelmäßig prüfen.'],
   MANUAL_LOCK_OVERRIDDEN_FOR_SAFETY: ['Auswahl aus Sicherheitsgründen geändert', 'Eine manuelle Auswahl wurde von einer Sicherheitsregel überstimmt.'],
   MANUAL_LOCK_LIMITS_WEATHER_PROTECTION: ['Wetterschutz eingeschränkt', 'Die manuell gewählte Kombination deckt die aktuelle Wetteranforderung nicht vollständig ab.'],
+  MANUAL_ITEM_THERMAL_SHIFT: ['Manuelle Auswahl weicht deutlich ab', 'Die übrigen Lagen wurden neu abgestimmt. Die Wärmeskala ist eine relative Orientierung, keine Temperaturmessung. Bitte den Nacken warm und trocken prüfen und das Outfit bei Bedarf anpassen.'],
   RAIN_PROTECTION_OPTIONAL: ['Regenschutz optional', 'Regen ist möglich; ein leichter Regenschutz kann sinnvoll sein.'],
   WARDROBE_INCOMPLETE: ['Kleiderschrank lückenhaft', 'Die App zeigt nur bestätigte passende Teile; offene Stellen sind unten erklärt.']
 });
@@ -543,7 +544,12 @@ function renderNotices(recommendation, excludedCodes = new Set()) {
     marker.textContent = notice.severity === 'hard_rule' ? '!' : '✦';
     const copy = document.createElement('div');
     const title = document.createElement('strong');
-    const mapped = NOTICE_COPY[notice.code] ?? [notice.code, ''];
+    const mapped = notice.code === 'MANUAL_ITEM_THERMAL_SHIFT'
+      ? [
+        `Manuelle Auswahl deutlich ${notice.data?.direction === 'warmer' ? 'wärmer' : 'kühler'}`,
+        `Das gewählte Teil ist im relativen Katalogvergleich um ${Math.abs(notice.data?.relativeThermalDelta ?? 0)} Wärmestufen ${notice.data?.direction === 'warmer' ? 'wärmer' : 'kühler'} als die automatische Auswahl. ${NOTICE_COPY[notice.code][1]}`
+      ]
+      : NOTICE_COPY[notice.code] ?? [notice.code, ''];
     title.textContent = mapped[0];
     copy.append(title);
     if (notice.severity !== 'info' && mapped[1]) {

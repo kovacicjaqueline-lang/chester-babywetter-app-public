@@ -56,6 +56,44 @@ test('10 C outdoor adds an insulating mid layer and keeps exposed feet warm',()=
   assert.equal(id(result,'hands'),null);
 });
 
+test('winter overall is not offered as an outdoor alternative from 8 C upward, with or without ground contact',()=>{
+  for (const groundContact of ['none','standing']) {
+    const result=recommendOutfit(request(outdoor({groundContact}),{w:weather(10)}));
+    const outer=slot(result,'outer');
+    assert.equal(outer.selected.itemId,'light_transition_jacket');
+    assert.ok(!outer.alternatives.some((option)=>option.itemId==='winter_overall'));
+    assert.ok(!result.addableSlots.find((entry)=>entry.slot==='outer')?.alternatives.some((option)=>option.itemId==='winter_overall'));
+  }
+});
+
+test('manual outerwear that is two or more relative warmth levels above baseline shows a caution',()=>{
+  const session=lockItem(createSession('manual_warmer_outer'),{slot:'outer',itemId:'softshell_jacket'});
+  const result=recommendOutfit(request(outdoor(),{w:weather(10),session}));
+  const notice=result.notices.find((entry)=>entry.code==='MANUAL_ITEM_THERMAL_SHIFT');
+  assert.equal(slot(result,'outer').selected.itemId,'softshell_jacket');
+  assert.equal(notice?.severity,'caution');
+  assert.equal(notice?.data.direction,'warmer');
+  assert.equal(notice?.data.relativeThermalDelta,2);
+});
+
+test('manual winter overall at 10 C stays selected but shows a stronger relative warmth caution',()=>{
+  const session=lockItem(createSession('manual_winter_outer'),{slot:'outer',itemId:'winter_overall'});
+  const result=recommendOutfit(request(outdoor(),{w:weather(10),session}));
+  const notice=result.notices.find((entry)=>entry.code==='MANUAL_ITEM_THERMAL_SHIFT');
+  assert.equal(slot(result,'outer').selected.itemId,'winter_overall');
+  assert.equal(notice?.data.direction,'warmer');
+  assert.equal(notice?.data.relativeThermalDelta,3);
+});
+
+test('manual clothing two or more relative warmth levels below baseline shows a caution',()=>{
+  const session=lockItem(createSession('manual_cooler_legs'),{slot:'legs',itemId:'light_trousers'});
+  const result=recommendOutfit(request(outdoor(),{w:weather(5),session}));
+  const notice=result.notices.find((entry)=>entry.code==='MANUAL_ITEM_THERMAL_SHIFT');
+  assert.equal(slot(result,'legs').selected.itemId,'light_trousers');
+  assert.equal(notice?.data.direction,'cooler');
+  assert.equal(notice?.data.relativeThermalDelta,-2);
+});
+
 test('8 C uses the insulated transition jacket without fleece stacking',()=>{
   const result=recommendOutfit(request(outdoor(),{w:weather(8)}));
   assert.equal(id(result,'mid'),null);
@@ -124,6 +162,7 @@ test('an omitted outer layer can be added without removing the base layer',()=>{
   const addable=recommendation.addableSlots.find((entry)=>entry.slot==='outer');
   assert.equal(addable?.addLabel,'Außenschicht hinzufügen');
   assert.ok(addable?.alternatives.some((entry)=>entry.itemId==='light_transition_jacket'));
+  assert.ok(!addable?.alternatives.some((entry)=>entry.itemId==='winter_overall'));
 
   const session=lockItem(base.session,{slot:'outer',itemId:'light_transition_jacket'});
   const layered=recommendOutfit({...base,session});
