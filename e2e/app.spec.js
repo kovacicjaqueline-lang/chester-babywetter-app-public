@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 
-const APP_SHELL_CACHE = 'babywetter-shell-v0.2.0-assets36';
+const APP_SHELL_CACHE = 'babywetter-shell-v0.2.0-assets37';
 
 async function openDemo(page) {
   await page.goto('/?demo=1');
@@ -186,6 +186,26 @@ test('entferntes Kinderwagen-Wärmezubehör kann wieder hinzugefügt werden', as
   await page.locator('#alternativeOptions [data-alternative-item-id="stroller_light_footmuff"]').click();
   await expect(page.locator('#outfitGrid [data-item-id="stroller_light_footmuff"]')).toBeVisible();
   await expect(page.locator('#outfitGrid [data-item-id="stroller_thermal_none"]')).toHaveCount(0);
+});
+
+test('bei 10 °C wird der Winteroverall auch im Kinderwagen nicht angeboten', async ({ page }) => {
+  await openDemo(page);
+  await chooseSituation(page, 'stroller');
+  await page.locator('[data-open-dialog="weatherOverrideDialog"]').click();
+  await page.locator('#manualAirTempC').fill('10');
+  await page.locator('input[name="manualWindPreset"][value="calm"]').check();
+  await page.locator('input[name="manualPrecipitationPreset"][value="dry"]').check();
+  await page.locator('input[name="manualSunPreset"][value="cloudy"]').check();
+  await page.locator('#applyWeatherOverrideButton').click();
+
+  const outer = page.locator('#outfitGrid [data-slot="outer"][data-open-alternatives="true"]');
+  const addOuter = page.locator('#outfitGrid [data-addable-slot="true"][data-slot="outer"]');
+  if (await outer.count()) await outer.first().click();
+  else {
+    await expect(addOuter).toBeVisible();
+    await addOuter.click();
+  }
+  await expect(page.locator('#alternativeOptions [data-alternative-item-id="winter_overall"]')).toHaveCount(0);
 });
 
 test('fehlende Außenschicht kann ergänzend über der Basisschicht gewählt werden', async ({ page }) => {

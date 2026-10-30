@@ -238,3 +238,33 @@ test('asset manifest metadata maps each visual group to the same fach item witho
     assert.deepEqual([...group.situations].sort(),[...item.allowedSituations].sort(),`${itemId} situations`);
   }
 });
+
+test('all catalog thermal metadata is finite and consistent across garment zones and situations', () => {
+  const validZones = new Set(['torso','arms','legs','feet','head','hands']);
+  const validSituations = new Set(['outdoor','stroller','carrier','car','sleep']);
+
+  for (const [itemId,item] of Object.entries(CLOTHING_CATALOG)) {
+    assert.equal(item.itemId,itemId,itemId+' itemId');
+    assert.ok(Number.isFinite(item.thermalWeight) && item.thermalWeight >= 0,itemId+' thermalWeight');
+    assert.ok(Number.isFinite(item.thermalStepCredit) && item.thermalStepCredit >= 0,itemId+' thermalStepCredit');
+    assert.ok(Array.isArray(item.bodyZones),itemId+' bodyZones');
+    assert.equal(new Set(item.bodyZones).size,item.bodyZones.length,itemId+' duplicate body zone');
+    for (const zone of item.bodyZones) assert.ok(validZones.has(zone),itemId+' unknown body zone '+zone);
+
+    assert.ok(Array.isArray(item.allowedSituations) && item.allowedSituations.length > 0,itemId+' allowedSituations');
+    assert.equal(new Set(item.allowedSituations).size,item.allowedSituations.length,itemId+' duplicate situation');
+    for (const mode of item.allowedSituations) assert.ok(validSituations.has(mode),itemId+' unknown situation '+mode);
+
+    for (const [zone,weight] of Object.entries(item.thermalWeightByZone ?? {})) {
+      assert.ok(validZones.has(zone),itemId+' thermalWeightByZone unknown zone '+zone);
+      assert.ok(item.bodyZones.includes(zone),itemId+' thermalWeightByZone '+zone+' is not covered');
+      assert.ok(Number.isFinite(weight) && weight >= 0,itemId+' thermalWeightByZone '+zone);
+    }
+    if (item.thermalSignatureWeight !== null) {
+      assert.ok(Number.isFinite(item.thermalSignatureWeight) && item.thermalSignatureWeight >= 0,itemId+' thermalSignatureWeight');
+    }
+    if (item.sleepWarmthWeight !== null) {
+      assert.ok(Number.isFinite(item.sleepWarmthWeight) && item.sleepWarmthWeight >= 0,itemId+' sleepWarmthWeight');
+    }
+  }
+});

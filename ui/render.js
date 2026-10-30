@@ -36,6 +36,8 @@ const NOTICE_COPY = Object.freeze({
   MANUAL_LOCK_OVERRIDDEN_FOR_SAFETY: ['Auswahl aus Sicherheitsgründen geändert', 'Eine manuelle Auswahl wurde von einer Sicherheitsregel überstimmt.'],
   MANUAL_LOCK_LIMITS_WEATHER_PROTECTION: ['Wetterschutz eingeschränkt', 'Die manuell gewählte Kombination deckt die aktuelle Wetteranforderung nicht vollständig ab.'],
   MANUAL_ITEM_THERMAL_SHIFT: ['Manuelle Auswahl weicht deutlich ab', 'Die übrigen Lagen wurden neu abgestimmt. Die Wärmeskala ist eine relative Orientierung, keine Temperaturmessung. Bitte den Nacken warm und trocken prüfen und das Outfit bei Bedarf anpassen.'],
+  MANUAL_OUTFIT_TOO_WARM: ['Outfit bleibt deutlich zu warm', 'Die Kombination ist nach dem Ausbalancieren deutlich wärmer als die automatische Empfehlung. Prüfe den Nacken und passe bei Bedarf eine manuelle Auswahl an.'],
+  MANUAL_OUTFIT_TOO_COOL: ['Outfit bleibt deutlich zu kühl', 'Die Kombination ist nach dem Ausbalancieren deutlich kühler als die automatische Empfehlung. Prüfe den Nacken und ergänze bei Bedarf eine wärmende Lage.'],
   RAIN_PROTECTION_OPTIONAL: ['Regenschutz optional', 'Regen ist möglich; ein leichter Regenschutz kann sinnvoll sein.'],
   WARDROBE_INCOMPLETE: ['Kleiderschrank lückenhaft', 'Die App zeigt nur bestätigte passende Teile; offene Stellen sind unten erklärt.']
 });

@@ -1,7 +1,7 @@
 import { CLOTHING_CATALOG, SLOT_ITEMS } from './clothing-catalog.js';
 import { SLEEP_BAG_IDS, genericTogGuidanceForRoomTemp } from './sleep-tog-rules.js';
 import {
-  TEMPERATURE_BANDS, RELATION_ORDER, createSession, setWarmthOffset, lockItem, temperatureBandFor,
+  BASELINE, TEMPERATURE_BANDS, RELATION_ORDER, createSession, setWarmthOffset, lockItem, temperatureBandFor,
   createPhaseState, seedBaseline, protectExposedFeetWithoutThermalCover, activityAdjustmentFor, traceThermal, strollerStateAdjustment,
   evaluateWind, warmthBiasAdjustment, neckFeedbackAdjustment, selectStrollerThermalAccessory, selectCarrierAccessory, selectCarThermalAccessory,
   setSelected, carrierThermalCredit, applyThermalDelta, applyCoveredThermalCredit, applyCarrierTorsoReduction,
@@ -19,6 +19,7 @@ export { TEMPERATURE_BANDS, createSession, setWarmthOffset, lockItem, temperatur
 const BODY_THERMAL_SLOTS = Object.freeze(['base_torso','legs','mid','outer','feet','head','hands']);
 const PROTECTION_REBALANCE_PRIORITY = Object.freeze(['mid','legs','base_torso','feet','head','hands']);
 const CARRIER_PROTECTION_REBALANCE_PRIORITY = Object.freeze(['mid','base_torso']);
+const MANUAL_OUTFIT_THERMAL_MISMATCH_THRESHOLD = 1.5;
 
 function roundVisibleRuleValue(value) {
   if (!isFiniteNumber(value)) return value;
@@ -78,14 +79,31 @@ function relativeThermalLevel(itemId) {
 }
 
 function addManualThermalShiftNotices(result, request) {
-  if (!request.session.manualLocks.length) return;
+  const manualPhases = new Set(result.slots
+    .filter((entry) => entry.selected.selectionSource === 'manual_lock')
+    .map((entry) => entry.phase));
+  if (!manualPhases.size) return;
+
   const automatic = recommendCore({
     ...request,
     session:{ ...request.session, manualLocks:[] }
   });
   if (automatic.status === 'blocked') return;
 
+  const mismatchedPhases = new Set();
+  for (const phase of manualPhases) {
+    const thermalDelta = roundHalf(thermalSignature(result,phase) - thermalSignature(automatic,phase));
+    if (thermalDelta >= MANUAL_OUTFIT_THERMAL_MISMATCH_THRESHOLD) {
+      addNotice(result,'MANUAL_OUTFIT_TOO_WARM','caution',phase,['MANUAL_OUTFIT_THERMAL_MISMATCH'],{ thermalDelta });
+      mismatchedPhases.add(phase);
+    } else if (thermalDelta <= -MANUAL_OUTFIT_THERMAL_MISMATCH_THRESHOLD) {
+      addNotice(result,'MANUAL_OUTFIT_TOO_COOL','caution',phase,['MANUAL_OUTFIT_THERMAL_MISMATCH'],{ thermalDelta });
+      mismatchedPhases.add(phase);
+    }
+  }
+
   for (const lock of request.session.manualLocks) {
+    if (mismatchedPhases.has(lock.phase)) continue;
     const selected = result.slots.find((entry) => entry.phase === lock.phase && entry.slot === lock.slot)?.selected;
     if (selected?.selectionSource !== 'manual_lock') continue;
     const recommendedItemId = automatic.slots.find((entry) => entry.phase === lock.phase && entry.slot === lock.slot)?.selected.itemId;
@@ -453,9 +471,21 @@ function evaluateSleep(result, request) {
   return result;
 }
 
+function situationRelevantCandidates(result,request,slotResult) {
+  const candidates = alternativeCandidateIds(slotResult,request.context.mode);
+  if (slotResult.slot !== 'outer' || !['outdoor','stroller','carrier'].includes(request.context.mode)) return candidates;
+  const temperature = result.phases.find((entry) => entry.phase === slotResult.phase)?.thermalReferenceC;
+  if (!isFiniteNumber(temperature)) return candidates;
+
+  const baselineOuter = BASELINE[temperatureBandFor(temperature).id]?.outer;
+  const baselineWeight = CLOTHING_CATALOG[baselineOuter]?.thermalWeight ?? 0;
+  return candidates.filter((itemId) => itemId !== 'winter_overall'
+    || (CLOTHING_CATALOG[itemId]?.thermalWeight ?? 0) - baselineWeight < 2);
+}
+
 function attachAlternatives(result,request) {
   for (const slotResult of result.slots) {
-    slotResult.alternatives = projectedAlternatives(result,request,slotResult,alternativeCandidateIds(slotResult,request.context.mode));
+    slotResult.alternatives = projectedAlternatives(result,request,slotResult,situationRelevantCandidates(result,request,slotResult));
     if (slotResult.selected.itemId.endsWith('_none') && slotResult.alternatives.length) {
       result.addableSlots.push({ phase:slotResult.phase, slot:slotResult.slot, addLabel:addableLabelFor(slotResult.slot), alternatives:slotResult.alternatives });
     }
@@ -466,7 +496,7 @@ function attachAlternatives(result,request) {
   if (!outer && ['outdoor','stroller','carrier'].includes(request.context.mode) && temperature < 24) {
     const slotResult = { phase:'main', slot:'outer', selected:{ itemId:null }, alternatives:[] };
     const activeCarrierCover = result.slots.find((entry) => entry.phase === 'main' && entry.slot === 'carrier_accessory')?.selected.itemId;
-    const outerLayerIds = alternativeCandidateIds(slotResult,request.context.mode)
+    const outerLayerIds = situationRelevantCandidates(result,request,slotResult)
       .filter((itemId) => itemId.endsWith('_jacket') || itemId.endsWith('_overall'))
       .filter((itemId) => request.context.mode !== 'carrier'
         || !itemId.endsWith('_overall')
@@ -478,11 +508,12 @@ function attachAlternatives(result,request) {
 
 function projectedAlternatives(result,request,slotResult,candidates) {
   const baselineScore = thermalSignature(result,slotResult.phase);
-  const thermalReferenceC = result.phases.find((entry) => entry.phase === slotResult.phase)?.thermalReferenceC;
+  const thermalSuitabilityBaseline = slotResult.slot === 'outer' && ['outdoor','stroller','carrier'].includes(request.context.mode)
+    ? recommendCore({ ...request, session:{ ...request.session, manualLocks:[] } })
+    : null;
   const options = [];
   for (const itemId of candidates) {
     if (itemId === slotResult.selected.itemId) continue;
-    if (request.context.mode === 'outdoor' && thermalReferenceC >= 8 && itemId === 'winter_overall') continue;
     const candidateSlot = CLOTHING_CATALOG[itemId]?.slot ?? slotResult.slot;
     const session = lockItem(request.session,{ phase:slotResult.phase, slot:slotResult.slot, itemId, lockedAt:request.requestedAt });
     const projected = recommendCore({ ...request, session });
@@ -495,6 +526,10 @@ function projectedAlternatives(result,request,slotResult,candidates) {
       if (originalStillSelected) continue;
     }
     const projectedScore = thermalSignature(projected,slotResult.phase);
+    if (thermalSuitabilityBaseline && thermalSuitabilityBaseline.status !== 'blocked') {
+      const suitabilityDelta = roundHalf(projectedScore - thermalSignature(thermalSuitabilityBaseline,slotResult.phase));
+      if (suitabilityDelta >= MANUAL_OUTFIT_THERMAL_MISMATCH_THRESHOLD) continue;
+    }
     let delta = roundHalf(projectedScore - baselineScore);
     let relation = Math.abs(delta) < 0.25 ? 'equivalent' : delta > 0 ? 'warmer' : 'cooler';
     if (slotResult.slot === 'mid' && candidateSlot === slotResult.slot) {
