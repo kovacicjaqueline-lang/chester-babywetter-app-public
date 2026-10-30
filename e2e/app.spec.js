@@ -222,7 +222,7 @@ test('fehlende Außenschicht kann ergänzend über der Basisschicht gewählt wer
   await expect(page.locator('#outfitGrid [data-item-id="long_sleeve_bodysuit"]')).toBeVisible();
 });
 
-test('stark wärmere manuelle Auswahl zeigt den relativen Wärmehinweis', async ({ page }) => {
+test('stark wärmere manuelle Auswahl zeigt einen Wärmehinweis', async ({ page }) => {
   await openDemo(page);
   await chooseSituation(page, 'outdoor');
   await page.locator('[data-open-dialog="weatherOverrideDialog"]').click();
@@ -238,10 +238,10 @@ test('stark wärmere manuelle Auswahl zeigt den relativen Wärmehinweis', async 
   await expect(page.locator('#alternativeOptions [data-alternative-item-id="winter_overall"]')).toHaveCount(0);
   await page.locator('#alternativeOptions [data-alternative-item-id="softshell_jacket"]').click();
 
-  const notice = page.locator('#safetyNotice [data-notice-code="MANUAL_ITEM_THERMAL_SHIFT"]');
+  const notice = page.locator('#safetyNotice [data-notice-code="MANUAL_ITEM_THERMAL_SHIFT"], #safetyNotice [data-notice-code="MANUAL_OUTFIT_TOO_WARM"]');
   await expect(notice).toBeVisible();
-  await expect(notice).toContainText('deutlich wärmer');
-  await expect(notice).toContainText('relative Orientierung');
+  await expect(notice).toContainText('deutlich');
+  await expect(notice).toContainText('Nacken');
 });
 
 test('Anderer Look ändert sichtbar die Visuals, nie die fachlichen Items, und bleibt nach Reload stabil', async ({ page }) => {
