@@ -22,7 +22,7 @@ Die Engine wendet Regeln in dieser Reihenfolge an:
 
 Ein manuell fixiertes Teil darf nur dann entfernt werden, wenn es eine harte Sicherheitsregel verletzt. Die Engine erzeugt dann einen sichtbaren Override-Hinweis.
 
-Weicht ein manuell fixiertes Teil auf der relativen Katalogskala um mindestens zwei Wärmestufen von der automatischen Auswahl desselben Slots ab, zeigt die App einen sichtbaren Wärmehinweis. Der Lock bleibt bestehen und die übrigen Lagen werden wie üblich neu ausbalanciert. Dieser Vergleich ist eine relative Orientierung, keine Temperaturmessung oder medizinische Aussage.
+Weicht ein manuell fixiertes Teil auf der relativen Katalogskala um mindestens zwei Wärmestufen von der automatischen Auswahl desselben Slots ab, zeigt die App einen Wärmehinweis. Zusätzlich vergleicht die Engine die Gesamtwärme nach dem Rebalancing mit der automatischen Empfehlung ohne manuelle Locks. Bleibt das Outfit mindestens 1,5 relative Wärmepunkte wärmer oder kühler, zeigt sie einen Gesamtoutfit-Hinweis; dieser ersetzt in derselben Phase den Einzelteil-Hinweis. Locks bleiben bestehen. Beide Skalen sind relative Produktheuristiken, keine Temperaturmessung oder medizinische Aussage.
 
 ## 2. Thermisches Modell
 
@@ -703,6 +703,8 @@ Beispiele:
 Alternativen werden als eigener Engine-Request mit einem manuellen Lock projiziert. Die ursprüngliche Empfehlung wird dabei nicht verändert. `relation` und `relativeThermalDelta` beschreiben die thermische Wirkung des gesamten projizierten Outfits; `projectedChanges` beschreibt separat, welche weiteren Slots für die gewählte Zusammensetzung angepasst würden.
 
 Für Alternativen im `mid`-Slot zeigen `relation` und `relativeThermalDelta` den Wärmeunterschied der gewählten Mittelschicht anhand ihres `thermalWeight`; ein Rebalancing anderer Slots ändert diese Einordnung nicht. Die angepassten Teile bleiben separat unter `projectedChanges` sichtbar.
+
+Außenschicht-Alternativen in Outdoor, Kinderwagen und Trage werden nach vollständigem Rebalancing gegen die automatische Empfehlung ohne Locks geprüft. Bleibt die Kombination mindestens 1,5 Wärmepunkte wärmer, wird die Alternative nicht angeboten. Der Winteroverall wird zusätzlich ausgeblendet, wenn sein `thermalWeight` mindestens zwei Punkte über der temperaturabhängigen Outer-Baseline liegt; im aktuellen Modell greift das ab 8 °C auch im Kinderwagen und in der Trage. Ein bereits gesetzter manueller Lock bleibt bestehen und erhält bei einer deutlichen Abweichung einen Hinweis. Regressionstests prüfen beide Grenzen aller 13 Temperaturbänder in allen drei Modi.
 
 ### 14.4 Lock-Lebensdauer
 

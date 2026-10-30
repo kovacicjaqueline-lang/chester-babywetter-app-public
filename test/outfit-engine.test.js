@@ -66,32 +66,90 @@ test('winter overall is not offered as an outdoor alternative from 8 C upward, w
   }
 });
 
+test('winter overall is not offered at 10 C in outdoor, stroller, or carrier',()=>{
+  const outdoorResult=recommendOutfit(request(outdoor(),{w:weather(10)}));
+  const strollerBase=request(stroller({strollerState:'awake',activity:'normal'}),{w:weather(10)});
+  const strollerResult=recommendOutfit({...strollerBase,session:lockItem(strollerBase.session,{
+    slot:'stroller_thermal_accessory',itemId:'stroller_thermal_none'
+  })});
+  const carrierBase=request(carrier(),{w:weather(10)});
+  const carrierResult=recommendOutfit({...carrierBase,session:lockItem(carrierBase.session,{
+    slot:'carrier_accessory',itemId:'carrier_cover_none'
+  })});
+
+  for (const result of [outdoorResult,strollerResult,carrierResult]) {
+    const alternatives=slot(result,'outer')?.alternatives
+      ?? result.addableSlots.find((entry)=>entry.slot==='outer')?.alternatives
+      ?? [];
+    assert.ok(!alternatives.some((option)=>option.itemId==='winter_overall'));
+  }
+});
+
 test('manual outerwear that is two or more relative warmth levels above baseline shows a caution',()=>{
   const session=lockItem(createSession('manual_warmer_outer'),{slot:'outer',itemId:'softshell_jacket'});
   const result=recommendOutfit(request(outdoor(),{w:weather(10),session}));
-  const notice=result.notices.find((entry)=>entry.code==='MANUAL_ITEM_THERMAL_SHIFT');
+  const notice=result.notices.find((entry)=>['MANUAL_ITEM_THERMAL_SHIFT','MANUAL_OUTFIT_TOO_WARM'].includes(entry.code));
   assert.equal(slot(result,'outer').selected.itemId,'softshell_jacket');
   assert.equal(notice?.severity,'caution');
-  assert.equal(notice?.data.direction,'warmer');
-  assert.equal(notice?.data.relativeThermalDelta,2);
+  if (notice?.code === 'MANUAL_ITEM_THERMAL_SHIFT') {
+    assert.equal(notice.data.direction,'warmer');
+    assert.equal(notice.data.relativeThermalDelta,2);
+  } else assert.ok(notice?.data.thermalDelta>=1.5);
 });
 
 test('manual winter overall at 10 C stays selected but shows a stronger relative warmth caution',()=>{
   const session=lockItem(createSession('manual_winter_outer'),{slot:'outer',itemId:'winter_overall'});
   const result=recommendOutfit(request(outdoor(),{w:weather(10),session}));
-  const notice=result.notices.find((entry)=>entry.code==='MANUAL_ITEM_THERMAL_SHIFT');
+  const notice=result.notices.find((entry)=>['MANUAL_ITEM_THERMAL_SHIFT','MANUAL_OUTFIT_TOO_WARM'].includes(entry.code));
   assert.equal(slot(result,'outer').selected.itemId,'winter_overall');
-  assert.equal(notice?.data.direction,'warmer');
-  assert.equal(notice?.data.relativeThermalDelta,3);
+  if (notice?.code === 'MANUAL_ITEM_THERMAL_SHIFT') {
+    assert.equal(notice.data.direction,'warmer');
+    assert.equal(notice.data.relativeThermalDelta,3);
+  } else assert.ok(notice?.data.thermalDelta>=1.5);
 });
 
 test('manual clothing two or more relative warmth levels below baseline shows a caution',()=>{
   const session=lockItem(createSession('manual_cooler_legs'),{slot:'legs',itemId:'light_trousers'});
   const result=recommendOutfit(request(outdoor(),{w:weather(5),session}));
-  const notice=result.notices.find((entry)=>entry.code==='MANUAL_ITEM_THERMAL_SHIFT');
+  const notice=result.notices.find((entry)=>['MANUAL_ITEM_THERMAL_SHIFT','MANUAL_OUTFIT_TOO_COOL'].includes(entry.code));
   assert.equal(slot(result,'legs').selected.itemId,'light_trousers');
-  assert.equal(notice?.data.direction,'cooler');
-  assert.equal(notice?.data.relativeThermalDelta,-2);
+  if (notice?.code === 'MANUAL_ITEM_THERMAL_SHIFT') {
+    assert.equal(notice.data.direction,'cooler');
+    assert.equal(notice.data.relativeThermalDelta,-2);
+  } else assert.ok(notice?.data.thermalDelta<=-1.5);
+});
+
+test('manual outfit that remains thermally mismatched after rebalancing shows a whole-outfit caution',()=>{
+  const warmLocks=[
+    {slot:'base_torso',itemId:'long_sleeve_bodysuit'},
+    {slot:'legs',itemId:'warm_trousers'},
+    {slot:'mid',itemId:'fleece_jacket'},
+    {slot:'outer',itemId:'winter_overall'},
+    {slot:'feet',itemId:'warm_socks_booties'},
+    {slot:'head',itemId:'warm_hat'},
+    {slot:'hands',itemId:'gloves'}
+  ];
+  const warmSession=warmLocks.reduce((session,lock)=>lockItem(session,lock),createSession('too_warm'));
+  const tooWarm=recommendOutfit(request(outdoor(),{w:weather(10),session:warmSession}));
+  const warmNotice=tooWarm.notices.find((notice)=>notice.code==='MANUAL_OUTFIT_TOO_WARM');
+  assert.equal(warmNotice?.severity,'caution');
+  assert.ok(warmNotice?.data.thermalDelta>=1.5);
+  assert.ok(!notices(tooWarm).includes('MANUAL_ITEM_THERMAL_SHIFT'));
+
+  const coolLocks=[
+    {slot:'base_torso',itemId:'short_sleeve_bodysuit'},
+    {slot:'legs',itemId:'trousers'},
+    {slot:'mid',itemId:'thin_sweater'},
+    {slot:'outer',itemId:'light_transition_jacket'},
+    {slot:'feet',itemId:'socks'},
+    {slot:'head',itemId:'thin_hat'}
+  ];
+  const coolSession=coolLocks.reduce((session,lock)=>lockItem(session,lock),createSession('too_cool'));
+  const tooCool=recommendOutfit(request(outdoor(),{w:weather(5),session:coolSession}));
+  const coolNotice=tooCool.notices.find((notice)=>notice.code==='MANUAL_OUTFIT_TOO_COOL');
+  assert.equal(coolNotice?.severity,'caution');
+  assert.ok(coolNotice?.data.thermalDelta<=-1.5);
+  assert.ok(!notices(tooCool).includes('MANUAL_ITEM_THERMAL_SHIFT'));
 });
 
 test('8 C uses the insulated transition jacket without fleece stacking',()=>{
@@ -171,13 +229,13 @@ test('an omitted outer layer can be added without removing the base layer',()=>{
   assert.equal(id(layered,'mid'),null);
 });
 
-test('carrier overalls are addable only when no carrier cover is worn',()=>{
+test('carrier transition overalls are addable only when no carrier cover is worn',()=>{
   const base=request(carrier(),{w:weather(18)});
   const uncovered=recommendOutfit(base);
   assert.equal(id(uncovered,'carrier_accessory'),'carrier_cover_none');
   const uncoveredOuter=uncovered.addableSlots.find((entry)=>entry.slot==='outer');
   assert.ok(uncoveredOuter?.alternatives.some((entry)=>entry.itemId==='transition_overall'));
-  assert.ok(uncoveredOuter?.alternatives.some((entry)=>entry.itemId==='winter_overall'));
+  assert.ok(!uncoveredOuter?.alternatives.some((entry)=>entry.itemId==='winter_overall'));
 
   const coveredRequest={...base,session:lockItem(base.session,{slot:'carrier_accessory',itemId:'carrier_cover_light'})};
   const covered=recommendOutfit(coveredRequest);
